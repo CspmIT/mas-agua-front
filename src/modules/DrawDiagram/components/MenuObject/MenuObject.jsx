@@ -7,10 +7,11 @@ function MenuObject() {
 	const [images, setImages] = useState([])
 	const [selectedImageId, setSelectedImageId] = useState(null) // Estado para la imagen seleccionada
 
-	const handleDragStart = (e, src, name, id) => {
-		setSelectedImageId(id)
-		e.dataTransfer.setData('text/plain', src)
-		e.dataTransfer.setData('name', name)
+	const handleDragStart = (e, img) => {
+		setSelectedImageId(img.id)
+		e.dataTransfer.setData('text/plain', img.src)
+		e.dataTransfer.setData('name', img.name)
+		e.dataTransfer.setData('animation', img.animation)
 	}
 
 	useEffect(() => {
@@ -25,7 +26,9 @@ function MenuObject() {
 				</Typography>
 			</div>
 
-			<div className={`grid grid-cols-3 gap-4 px-4 justify-center items-center ${styles.hMaxListImg}`}>
+			<div
+				className={`grid grid-cols-3 gap-4 px-4 justify-center items-center ${styles.hMaxListImg} overflow-y-auto`}
+			>
 				{images.map((img) => (
 					<div
 						key={img.id}
@@ -41,7 +44,7 @@ function MenuObject() {
 							height={img.height}
 							className='max-h-20 max-w-20 cursor-move'
 							draggable
-							onDragStart={(e) => handleDragStart(e, img.src, img.name, img.id)} // Asignar evento de drag
+							onDragStart={(e) => handleDragStart(e, img)} // Asignar evento de drag
 						/>
 					</div>
 				))}

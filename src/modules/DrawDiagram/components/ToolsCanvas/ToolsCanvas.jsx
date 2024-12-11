@@ -5,15 +5,57 @@ import { MdOutlinePolyline } from 'react-icons/md'
 import { RiText } from 'react-icons/ri'
 import MenuObject from '../MenuObject/MenuObject'
 import PropertiesSelect from '../PropertiesSelect/PropertiesSelect'
-function ToolsCanvas({ selectedObject, AddText, convertToImagenTopic }) {
+import { FaTools } from 'react-icons/fa'
+import DrawText from '../DrawText/DrawText'
+import { getInstanceType } from '../DrawDiagram/utils/js/actions'
+
+function ToolsCanvas({
+	selectedObject,
+	AddTextImg,
+	AddTextImgInflux,
+	newText,
+	convertToImagenTopic,
+	changeCursor,
+	onToolSelected,
+	showValueInflux,
+}) {
 	const [alignment, setAlignment] = useState('web')
 
 	const handleChange = (event, newAlignment) => {
 		setAlignment(newAlignment)
+		if (newAlignment === 'Text') {
+			changeCursor('text')
+		} else {
+			changeCursor('default')
+		}
 	}
+
 	useEffect(() => {
-		setAlignment(selectedObject ? 'SelectImage' : null)
+		let tool = null
+		switch (getInstanceType(selectedObject)) {
+			case 'TextDiagram':
+				setAlignment(selectedObject ? 'Text' : null)
+				tool = 'Text'
+				break
+			case 'ImageDiagram':
+			case 'ImageTopic':
+				setAlignment(selectedObject ? 'Property' : null)
+				tool = 'Property'
+				break
+			default:
+				setAlignment(null)
+				break
+		}
 	}, [selectedObject])
+
+	const handleComponentClick = (componentName) => {
+		if (['DrawText', 'MenuObject', 'PropertiesSelect'].includes(componentName)) {
+			onToolSelected(componentName)
+		} else {
+			onToolSelected(null)
+		}
+	}
+
 	return (
 		<>
 			<ToggleButtonGroup
@@ -36,10 +78,30 @@ function ToolsCanvas({ selectedObject, AddText, convertToImagenTopic }) {
 				<ToggleButton value='Image'>
 					<IoImagesOutline />
 				</ToggleButton>
+				<ToggleButton value='Property' className={`${alignment === 'Property' ? '' : '!hidden'}`}>
+					<FaTools className={`${alignment === 'Property' ? 'text-blue-500' : ''}`} />
+				</ToggleButton>
 			</ToggleButtonGroup>
-			{alignment == 'Image' ? <MenuObject /> : null}
-			{alignment == 'SelectImage' ? (
-				<PropertiesSelect data={selectedObject} AddText={AddText} convertToImagenTopic={convertToImagenTopic} />
+			{alignment === 'Text' && selectedObject ? (
+				<div onClick={() => handleComponentClick('DrawText')}>
+					<DrawText selectedObject={selectedObject} AddText={newText} />
+				</div>
+			) : null}
+			{alignment === 'Image' ? (
+				<div onClick={() => handleComponentClick('MenuObject')}>
+					<MenuObject />
+				</div>
+			) : null}
+			{alignment === 'Property' && selectedObject ? (
+				<div onClick={() => handleComponentClick('PropertiesSelect')}>
+					<PropertiesSelect
+						data={selectedObject}
+						AddText={AddTextImg}
+						AddTextInflux={AddTextImgInflux}
+						convertToImagenTopic={convertToImagenTopic}
+						showValueInflux={showValueInflux}
+					/>
+				</div>
 			) : null}
 		</>
 	)

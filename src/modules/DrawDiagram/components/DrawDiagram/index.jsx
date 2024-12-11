@@ -5,13 +5,42 @@ import styles from '../../utils/css/style.module.css'
 import ToolsCanvas from '../ToolsCanvas/ToolsCanvas'
 import { ImageDiagram, ImageTopic } from '../../class/Image'
 import Swal from 'sweetalert2'
-import { Button } from '@mui/material'
+import { createImage, editTextCanva, getInstanceType, newTextCanva } from './utils/js/actions'
+import { createTextInflux, updateTextInflux } from './utils/js/actionsTopic'
+
 function DrawDiagram() {
 	const canvasRef = useRef(null) // Referencia al elemento canvas
 	const fabricCanvasRef = useRef(null) // Referencia al lienzo de Fabric
 	const [selectedObject, setSelectedObject] = useState(null) // Estado del objeto seleccionado
-
+	const [activeTool, setActiveTool] = useState(null)
 	const [images, setImages] = useState([])
+	const [texts, setTexts] = useState([])
+
+	const changeCursor = (customCursor) => {
+		const fabricCanvas = fabricCanvasRef.current
+		if (!fabricCanvas) return
+
+		fabricCanvas.defaultCursor = customCursor
+	}
+
+	const clickOptions = (e) => {
+		const fabricCanvas = fabricCanvasRef.current
+		const currentCursor = fabricCanvas?.defaultCursor
+
+		if (currentCursor == 'default') {
+			const selected = e.target
+			if (selected && selected.metadata) {
+				setSelectedObject(selected.metadata) // Actualiza el estado con el objeto relacionado
+			} else {
+				setSelectedObject(null)
+			}
+		}
+		if (currentCursor == 'text') {
+			textDiagram(e)
+			changeCursor('default')
+		}
+		onToolSelected(false)
+	}
 	useEffect(() => {
 		const canvasElement = canvasRef.current
 		if (canvasElement) {
@@ -21,23 +50,17 @@ function DrawDiagram() {
 				height: parent.offsetHeight,
 			})
 			fabricCanvasRef.current = fabricCanvas
+			fabricCanvas.on('selection:created', (e) => handleSelection(e))
+			fabricCanvas.on('selection:updated', (e) => handleSelection(e))
 			// Ajustar el tamaño inicial del lienzo
 			fabricCanvas.on('mouse:down', (e) => {
-				const selected = e.target
-				if (selected && selected.metadata) {
-					setSelectedObject(selected.metadata) // Actualiza el estado con el objeto relacionado
-				} else {
-					setSelectedObject(null)
-				}
+				clickOptions(e)
 			})
 
 			fabricCanvas.on('object:modified', (e) => {
 				const selected = e.target
-
 				if (selected && selected.metadata) {
-					selected.metadata.move(selected.top, selected.left)
-					selected.metadata.resize(selected.width * selected.scaleX, selected.height * selected.scaleY)
-					addText(selected.metadata)
+					handleModify(selected)
 				} else {
 					setSelectedObject(null)
 				}
@@ -54,10 +77,61 @@ function DrawDiagram() {
 		}
 	}, [])
 
+	const handleModify = (selected) => {
+		const Object = selected?.metadata ? selected.metadata : selected
+		switch (getInstanceType(Object)) {
+			case 'TextDiagram':
+				Object.move(selected.top, selected.left)
+				Object.rotate(selected.angle)
+				textDiagram(Object)
+				break
+			case 'ImageDiagram':
+				Object.move(selected.top, selected.left)
+				Object.resize(selected.width * selected.scaleX, selected.height * selected.scaleY)
+				addTextImg(Object)
+				break
+			case 'ImageTopic':
+				Object.move(selected.top, selected.left)
+				Object.resize(selected.width * selected.scaleX, selected.height * selected.scaleY)
+				addTextImg(Object)
+				addTextImgInflux(Object)
+				break
+
+			default:
+				break
+		}
+	}
+
+	const handleSelection = (e) => {
+		const selected = fabricCanvasRef.current.getActiveObject()
+		if (selected) {
+			switch (selected.type) {
+				case 'textbox':
+					// Manejar selección de un textbox
+					textDiagram(selected)
+					break
+
+				case 'image':
+					// Verificar que 'metadata' esté presente antes de usarla
+					if (selected.metadata) {
+						addTextImg(selected.metadata)
+					}
+					break
+
+				default:
+					// Manejar selección de otros tipos de objetos
+					console.log('Se seleccionó otro tipo de objeto:', selected)
+					break
+			}
+		} else {
+			setSelectedObject(null)
+		}
+	}
+
 	const handleConvertToImagenTopic = async (id, status) => {
 		const fabricCanvas = fabricCanvasRef.current
+		if (!fabricCanvas) return
 		const object = fabricCanvas.getObjects().find((obj) => obj.metadata.id === id)
-
 		if (object) {
 			const imageChange = images.find((img) => img.id == id)
 			let newImagen
@@ -76,79 +150,36 @@ function DrawDiagram() {
 	const handleDrop = (e) => {
 		try {
 			e.preventDefault()
-			const imageSrc = e.dataTransfer.getData('text/plain') // URL de la imagen
-			const imageName = e.dataTransfer.getData('name') // URL de la imagen
-			const fabricCanvas = fabricCanvasRef.current
-			if (!fabricCanvas || !imageSrc) return
-
-			const imgNode = new Image()
-			imgNode.src = imageSrc
-
-			const left = e.nativeEvent.offsetX - 50
-			const top = e.nativeEvent.offsetY - 50
-			const id = images.length + 1
-			const imgnueva = new ImageDiagram({
-				id,
-				name: imageName,
-				src: imageSrc,
-				left: left,
-				top: top,
-				width: imgNode.width * 0.25,
-				height: imgNode.height * 0.25,
-			})
-
-			imgNode.onload = () => {
-				// Crear una imagen de Fabric.js con las dimensiones correctas
-				const img = new fabric.FabricImage(imgNode, {
-					left, // Coordenadas iniciales
-					top,
-					scaleX: 0.25, // Escala predeterminada
-					scaleY: 0.25,
-					opacity: 1,
-					id,
-				})
-
-				// Asocia el ImageDiagram al objeto de Fabric.js
-				img.metadata = imgnueva
-
-				// Añadir la imagen al lienzo
-				fabricCanvas.add(img)
-			}
-
+			const imgnueva = createImage(e, images, fabricCanvasRef)
 			setImages((prev) => [...prev, imgnueva])
 		} catch (error) {
 			Swal.fire({ title: 'Atención!', text: error, icon: 'warning' })
 		}
 	}
 
-	useEffect(() => {
-		function onKeyDownHandler(e) {
-			const fabricCanvas = fabricCanvasRef.current
-			switch (e.keyCode) {
-				case 46: // delete
-					const activeObject = fabricCanvas.getActiveObject()
-					const group = fabricCanvas
-						.getObjects()
-						.find((obj) => obj.metadata === activeObject.metadata.id + 'group')
-					if (activeObject) {
-						if (group) {
-							fabricCanvas.remove(group)
-						}
-						fabricCanvas.remove(activeObject)
-						fabricCanvas.discardActiveObject()
-						fabricCanvas.renderAll()
+	const onToolSelected = (tool) => {
+		setActiveTool(tool) // Actualiza el estado de la herramienta activa
+	}
 
-						// Elimina la imagen del array `images`
-						const updatedImages = images.filter((img) => {
-							return img.id !== activeObject.metadata.id
-						})
-						setImages(updatedImages) // Actualiza el estado de las imágenes
-						setSelectedObject(null)
-					}
-					e.preventDefault()
-					break
-				default:
-					break
+	useEffect(() => {
+		const onKeyDownHandler = (e) => {
+			if (!fabricCanvasRef.current || activeTool) return
+			const fabricCanvas = fabricCanvasRef.current
+			const activeObject = fabricCanvas.getActiveObject()
+			if (e.key === 'Delete' && activeObject) {
+				const text = fabricCanvas
+					.getObjects()
+					.find((obj) => obj.type === 'textbox' && obj.id == activeObject.metadata?.id + '_text')
+				if (text) {
+					fabricCanvas.remove(text)
+				}
+				fabricCanvas.remove(activeObject)
+				fabricCanvas.discardActiveObject()
+				fabricCanvas.renderAll()
+
+				setImages((prev) => prev.filter((img) => img.id !== activeObject.metadata?.id))
+				setSelectedObject(null)
+				e.preventDefault()
 			}
 		}
 
@@ -156,113 +187,85 @@ function DrawDiagram() {
 		return () => {
 			window.removeEventListener('keydown', onKeyDownHandler)
 		}
-	}, [images]) // Asegúrate de que `images` esté actualizado
+	}, [images, activeTool])
 
-	const addText = async (props) => {
-		if (!props.statusTitle) return
+	const textDiagram = async (props, type = '') => {
 		const fabricCanvas = fabricCanvasRef.current
+		if (!fabricCanvas) return
 
-		// Buscar si ya existe un grupo con el metadata
-		let group = fabricCanvas.getObjects().find((obj) => obj.metadata === props.id + 'group')
+		const left = props?.e?.offsetX || props.left
+		const top = props?.e?.offsetY || props.top
 
-		if (group) {
-			// Si el grupo ya existe, actualizar texto y fondo
-			const textObj = group
-				.getObjects()
-				.find((obj) => obj.type === 'text' || obj.type === 'i-text' || obj.type === 'textbox')
-			const background = group.getObjects().find((obj) => obj.type === 'rect')
-			if (textObj) {
-				textObj.set('text', props.title)
-				textObj.set('fontSize', props.sizeText || textObj.fontSize)
-				textObj.set('fill', props.colorText || textObj.fill)
-			}
-
-			if (background) {
-				background.set('width', textObj.width + 20)
-				background.set('height', textObj.height + 10)
-				background.set('fill', props.backgroundText || background.fill)
-			}
-
-			const { left, top } = await ubicationText(props, textObj)
-			group.set('width', background.width)
-			group.set('height', background.height)
-			group.set('left', left)
-			group.set('top', top)
-			// Renderizar el canvas para reflejar los cambios
-			await fabricCanvas.renderAll()
+		if (!props.id) {
+			const text = await newTextCanva(fabricCanvas.getObjects().length + 1, fabricCanvas, left, top, null)
+			setSelectedObject(text)
+			const updatedTexts = [...texts, text]
+			setTexts(updatedTexts)
 		} else {
-			// Si el grupo no existe, crearlo
-			const text = new fabric.Textbox(props.title, {
-				fontSize: props.sizeText || 20,
-				fill: props.colorText || 'black',
-				maxWidth: 150,
-				textAlign: 'center',
-				originX: 'center',
-				originY: 'center',
-			})
-			text.metadata = props.id + 'text'
-
-			const background = new fabric.Rect({
-				width: text.width + 20,
-				height: text.height + 10,
-				fill: props.backgroundText || 'white',
-				originX: 'center',
-				originY: 'center',
-			})
-			background.metadata = props.id + 'background'
-			const { left, top } = await ubicationText(props, text)
-			const group = new fabric.Group([background, text], {
-				left: left,
-				top: top,
-			})
-			group.metadata = props.id + 'group'
-			fabricCanvas.add(group)
-			fabricCanvas.renderAll()
+			if (type == 'Influx') {
+				let text_influx = fabricCanvas
+					.getObjects()
+					.find((obj) => obj.type === 'textbox' && obj.id == `${props.id}_text_influx`)
+				await updateTextInflux(props, fabricCanvas, text_influx)
+			} else {
+				let group = fabricCanvas.getObjects().find((obj) => obj.metadata.id === props.id)
+				await editTextCanva(props, fabricCanvas, group)
+			}
+		}
+		fabricCanvas.renderAll()
+	}
+	const showValueInflux = async (img, status) => {
+		const fabricCanvas = fabricCanvasRef.current
+		if (!fabricCanvas) return
+		if (status) {
+			await addTextImgInflux(img)
+		} else {
+			const text = fabricCanvas.getObjects().find((obj) => obj.id == img.id + '_text_influx')
+			if (text) {
+				fabricCanvas.remove(text)
+			}
 		}
 	}
-	const ubicationText = async (props, text) => {
-		const leftImg = props.left
-		const topImg = props.top
-		const widthImg = props.width
-		const heightImg = props.height
+	const addTextImg = async (props) => {
+		const fabricCanvas = fabricCanvasRef.current
+		if (!fabricCanvas) return
 
-		let left = 0
-		let top = 0
-		// Ajuste en el cálculo de la posición del texto
-		switch (props.textPosition) {
-			case 'Left':
-				left = leftImg - text.width - 40 // A la izquierda de la imagen
-				top = topImg + heightImg / 2 - text.height / 2 // Centrado verticalmente respecto a la imagen
-				break
-			case 'Right':
-				left = leftImg + widthImg + 20 // A la derecha de la imagen
-				top = topImg + heightImg / 2 - text.height / 2 // Centrado verticalmente respecto a la imagen
-				break
-			case 'Top':
-				left = leftImg + widthImg / 2 - text.width / 2 // Centrado horizontalmente sobre la imagen
-				top = topImg - text.height - 10 // Arriba de la imagen
-				break
-			case 'Bottom':
-				left = leftImg + widthImg / 2 - text.width / 2 // Centrado horizontalmente debajo de la imagen
-				top = topImg + heightImg + 15 // Debajo de la imagen
-				break
-			case 'Center':
-				left = leftImg + widthImg / 2 - text.width / 2 // Centrado horizontalmente sobre la imagen
-				top = topImg + heightImg / 2 - text.height / 2 // Centrado verticalmente sobre la imagen
-				break
-			default:
-				left = leftImg + widthImg / 2 - text.width / 2 // Centrado horizontalmente por defecto
-				top = topImg + heightImg / 2 - text.height / 2 // Centrado verticalmente por defecto
-				break
+		let text = fabricCanvas.getObjects().find((obj) => obj.type === 'textbox' && obj.id == `${props.id}_text`)
+
+		if (!props?.statusText) {
+			fabricCanvas.remove(text)
+			return false
+		}
+		if (text && props.statusText) {
+			await editTextCanva(props, fabricCanvas, text)
+		} else {
+			await newTextCanva(props.id, fabricCanvas, props.left, props.top, props)
 		}
 
-		return { left, top }
+		await fabricCanvas.renderAll()
 	}
+	const addTextImgInflux = async (props) => {
+		const fabricCanvas = fabricCanvasRef.current
+		if (!fabricCanvas) return
 
+		let text_influx = fabricCanvas
+			.getObjects()
+			.find((obj) => obj.type === 'textbox' && obj.id == `${props.id}_text_influx`)
+		if (!props?.showValue) {
+			fabricCanvas.remove(text_influx)
+			return false
+		}
+		if (text_influx) {
+			await updateTextInflux(props, fabricCanvas, text_influx)
+		} else {
+			await createTextInflux(props, fabricCanvas)
+		}
+		await fabricCanvas.renderAll()
+	}
 	return (
 		<CardCustom
 			className={
-				'w-full h-full flex flex-col items-center justify-center text-black dark:text-white relative p-3 rounded-md'
+				'w-full  h-full flex flex-col items-center justify-center text-black dark:text-white relative p-3 rounded-md'
 			}
 		>
 			<div
@@ -275,11 +278,16 @@ function DrawDiagram() {
 				<div className={`flex w-full ${styles.hscreenCustom} `}>
 					<canvas ref={canvasRef} width={1000} height={600} style={{ border: '1px solid black' }} />
 				</div>
-				<div className='absolute top-2 left-2 w-1/4'>
+				<div className='absolute top-2 left-2 w-1/4 '>
 					<ToolsCanvas
 						selectedObject={selectedObject}
-						AddText={addText}
+						AddTextImg={addTextImg}
+						AddTextImgInflux={addTextImgInflux}
+						newText={textDiagram}
 						convertToImagenTopic={handleConvertToImagenTopic}
+						changeCursor={changeCursor}
+						onToolSelected={onToolSelected}
+						showValueInflux={showValueInflux}
 					/>
 				</div>
 			</div>

@@ -32,6 +32,7 @@ import styles from '../utils/css/styles.module.css'
 import { io } from 'socket.io-client'
 import Cookies from 'js-cookie'
 import Logo from '/src/assets/img/Logo/LogoTextAgua.png'
+import { list_menu } from '../../ConfigMenu/components/PermissionMenu/components/data'
 function NavBarCustom({ setLoading }) {
 	const [open, setOpen] = useState(false)
 	const [nameCoop, setNameCoop] = useState('')
@@ -121,7 +122,7 @@ function NavBarCustom({ setLoading }) {
 	}
 
 	const getPermissions = async () => {
-		const permiso = await getPermissionDb()
+		const permiso = import.meta.env.VITE_WIFI == 'sin' ? list_menu : await getPermissionDb()
 		setPermission(permiso)
 		await groupedMenu(permiso)
 		setLoading(true)

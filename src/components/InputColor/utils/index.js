@@ -9,9 +9,9 @@ export const hexToRgb = (hex) => {
 }
 
 export const parseRgba = (rgba) => {
-	if (!rgba.startsWith('rgba')) return { color: '#000000', opacity: 1 }
+	if (!rgba?.startsWith('rgba')) return { color: '#ffffff', opacity: 1 }
 	const parts = rgba.match(/rgba?\((\d+), (\d+), (\d+), ([0-9.]+)\)/)
-	if (!parts) return { color: '#000000', opacity: 1 }
+	if (!parts) return { color: '#ffffff', opacity: 1 }
 	const [_, r, g, b, a] = parts
 	return { color: rgbToHex(r, g, b), opacity: parseFloat(a) }
 }
