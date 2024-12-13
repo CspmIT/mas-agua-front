@@ -1,3 +1,4 @@
+import Swal from 'sweetalert2'
 import { backend } from '../../../utils/routes/app.routes'
 import { request, requestAuth } from './requesLogin'
 
@@ -17,7 +18,8 @@ export const logeoApp = async (usuarioId, schema, cliente = false) => {
 		const token = await request(urlToken, 'POST', info)
 		return token.data
 	} catch (error) {
-		return { error: error }
+		Swal.fire({ title: 'Atención!', text: error, icon: 'warning' })
+		return false
 	}
 }
 export const schemaName = async (clientId, productId) => {
@@ -52,12 +54,12 @@ export const getProduct = async (productName, clientID, usuarioId) => {
 
 export const getProductActive = async () => {
 	try {
-		const tokencooptech = storage.get('usuario') || storage.get('usuarioCooptech')
+		const tokencooptech = storage.get('usuarioCooptech') || storage.get('usuario')
 		const usuarioCooptech = storage.get('usuarioCooptech').id_user
 		const clientID =
-			tokencooptech.cliente.length > 1
+			tokencooptech.cliente?.length > 1
 				? tokencooptech.cliente.find((item) => item.selected).id
-				: tokencooptech.cliente[0].id
+				: tokencooptech.cliente.id
 		const url =
 			backend.Cooptech + `/getListProdct?id_user=${usuarioCooptech || tokencooptech.sub}&id_client=${clientID}`
 		const product = await requestAuth(url, 'GET').then((data) => {

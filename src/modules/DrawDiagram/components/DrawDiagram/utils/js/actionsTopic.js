@@ -1,5 +1,5 @@
-import { ImageDiagram, ImageTopic } from '../../../../class/Image'
-import { TextDiagram } from '../../../../class/Text'
+import { ImageDiagram, ImageTopic } from '../../../../class/ImageClass'
+import { TextDiagram } from '../../../../class/TextClass'
 import * as fabric from 'fabric'
 import { calcWidthText } from './actions'
 

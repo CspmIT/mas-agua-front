@@ -1,5 +1,6 @@
-import { ImageDiagram, ImageTopic } from '../../../../class/Image'
-import { TextDiagram } from '../../../../class/Text'
+import { ImageDiagram, ImageTopic } from '../../../../class/ImageClass'
+import { LineDiagram } from '../../../../class/LineClass'
+import { TextDiagram } from '../../../../class/TextClass'
 import * as fabric from 'fabric'
 export const calcWidthText = (texto, fontSize) => {
 	// Crear un canvas temporal para medir el ancho del texto
@@ -151,6 +152,7 @@ const classMap = {
 	TextDiagram,
 	ImageDiagram,
 	ImageTopic,
+	LineDiagram,
 }
 
 /**

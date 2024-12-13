@@ -18,4 +18,5 @@ export const ListImg = () => [
 	{ id: 16, name: 'Filtro cartucho', src: `${urlBase}/Filtro_cartucho.png`, animation: false },
 	{ id: 17, name: 'Filtro de manga', src: `${urlBase}/Tubos_osmosis.png`, animation: false },
 	{ id: 18, name: 'Instrumento', src: `${urlBase}/Sonda_conductimetro.png`, animation: false },
+	{ id: 19, name: 'Indicador Luminoso', src: `${urlBase}/Sonda_conductimetro.png`, animation: false },
 ]

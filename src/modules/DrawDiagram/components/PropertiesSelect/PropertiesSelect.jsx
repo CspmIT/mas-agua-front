@@ -1,6 +1,6 @@
 import { Typography } from '@mui/material'
 import styles from '../../utils/css/style.module.css'
-import { ImageDiagram } from '../../class/Image'
+import { ImageDiagram } from '../../class/ImageClass'
 import FormPropImg from './FormPropImg'
 function PropertiesSelect({ data, AddText, AddTextInflux, convertToImagenTopic, showValueInflux }) {
 	// if (!data) return null

@@ -3,10 +3,12 @@ import { useEffect, useRef, useState } from 'react'
 import CardCustom from '../../../../components/CardCustom'
 import styles from '../../utils/css/style.module.css'
 import ToolsCanvas from '../ToolsCanvas/ToolsCanvas'
-import { ImageDiagram, ImageTopic } from '../../class/Image'
+import { ImageDiagram, ImageTopic } from '../../class/ImageClass'
 import Swal from 'sweetalert2'
 import { createImage, editTextCanva, getInstanceType, newTextCanva } from './utils/js/actions'
 import { createTextInflux, updateTextInflux } from './utils/js/actionsTopic'
+import { drawLine, getPiontsLine } from '../DrawLine/utils/js/line'
+import { LineDiagram } from '../../class/LineClass'
 
 function DrawDiagram() {
 	const canvasRef = useRef(null) // Referencia al elemento canvas
@@ -15,7 +17,8 @@ function DrawDiagram() {
 	const [activeTool, setActiveTool] = useState(null)
 	const [images, setImages] = useState([])
 	const [texts, setTexts] = useState([])
-
+	const [pointer, setPointer] = useState([])
+	const [lines, setLines] = useState([])
 	const changeCursor = (customCursor) => {
 		const fabricCanvas = fabricCanvasRef.current
 		if (!fabricCanvas) return
@@ -23,24 +26,38 @@ function DrawDiagram() {
 		fabricCanvas.defaultCursor = customCursor
 	}
 
-	const clickOptions = (e) => {
+	const clickOptions = async (e) => {
 		const fabricCanvas = fabricCanvasRef.current
 		const currentCursor = fabricCanvas?.defaultCursor
-
+		const selected = fabricCanvas.getActiveObject()
+		if (e.target?.type == 'circle') {
+		}
+		// FALTA PODER IDENTIFICAR CUANDO ES LINE Y CUANDO ES POLYLINE CON EL ACTIVETOOL O VER DE QUE MANERA HACERLO
 		if (currentCursor == 'default') {
-			const selected = e.target
-			if (selected && selected.metadata) {
-				setSelectedObject(selected.metadata) // Actualiza el estado con el objeto relacionado
-			} else {
+			if (!selected || !selected?.metadata) {
 				setSelectedObject(null)
 			}
 		}
 		if (currentCursor == 'text') {
+			changeTool(false)
 			textDiagram(e)
 			changeCursor('default')
 		}
-		onToolSelected(false)
+		if (currentCursor == 'pointer') {
+			const newLine = await drawLine(e.pointer, fabricCanvasRef, setPointer, changeCursor, lines)
+			if (newLine) {
+				const dataLine = {
+					id: newLine.id,
+					points: getPiontsLine(newLine),
+				}
+				const line = new LineDiagram(dataLine)
+				newLine.metadata = line
+				const newListLines = [...lines, line]
+				setLines(newListLines)
+			}
+		}
 	}
+
 	useEffect(() => {
 		const canvasElement = canvasRef.current
 		if (canvasElement) {
@@ -107,24 +124,29 @@ function DrawDiagram() {
 		if (selected) {
 			switch (selected.type) {
 				case 'textbox':
-					// Manejar selección de un textbox
+					changeTool(null)
+					setSelectedObject(selected.metadata)
 					textDiagram(selected)
 					break
-
 				case 'image':
-					// Verificar que 'metadata' esté presente antes de usarla
 					if (selected.metadata) {
+						setSelectedObject(selected.metadata)
 						addTextImg(selected.metadata)
 					}
 					break
-
+				case 'line':
+					if (selected.metadata) {
+						setSelectedObject(selected.metadata)
+						addTextImg(selected.metadata)
+					}
+					break
 				default:
-					// Manejar selección de otros tipos de objetos
+					changeTool(null)
 					console.log('Se seleccionó otro tipo de objeto:', selected)
 					break
 			}
 		} else {
-			setSelectedObject(null)
+			changeTool(null)
 		}
 	}
 
@@ -155,10 +177,6 @@ function DrawDiagram() {
 		} catch (error) {
 			Swal.fire({ title: 'Atención!', text: error, icon: 'warning' })
 		}
-	}
-
-	const onToolSelected = (tool) => {
-		setActiveTool(tool) // Actualiza el estado de la herramienta activa
 	}
 
 	useEffect(() => {
@@ -262,6 +280,10 @@ function DrawDiagram() {
 		}
 		await fabricCanvas.renderAll()
 	}
+
+	const changeTool = async (tool) => {
+		setActiveTool(tool)
+	}
 	return (
 		<CardCustom
 			className={
@@ -286,7 +308,7 @@ function DrawDiagram() {
 						newText={textDiagram}
 						convertToImagenTopic={handleConvertToImagenTopic}
 						changeCursor={changeCursor}
-						onToolSelected={onToolSelected}
+						onPropertySelected={changeTool}
 						showValueInflux={showValueInflux}
 					/>
 				</div>

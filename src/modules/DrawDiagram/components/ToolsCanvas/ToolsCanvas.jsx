@@ -8,6 +8,8 @@ import PropertiesSelect from '../PropertiesSelect/PropertiesSelect'
 import { FaTools } from 'react-icons/fa'
 import DrawText from '../DrawText/DrawText'
 import { getInstanceType } from '../DrawDiagram/utils/js/actions'
+import DrawLine from '../DrawLine/DrawLine'
+import DrawPolyLine from '../DrawPolyLine/DrawPolyLine'
 
 function ToolsCanvas({
 	selectedObject,
@@ -16,46 +18,52 @@ function ToolsCanvas({
 	newText,
 	convertToImagenTopic,
 	changeCursor,
-	onToolSelected,
+	onPropertySelected,
 	showValueInflux,
 }) {
 	const [alignment, setAlignment] = useState('web')
 
-	const handleChange = (event, newAlignment) => {
+	const handleChange = async (event, newAlignment) => {
 		setAlignment(newAlignment)
-		if (newAlignment === 'Text') {
-			changeCursor('text')
-		} else {
-			changeCursor('default')
+		await onPropertySelected(newAlignment)
+		switch (newAlignment) {
+			case 'Text':
+				changeCursor('text')
+				break
+			case 'Line':
+			case 'PolyLine':
+				changeCursor('pointer')
+				break
+			default:
+				changeCursor('default')
+				break
 		}
 	}
 
 	useEffect(() => {
-		let tool = null
 		switch (getInstanceType(selectedObject)) {
 			case 'TextDiagram':
 				setAlignment(selectedObject ? 'Text' : null)
-				tool = 'Text'
 				break
 			case 'ImageDiagram':
 			case 'ImageTopic':
 				setAlignment(selectedObject ? 'Property' : null)
-				tool = 'Property'
+				break
+			case 'LineDiagram':
+				setAlignment(selectedObject ? 'Line' : null)
 				break
 			default:
 				setAlignment(null)
 				break
 		}
 	}, [selectedObject])
-
 	const handleComponentClick = (componentName) => {
-		if (['DrawText', 'MenuObject', 'PropertiesSelect'].includes(componentName)) {
-			onToolSelected(componentName)
+		if (['DrawLine', 'DrawPolyLine', 'DrawText', 'MenuObject', 'PropertiesSelect'].includes(componentName)) {
+			onPropertySelected(componentName)
 		} else {
-			onToolSelected(null)
+			onPropertySelected(false)
 		}
 	}
-
 	return (
 		<>
 			<ToggleButtonGroup
@@ -69,7 +77,7 @@ function ToolsCanvas({
 				<ToggleButton value='Line'>
 					<IoRemoveOutline />
 				</ToggleButton>
-				<ToggleButton value='PoliLine'>
+				<ToggleButton value='PolyLine'>
 					<MdOutlinePolyline />
 				</ToggleButton>
 				<ToggleButton value='Text'>
@@ -82,6 +90,16 @@ function ToolsCanvas({
 					<FaTools className={`${alignment === 'Property' ? 'text-blue-500' : ''}`} />
 				</ToggleButton>
 			</ToggleButtonGroup>
+			{alignment === 'Line' && selectedObject ? (
+				<div onClick={() => handleComponentClick('DrawLine')}>
+					<DrawLine selectedObject={selectedObject} AddText={newText} />
+				</div>
+			) : null}
+			{alignment === 'PolyLine' && selectedObject ? (
+				<div onClick={() => handleComponentClick('PolyLine')}>
+					<DrawPolyLine selectedObject={selectedObject} AddText={newText} />
+				</div>
+			) : null}
 			{alignment === 'Text' && selectedObject ? (
 				<div onClick={() => handleComponentClick('DrawText')}>
 					<DrawText selectedObject={selectedObject} AddText={newText} />
