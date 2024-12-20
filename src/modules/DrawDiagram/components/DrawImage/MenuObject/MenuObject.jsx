@@ -1,7 +1,7 @@
 import { Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
-import { ListImg } from '../../utils/js/ListImg'
-import styles from '../../utils/css/style.module.css'
+import styles from '../../../utils/css/style.module.css'
+import { ListImg } from '../../../utils/js/ListImg'
 
 function MenuObject() {
 	const [images, setImages] = useState([])

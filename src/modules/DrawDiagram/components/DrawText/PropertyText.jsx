@@ -3,7 +3,7 @@ import InputColor from '../../../../components/InputColor/InputColor'
 import { TextField } from '@mui/material'
 import { parseRgba } from '../../../../components/InputColor/utils'
 
-function PropertyText({ data, AddText }) {
+function PropertyText({ data, AddText, fabricCanvasRef }) {
 	const [info, setInfo] = useState(data)
 	const [backgroundText, setBackgroudText] = useState(info?.backgroundText || '#ffffff')
 
@@ -11,28 +11,28 @@ function PropertyText({ data, AddText }) {
 		data.setText(string)
 		const infoUpdate = { ...info, text: string }
 		setInfo(infoUpdate)
-		AddText(infoUpdate)
+		AddText(infoUpdate, fabricCanvasRef)
 	}
 
 	const changeSizeText = (size) => {
 		data.setSizeText(size)
 		const infoUpdate = { ...info, sizeText: size }
 		setInfo(infoUpdate)
-		AddText(infoUpdate)
+		AddText(infoUpdate, fabricCanvasRef)
 	}
 
 	const changeColorText = (color) => {
 		data.setColorText(color)
 		const infoUpdate = { ...info, colorText: color }
 		setInfo(infoUpdate)
-		AddText(infoUpdate)
+		AddText(infoUpdate, fabricCanvasRef)
 	}
 
 	const updateBackground = (rgbaColor) => {
 		data.setBackgroundTextColor(rgbaColor)
 		const infoUpdate = { ...info, backgroundText: rgbaColor }
 		setInfo(infoUpdate)
-		AddText(infoUpdate)
+		AddText(infoUpdate, fabricCanvasRef)
 	}
 
 	useEffect(() => {

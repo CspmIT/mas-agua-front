@@ -4,8 +4,9 @@ import PropertyTopic from './PropertiesInflux/PropertyTopic'
 import PropertyTextImg from './PropertyTextImg/PropertyTextImg'
 import PropertyAnimation from './PropertyAnimation/PropertyAnimation'
 import Swal from 'sweetalert2'
+import { addTextToCanvas } from '../utils/js/actionImage'
 
-function FormPropImg({ data, AddText, AddTextInflux, convertToImagenTopic, showValueInflux }) {
+function FormPropImg({ data, fabricCanvasRef, handleChangeTypeImg }) {
 	const [info, setInfo] = useState(data)
 	const [checkBoxText, setCheckBoxText] = useState(Boolean(info?.statusText))
 	const [checkBoxTopic, setCheckBoxTopic] = useState(Boolean(info?.statusTopic))
@@ -14,7 +15,7 @@ function FormPropImg({ data, AddText, AddTextInflux, convertToImagenTopic, showV
 		setCheckBoxText(status)
 		const newInfo = { ...info, statusText: status }
 		setInfo(newInfo)
-		AddText(newInfo)
+		addTextToCanvas(newInfo, fabricCanvasRef)
 		data.setStatusText(status)
 	}
 	const activeTopic = async (status) => {
@@ -38,10 +39,10 @@ function FormPropImg({ data, AddText, AddTextInflux, convertToImagenTopic, showV
 		if (status == false) {
 			data.setShowValue(status)
 			const newInfo2 = { ...newInfo, showValue: status }
-			showValueInflux(newInfo2, status)
+			await addTextToCanvas(newInfo2, fabricCanvasRef, 'influx')
 			setInfo(newInfo2)
 		}
-		await convertToImagenTopic(newInfo.id, status)
+		await handleChangeTypeImg(newInfo.id, status)
 	}
 
 	useEffect(() => {
@@ -75,7 +76,7 @@ function FormPropImg({ data, AddText, AddTextInflux, convertToImagenTopic, showV
 					</div>
 				</AccordionSummary>
 				<AccordionDetails>
-					<PropertyTextImg AddText={AddText} data={data} />
+					<PropertyTextImg AddText={addTextToCanvas} fabricCanvasRef={fabricCanvasRef} data={data} />
 				</AccordionDetails>
 			</Accordion>
 			<Accordion
@@ -94,7 +95,7 @@ function FormPropImg({ data, AddText, AddTextInflux, convertToImagenTopic, showV
 					</div>
 				</AccordionSummary>
 				<AccordionDetails>
-					<PropertyTopic data={data} showValueInflux={showValueInflux} AddText={AddTextInflux} />
+					<PropertyTopic data={data} fabricCanvasRef={fabricCanvasRef} />
 				</AccordionDetails>
 			</Accordion>
 		</>

@@ -1,9 +1,8 @@
 import { Typography } from '@mui/material'
-import styles from '../../utils/css/style.module.css'
-import { ImageDiagram } from '../../class/ImageClass'
+import styles from '../../../utils/css/style.module.css'
+import { ImageDiagram } from '../../../class/ImageClass'
 import FormPropImg from './FormPropImg'
-function PropertiesSelect({ data, AddText, AddTextInflux, convertToImagenTopic, showValueInflux }) {
-	// if (!data) return null
+function PropertiesSelect({ data, fabricCanvasRef, handleChangeTypeImg }) {
 	return (
 		<div className={`w-full pt-4 bg-white `}>
 			<div className='flex w-full justify-center items-center border-b-2 mb-4'>
@@ -16,10 +15,8 @@ function PropertiesSelect({ data, AddText, AddTextInflux, convertToImagenTopic, 
 				{data instanceof ImageDiagram ? (
 					<FormPropImg
 						data={data}
-						AddText={AddText}
-						AddTextInflux={AddTextInflux}
-						convertToImagenTopic={convertToImagenTopic}
-						showValueInflux={showValueInflux}
+						fabricCanvasRef={fabricCanvasRef}
+						handleChangeTypeImg={handleChangeTypeImg}
 					/>
 				) : null}
 			</div>

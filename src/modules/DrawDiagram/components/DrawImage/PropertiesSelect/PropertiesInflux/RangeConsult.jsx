@@ -47,45 +47,6 @@ function RangeConsult({ data }) {
 					<MenuItem value='y'>Año</MenuItem>
 				</TextField>
 			</div>
-			{/* <TextField
-				select
-				label='Tipo de Sensor'
-				onChange={(e) => {
-					if (e.target.value == '') return false
-					handlechangeTypeRange(e.target.value)
-				}}
-				className='w-full'
-				value={info.rangeConsult || 'last'}
-			>
-				<MenuItem value='last'>Último Valor</MenuItem>
-				<MenuItem value='time'>Rango de Tiempo</MenuItem>
-			</TextField>
-			{info.rangeConsult == 'time' && (
-				<div className='flex gap-3'>
-					<TextField
-						type='number'
-						label='Valor Mínimo'
-						id='minParam'
-						name='minParam'
-						onChange={(e) => handleChangeParam('min', e.target.value)}
-						className='w-1/2'
-						value={info?.startRange || ''}
-					/>
-					<TextField
-						select
-						label='Tipo de Sensor'
-						onChange={(e) => {
-							if (e.target.value == '') return false
-							handlechangeTypeRange(e.target.value)
-						}}
-						className='w-full'
-						value={info.rangeConsult || 'last'}
-					>
-						<MenuItem value='last'>Último Valor</MenuItem>
-						<MenuItem value='time'>Rango de Tiempo</MenuItem>
-					</TextField>
-				</div>
-			)} */}
 		</>
 	)
 }

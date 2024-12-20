@@ -1,109 +1,109 @@
-import { ImageDiagram, ImageTopic } from '../../../../class/ImageClass'
-import { TextDiagram } from '../../../../class/TextClass'
 import * as fabric from 'fabric'
 import { calcWidthText } from './actions'
 
 /**
- * Calcula la posición del texto en base a las propiedades del elemento al que está asociado.
+ * Calcula la posición del texto en base a la posición y tamaño del elemento asociado.
  *
- * @param {Object} props - Propiedades del elemento (posición, tamaño, posición del texto).
+ * @param {Object} img - Propiedades de la imagen (posición, tamaño y ubicación del texto).
  * @param {fabric.Textbox} text - Objeto de texto de Fabric.js.
- * @returns {Object} Coordenadas calculadas {left, top}.
- * @author Jose Romani <jose.romani@hotmail.com>
+ * @returns {{left: number, top: number}} Coordenadas calculadas para la posición del texto.
  */
-export const calcTextPositionInflux = (props, text) => {
-	const { left: leftImg, top: topImg, width: widthImg, height: heightImg } = props
-	let left = leftImg
-	let top = topImg
-	switch (props.valuePosition) {
-		case 'Left':
-			left = leftImg - text.width - 20
-			top = topImg + heightImg / 2 - text.height / 2
-			break
-		case 'Right':
-			left = leftImg + widthImg + 20
-			top = topImg + heightImg / 2 - text.height / 2
-			break
-		case 'Top':
-			left = leftImg + widthImg / 2 - text.width / 2
-			top = topImg - text.height - 20
-			break
-		case 'Bottom':
-			left = leftImg + widthImg / 2 - text.width / 2
-			top = topImg + heightImg + 15
-			break
-		case 'Center':
-			left = leftImg + widthImg / 2 - text.width / 2
-			top = topImg + heightImg / 2 - text.height / 2
-			break
-		default:
-			left = leftImg + widthImg / 2 - text.width / 2
-			top = topImg + heightImg / 2 - text.height / 2
-			break
+export const calculateTextPosition = (img, text) => {
+	const { left, top, width, height, valuePosition } = img
+
+	// Mapa de posiciones predefinidas
+	const positions = {
+		Left: () => ({
+			left: left - text.width - 20,
+			top: top + height / 2 - text.height / 2,
+		}),
+		Right: () => ({
+			left: left + width + 20,
+			top: top + height / 2 - text.height / 2,
+		}),
+		Top: () => ({
+			left: left + width / 2 - text.width / 2,
+			top: top - text.height - 10,
+		}),
+		Bottom: () => ({
+			left: left + width / 2 - text.width / 2,
+			top: top + height + 15,
+		}),
+		Center: () => ({
+			left: left + width / 2 - text.width / 2,
+			top: top + height / 2 - text.height / 2,
+		}),
 	}
 
-	return { left, top }
+	// Retorna la posición especificada o la posición 'Top' por defecto
+	return (positions[valuePosition] || positions.Top)()
 }
-
-export const createTextInflux = async (props, fabricCanvas) => {
+/**
+ * Crea un nuevo Textbox asociado a valores de InfluxDB en el canvas de Fabric.js.
+ *
+ * @param {Object} propsImg - Propiedades del elemento asociado.
+ * @param {fabric.Canvas} fabricCanvas - Canvas principal de Fabric.js.
+ * @returns No retorna valor.
+ */
+export const createTextInflux = (propsImg, fabricCanvas) => {
 	if (!fabricCanvas) return
-	const newText = props
-	let texto = props.field.map((item) => `${item.field} ${item.uni}`).join('\n') || 'Valores de Influx'
-	const maxWidth = calcWidthText(texto, props.sizeTextValue)
 
-	// texto = texto == '' ? 'Texto predeterminado' : texto
+	const texto = propsImg.field?.map((item) => `${item.field} ${item.uni}`).join('\n') || 'Valores de Influx'
+
+	const maxWidth = calcWidthText(texto, propsImg.sizeTextValue)
+
 	const textbox = new fabric.Textbox(texto, {
-		id: `${props.id}_text_influx`,
-		left: props.left,
-		top: props.top,
-		fontSize: props.sizeTextValue || 20,
+		id: `${propsImg.id}_text_influx`,
+		left: propsImg.left,
+		top: propsImg.top,
+		fontSize: propsImg.sizeTextValue || 20,
 		fontFamily: 'Arial',
 		width: maxWidth,
-		fill: props.colorTextValue || '#000000',
+		fill: propsImg.colorTextValue || '#000000',
 		textAlign: 'center',
-		backgroundColor: props.backgroundTextValue || 'white',
+		backgroundColor: propsImg.backgroundTextValue || 'white',
 		editable: false,
 		selectable: false,
-		lockScalingX: true,
-		lockScalingY: true,
-		lockSkewingX: true,
-		lockSkewingY: true,
 	})
-	if (props?.textPosition) {
-		const { left, top } = calcTextPositionInflux(props, textbox)
-		textbox.set({ left, top })
-	}
-	textbox.metadata = props
+	textbox.metadata = propsImg
 	textbox.metatype = 'Influx'
-	// Agregar el textbox al canvas
-	fabricCanvas.add(textbox)
 
-	return newText
+	const { left, top } = calculateTextPosition(propsImg, textbox)
+	textbox.set({
+		left,
+		top,
+	})
+
+	fabricCanvas.add(textbox)
 }
 
-export const updateTextInflux = async (props, fabricCanvas, textbox) => {
-	if (!props || !fabricCanvas || !textbox) return
+/**
+ * Actualiza un Textbox existente con nuevos valores asociados a InfluxDB.
+ *
+ * @param {Object} propsImg - Propiedades actualizadas del elemento.
+ * @param {fabric.Canvas} fabricCanvas - Canvas principal de Fabric.js.
+ * @param {fabric.Textbox} textbox - Objeto Textbox existente en el canvas.
+ * @returns No retorna valor.
+ */
+export const updateTextInflux = (propsImg, fabricCanvas, textbox) => {
+	if (!propsImg || !fabricCanvas || !textbox) return
 
 	// Crear el texto dinámico
-	const texto = props.field?.map((item) => `${item.field} ${item.uni}`).join('\n') || textbox.text
+	const texto = propsImg.field?.map((item) => `${item.field} ${item.uni}`).join('\n') || textbox.text
+
+	// Calcula el nuevo ancho para el texto
 	const maxWidth = calcWidthText(texto, textbox.fontSize)
 
 	// Ajustar el Textbox para que tenga el ancho de la frase más larga
 	textbox.set({
 		text: texto,
 		width: maxWidth, // Usar el ancho calculado
-		fontSize: props.sizeTextValue || textbox.fontSize,
-		fill: props.colorTextValue || textbox.fill,
-		backgroundColor: props.backgroundTextValue || textbox.backgroundColor,
+		fontSize: propsImg.sizeTextValue || textbox.fontSize,
+		fill: propsImg.colorTextValue || textbox.fill,
+		backgroundColor: propsImg.backgroundTextValue || textbox.backgroundColor,
 	})
 
 	// Calcular la posición ajustada (usa tu función `calcTextPositionInflux`)
-	const { left, top } = calcTextPositionInflux(props, textbox)
-	textbox.set({
-		left,
-		top,
-	})
-
-	// Renderizar cambios en el canvas
-	fabricCanvas.renderAll()
+	const { left, top } = calculateTextPosition(propsImg, textbox)
+	textbox.set({ left, top })
 }

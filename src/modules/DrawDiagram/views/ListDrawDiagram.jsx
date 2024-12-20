@@ -1,8 +1,8 @@
-import { Button, IconButton } from '@mui/material'
+import { IconButton } from '@mui/material'
 import CardCustom from '../../../components/CardCustom'
 import TableCustom from '../../../components/TableCustom'
 import { ColumnsListDiagram } from '../utils/js/ColumnsList'
-import { Add, PlusOne } from '@mui/icons-material'
+import { Add } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 
 const ListDrawDiagram = () => {
@@ -10,6 +10,7 @@ const ListDrawDiagram = () => {
 	const editDiagram = (id) => {
 		console.log(id)
 	}
+
 	return (
 		<CardCustom
 			className={

@@ -1,13 +1,13 @@
 import { MenuItem, TextField } from '@mui/material'
 import { useState } from 'react'
-import PropertyText from '../../DrawText/PropertyText'
+import PropertyText from '../../../DrawText/PropertyText'
 
-function PropertyTextImg({ data, AddText }) {
+function PropertyTextImg({ data, fabricCanvasRef, AddText }) {
 	const [info, setInfo] = useState(data)
 
 	return (
 		<div className='flex flex-col gap-4'>
-			<PropertyText data={data} AddText={AddText} />
+			<PropertyText data={data} AddText={AddText} fabricCanvasRef={fabricCanvasRef} />
 			<TextField
 				select
 				label='Posición del Texto'
@@ -18,7 +18,7 @@ function PropertyTextImg({ data, AddText }) {
 					data.setTextPosition(value)
 					const infoUpdate = { ...info, textPosition: value }
 					setInfo(infoUpdate)
-					AddText(data)
+					AddText(data, fabricCanvasRef)
 				}}
 				className='w-full'
 				value={info.textPosition || ''}

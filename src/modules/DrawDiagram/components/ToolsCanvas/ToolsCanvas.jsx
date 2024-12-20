@@ -3,39 +3,32 @@ import { useEffect, useState } from 'react'
 import { IoImagesOutline, IoRemoveOutline } from 'react-icons/io5'
 import { MdOutlinePolyline } from 'react-icons/md'
 import { RiText } from 'react-icons/ri'
-import MenuObject from '../MenuObject/MenuObject'
-import PropertiesSelect from '../PropertiesSelect/PropertiesSelect'
 import { FaTools } from 'react-icons/fa'
 import DrawText from '../DrawText/DrawText'
 import { getInstanceType } from '../DrawDiagram/utils/js/actions'
 import DrawLine from '../DrawLine/DrawLine'
 import DrawPolyLine from '../DrawPolyLine/DrawPolyLine'
+import PropertiesSelect from '../DrawImage/PropertiesSelect/PropertiesSelect'
+import MenuObject from '../DrawImage/MenuObject/MenuObject'
+import { cleanSelectionCanvas } from './utils/js'
 
-function ToolsCanvas({
-	selectedObject,
-	AddTextImg,
-	AddTextImgInflux,
-	newText,
-	convertToImagenTopic,
-	changeCursor,
-	onPropertySelected,
-	showValueInflux,
-}) {
+function ToolsCanvas({ selectedObject, handleChangeTypeImg, fabricCanvasRef, onPropertySelected }) {
 	const [alignment, setAlignment] = useState('web')
 
 	const handleChange = async (event, newAlignment) => {
 		setAlignment(newAlignment)
-		await onPropertySelected(newAlignment)
+		onPropertySelected(newAlignment)
+		cleanSelectionCanvas(fabricCanvasRef)
 		switch (newAlignment) {
 			case 'Text':
-				changeCursor('text')
+				fabricCanvasRef.current?.set({ defaultCursor: 'text' })
 				break
 			case 'Line':
-			case 'PolyLine':
-				changeCursor('pointer')
+			case 'Polyline':
+				if (!selectedObject) fabricCanvasRef.current?.set({ defaultCursor: 'crosshair' })
 				break
 			default:
-				changeCursor('default')
+				fabricCanvasRef.current?.set({ defaultCursor: 'default' })
 				break
 		}
 	}
@@ -51,6 +44,9 @@ function ToolsCanvas({
 				break
 			case 'LineDiagram':
 				setAlignment(selectedObject ? 'Line' : null)
+				break
+			case 'PolylineDiagram':
+				setAlignment(selectedObject ? 'Polyline' : null)
 				break
 			default:
 				setAlignment(null)
@@ -77,7 +73,7 @@ function ToolsCanvas({
 				<ToggleButton value='Line'>
 					<IoRemoveOutline />
 				</ToggleButton>
-				<ToggleButton value='PolyLine'>
+				<ToggleButton value='Polyline'>
 					<MdOutlinePolyline />
 				</ToggleButton>
 				<ToggleButton value='Text'>
@@ -92,17 +88,17 @@ function ToolsCanvas({
 			</ToggleButtonGroup>
 			{alignment === 'Line' && selectedObject ? (
 				<div onClick={() => handleComponentClick('DrawLine')}>
-					<DrawLine selectedObject={selectedObject} AddText={newText} />
+					<DrawLine selectedObject={selectedObject} fabricCanvasRef={fabricCanvasRef} />
 				</div>
 			) : null}
-			{alignment === 'PolyLine' && selectedObject ? (
-				<div onClick={() => handleComponentClick('PolyLine')}>
-					<DrawPolyLine selectedObject={selectedObject} AddText={newText} />
+			{alignment === 'Polyline' && selectedObject ? (
+				<div onClick={() => handleComponentClick('DrawPolyLine')}>
+					<DrawPolyLine selectedObject={selectedObject} fabricCanvasRef={fabricCanvasRef} />
 				</div>
 			) : null}
 			{alignment === 'Text' && selectedObject ? (
 				<div onClick={() => handleComponentClick('DrawText')}>
-					<DrawText selectedObject={selectedObject} AddText={newText} />
+					<DrawText selectedObject={selectedObject} fabricCanvasRef={fabricCanvasRef} />
 				</div>
 			) : null}
 			{alignment === 'Image' ? (
@@ -114,10 +110,8 @@ function ToolsCanvas({
 				<div onClick={() => handleComponentClick('PropertiesSelect')}>
 					<PropertiesSelect
 						data={selectedObject}
-						AddText={AddTextImg}
-						AddTextInflux={AddTextImgInflux}
-						convertToImagenTopic={convertToImagenTopic}
-						showValueInflux={showValueInflux}
+						fabricCanvasRef={fabricCanvasRef}
+						handleChangeTypeImg={handleChangeTypeImg}
 					/>
 				</div>
 			) : null}
