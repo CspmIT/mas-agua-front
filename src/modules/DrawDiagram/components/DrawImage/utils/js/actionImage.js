@@ -1,7 +1,7 @@
 import * as fabric from 'fabric'
 import { ImageDiagram, ImageTopic } from '../../../../class/ImageClass'
-import { editTextImg, getInstanceType, newTextImg } from '../../../DrawDiagram/utils/js/actions'
-import { createTextInflux, updateTextInflux } from '../../../DrawDiagram/utils/js/actionsTopic'
+import { calcWidthText, getInstanceType } from '../../../../utils/js/drawActions'
+import { createTextInflux, updateTextInflux } from './actionsTopic'
 import Swal from 'sweetalert2'
 
 /**
@@ -18,7 +18,7 @@ export const addTextToCanvas = async (propsImg, fabricCanvasRef, type = 'default
 
 	// Identificación del texto basado en su tipo
 	const textId = type === 'influx' ? `${propsImg.id}_text_influx` : `${propsImg.id}_text`
-	let textObject = fabricCanvas.getObjects().find((obj) => obj.type === 'textbox' && obj.id === textId)
+	let textObject = fabricCanvas.getObjects('textbox').find((obj) => obj.id === textId)
 
 	// Lógica para eliminar texto si no se requiere
 	const shouldRemoveText = type === 'influx' ? !propsImg?.showValue : !propsImg?.statusText
@@ -52,48 +52,51 @@ export const addTextToCanvas = async (propsImg, fabricCanvasRef, type = 'default
  * @returns {ImageDiagram|undefined} - Instancia del objeto ImageDiagram creado.
  * @author Jose Romani <jose.romani@hotmail.com>
  */
-export const createImage = (e, fabricCanvasRef, setSelectedObject, changeTool) => {
-	const imageSrc = e.dataTransfer.getData('text/plain') // URL de la imagen
-	const imageName = e.dataTransfer.getData('name') // URL de la imagen
-	const imageAnimation = JSON.parse(e.dataTransfer.getData('animation')) // URL de la imagen
-	const fabricCanvas = fabricCanvasRef.current
-	if (!fabricCanvas || !imageSrc) return
+export const createImage = (data, fabricCanvasRef, setSelectedObject, changeTool) => {
+	const canvas = fabricCanvasRef.current
+
+	if (canvas.getObjects('image').find((obj) => obj.id == data.id)) return false
 
 	const imgNode = new Image()
-	imgNode.src = imageSrc
 
-	const left = e.nativeEvent.offsetX - 50
-	const top = e.nativeEvent.offsetY - 50
-	const id = Math.random().toString(36).substring(2, 9)
+	imgNode.src = data.src
+	if (data.width && data.height) {
+		imgNode.width = parseInt(data.width)
+		imgNode.height = parseInt(data.height)
+	}
 	const imgnueva = new ImageDiagram({
-		id,
-		name: imageName,
-		statusAnimation: imageAnimation,
-		src: imageSrc,
-		left: left,
-		top: top,
-		width: imgNode.width * 0.25,
-		height: imgNode.height * 0.25,
+		...data,
+		statusAnimation: data.animation,
+		width: parseFloat(data?.width) || imgNode.width,
+		height: parseFloat(data?.height) || imgNode.height,
 	})
-
 	imgNode.onload = () => {
 		// Crear una imagen de Fabric.js con las dimensiones correctas
 		const img = new fabric.FabricImage(imgNode, {
-			left, // Coordenadas iniciales
-			top,
-			scaleX: 0.25, // Escala predeterminada
+			left: data.left,
+			top: data.top,
+			scaleX: 0.25, // Escala inicial (se ajustará después si es necesario)
 			scaleY: 0.25,
 			opacity: 1,
-			id,
+			id: data.id,
 		})
 
+		// Ajustar la escala según las dimensiones deseadas (si es necesario)
+		if (data.width && data.height) {
+			img.scaleToWidth(parseFloat(data.width))
+			img.scaleToHeight(parseFloat(data.height))
+		}
 		// Asocia el ImageDiagram al objeto de Fabric.js
 		img.metadata = imgnueva
-		attachImageEvents(img, fabricCanvasRef, setSelectedObject, changeTool)
-		// Añadir la imagen al lienzo
-		fabricCanvas.add(img)
-	}
 
+		attachImageEvents(img, fabricCanvasRef, setSelectedObject, changeTool)
+
+		// Añadir la imagen al lienzo
+		canvas.add(img)
+	}
+	if (data.statusText) {
+		newTextImg(imgnueva, canvas)
+	}
 	return imgnueva
 }
 
@@ -121,7 +124,6 @@ export const handleConvertToImagenTopic = (id, status, fabricCanvasRef, setSelec
 			newImagen = new ImageDiagram(object.metadata)
 			attachImageEvents(object, fabricCanvasRef, setSelectedObject, changeTool)
 		}
-		setSelectedObject(newImagen)
 		object.metadata = newImagen
 	}
 }
@@ -164,8 +166,115 @@ const attachImageEvents = (object, fabricCanvasRef, setSelectedObject, changeToo
 export const handleDrop = (e, fabricCanvasRef, setSelectedObject, changeTool) => {
 	e.preventDefault()
 	try {
-		createImage(e, fabricCanvasRef, setSelectedObject, changeTool)
+		const imageSrc = e.dataTransfer.getData('text/plain') // URL de la imagen
+		const imageName = e.dataTransfer.getData('name') // URL de la imagen
+		const imageAnimation = JSON.parse(e.dataTransfer.getData('animation')) // URL de la imagen
+		const fabricCanvas = fabricCanvasRef.current
+		if (!fabricCanvas || !imageSrc) return
+
+		const left = e.nativeEvent.offsetX - 50
+		const top = e.nativeEvent.offsetY - 50
+		const id = Math.random().toString(36).substring(2, 9)
+		const data = {
+			src: imageSrc,
+			name: imageName,
+			animation: imageAnimation,
+			left,
+			top,
+			id,
+		}
+		createImage(data, fabricCanvasRef, setSelectedObject, changeTool)
 	} catch (error) {
 		Swal.fire({ title: 'Atención!', text: error.message, icon: 'warning' })
 	}
+}
+
+/**
+ * Crea un nuevo textbox en el canvas utilizando Fabric.js.
+ *
+ * @param {Object} img - Propiedades de la imagen a la que se le va a agregar el texto.
+ * @param {fabric.Canvas} fabricCanvas - Canvas de Fabric.js.
+ * @returns {Promise<fabric.Textbox>} Objeto textbox de Fabric.js.
+ * @author Jose Romani <jose.romani@hotmail.com>
+ */
+export const newTextImg = (img, fabricCanvas) => {
+	if (!fabricCanvas) return
+
+	const defaultText = 'Escriba en la caja de config'
+	const texto = img.text || defaultText
+	const maxWidth = calcWidthText(texto, img.sizeText || 20)
+	const textbox = new fabric.Textbox(texto, {
+		id: `${img.id}_text`,
+		left: img.left,
+		top: img.top,
+		fontSize: img.sizeText || 20,
+		width: maxWidth,
+		fill: img.colorText || '#000000',
+		fontFamily: 'Arial',
+		textAlign: 'center',
+		backgroundColor: img.backgroundText || 'white',
+		hasControls: false,
+		hasBorders: false,
+		editable: false,
+		selectable: false,
+	})
+	textbox.metadata = img
+	const { left, top } = calculateTextPosition(img, textbox)
+	textbox.set({ left, top })
+	fabricCanvas.add(textbox)
+	fabricCanvas.setActiveObject(textbox)
+
+	return textbox
+}
+
+/**
+ * Edita el textbox existente en la imagen del canvas utilizando Fabric.js.
+ *
+ * @param {Object} img - Propiedades actualizadas de la imagen.
+ * @param {fabric.Canvas} fabricCanvas - Canvas de Fabric.js.
+ * @param {fabric.Textbox} textbox - Objeto textbox existente.
+ * @returns {Promise<fabric.Textbox>} Objeto de texto actualizado.
+ * @author Jose Romani <jose.romani@hotmail.com>
+ */
+export const editTextImg = (img, fabricCanvas, textbox) => {
+	if (!img || !fabricCanvas || !textbox) return
+	// Actualiza propiedades dinámicas
+	textbox.set({
+		text: img.text || textbox.text,
+		width: calcWidthText(img.text || textbox.text, img.sizeText || textbox.fontSize),
+		fontSize: img.sizeText || textbox.fontSize,
+		fill: img.colorText || textbox.fill,
+		backgroundColor: img.backgroundText || textbox.backgroundColor,
+	})
+	// Ajusta posición si es necesario
+	if (img?.textPosition) {
+		const { left, top } = calculateTextPosition(img, textbox)
+		textbox.set({ left, top })
+	}
+
+	fabricCanvas.requestRenderAll() // Optimización del renderizado
+	return textbox
+}
+
+/**
+ * Calcula la posición del texto en base a la posición y tamaño del elemento asociado.
+ *
+ * @param {Object} img - Propiedades de la imagen para obtener datos de ubicacion y tamaño.
+ * @param {fabric.Textbox} text - Objeto de texto de Fabric.js.
+ * @returns {{left: number, top: number}} Coordenadas calculadas.
+ * @author Jose Romani <jose.romani@hotmail.com>
+ */
+const calculateTextPosition = (img, text) => {
+	const { left: leftImg, top: topImg, width: widthImg, height: heightImg, textPosition } = img
+	const positions = {
+		Left: () => ({ left: leftImg - text.width - 20, top: topImg + heightImg / 2 - text.height / 2 }),
+		Right: () => ({ left: leftImg + widthImg + 20, top: topImg + heightImg / 2 - text.height / 2 }),
+		Top: () => ({ left: leftImg + widthImg / 2 - text.width / 2, top: topImg - text.height - 10 }),
+		Bottom: () => ({ left: leftImg + widthImg / 2 - text.width / 2, top: topImg + heightImg + 15 }),
+		Center: () => ({
+			left: leftImg + widthImg / 2 - text.width / 2,
+			top: topImg + heightImg / 2 - text.height / 2,
+		}),
+	}
+	return (positions[textPosition] || positions.Center)()
 }

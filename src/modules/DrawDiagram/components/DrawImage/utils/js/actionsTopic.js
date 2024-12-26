@@ -1,5 +1,5 @@
 import * as fabric from 'fabric'
-import { calcWidthText } from './actions'
+import { calcWidthText } from '../../../../utils/js/drawActions'
 
 /**
  * Calcula la posición del texto en base a la posición y tamaño del elemento asociado.

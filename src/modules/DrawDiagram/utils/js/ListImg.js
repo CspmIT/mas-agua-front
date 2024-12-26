@@ -1,4 +1,4 @@
-const urlBase = 'src/modules/DrawDiagram/utils/assets/img/newDiagram'
+const urlBase = '/src/modules/DrawDiagram/utils/assets/img/newDiagram'
 export const ListImg = () => [
 	{ id: 1, name: 'Cisterna enterrada', src: `${urlBase}/Cisterna.png`, animation: true },
 	{ id: 2, name: 'Cisterna horizontal', src: `${urlBase}/tanque_horizontal.png`, animation: true },

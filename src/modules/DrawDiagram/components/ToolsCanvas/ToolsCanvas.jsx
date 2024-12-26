@@ -5,30 +5,43 @@ import { MdOutlinePolyline } from 'react-icons/md'
 import { RiText } from 'react-icons/ri'
 import { FaTools } from 'react-icons/fa'
 import DrawText from '../DrawText/DrawText'
-import { getInstanceType } from '../DrawDiagram/utils/js/actions'
+import { getInstanceType } from '../../utils/js/drawActions'
 import DrawLine from '../DrawLine/DrawLine'
 import DrawPolyLine from '../DrawPolyLine/DrawPolyLine'
 import PropertiesSelect from '../DrawImage/PropertiesSelect/PropertiesSelect'
 import MenuObject from '../DrawImage/MenuObject/MenuObject'
 import { cleanSelectionCanvas } from './utils/js'
+import PropertyCanva from '../PropertyCanva/PropertyCanva'
 
 function ToolsCanvas({ selectedObject, handleChangeTypeImg, fabricCanvasRef, onPropertySelected }) {
 	const [alignment, setAlignment] = useState('web')
 
 	const handleChange = async (event, newAlignment) => {
+		const canvas = fabricCanvasRef?.current
 		setAlignment(newAlignment)
 		onPropertySelected(newAlignment)
 		cleanSelectionCanvas(fabricCanvasRef)
+		canvas.getObjects().forEach((obj) => (obj.selectable = true))
+		const selectObject = canvas?.getActiveObject()
+
 		switch (newAlignment) {
 			case 'Text':
-				fabricCanvasRef.current?.set({ defaultCursor: 'text' })
+				canvas?.set({ defaultCursor: 'text' })
+				break
+			case 'Property':
+				if (selectObject) {
+					setAlignment('PropertyImg')
+				} else {
+					setAlignment('PropertyCanvas')
+				}
 				break
 			case 'Line':
 			case 'Polyline':
-				if (!selectedObject) fabricCanvasRef.current?.set({ defaultCursor: 'crosshair' })
+				canvas?.getObjects().forEach((obj) => (obj.selectable = false))
+				if (!selectedObject) canvas?.set({ defaultCursor: 'crosshair' })
 				break
 			default:
-				fabricCanvasRef.current?.set({ defaultCursor: 'default' })
+				canvas?.set({ defaultCursor: 'default' })
 				break
 		}
 	}
@@ -40,7 +53,7 @@ function ToolsCanvas({ selectedObject, handleChangeTypeImg, fabricCanvasRef, onP
 				break
 			case 'ImageDiagram':
 			case 'ImageTopic':
-				setAlignment(selectedObject ? 'Property' : null)
+				setAlignment(selectedObject ? 'PropertyImg' : null)
 				break
 			case 'LineDiagram':
 				setAlignment(selectedObject ? 'Line' : null)
@@ -82,8 +95,12 @@ function ToolsCanvas({ selectedObject, handleChangeTypeImg, fabricCanvasRef, onP
 				<ToggleButton value='Image'>
 					<IoImagesOutline />
 				</ToggleButton>
-				<ToggleButton value='Property' className={`${alignment === 'Property' ? '' : '!hidden'}`}>
-					<FaTools className={`${alignment === 'Property' ? 'text-blue-500' : ''}`} />
+				<ToggleButton
+					value='Property'
+					selected={alignment?.includes('Property')}
+					onClick={() => handleChange(['PropertyImg', 'PropertyCanvas'])}
+				>
+					<FaTools />
 				</ToggleButton>
 			</ToggleButtonGroup>
 			{alignment === 'Line' && selectedObject ? (
@@ -106,13 +123,18 @@ function ToolsCanvas({ selectedObject, handleChangeTypeImg, fabricCanvasRef, onP
 					<MenuObject />
 				</div>
 			) : null}
-			{alignment === 'Property' && selectedObject ? (
+			{alignment === 'PropertyImg' ? (
 				<div onClick={() => handleComponentClick('PropertiesSelect')}>
 					<PropertiesSelect
 						data={selectedObject}
 						fabricCanvasRef={fabricCanvasRef}
 						handleChangeTypeImg={handleChangeTypeImg}
 					/>
+				</div>
+			) : null}
+			{alignment === 'PropertyCanvas' ? (
+				<div onClick={() => handleComponentClick('PropertiesSelect')}>
+					<PropertyCanva fabricCanvasRef={fabricCanvasRef} />
 				</div>
 			) : null}
 		</>

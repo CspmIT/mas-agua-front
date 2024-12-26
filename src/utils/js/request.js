@@ -68,3 +68,25 @@ export const requestPublic = async (url, method, data = false) => {
 		}
 	}
 }
+
+export const requestFile = async (url, method, data = false) => {
+	if (!url || !method) {
+		throw new Error('URL o método no proporcionados')
+	}
+
+	try {
+		const response = await axios({
+			method,
+			url,
+			data: data || {},
+			headers: {
+				accesskey: 'ZRJGodMUp2FzrLF9N9fg',
+				secretkey: 'KYTjiz1pC6AGM1U07mlDl2mUmDvUSNqnX6iM6DjL',
+				'Content-Type': 'multipart/form-data',
+			},
+		})
+		return response
+	} catch (error) {
+		throw error
+	}
+}

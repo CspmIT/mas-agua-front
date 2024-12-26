@@ -1,5 +1,5 @@
 import * as fabric from 'fabric'
-import { calcWidthText } from '../../../DrawDiagram/utils/js/actions'
+import { calcWidthText } from '../../../../utils/js/drawActions'
 import { LineDiagram } from '../../../../class/LineClass'
 import { invertHexColor } from '../../../ToolsCanvas/utils/js'
 
@@ -19,7 +19,6 @@ export const drawLine = async (click, fabricCanvasRef, setPointer, changeTool, s
 	if (click) {
 		const canvas = fabricCanvasRef.current
 		const { x, y } = click
-		let newLine
 		const handleEscape = async (e) => {
 			if (e.key === 'Escape') {
 				deleteLineTemp(canvas)
@@ -48,110 +47,148 @@ export const drawLine = async (click, fabricCanvasRef, setPointer, changeTool, s
 
 				return [{ x, y }]
 			}
-
-			// Manejo del segundo clic: finaliza la línea
 			const [start] = prevPointer
-			const finalLine = new fabric.Line([start.x, start.y, x, y], {
-				id: id,
-				stroke: 'black',
-				strokeWidth: 2,
-				hasControls: false,
-				hasBorders: false,
-				selectable: true,
-				perPixelTargetFind: true,
-				targetFindTolerance: 20,
-			})
-			finalLine.metadata = new LineDiagram({
-				id: finalLine.id,
-				points: getPointsLine(finalLine),
-			})
-			// Crear puntos movibles para los extremos de la línea
-			const startCircle = new fabric.Circle({
-				id: `${id}_start`,
-				left: start.x,
-				top: start.y,
-				radius: 8,
-				fill: 'blue',
-				originX: 'center',
-				originY: 'center',
-				hasControls: false,
-				hasBorders: false,
-				selectBack: true,
-			})
+			const points = [start.x, start.y, x, y]
 
-			const endCircle = new fabric.Circle({
-				id: `${id}_end`,
-				left: x,
-				top: y,
-				radius: 8,
-				fill: 'red',
-				originX: 'center',
-				originY: 'center',
-				hasControls: false,
-				hasBorders: false,
-				selectable: true,
-			})
-			startCircle.on('moving', (e) => {
-				startCircle.visible = true
-				endCircle.visible = true
-				updateLineMoveCircle(e, fabricCanvasRef)
-				canvas.renderAll()
-			})
-			endCircle.on('moving', (e) => {
-				startCircle.visible = true
-				endCircle.visible = true
-				updateLineMoveCircle(e, fabricCanvasRef)
-				canvas.renderAll()
-			})
-			startCircle.on('deselected', (e) => {
-				startCircle.visible = false
-				endCircle.visible = false
-			})
-			endCircle.on('deselected', (e) => {
-				startCircle.visible = false
-				endCircle.visible = false
-			})
+			// CREACION DE LA LINEA FINAL
+			const finalLine = createLine(points, fabricCanvasRef, setSelectedObject, changeTool, id)
 
-			finalLine.on('moving', (e) => {
-				const locateLine = getPointsLine(finalLine)
-				updatePoint(e, fabricCanvasRef, locateLine)
-				finalLine.metadata.setPoints(locateLine)
-				updateLineMove(canvas, finalLine)
-				addTextLine(finalLine.metadata, fabricCanvasRef)
-				canvas.renderAll()
-			})
-
-			// Detectar selección de la línea
-			finalLine.on('selected', () => {
-				startCircle.visible = true
-				endCircle.visible = true
-				canvas.bringObjectToFront(startCircle)
-				canvas.bringObjectToFront(endCircle)
-				changeTool(null)
-				setSelectedObject(finalLine.metadata)
-				addMetadataPoints(finalLine.metadata, canvas)
-				canvas.renderAll()
-			})
-
-			finalLine.on('deselected', () => {
-				startCircle.visible = false
-				endCircle.visible = false
-				canvas.renderAll()
-			})
-			canvas.add(finalLine)
-
-			setSelectedObject(finalLine.metadata)
+			//ELIMINO LA LINEA TEMPORAL
 			deleteLineTemp(canvas)
-			canvas.off('mouse:move') // Detiene la escucha del mouse
+
+			//ELIMINO LA FUNCION DE MOVIMIENTO DEL MOUSE QUE MOVIA LA LINEA TEMPORAL
+			canvas.off('mouse:move')
+
+			// SELECCIONAMOS LA LINEA QUE SE TERMINO DE CREAR PARA MODIFICAR LOS PARAMETROS
 			canvas.setActiveObject(finalLine)
-			newLine = finalLine
+
+			// CAMBIO EL CURSOR PARA QUE NO PAREZCA QUE SEGUIMOS CREANDO LINEAS
 			canvas?.set({ defaultCursor: 'default' })
+
+			// VOLVEMOS A ACTIVAR LA FUNCION DE SELECCION A TODO LOS OBJETOS
+			canvas?.getObjects().forEach((obj) => (obj.selectable = true))
 			return [] // Resetea los puntos
 		})
-		return newLine
 	}
 }
 
+export const createLine = (points, fabricCanvasRef, setSelectedObject, changeTool, data) => {
+	const canvas = fabricCanvasRef.current
+	const id = data?.id || data
+	if (canvas.getObjects('line').find((obj) => obj.id == id)) return false
+	const finalLine = new fabric.Line(points, {
+		id: id,
+		stroke: data.stroke || 'black',
+		strokeWidth: data.strokeWidth || 2,
+		hasControls: false,
+		hasBorders: false,
+		selectable: true,
+		perPixelTargetFind: true,
+		targetFindTolerance: 20,
+	})
+	finalLine.metadata = new LineDiagram({
+		...data,
+		id: finalLine.id,
+		points: getPointsLine(finalLine),
+	})
+	// Crear puntos movibles para los extremos de la línea
+	const startCircle = new fabric.Circle({
+		id: `${id}_start`,
+		left: points[0],
+		top: points[1],
+		radius: 8,
+		fill: 'blue',
+		originX: 'center',
+		originY: 'center',
+		hasControls: false,
+		hasBorders: false,
+		selectBack: true,
+	})
+
+	const endCircle = new fabric.Circle({
+		id: `${id}_end`,
+		left: points[2],
+		top: points[3],
+		radius: 8,
+		fill: 'red',
+		originX: 'center',
+		originY: 'center',
+		hasControls: false,
+		hasBorders: false,
+		selectable: true,
+	})
+	startCircle.visible = false
+	endCircle.visible = false
+	canvas.add(startCircle)
+	canvas.add(endCircle)
+	addCircleListeners(finalLine, fabricCanvasRef)
+	addLineListeners(finalLine, fabricCanvasRef, setSelectedObject, changeTool)
+	canvas.add(finalLine)
+	if (data?.animation) {
+		animationDobleLine(canvas, data.id)
+	}
+	if (data?.showText) {
+		addTextLine(finalLine.metadata, fabricCanvasRef)
+	}
+	return finalLine
+}
+
+const addCircleListeners = (line, fabricCanvasRef) => {
+	const canvas = fabricCanvasRef.current
+	const startCircle = canvas.getObjects('circle').find((obj) => obj.id == line.id + '_start')
+	const endCircle = canvas.getObjects('circle').find((obj) => obj.id == line.id + '_end')
+	startCircle.on('moving', (e) => {
+		startCircle.visible = true
+		endCircle.visible = true
+		updateLineMoveCircle(e, fabricCanvasRef)
+		canvas.renderAll()
+	})
+	endCircle.on('moving', (e) => {
+		startCircle.visible = true
+		endCircle.visible = true
+		updateLineMoveCircle(e, fabricCanvasRef)
+		canvas.renderAll()
+	})
+	startCircle.on('deselected', (e) => {
+		startCircle.visible = false
+		endCircle.visible = false
+	})
+	endCircle.on('deselected', (e) => {
+		startCircle.visible = false
+		endCircle.visible = false
+	})
+}
+const addLineListeners = (line, fabricCanvasRef, setSelectedObject, changeTool) => {
+	const canvas = fabricCanvasRef.current
+	const startCircle = canvas.getObjects('circle').find((obj) => obj.id == line.id + '_start')
+	const endCircle = canvas.getObjects('circle').find((obj) => obj.id == line.id + '_end')
+	line.on('moving', (e) => {
+		const locateLine = getPointsLine(line)
+		updatePoint(e, fabricCanvasRef, locateLine)
+		line.metadata.setPoints(locateLine)
+		updateLineMove(canvas, line)
+		addTextLine(line.metadata, fabricCanvasRef)
+		canvas.renderAll()
+	})
+
+	// Detectar selección de la línea
+	line.on('selected', () => {
+		startCircle.visible = true
+		endCircle.visible = true
+		canvas.bringObjectToFront(startCircle)
+		canvas.bringObjectToFront(endCircle)
+		changeTool(null)
+		setSelectedObject(line.metadata)
+		addMetadataPoints(line.metadata, canvas)
+		canvas.renderAll()
+	})
+
+	line.on('deselected', () => {
+		startCircle.visible = false
+		endCircle.visible = false
+		canvas.renderAll()
+	})
+}
 /**
  * Actualiza la posición de una línea en el canvas según los círculos de sus extremos.
  *
@@ -169,10 +206,13 @@ export const updateLineMove = (canvas, finalLine) => {
 		.getObjects('circle')
 		.find((item) => item.id == `${finalLine.id}_end`)
 		.getCenterPoint()
-	finalLine.x1 = circleStart.x
-	finalLine.x2 = circleEnd.x
-	finalLine.y1 = circleStart.y
-	finalLine.y2 = circleEnd.y
+
+	finalLine.set({
+		x1: circleStart.x,
+		x2: circleEnd.x,
+		y1: circleStart.y,
+		y2: circleEnd.y,
+	})
 }
 
 /**
@@ -248,7 +288,7 @@ export const updateLineMoveCircle = (e, fabricCanvasRef) => {
 	const PointMoved = e.transform.target
 	const isStart = PointMoved.id.includes('start')
 	const id = PointMoved.id.split('_')[0]
-	const lineSelect = canvas.getObjects('line').find((obj) => obj.id === id)
+	const lineSelect = canvas.getObjects('line').find((obj) => obj.id == id)
 	const otherPoint = canvas.getObjects('circle').find((obj) => obj.id === `${id}_${isStart ? 'end' : 'start'}`)
 	const movedPoint = { left: PointMoved.left, top: PointMoved.top, radius: PointMoved.radius }
 	const lastPoint = { left: otherPoint.left, top: otherPoint.top, radius: otherPoint.radius }
@@ -301,7 +341,10 @@ export const getPointsLine = (Line) => ({
  * @author Jose Romani <jose.romani@hotmail.com>
  */
 export const deleteLineTemp = (canvas) => {
-	const tempLine = canvas.getObjects('line').find((obj) => obj?.id?.startsWith('temp'))
+	const tempLine = canvas.getObjects('line').find((obj) => {
+		if (typeof obj.id == 'number') return false
+		return obj?.id?.startsWith('temp')
+	})
 	if (tempLine) canvas.remove(tempLine)
 }
 
@@ -332,6 +375,7 @@ export const addMetadataPoints = (line, canvas) => {
 export const updatePropertyLine = (line, property, canvas) => {
 	const lineSelect = canvas.getObjects('line').find((obj) => obj.id === line.id)
 	if (!lineSelect) return
+	console.log(lineSelect)
 	const value = parseInt(line[property]) || line[property]
 	lineSelect.set({ [property]: value })
 	const circles_start = canvas.getObjects('circle').find((circle) => circle.id.includes(`${line.id}_start`))
@@ -390,6 +434,7 @@ export const addTextLine = (line, fabricCanvasRef) => {
 	const canvas = fabricCanvasRef.current
 	if (line?.showText) {
 		const textLine = canvas.getObjects('textbox').find((obj) => obj.id === `${line.id}_text_line`)
+		const Line = canvas.getObjects('line').find((obj) => obj.id === line.id)
 		const textLocation = getLocationLineforText(line)
 		const maxWidth = calcWidthText(line.text, line.sizeText)
 		if (textLine) {
@@ -418,11 +463,12 @@ export const addTextLine = (line, fabricCanvasRef) => {
 				width: maxWidth,
 				backgroundColor: line.backgroundText || 'white',
 				editable: false,
+				hasBorders: false,
+				hasControls: false,
 				selectable: false,
-				lockScalingX: true,
-				lockScalingY: true,
-				lockSkewingX: true,
-				lockSkewingY: true,
+			})
+			text.on('selected', () => {
+				canvas.setActiveObject(Line)
 			})
 			canvas.add(text)
 		}
@@ -469,24 +515,28 @@ export const animationDobleLine = (canvas, id) => {
 		canvas.add(lineFlow)
 	}
 	const animateLineFlow = () => {
-		if (!line.metadata.dobleLine) {
+		if (!line.metadata.animation || !canvas.getObjects('line').some((item) => item.id == line.id)) {
 			canvas.remove(lineFlow)
-			line.strokeWidth = parseInt(line.metadata.strokeWidth)
+			line.set('strokeWidth', parseInt(line.metadata.strokeWidth))
 			return
 		}
-		line.strokeWidth = parseInt(line.metadata.strokeWidth) + 4
-		lineFlow.stroke = invertHexColor(line.metadata.stroke)
+		line.set('strokeWidth', parseInt(line.metadata.strokeWidth) + 4)
+		canvas.requestRenderAll()
+		updateLineMove(canvas, line)
+		// lineFlow.stroke = invertHexColor(line.metadata.stroke)
 		lineFlow.set({
+			stroke: invertHexColor(line.metadata.stroke),
 			x1: line.x1,
 			y1: line.y1,
 			x2: line.x2,
 			y2: line.y2,
 		})
 		const movement = line.metadata.invertAnimation ? 1 : -1
-		lineFlow.strokeDashOffset -= movement
+		lineFlow.set('strokeDashOffset', lineFlow.strokeDashOffset - movement)
 
-		if (lineFlow.strokeDashOffset < -50) lineFlow.strokeDashOffset = 0
-
+		if (lineFlow.strokeDashOffset < -50 || lineFlow.strokeDashOffset > 50) {
+			lineFlow.set('strokeDashOffset', 0)
+		}
 		canvas.requestRenderAll()
 		requestAnimationFrame(animateLineFlow)
 	}

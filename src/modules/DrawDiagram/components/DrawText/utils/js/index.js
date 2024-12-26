@@ -1,5 +1,5 @@
 import { TextDiagram } from '../../../../class/TextClass'
-import { calcWidthText } from '../../../DrawDiagram/utils/js/actions'
+import { calcWidthText } from '../../../../utils/js/drawActions'
 import * as fabric from 'fabric'
 /**
  * Crea un nuevo textbox en el canvas utilizando Fabric.js.
@@ -12,27 +12,30 @@ import * as fabric from 'fabric'
  * @returns {Promise<fabric.Textbox>} Objeto textbox de Fabric.js.
  * @author Jose Romani
  */
-export const newText = (fabricCanvasRef, left, top, changeTool, setSelectedObject) => {
+export const newText = (fabricCanvasRef, data, changeTool, setSelectedObject) => {
 	const fabricCanvas = fabricCanvasRef?.current
 	if (!fabricCanvas) return
-
-	const id = Math.random().toString(36).substring(2, 9)
+	const id = data.id || Math.random().toString(36).substring(2, 9)
+	if (fabricCanvas.getObjects('textbox').find((obj) => obj.id == id)) return false
 	// Crear las propiedades iniciales del texto
 	const textnew = new TextDiagram({
-		id: id,
-		left: left,
-		top: top,
-		text: 'Escriba en la caja de config',
+		id: data.id || id,
+		left: data.left,
+		top: data.top,
+		text: data.text || 'Escriba en la caja de config',
+		sizeText: data.sizeText || 20,
+		colorText: data.colorText || '#000000',
+		backgroundText: data.backgroundText || 'white',
 	})
-	const texto = textnew?.text || 'Texto predeterminado'
-	const maxWidth = calcWidthText(texto, textnew.sizeText || 20)
-	const textbox = new fabric.Textbox(texto, {
+	// const texto = textnew?.text || 'Texto predeterminado'
+	const maxWidth = calcWidthText(textnew.text, textnew.sizeText || 20)
+	const textbox = new fabric.Textbox(textnew.text, {
 		id: `${textnew.id}`,
 		left: textnew.left ?? left ?? 0,
 		top: textnew.top ?? top ?? 0,
 		fontSize: textnew.sizeText || 20,
 		width: maxWidth,
-		fill: textnew.colorText || '#000000',
+		fill: textnew.colorText,
 		fontFamily: 'Arial',
 		textAlign: 'center',
 		backgroundColor: textnew.backgroundText || 'white',
@@ -43,16 +46,20 @@ export const newText = (fabricCanvasRef, left, top, changeTool, setSelectedObjec
 		lockSkewingX: true,
 		lockSkewingY: true,
 	})
+
 	textbox.metadata = textnew
+
 	textbox.on('selected', () => {
 		changeTool(null)
 		setSelectedObject(textnew)
 	})
+
 	textbox.on('moving', () => {
-		textbox.metadata.move(textbox.metadata.top, textbox.metadata.left)
+		textbox.metadata.move(textbox.top, textbox.left)
 	})
+
 	textbox.on('rotating', () => {
-		textbox.metadata.rotate(textbox.metadata.angle)
+		textbox.metadata.rotate(textbox.angle)
 	})
 
 	// Agregar el textbox al canvas

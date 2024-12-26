@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 
 function PropertyLineBase({ data, fabricCanvasRef, animationDobleLine, updateProperty }) {
 	const [info, setInfo] = useState(data)
-	const [showAnimation, setShowAnimation] = useState(info.dobleLine)
+	const [showAnimation, setShowAnimation] = useState(info.animation)
 	const [invertAnimation, setInvertAnimation] = useState(info.invertAnimation)
 	const [canvas, setCanvas] = useState(fabricCanvasRef?.current)
 
@@ -29,10 +29,10 @@ function PropertyLineBase({ data, fabricCanvasRef, animationDobleLine, updatePro
 		updateProperty(infoUpdate, 'stroke', canvas)
 	}
 	const activeDobleLine = (status) => {
-		const infoUpdate = { ...info, dobleLine: status }
+		const infoUpdate = { ...info, animation: status }
 		setInfo(infoUpdate)
 		setShowAnimation(status)
-		data.setActiveDobleLine(status)
+		data.setAnimation(status)
 		if (animationDobleLine) {
 			animationDobleLine(canvas, info.id)
 		}

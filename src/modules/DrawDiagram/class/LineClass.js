@@ -4,8 +4,7 @@ export class LineDiagram {
 	 * @param {number} params.id - Identificador de la linea.
 	 * @param {Object} params.points - Objeto con los puntos {start:{left, top}, end:{left, top}}.
 	 * @param {string} params.stroke - Color de linea principal.
-	 * @param {number} params.strokeWidth - Angulo de la linea.
-	 * @param {boolean} params.dobleLine - Angulo de la linea.
+	 * @param {number} params.strokeWidth - Ancho de la linea.
 	 * @param {string} params.colorSecondary - Color de linea secundaria.
 	 * @param {boolean} params.animation - Estado de la animacion de la linea.
 	 * @param {boolean} params.invertAnimation - Sentido de la animación.
@@ -21,7 +20,6 @@ export class LineDiagram {
 		points = { start: {}, end: {} },
 		stroke = '#000000',
 		strokeWidth = 3,
-		dobleLine = false,
 		colorSecondary = '#000000',
 		animation = false,
 		invertAnimation = false,
@@ -39,7 +37,6 @@ export class LineDiagram {
 			points,
 			stroke,
 			strokeWidth,
-			dobleLine,
 			colorSecondary,
 			animation,
 			invertAnimation,
@@ -62,11 +59,11 @@ export class LineDiagram {
 
 	/**
 	 * Establece los Puntos que componen la linea.
-	 * @param {Object} points - Objeto con los puntos { start:{left, top}, end:{left, top} }.
+	 * @param {Object} point - Objeto con los puntos { start:{left, top}, end:{left, top} }.
 	 * @author Jose Romani <jose.romani@hotmail.com>
 	 */
-	setPoints(points) {
-		this.points = points
+	setPoints(point) {
+		this.points = point
 	}
 
 	/**
@@ -85,15 +82,6 @@ export class LineDiagram {
 	 */
 	setWidth(width) {
 		this.strokeWidth = width
-	}
-
-	/**
-	 * Establece si se utilizara o no una linea secundaria.
-	 * @param {boolean} status - Nuevo estado.
-	 * @author Jose Romani <jose.romani@hotmail.com>
-	 */
-	setActiveDobleLine(status) {
-		this.dobleLine = status
 	}
 
 	/**

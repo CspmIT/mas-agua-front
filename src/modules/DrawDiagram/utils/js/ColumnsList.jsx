@@ -4,7 +4,7 @@ import { IconButton } from '@mui/material'
 export const ColumnsListDiagram = (editDiagram) => [
 	{
 		header: 'Nombre',
-		accessorKey: 'name',
+		accessorKey: 'title',
 	},
 	{
 		header: 'Estado',

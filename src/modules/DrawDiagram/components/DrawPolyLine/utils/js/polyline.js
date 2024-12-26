@@ -1,6 +1,7 @@
 import * as fabric from 'fabric'
 import { PolylineDiagram } from '../../../../class/PolylineClass'
 import { invertHexColor } from '../../../ToolsCanvas/utils/js'
+import { gridColumnLookupSelector } from '@mui/x-data-grid'
 
 let tempPolyline = null
 let points = []
@@ -18,7 +19,6 @@ let points = []
 export const drawPolyline = (click, canvasRef, setSelectedObject, changeTool) => {
 	const { x, y } = click
 	const canvas = canvasRef.current
-
 	points.push({ x, y })
 
 	if (!tempPolyline) {
@@ -41,8 +41,6 @@ export const drawPolyline = (click, canvasRef, setSelectedObject, changeTool) =>
 const initializeTempPolyline = (canvas, setSelectedObject, changeTool) => {
 	const id = generateId()
 
-	canvas.forEachObject((obj) => (obj.selectable = false))
-
 	tempPolyline = new fabric.Polyline(points, {
 		id: `temp_polyline_${id}`,
 		stroke: 'black',
@@ -55,23 +53,22 @@ const initializeTempPolyline = (canvas, setSelectedObject, changeTool) => {
 	canvas.on('mouse:move', handleMouseMoveTemp(canvas))
 	canvas.renderAll()
 
-	const handleEscape = async (e) => {
-		if (e.key === 'Escape') {
-			exitDrawPolyline(canvas, setSelectedObject)
-			canvas.forEachObject((obj) => (obj.selectable = true))
-			window.removeEventListener('keydown', handleEscape)
-			changeTool(null)
-		}
-		if (e.key === 'Enter') {
-			finalizePolyline(canvas, setSelectedObject)
-			window.removeEventListener('keydown', handleEscape)
-			changeTool(null)
-		}
-	}
-
-	window.addEventListener('keydown', handleEscape)
+	window.addEventListener('keydown', (e) => handleEscape(e, canvas, setSelectedObject, changeTool))
 }
 
+const handleEscape = async (e, canvas, setSelectedObject, changeTool) => {
+	if (e.key === 'Escape') {
+		exitDrawPolyline(canvas, setSelectedObject)
+		canvas.getObjects().forEach((obj) => (obj.selectable = true))
+		window.removeEventListener('keydown', handleEscape)
+		changeTool(null)
+	}
+	if (e.key === 'Enter') {
+		finalizePolyline(canvas, setSelectedObject)
+		window.removeEventListener('keydown', handleEscape)
+		changeTool(null)
+	}
+}
 /**
  * Función que maneja el movimiento del mouse para la polilínea temporal.
  * Actualiza la posición de los puntos de la polilínea según la ubicación del puntero.
@@ -97,16 +94,20 @@ const handleMouseMoveTemp = (canvas) => (e) => {
  * @param {Function} setSelectedObject - Función para establecer el objeto seleccionado.
  * @author Jose Romani <jose.romani@hotmail.com>
  */
-const finalizePolyline = async (canvas, setSelectedObject) => {
-	if (tempPolyline && points.length > 1) {
-		const id = generateId()
-		canvas.remove(tempPolyline)
+export const finalizePolyline = async (canvas, setSelectedObject, data = {}) => {
+	if ((tempPolyline && points.length > 1) || data?.points) {
+		const id = data?.id + '_polyline' || generateId()
+		if (canvas.getObjects('polyline').find((obj) => obj.id == id)) return false
+		if (tempPolyline) {
+			canvas.remove(tempPolyline)
+		}
+		const polylinePopints = data?.points || points
+		const polyline = new PolylineDiagram({ ...data, id, points: polylinePopints })
 
-		const polyline = new PolylineDiagram({ id, points })
-		const finalPolyline = new fabric.Polyline(points, {
+		const finalPolyline = new fabric.Polyline(polylinePopints, {
 			id,
-			stroke: 'black',
-			strokeWidth: 2,
+			stroke: data?.stroke || 'black',
+			strokeWidth: data?.strokeWidth || 2,
 			fill: 'transparent',
 			strokeLineCap: 'round',
 			hasControls: false,
@@ -124,14 +125,19 @@ const finalizePolyline = async (canvas, setSelectedObject) => {
 		canvas.add(finalPolyline)
 		canvas?.set({ defaultCursor: 'default' })
 
-		points.forEach((point, index) => createVertexCircle(canvas, point, index, id))
+		polylinePopints.forEach((point, index) => createVertexCircle(canvas, point, index, id))
 
 		points = []
-		tempPolyline = null
-
-		canvas.forEachObject((obj) => (obj.selectable = true))
+		if (tempPolyline) {
+			tempPolyline = null
+		}
+		if (polyline.animation) {
+			animationDoblePolyline(canvas, polyline.id)
+		}
+		canvas.getObjects().forEach((obj) => (obj.selectable = true))
 		setSelectedObject(finalPolyline.metadata)
 		canvas.setActiveObject(finalPolyline)
+		window.removeEventListener('keydown', handleEscape)
 		canvas.renderAll()
 	}
 }
@@ -195,12 +201,18 @@ const handleVisualizerCircle = (idLine, status, canvas) => {
  */
 const createVertexCircle = (canvas, point, index, id) => {
 	const polyline = canvas.getObjects('polyline').find((obj) => obj.id === id)
-
+	let potencia = 1.3
+	if (parseInt(polyline.strokeWidth) <= 6) {
+		potencia = 2
+	}
+	if (parseInt(polyline.strokeWidth) <= 4) {
+		potencia = 3
+	}
 	const pointCircle = new fabric.Circle({
 		id: `${id}_poliyline_${index}`,
 		left: point.x,
 		top: point.y,
-		radius: 8,
+		radius: parseInt(polyline.strokeWidth) * potencia,
 		fill: index === 0 ? 'green' : index === polyline.points.length - 1 ? 'red' : 'blue',
 		originX: 'center',
 		originY: 'center',
@@ -392,7 +404,7 @@ export const animationDoblePolyline = (canvas, id) => {
 	}
 
 	const animatePolylineFlow = () => {
-		if (!polyline.metadata.dobleLine) {
+		if (!polyline.metadata.animation) {
 			canvas.remove(polylineFlow)
 			polyline.strokeWidth = parseInt(polyline.metadata.strokeWidth)
 			return
@@ -401,6 +413,7 @@ export const animationDoblePolyline = (canvas, id) => {
 		polyline.strokeWidth = parseInt(polyline.metadata.strokeWidth) + 4
 		polylineFlow.stroke = invertHexColor(polyline.metadata.stroke)
 		const adjustedPoints = adjustPointsToCenter(canvas, id)
+
 		updateAllPolyline(id, canvas)
 		// Sincronizar puntos de la polilínea animada con los puntos originales
 		polylineFlow.set({

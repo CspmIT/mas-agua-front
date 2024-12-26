@@ -37,7 +37,7 @@ function FormPropImg({ data, fabricCanvasRef, handleChangeTypeImg }) {
 		const newInfo = { ...info, statusTopic: status }
 		setInfo(newInfo)
 		if (status == false) {
-			data.setShowValue(status)
+			data?.setShowValue(status)
 			const newInfo2 = { ...newInfo, showValue: status }
 			await addTextToCanvas(newInfo2, fabricCanvasRef, 'influx')
 			setInfo(newInfo2)
