@@ -44,7 +44,7 @@ const initializeTempPolyline = (canvas, setSelectedObject, changeTool) => {
 	tempPolyline = new fabric.Polyline(points, {
 		id: `temp_polyline_${id}`,
 		stroke: 'black',
-		strokeWidth: 2,
+		strokeWidth: 3,
 		fill: 'transparent',
 		selectable: false,
 	})
@@ -64,7 +64,7 @@ const handleEscape = async (e, canvas, setSelectedObject, changeTool) => {
 		changeTool(null)
 	}
 	if (e.key === 'Enter') {
-		finalizePolyline(canvas, setSelectedObject)
+		await finalizePolyline(canvas, setSelectedObject)
 		window.removeEventListener('keydown', handleEscape)
 		changeTool(null)
 	}
@@ -96,7 +96,7 @@ const handleMouseMoveTemp = (canvas) => (e) => {
  */
 export const finalizePolyline = async (canvas, setSelectedObject, data = {}) => {
 	if ((tempPolyline && points.length > 1) || data?.points) {
-		const id = data?.id + '_polyline' || generateId()
+		const id = `${data?.id || generateId()}_polyline`
 		if (canvas.getObjects('polyline').find((obj) => obj.id == id)) return false
 		if (tempPolyline) {
 			canvas.remove(tempPolyline)
@@ -107,11 +107,11 @@ export const finalizePolyline = async (canvas, setSelectedObject, data = {}) => 
 		const finalPolyline = new fabric.Polyline(polylinePopints, {
 			id,
 			stroke: data?.stroke || 'black',
-			strokeWidth: data?.strokeWidth || 2,
+			strokeWidth: data?.strokeWidth || 3,
 			fill: 'transparent',
 			strokeLineCap: 'round',
 			hasControls: false,
-			hasBorders: false,
+			hasBorders: true,
 			selectable: true,
 			perPixelTargetFind: true,
 			targetFindTolerance: 20,
@@ -121,7 +121,6 @@ export const finalizePolyline = async (canvas, setSelectedObject, data = {}) => 
 		finalPolyline.metadata = polyline
 
 		addPolylineListeners(finalPolyline, canvas, setSelectedObject)
-
 		canvas.add(finalPolyline)
 		canvas?.set({ defaultCursor: 'default' })
 
@@ -152,10 +151,19 @@ export const finalizePolyline = async (canvas, setSelectedObject, data = {}) => 
  * @author Jose Romani <jose.romani@hotmail.com>
  */
 const addPolylineListeners = (polyline, canvas, setSelectedObject) => {
-	polyline.on('selected', (e) => {
+	polyline.on('mousedblclick', () => {
 		if (tempPolyline) return // No hacer nada si hay una polilínea en creación
-		setSelectedObject(polyline.metadata)
+		polyline.hasBorders = false
+		canvas.setActiveObject(canvas.getObjects('circle').find((obj) => obj.id.includes(`${polyline.id}_polyline_`)))
 		handleVisualizerCircle(polyline.id, true, canvas)
+		setSelectedObject(polyline.metadata)
+	})
+
+	polyline.on('selected', () => {
+		if (tempPolyline) return // No hacer nada si hay una polilínea en creación
+		polyline.hasBorders = true
+		setSelectedObject(polyline.metadata)
+		handleVisualizerCircle(polyline.id, false, canvas)
 	})
 
 	polyline.on('deselected', () => {
@@ -168,8 +176,9 @@ const addPolylineListeners = (polyline, canvas, setSelectedObject) => {
 		if (tempPolyline) return // No mover mientras se crea
 		const { movementX = 0, movementY = 0 } = e.e || {}
 		setSelectedObject(polyline.metadata)
+		polyline.hasBorders = true
 		updateCirclesOnPolylineMove(polyline.id, canvas, movementX, movementY)
-		handleVisualizerCircle(polyline.id, true, canvas)
+		handleVisualizerCircle(polyline.id, false, canvas)
 	})
 }
 
@@ -202,6 +211,7 @@ const handleVisualizerCircle = (idLine, status, canvas) => {
 const createVertexCircle = (canvas, point, index, id) => {
 	const polyline = canvas.getObjects('polyline').find((obj) => obj.id === id)
 	let potencia = 1.3
+
 	if (parseInt(polyline.strokeWidth) <= 6) {
 		potencia = 2
 	}
@@ -209,7 +219,7 @@ const createVertexCircle = (canvas, point, index, id) => {
 		potencia = 3
 	}
 	const pointCircle = new fabric.Circle({
-		id: `${id}_poliyline_${index}`,
+		id: `${id}_polyline_${index}`,
 		left: point.x,
 		top: point.y,
 		radius: parseInt(polyline.strokeWidth) * potencia,
@@ -268,9 +278,7 @@ const updateCirclesOnPolylineMove = (polylineId, canvas, dx, dy) => {
 		.getObjects('polyline')
 		.find((polyline) => polyline.id === polylineId)
 		?.points.forEach((_, index) => {
-			const circle = canvas
-				.getObjects('circle')
-				.find((circle) => circle.id === `${polylineId}_poliyline_${index}`)
+			const circle = canvas.getObjects('circle').find((circle) => circle.id === `${polylineId}_polyline_${index}`)
 			if (circle) {
 				circle.set({ left: circle.left + dx, top: circle.top + dy })
 				circle.setCoords()
@@ -278,6 +286,34 @@ const updateCirclesOnPolylineMove = (polylineId, canvas, dx, dy) => {
 		})
 
 	updateAllPolyline(polylineId, canvas)
+}
+/**
+ * Actualiza la posición de los círculos de los vértices al mover la polilínea.
+ *
+ * @param {string} polylineId - ID de la polilínea que se mueve.
+ * @param {fabric.Canvas} canvas - El objeto canvas de Fabric.js .
+ * @param {number} dx - Desplazamiento en el eje X.
+ * @param {number} dy - Desplazamiento en el eje Y.
+ * @author Jose Romani <jose.romani@hotmail.com>
+ */
+const updateRadiusCircles = (polylineId, canvas) => {
+	const polyline = canvas.getObjects('polyline').find((polyline) => polyline.id === polylineId)
+
+	const circles = canvas.getObjects('circle').filter((circle) => circle.id.includes(`${polylineId}_poliyline`))
+	if (circles.length) {
+		let potencia = 1.5
+		if (parseInt(polyline.strokeWidth) <= 6) {
+			potencia = 2.2
+		}
+		if (parseInt(polyline.strokeWidth) <= 4) {
+			potencia = 3
+		}
+		const radius = parseInt(polyline.strokeWidth * potencia)
+		circles.forEach((circle) => {
+			circle.set({ radius })
+			circle.setCoords()
+		})
+	}
 }
 
 /**
@@ -289,7 +325,7 @@ const updateCirclesOnPolylineMove = (polylineId, canvas, dx, dy) => {
  */
 const updateAllPolyline = (id, canvas) => {
 	const polyline = canvas.getObjects('polyline').find((obj) => obj.id === id)
-	const circles = canvas.getObjects('circle').filter((circle) => circle.id.includes(`${id}_poliyline_`))
+	const circles = canvas.getObjects('circle').filter((circle) => circle.id.includes(`${id}_polyline_`))
 	const polylineback = canvas.getObjects().find((obj) => obj.id === id + '_back')
 	if (polyline && circles) {
 		circles.forEach((circle, index) => {
@@ -325,7 +361,7 @@ const generateId = () => Math.random().toString(36).substring(2, 9)
 export const updatePropertyPolyline = (polyline, property, canvas) => {
 	const lineSelect = canvas.getObjects('polyline').find((obj) => obj.id === polyline.id)
 	const polylineback = canvas.getObjects('polyline').find((obj) => obj.id === polyline.id + '_back')
-	const circles = canvas.getObjects('circle').filter((circle) => circle.id.includes(`${polyline.id}_poliyline_`))
+	const circles = canvas.getObjects('circle').filter((circle) => circle.id.includes(`${polyline.id}_polyline_`))
 
 	if (lineSelect) {
 		const value = isNaN(polyline[property]) ? polyline[property] : parseInt(polyline[property], 10)
@@ -406,7 +442,8 @@ export const animationDoblePolyline = (canvas, id) => {
 	const animatePolylineFlow = () => {
 		if (!polyline.metadata.animation) {
 			canvas.remove(polylineFlow)
-			polyline.strokeWidth = parseInt(polyline.metadata.strokeWidth)
+			polyline.set('strokeWidth', parseInt(polyline.metadata.strokeWidth))
+			updateRadiusCircles(polyline.id, canvas)
 			return
 		}
 
@@ -429,6 +466,7 @@ export const animationDoblePolyline = (canvas, id) => {
 	}
 
 	animatePolylineFlow()
+	updateRadiusCircles(polyline.id, canvas)
 }
 
 /**
@@ -439,7 +477,7 @@ export const animationDoblePolyline = (canvas, id) => {
  * @author Jose Romani <jose.romani@hotmail.com>
  */
 const adjustPointsToCenter = (canvas, id) => {
-	const circles = canvas.getObjects('circle').filter((circle) => circle.id.includes(`${id}_poliyline_`))
+	const circles = canvas.getObjects('circle').filter((circle) => circle.id.includes(`${id}_polyline_`))
 	const points = []
 	if (circles) {
 		circles.forEach((circle, index) => {

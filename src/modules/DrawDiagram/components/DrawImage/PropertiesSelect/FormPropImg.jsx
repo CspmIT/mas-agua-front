@@ -1,16 +1,15 @@
-import { Accordion, AccordionDetails, AccordionSummary, Checkbox, TextField } from '@mui/material'
+import { Accordion, AccordionDetails, AccordionSummary, Checkbox, Divider, TextField, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import PropertyTopic from './PropertiesInflux/PropertyTopic'
 import PropertyTextImg from './PropertyTextImg/PropertyTextImg'
-import PropertyAnimation from './PropertyAnimation/PropertyAnimation'
 import Swal from 'sweetalert2'
 import { addTextToCanvas } from '../utils/js/actionImage'
+import PropertyField from './PropertyField/PropertyField'
 
 function FormPropImg({ data, fabricCanvasRef, handleChangeTypeImg }) {
 	const [info, setInfo] = useState(data)
 	const [checkBoxText, setCheckBoxText] = useState(Boolean(info?.statusText))
 	const [checkBoxTopic, setCheckBoxTopic] = useState(Boolean(info?.statusTopic))
-	const [checkBoxAnimate, setCheckBoxAnimate] = useState(Boolean(info?.animation))
 	const activeText = (status) => {
 		setCheckBoxText(status)
 		const newInfo = { ...info, statusText: status }
@@ -18,38 +17,37 @@ function FormPropImg({ data, fabricCanvasRef, handleChangeTypeImg }) {
 		addTextToCanvas(newInfo, fabricCanvasRef)
 		data.setStatusText(status)
 	}
-	const activeTopic = async (status) => {
-		if (status == false) {
-			const result = await Swal.fire({
-				title: 'Atención!',
-				text: '¿Estas seguro de sacarle la propiedad de conexión con Influx? Se borrara toda la configuración...',
-				icon: 'question',
-				allowOutsideClick: false,
-				showDenyButton: true,
-				showCancelButton: false,
-				confirmButtonText: 'Sí',
-				denyButtonText: `No`,
-			})
-			if (result.isDenied) return
-		}
+	// const activeTopic = async (status) => {
+	// 	if (status == false) {
+	// 		const result = await Swal.fire({
+	// 			title: 'Atención!',
+	// 			text: '¿Estas seguro de sacarle la propiedad de conexión con Influx? Se borrara toda la configuración...',
+	// 			icon: 'question',
+	// 			allowOutsideClick: false,
+	// 			showDenyButton: true,
+	// 			showCancelButton: false,
+	// 			confirmButtonText: 'Sí',
+	// 			denyButtonText: `No`,
+	// 		})
+	// 		if (result.isDenied) return
+	// 	}
 
-		setCheckBoxTopic(status)
-		const newInfo = { ...info, statusTopic: status }
-		setInfo(newInfo)
-		if (status == false) {
-			data?.setShowValue(status)
-			const newInfo2 = { ...newInfo, showValue: status }
-			await addTextToCanvas(newInfo2, fabricCanvasRef, 'influx')
-			setInfo(newInfo2)
-		}
-		await handleChangeTypeImg(newInfo.id, status)
-	}
+	// 	setCheckBoxTopic(status)
+	// 	const newInfo = { ...info, statusTopic: status }
+	// 	setInfo(newInfo)
+	// 	if (status == false) {
+	// 		data?.setShowValue(status)
+	// 		const newInfo2 = { ...newInfo, showValue: status }
+	// 		await addTextToCanvas(newInfo2, fabricCanvasRef, 'influx')
+	// 		setInfo(newInfo2)
+	// 	}
+	// 	await handleChangeTypeImg(newInfo.id, status)
+	// }
 
 	useEffect(() => {
 		setInfo(data) // Actualiza el estado `info` cuando `data` cambia
 		setCheckBoxText(Boolean(data.statusText))
 		setCheckBoxTopic(Boolean(data.statusTopic))
-		setCheckBoxAnimate(Boolean(data.animation))
 	}, [data])
 
 	const changeName = (string) => {
@@ -67,7 +65,6 @@ function FormPropImg({ data, fabricCanvasRef, handleChangeTypeImg }) {
 				className='w-full'
 				value={info.name}
 			/>
-			{info.statusAnimation ? <PropertyAnimation data={data} /> : null}
 			<Accordion className='!mb-0' expanded={checkBoxText} onChange={() => activeText(!checkBoxText)}>
 				<AccordionSummary aria-controls='panel1-content' id='panel1-header'>
 					<div className='flex justify-start items-center'>
@@ -79,7 +76,20 @@ function FormPropImg({ data, fabricCanvasRef, handleChangeTypeImg }) {
 					<PropertyTextImg AddText={addTextToCanvas} fabricCanvasRef={fabricCanvasRef} data={data} />
 				</AccordionDetails>
 			</Accordion>
-			<Accordion
+
+			{info?.variables
+				? Object.keys(info.variables).map((name, index) => (
+						<>
+							<Typography variant='h6' className='text-center uppercase'>
+								Variables
+							</Typography>
+							<Divider />
+							<PropertyField key={index} field={name} dataField={info.variables[name]} />
+						</>
+				  ))
+				: null}
+
+			{/* <Accordion
 				className={`${checkBoxTopic ? '!bg-gray-200 border border-zinc-300' : ''} !mt-0`}
 				expanded={checkBoxTopic}
 				onChange={() => activeTopic(!checkBoxTopic)}
@@ -97,7 +107,7 @@ function FormPropImg({ data, fabricCanvasRef, handleChangeTypeImg }) {
 				<AccordionDetails>
 					<PropertyTopic data={data} fabricCanvasRef={fabricCanvasRef} />
 				</AccordionDetails>
-			</Accordion>
+			</Accordion> */}
 		</>
 	)
 }

@@ -2,20 +2,19 @@ import * as fabric from 'fabric'
 import { calcWidthText } from '../../../../utils/js/drawActions'
 import { LineDiagram } from '../../../../class/LineClass'
 import { invertHexColor } from '../../../ToolsCanvas/utils/js'
-
+let points = []
 /**
  * Dibuja una línea en el canvas de Fabric.js al hacer clic.
  * La función maneja dos clics: el primero crea una línea temporal, el segundo finaliza la línea y la agrega al canvas.
  *
  * @param {Object} click - Objeto con las coordenadas del clic.
  * @param {React.RefObject} fabricCanvasRef - Referencia al canvas de Fabric.js.
- * @param {Function} setPointer - Función para actualizar los puntos de la línea.
  * @param {Function} changeTool - Función para cambiar la herramienta activa.
  * @param {Function} setSelectedObject - Función para establecer el objeto seleccionado en el canvas.
  * @returns {fabric.Line} Línea creada en el canvas.
  * @author Jose Romani <jose.romani@hotmail.com>
  */
-export const drawLine = async (click, fabricCanvasRef, setPointer, changeTool, setSelectedObject) => {
+export const drawLine = async (click, fabricCanvasRef, changeTool, setSelectedObject) => {
 	if (click) {
 		const canvas = fabricCanvasRef.current
 		const { x, y } = click
@@ -23,52 +22,49 @@ export const drawLine = async (click, fabricCanvasRef, setPointer, changeTool, s
 			if (e.key === 'Escape') {
 				deleteLineTemp(canvas)
 				canvas?.set({ defaultCursor: 'default' })
-				setPointer([])
+				points = []
 				window.removeEventListener('keydown', handleEscape)
 			}
 		}
 
 		window.addEventListener('keydown', handleEscape)
 		// Manejo del primer clic: inicializa la línea temporal
-		setPointer((prevPointer) => {
-			const id = Math.random().toString(36).substring(2, 9)
-			const tempLine = new fabric.Line([x, y, x, y], {
-				id: `temp_line_${id}`,
-				stroke: 'black',
-				strokeWidth: 2,
-				selectable: false,
-			})
-			if (prevPointer?.length === 0 || !prevPointer) {
-				// Crea una línea temporal
-				canvas.add(tempLine)
-				canvas.renderAll()
-
-				canvas.on('mouse:move', handleMouseMove(tempLine, fabricCanvasRef))
-
-				return [{ x, y }]
-			}
-			const [start] = prevPointer
-			const points = [start.x, start.y, x, y]
-
-			// CREACION DE LA LINEA FINAL
-			const finalLine = createLine(points, fabricCanvasRef, setSelectedObject, changeTool, id)
-
-			//ELIMINO LA LINEA TEMPORAL
-			deleteLineTemp(canvas)
-
-			//ELIMINO LA FUNCION DE MOVIMIENTO DEL MOUSE QUE MOVIA LA LINEA TEMPORAL
-			canvas.off('mouse:move')
-
-			// SELECCIONAMOS LA LINEA QUE SE TERMINO DE CREAR PARA MODIFICAR LOS PARAMETROS
-			canvas.setActiveObject(finalLine)
-
-			// CAMBIO EL CURSOR PARA QUE NO PAREZCA QUE SEGUIMOS CREANDO LINEAS
-			canvas?.set({ defaultCursor: 'default' })
-
-			// VOLVEMOS A ACTIVAR LA FUNCION DE SELECCION A TODO LOS OBJETOS
-			canvas?.getObjects().forEach((obj) => (obj.selectable = true))
-			return [] // Resetea los puntos
+		const id = Math.random().toString(36).substring(2, 9)
+		const tempLine = new fabric.Line([x, y, x, y], {
+			id: `temp_line_${id}`,
+			stroke: 'black',
+			strokeWidth: 2,
+			selectable: false,
 		})
+		if (!points.length) {
+			// Crea una línea temporal
+			canvas.add(tempLine)
+			canvas.renderAll()
+
+			canvas.on('mouse:move', handleMouseMove(tempLine, fabricCanvasRef))
+			points.push(x, y)
+			return false
+		}
+		// const [start] = prevPointer
+		points.push(x, y)
+		// CREACION DE LA LINEA FINAL
+		const finalLine = createLine(points, fabricCanvasRef, setSelectedObject, changeTool, id)
+
+		//ELIMINO LA LINEA TEMPORAL
+		deleteLineTemp(canvas)
+
+		//ELIMINO LA FUNCION DE MOVIMIENTO DEL MOUSE QUE MOVIA LA LINEA TEMPORAL
+		canvas.off('mouse:move')
+
+		// SELECCIONAMOS LA LINEA QUE SE TERMINO DE CREAR PARA MODIFICAR LOS PARAMETROS
+		canvas.setActiveObject(finalLine)
+
+		// CAMBIO EL CURSOR PARA QUE NO PAREZCA QUE SEGUIMOS CREANDO LINEAS
+		canvas?.set({ defaultCursor: 'default' })
+
+		// VOLVEMOS A ACTIVAR LA FUNCION DE SELECCION A TODO LOS OBJETOS
+		canvas?.getObjects().forEach((obj) => (obj.selectable = true))
+		points = []
 	}
 }
 
@@ -375,7 +371,6 @@ export const addMetadataPoints = (line, canvas) => {
 export const updatePropertyLine = (line, property, canvas) => {
 	const lineSelect = canvas.getObjects('line').find((obj) => obj.id === line.id)
 	if (!lineSelect) return
-	console.log(lineSelect)
 	const value = parseInt(line[property]) || line[property]
 	lineSelect.set({ [property]: value })
 	const circles_start = canvas.getObjects('circle').find((circle) => circle.id.includes(`${line.id}_start`))

@@ -10,7 +10,6 @@ import { createLine } from '../../components/DrawLine/utils/js/line'
 import { finalizePolyline } from '../../components/DrawPolyLine/utils/js/polyline'
 import { createImage } from '../../components/DrawImage/utils/js/actionImage'
 import { newText } from '../../components/DrawText/utils/js'
-import { handlechangeBackground } from '../../components/PropertyCanva/utils/js/propertyCanvas'
 import axios from 'axios'
 
 /**

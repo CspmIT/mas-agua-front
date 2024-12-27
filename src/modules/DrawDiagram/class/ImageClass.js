@@ -17,7 +17,7 @@ export class ImageDiagram {
 	 * @param {number} params.colorText - Color del texto de la imagen.
 	 * @param {string} params.backgroundText - Color o texto de fondo.
 	 * @param {string} params.textPosition - Ubicación del titulo/texto que querramos en la imagen
-	 * @param {boolean} params.animation - Valor para indicar si la imagen tiene activa o no animación
+	 * @param {object} params.variables - Objeto con las variables necesarias para mostrar
 	 * @author Jose Romani <jose.romani@hotmail.com>
 	 */
 	constructor({
@@ -36,7 +36,7 @@ export class ImageDiagram {
 		colorText = '#000000',
 		backgroundText = '#ffffff',
 		textPosition = 'Top',
-		animation = false,
+		variables = {},
 	}) {
 		if (!id || !name || !src || !left || !top || !width || !height)
 			throw new Error('Debes pasar todo los parametros necesarios')
@@ -56,7 +56,7 @@ export class ImageDiagram {
 			colorText,
 			backgroundText,
 			textPosition,
-			animation,
+			variables,
 		})
 	}
 
@@ -166,12 +166,12 @@ export class ImageDiagram {
 	}
 
 	/**
-	 * Activa/Desactiva la animacion de la imagen.
-	 * @param {boolean} status - Nueva estado.
+	 * Definimos las variables para la imagen.
+	 * @param {object} variable - Nueva variable
 	 * @author Jose Romani <jose.romani@hotmail.com>
 	 */
-	setAnimated(status) {
-		this.animation = status
+	setVariables(variable) {
+		this.variables = variable
 	}
 
 	/**

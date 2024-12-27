@@ -1,7 +1,17 @@
 export const front = {
-	Cooptech: 'http://localhost:8000',
+	Cooptech:
+		import.meta.env.VITE_ENTORNO == 'local'
+			? 'https://dev.cooptech.com.ar'
+			: import.meta.env.VITE_ENTORNO == 'desarrollo'
+			? 'https://dev.cooptech.com.ar'
+			: 'https://cooptech.com.ar',
 	'Oficina Virtual': 'https://oficinainterna.cooptech.com.ar',
-	Reconecta: 'https://reconecta.cooptech.com.ar',
+	Reconecta:
+		import.meta.env.VITE_ENTORNO == 'local'
+			? 'http://localhost:8000'
+			: import.meta.env.VITE_ENTORNO == 'desarrollo'
+			? 'https://devreconecta.cooptech.com.ar/'
+			: 'https://reconecta.cooptech.com.ar',
 	'Mas Agua':
 		import.meta.env.VITE_ENTORNO == 'local'
 			? 'http://localhost:4000'

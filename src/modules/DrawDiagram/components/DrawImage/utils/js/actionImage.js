@@ -31,6 +31,7 @@ export const addTextToCanvas = async (propsImg, fabricCanvasRef, type = 'default
 		object = fabricCanvas.getObjects('image').find((obj) => obj.id === propsImg.id).metadata
 	}
 	// Actualizar o crear el texto
+	console.log(object.width)
 	if (textObject) {
 		type === 'influx'
 			? updateTextInflux(object, fabricCanvas, textObject)
@@ -67,8 +68,8 @@ export const createImage = (data, fabricCanvasRef, setSelectedObject, changeTool
 	const imgnueva = new ImageDiagram({
 		...data,
 		statusAnimation: data.animation,
-		width: parseFloat(data?.width) || imgNode.width,
-		height: parseFloat(data?.height) || imgNode.height,
+		width: parseFloat(data?.width) || imgNode.width * 0.25,
+		height: parseFloat(data?.height) || imgNode.height * 0.25,
 	})
 	imgNode.onload = () => {
 		// Crear una imagen de Fabric.js con las dimensiones correctas
@@ -152,11 +153,13 @@ const attachImageEvents = (object, fabricCanvasRef, setSelectedObject, changeToo
 	})
 	object.on('scaling', () => {
 		object.metadata.resize(object.width * object.scaleX, object.height * object.scaleY)
+		object.metadata.move(object.top, object.left)
 		addTextToCanvas(object.metadata, fabricCanvasRef)
 		if (withInflux) addTextToCanvas(object.metadata, fabricCanvasRef, 'influx')
 	})
 	object.on('rotating', () => {
 		object.metadata.rotate(object.angle)
+		object.metadata.move(object.top, object.left)
 		addTextToCanvas(object.metadata, fabricCanvasRef)
 		if (withInflux) addTextToCanvas(object.metadata, fabricCanvasRef, 'influx')
 	})
@@ -168,7 +171,7 @@ export const handleDrop = (e, fabricCanvasRef, setSelectedObject, changeTool) =>
 	try {
 		const imageSrc = e.dataTransfer.getData('text/plain') // URL de la imagen
 		const imageName = e.dataTransfer.getData('name') // URL de la imagen
-		const imageAnimation = JSON.parse(e.dataTransfer.getData('animation')) // URL de la imagen
+		const variables = JSON.parse(e.dataTransfer.getData('variables'))
 		const fabricCanvas = fabricCanvasRef.current
 		if (!fabricCanvas || !imageSrc) return
 
@@ -178,7 +181,7 @@ export const handleDrop = (e, fabricCanvasRef, setSelectedObject, changeTool) =>
 		const data = {
 			src: imageSrc,
 			name: imageName,
-			animation: imageAnimation,
+			variables: variables,
 			left,
 			top,
 			id,
@@ -239,12 +242,24 @@ export const newTextImg = (img, fabricCanvas) => {
 export const editTextImg = (img, fabricCanvas, textbox) => {
 	if (!img || !fabricCanvas || !textbox) return
 	// Actualiza propiedades dinámicas
+	let angle = img.angle || textbox.angle || 0
+	let flipX = false
+	let flipY = false
+
+	if (angle > 90 && angle < 270) {
+		flipX = true
+		flipY = true
+	}
+
 	textbox.set({
 		text: img.text || textbox.text,
 		width: calcWidthText(img.text || textbox.text, img.sizeText || textbox.fontSize),
 		fontSize: img.sizeText || textbox.fontSize,
 		fill: img.colorText || textbox.fill,
 		backgroundColor: img.backgroundText || textbox.backgroundColor,
+		angle,
+		flipX,
+		flipY,
 	})
 	// Ajusta posición si es necesario
 	if (img?.textPosition) {
@@ -265,16 +280,39 @@ export const editTextImg = (img, fabricCanvas, textbox) => {
  * @author Jose Romani <jose.romani@hotmail.com>
  */
 const calculateTextPosition = (img, text) => {
-	const { left: leftImg, top: topImg, width: widthImg, height: heightImg, textPosition } = img
+	const { left: leftImg, top: topImg, width: widthImg, height: heightImg, textPosition, angle } = img
 	const positions = {
-		Left: () => ({ left: leftImg - text.width - 20, top: topImg + heightImg / 2 - text.height / 2 }),
-		Right: () => ({ left: leftImg + widthImg + 20, top: topImg + heightImg / 2 - text.height / 2 }),
-		Top: () => ({ left: leftImg + widthImg / 2 - text.width / 2, top: topImg - text.height - 10 }),
-		Bottom: () => ({ left: leftImg + widthImg / 2 - text.width / 2, top: topImg + heightImg + 15 }),
+		Left: () => ({
+			left: parseFloat((leftImg - text.width - 20).toFixed(2)),
+			top: parseFloat((topImg + heightImg / 2 - text.height / 2).toFixed(2)),
+		}),
+		Right: () => ({
+			left: parseFloat((leftImg + widthImg + 20).toFixed(2)),
+			top: parseFloat((topImg + heightImg / 2 - text.height / 2).toFixed(2)),
+		}),
+		Top: () => ({
+			left: parseFloat((leftImg + widthImg / 2 - text.width / 2).toFixed(2)),
+			top: parseFloat((topImg - text.height - 10).toFixed(2)),
+		}),
+		Bottom: () => ({
+			left: parseFloat((leftImg + widthImg / 2 - text.width / 2).toFixed(2)),
+			top: parseFloat((topImg + heightImg + 15).toFixed(2)),
+		}),
 		Center: () => ({
-			left: leftImg + widthImg / 2 - text.width / 2,
-			top: topImg + heightImg / 2 - text.height / 2,
+			left: parseFloat((leftImg + widthImg / 2 - text.width / 2).toFixed(2)),
+			top: parseFloat((topImg + heightImg / 2 - text.height / 2).toFixed(2)),
 		}),
 	}
-	return (positions[textPosition] || positions.Center)()
+	// Si la imagen tiene un ángulo de rotación, ajusta también la posición del texto
+	const position = (positions[textPosition] || positions.Center)()
+	if (angle) {
+		const rad = (angle * Math.PI) / 180 // Convertir a radianes
+		const cos = Math.cos(rad)
+		const sin = Math.sin(rad)
+		const xOffset = position.left - leftImg
+		const yOffset = position.top - topImg
+		position.left = leftImg + xOffset * cos - yOffset * sin
+		position.top = topImg + xOffset * sin + yOffset * cos
+	}
+	return position
 }

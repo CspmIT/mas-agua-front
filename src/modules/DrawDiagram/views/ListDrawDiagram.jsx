@@ -13,7 +13,6 @@ const ListDrawDiagram = () => {
 	const navigate = useNavigate()
 	const [listDiagram, setListDiagram] = useState([])
 	const editDiagram = (diagram) => {
-		console.log(diagram)
 		navigate(`/newDiagram/${diagram.id}`)
 	}
 	const getDiagrams = async () => {

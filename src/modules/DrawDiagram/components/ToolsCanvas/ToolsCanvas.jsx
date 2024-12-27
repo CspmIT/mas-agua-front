@@ -12,6 +12,8 @@ import PropertiesSelect from '../DrawImage/PropertiesSelect/PropertiesSelect'
 import MenuObject from '../DrawImage/MenuObject/MenuObject'
 import { cleanSelectionCanvas } from './utils/js'
 import PropertyCanva from '../PropertyCanva/PropertyCanva'
+import ListField from '../Fields/ListField'
+import { HiOutlineVariable } from 'react-icons/hi2'
 
 function ToolsCanvas({ selectedObject, handleChangeTypeImg, fabricCanvasRef, onPropertySelected }) {
 	const [alignment, setAlignment] = useState('web')
@@ -22,18 +24,13 @@ function ToolsCanvas({ selectedObject, handleChangeTypeImg, fabricCanvasRef, onP
 		onPropertySelected(newAlignment)
 		cleanSelectionCanvas(fabricCanvasRef)
 		canvas.getObjects().forEach((obj) => (obj.selectable = true))
-		const selectObject = canvas?.getActiveObject()
-
+		selectedObject = ''
 		switch (newAlignment) {
 			case 'Text':
 				canvas?.set({ defaultCursor: 'text' })
 				break
 			case 'Property':
-				if (selectObject) {
-					setAlignment('PropertyImg')
-				} else {
-					setAlignment('PropertyCanvas')
-				}
+				setAlignment('PropertyCanvas')
 				break
 			case 'Line':
 			case 'Polyline':
@@ -49,17 +46,17 @@ function ToolsCanvas({ selectedObject, handleChangeTypeImg, fabricCanvasRef, onP
 	useEffect(() => {
 		switch (getInstanceType(selectedObject)) {
 			case 'TextDiagram':
-				setAlignment(selectedObject ? 'Text' : null)
+				setAlignment(selectedObject ? 'PropertyText' : null)
 				break
 			case 'ImageDiagram':
 			case 'ImageTopic':
 				setAlignment(selectedObject ? 'PropertyImg' : null)
 				break
 			case 'LineDiagram':
-				setAlignment(selectedObject ? 'Line' : null)
+				setAlignment(selectedObject ? 'PropertyLine' : null)
 				break
 			case 'PolylineDiagram':
-				setAlignment(selectedObject ? 'Polyline' : null)
+				setAlignment(selectedObject ? 'PropertyPolyline' : null)
 				break
 			default:
 				setAlignment(null)
@@ -95,25 +92,36 @@ function ToolsCanvas({ selectedObject, handleChangeTypeImg, fabricCanvasRef, onP
 				<ToggleButton value='Image'>
 					<IoImagesOutline />
 				</ToggleButton>
+				<ToggleButton value='Variable'>
+					<HiOutlineVariable size={20} />
+				</ToggleButton>
 				<ToggleButton
 					value='Property'
 					selected={alignment?.includes('Property')}
-					onClick={() => handleChange(['PropertyImg', 'PropertyCanvas'])}
+					onClick={() =>
+						handleChange([
+							'PropertyImg',
+							'PropertyCanvas',
+							'PropertyText',
+							'PropertyPolyline',
+							'PropertyLine',
+						])
+					}
 				>
 					<FaTools />
 				</ToggleButton>
 			</ToggleButtonGroup>
-			{alignment === 'Line' && selectedObject ? (
+			{alignment === 'PropertyLine' && getInstanceType(selectedObject) == 'LineDiagram' ? (
 				<div onClick={() => handleComponentClick('DrawLine')}>
 					<DrawLine selectedObject={selectedObject} fabricCanvasRef={fabricCanvasRef} />
 				</div>
 			) : null}
-			{alignment === 'Polyline' && selectedObject ? (
+			{alignment === 'PropertyPolyline' && getInstanceType(selectedObject) == 'PolylineDiagram' ? (
 				<div onClick={() => handleComponentClick('DrawPolyLine')}>
 					<DrawPolyLine selectedObject={selectedObject} fabricCanvasRef={fabricCanvasRef} />
 				</div>
 			) : null}
-			{alignment === 'Text' && selectedObject ? (
+			{alignment === 'PropertyText' && getInstanceType(selectedObject) == 'TextDiagram' ? (
 				<div onClick={() => handleComponentClick('DrawText')}>
 					<DrawText selectedObject={selectedObject} fabricCanvasRef={fabricCanvasRef} />
 				</div>
@@ -123,7 +131,13 @@ function ToolsCanvas({ selectedObject, handleChangeTypeImg, fabricCanvasRef, onP
 					<MenuObject />
 				</div>
 			) : null}
-			{alignment === 'PropertyImg' ? (
+			{alignment === 'Variable' ? (
+				<div onClick={() => handleComponentClick('Variable')}>
+					<ListField />
+				</div>
+			) : null}
+			{alignment === 'PropertyImg' &&
+			(getInstanceType(selectedObject) == 'ImageDiagram' || getInstanceType(selectedObject) == 'ImageTopic') ? (
 				<div onClick={() => handleComponentClick('PropertiesSelect')}>
 					<PropertiesSelect
 						data={selectedObject}

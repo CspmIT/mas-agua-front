@@ -11,7 +11,7 @@ function MenuObject() {
 		setSelectedImageId(img.id)
 		e.dataTransfer.setData('text/plain', img.src)
 		e.dataTransfer.setData('name', img.name)
-		e.dataTransfer.setData('animation', img.animation)
+		e.dataTransfer.setData('variables', JSON.stringify(img.variables))
 	}
 
 	useEffect(() => {

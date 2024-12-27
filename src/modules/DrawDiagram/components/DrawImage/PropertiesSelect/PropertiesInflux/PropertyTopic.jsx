@@ -2,7 +2,7 @@ import { Checkbox, TextField } from '@mui/material'
 import { useEffect, useState } from 'react'
 import PropertyTextInflux from './PropertyTextInflux'
 import TypeSensor from './TypeSensor/TypeSensor'
-import ListField from './ListField'
+import ListField from '../../../Fields/ListField'
 import RangeConsult from './RangeConsult'
 import { addTextToCanvas } from '../../utils/js/actionImage'
 
