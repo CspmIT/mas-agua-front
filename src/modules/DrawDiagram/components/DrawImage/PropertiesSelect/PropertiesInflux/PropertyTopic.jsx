@@ -1,13 +1,12 @@
-import { Add, Close } from '@mui/icons-material'
-import { Badge, Checkbox, IconButton, List, MenuItem, TextField, Typography } from '@mui/material'
+import { Checkbox, TextField } from '@mui/material'
 import { useEffect, useState } from 'react'
-import Swal from 'sweetalert2'
 import PropertyTextInflux from './PropertyTextInflux'
 import TypeSensor from './TypeSensor/TypeSensor'
 import ListField from './ListField'
 import RangeConsult from './RangeConsult'
+import { addTextToCanvas } from '../../utils/js/actionImage'
 
-function PropertyTopic({ data, showValueInflux, AddText }) {
+function PropertyTopic({ data, fabricCanvasRef }) {
 	const [info, setInfo] = useState(data || [])
 	const [errorTopic, setErrorTopic] = useState(false)
 	const [showValueTopic, setShowValueTopic] = useState(false)
@@ -34,7 +33,7 @@ function PropertyTopic({ data, showValueInflux, AddText }) {
 		const newInfo = { ...info, showValue: status }
 		setInfo(newInfo)
 		data.setShowValue(status)
-		showValueInflux(newInfo, status)
+		await addTextToCanvas(newInfo, fabricCanvasRef, 'influx')
 	}
 
 	return (
@@ -55,13 +54,13 @@ function PropertyTopic({ data, showValueInflux, AddText }) {
 
 			{/* // FALTA EL LISTADO DEL FIELDS Y LOS DATE DE FECHA */}
 			<RangeConsult data={data} />
-			<ListField data={data} setShowValueTopic={setShowValueTopic} AddText={AddText} />
+			<ListField data={data} setShowValueTopic={setShowValueTopic} fabricCanvasRef={fabricCanvasRef} />
 			<TypeSensor data={data} />
 			<div className='flex justify-start items-center'>
 				<Checkbox key={'topic'} checked={!!showValueTopic} onChange={(e) => showValue(e.target.checked)} />
 				<p>Mostrar Valor</p>
 			</div>
-			{showValueTopic ? <PropertyTextInflux data={data} AddText={AddText} /> : null}
+			{showValueTopic ? <PropertyTextInflux data={data} fabricCanvasRef={fabricCanvasRef} /> : null}
 		</div>
 	)
 }

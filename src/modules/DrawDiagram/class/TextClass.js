@@ -6,7 +6,6 @@ export class TextDiagram {
 	 * @param {number} params.top - Posición vertical del texto.
 	 * @param {number} params.angle - Angulo del texto.
 	 * @param {number} params.status - Estado del texto (1 para activo, 0 para inactivo).
-	 * @param {number} params.zIndex - Índice de apilamiento (z-index) del texto.
 	 * @param {string} params.text - Texto del texto.
 	 * @param {number} params.sizeText - Tamaño del texto.
 	 * @param {number} params.colorText - Color del texto.
@@ -19,14 +18,13 @@ export class TextDiagram {
 		top,
 		angle = 0,
 		status = 1,
-		zIndex = 1,
 		text = '',
 		sizeText = 20,
 		colorText = '#000000',
 		backgroundText = '#ffffff',
 	}) {
 		if (!id || !left || !top) throw new Error('Debes pasar todo los parametros necesarios')
-		Object.assign(this, { id, left, top, angle, status, zIndex, text, sizeText, colorText, backgroundText })
+		Object.assign(this, { id, left, top, angle, status, text, sizeText, colorText, backgroundText })
 	}
 
 	/**

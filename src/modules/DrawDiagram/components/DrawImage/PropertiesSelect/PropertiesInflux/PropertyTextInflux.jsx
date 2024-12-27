@@ -1,30 +1,32 @@
 import React, { useEffect, useState } from 'react'
 import { MenuItem, TextField } from '@mui/material'
-import InputColor from '../../../../../components/InputColor/InputColor'
-import { parseRgba } from '../../../../../components/InputColor/utils'
+import InputColor from '../../../../../../components/InputColor/InputColor'
+import { parseRgba } from '../../../../../../components/InputColor/utils'
+import { addTextToCanvas } from '../../utils/js/actionImage'
 
-function PropertyTextInflux({ data, AddText }) {
+function PropertyTextInflux({ data, fabricCanvasRef }) {
 	const [info, setInfo] = useState(data)
 	const [backgroundText, setBackgroudText] = useState(info?.backgroundTextValue || '#ffffff')
+
 	const changeSizeText = (size) => {
 		data.setSizeTextValue(size)
 		const infoUpdate = { ...info, sizeTextValue: size }
 		setInfo(infoUpdate)
-		AddText(data)
+		addTextToCanvas(data, fabricCanvasRef, 'influx')
 	}
 
 	const changeColorText = (color) => {
 		data.setColorTextValue(color)
 		const infoUpdate = { ...info, colorTextValue: color }
 		setInfo(infoUpdate)
-		AddText(data)
+		addTextToCanvas(data, fabricCanvasRef, 'influx')
 	}
 
 	const updateBackground = (rgbaColor) => {
 		data.setBackgroundTextValue(rgbaColor)
 		const infoUpdate = { ...info, backgroundTextValue: rgbaColor }
 		setInfo(infoUpdate)
-		AddText(data)
+		addTextToCanvas(data, fabricCanvasRef, 'influx')
 	}
 
 	const changePosition = (e) => {
@@ -32,7 +34,7 @@ function PropertyTextInflux({ data, AddText }) {
 		data.setPositionValue(value)
 		const infoUpdate = { ...info, valuePosition: value }
 		setInfo(infoUpdate)
-		AddText(data)
+		addTextToCanvas(data, fabricCanvasRef, 'influx')
 	}
 
 	useEffect(() => {

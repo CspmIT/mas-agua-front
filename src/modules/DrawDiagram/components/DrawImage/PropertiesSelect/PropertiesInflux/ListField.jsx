@@ -2,8 +2,9 @@ import { Add, Close } from '@mui/icons-material'
 import { Badge, IconButton, List, TextField, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import Swal from 'sweetalert2'
+import { addTextToCanvas } from '../../utils/js/actionImage'
 
-function ListField({ data, setShowValueTopic, AddText }) {
+function ListField({ data, setShowValueTopic, fabricCanvasRef }) {
 	const [info, setInfo] = useState(data || [])
 	const [listFields, setListFields] = useState(info?.field || [])
 	const [field, setField] = useState([])
@@ -50,7 +51,7 @@ function ListField({ data, setShowValueTopic, AddText }) {
 			setListFields(updatedList)
 			setField(null)
 			setUni(null)
-			AddText(data)
+			addTextToCanvas(data, fabricCanvasRef, 'influx')
 			setErrorFields(false)
 		} catch (error) {
 			console.error('Error al agregar el campo:', error)
@@ -78,7 +79,7 @@ function ListField({ data, setShowValueTopic, AddText }) {
 			}
 			data.setField(updatedList)
 			setListFields(updatedList)
-			AddText(data)
+			addTextToCanvas(data, fabricCanvasRef, 'influx')
 		} catch (error) {
 			await Swal.fire({
 				title: 'Atención!',

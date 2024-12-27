@@ -1,23 +1,25 @@
-export class LineDiagram {
+export class PolylineDiagram {
 	/**
 	 * @param {Object} params - Parámetros para inicializar la instancia.
 	 * @param {number} params.id - Identificador de la linea.
-	 * @param {Object} params.points - Objeto con los puntos {start:{left, top}, end:{left, top}}.
+	 * @param {Array} params.points - Array de objetos con los puntos que componen la polylinea [{left, top},{left, top},...].
 	 * @param {string} params.stroke - Color de linea principal.
-	 * @param {number} params.strokeWidth - Ancho de la linea.
+	 * @param {number} params.strokeWidth - Angulo de la linea.
 	 * @param {string} params.colorSecondary - Color de linea secundaria.
 	 * @param {boolean} params.animation - Estado de la animacion de la linea.
 	 * @param {boolean} params.invertAnimation - Sentido de la animación.
 	 * @param {number} params.status - Estado de la linea (1 para activo, 0 para inactivo).
+	 * @param {boolean} params.showText - Estado para mostrar el texto.
 	 * @param {string} params.text - Texto de la linea.
 	 * @param {number} params.sizeText - Tamaño del texto.
 	 * @param {number} params.colorText - Color del texto.
 	 * @param {string} params.backgroundText - Color de fondo.
+	 * @param {string} params.locationText - Ubicación del texto respecto a la linea
 	 * @author Jose Romani <jose.romani@hotmail.com>
 	 */
 	constructor({
 		id,
-		points = { start: {}, end: {} },
+		points = [],
 		stroke = '#000000',
 		strokeWidth = 3,
 		colorSecondary = '#000000',
@@ -31,7 +33,7 @@ export class LineDiagram {
 		backgroundText = '#ffffff',
 		locationText = 'Top',
 	}) {
-		if (!id || !points.start || !points.end) throw new Error('Debes pasar todo los parametros necesarios')
+		if (!id || points.length < 2) throw new Error('Debes pasar todo los parametros necesarios')
 		Object.assign(this, {
 			id,
 			points,
@@ -59,11 +61,11 @@ export class LineDiagram {
 
 	/**
 	 * Establece los Puntos que componen la linea.
-	 * @param {Object} point - Objeto con los puntos { start:{left, top}, end:{left, top} }.
+	 * @param {Object} points - Objeto con los puntos { start:{left, top}, end:{left, top} }.
 	 * @author Jose Romani <jose.romani@hotmail.com>
 	 */
-	setPoints(point) {
-		this.points = point
+	setPoints(points) {
+		this.points = points
 	}
 
 	/**

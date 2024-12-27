@@ -18,7 +18,7 @@ import ConfigSecurity from './modules/configSecurity/views'
 import LoginCooptech from './modules/LoginApp/view/LoginCooptech'
 import AddMenu from './modules/ConfigMenu/components/AddMenu'
 import ListDrawDiagram from './modules/DrawDiagram/views/ListDrawDiagram'
-import DrawDiagram from './modules/DrawDiagram/components/DrawDiagram'
+import DrawDiagram from './modules/DrawDiagram/views/DrawDiagram'
 import SelectType from './modules/Charts/views/SelectType'
 import ConfigGraphic from './modules/Charts/views/ConfigGraphic'
 
@@ -41,6 +41,7 @@ function App() {
 		{ path: '/config/notifications', element: <Notifications /> },
 		{ path: '/config/diagram', element: <ListDrawDiagram /> },
 		{ path: '/newDiagram', element: <DrawDiagram /> },
+		{ path: '/newDiagram/:id', element: <DrawDiagram /> },
 		{ path: '/AddMenu', element: <AddMenu /> },
         {path: '/config/graphic', element: <SelectType />},
         {path: '/config/graphic/:id', element: <ConfigGraphic/>},

@@ -21,4 +21,8 @@ export const backend = {
 	Centinela: `${front.Centinela}/api`,
 	Cloud: `${front.Cloud}/api`,
 	Provision: `${front.Provision}/api`,
+	Archivos:
+		import.meta.env.VITE_ENTORNO == 'local'
+			? 'http://localhost:5000/minio'
+			: 'https://storageov.cooptech.com.ar/minio',
 }

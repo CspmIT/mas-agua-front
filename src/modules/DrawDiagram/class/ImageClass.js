@@ -17,7 +17,6 @@ export class ImageDiagram {
 	 * @param {number} params.colorText - Color del texto de la imagen.
 	 * @param {string} params.backgroundText - Color o texto de fondo.
 	 * @param {string} params.textPosition - Ubicación del titulo/texto que querramos en la imagen
-	 * @param {boolean} params.statusAnimation - Estado para indicar si la imagen tiene o no animación
 	 * @param {boolean} params.animation - Valor para indicar si la imagen tiene activa o no animación
 	 * @author Jose Romani <jose.romani@hotmail.com>
 	 */
@@ -30,7 +29,6 @@ export class ImageDiagram {
 		angle = 0,
 		width,
 		height,
-		value = 0,
 		status = 1,
 		statusText = 0,
 		text = '',
@@ -38,7 +36,6 @@ export class ImageDiagram {
 		colorText = '#000000',
 		backgroundText = '#ffffff',
 		textPosition = 'Top',
-		statusAnimation = false,
 		animation = false,
 	}) {
 		if (!id || !name || !src || !left || !top || !width || !height)
@@ -52,7 +49,6 @@ export class ImageDiagram {
 			angle,
 			width,
 			height,
-			value,
 			status,
 			statusText,
 			text,
@@ -60,7 +56,6 @@ export class ImageDiagram {
 			colorText,
 			backgroundText,
 			textPosition,
-			statusAnimation,
 			animation,
 		})
 	}
@@ -103,8 +98,8 @@ export class ImageDiagram {
 		if (width <= 0 || height <= 0) {
 			throw new Error('El ancho y alto deben ser mayores que cero.')
 		}
-		this.width = width
-		this.height = height
+		this.width = parseFloat(width.toFixed(2))
+		this.height = parseFloat(height.toFixed(2))
 	}
 
 	/**
@@ -209,22 +204,52 @@ export class ImageDiagram {
 	/**
 	 * Convierte una instancia de ImageDiagram en una instancia de ImageTopic.
 	 * @param {ImageDiagram} image - Instancia de ImageDiagram.
-	 * @param {Object} params - Parámetros adicionales para ImageTopic.
-	 * @param {string} params.topic - Tema de la imagen.
-	 * @param {Array} params.field - Campo asociado.
-	 * @param {number} params.startRange - Rango inicial.
-	 * @param {number} params.finishRange - Rango final.
+	 * @param {number} params.statusTopic - Tema de la imagen.
+	 * @param {string} params.topic - Topico de la imagen.
+	 * @param {string} params.typeSensor - Tipo de sensor que va a ser esta imagen (Analogico o Binario)
+	 * @param {Array} params.optionValue - Aray donde se van a pasar los parametros del sensor de tipo binario.
+	 * @param {Array} params.field - Array donde vas a estar todo los fields para la consulta en influx.
+	 * @param {boolean} params.showValue - Estado para saber si se muestra o no el valor del dato de influx.
+	 * @param {string} params.valuePosition - Ubicación del texto del valor, que se mostrara en caso de estar habilitado.
+	 * @param {number} params.sizeTextValue - Tamaño del texto del valor, que se mostrara en caso de estar habilitado.
+	 * @param {string} params.colorTextValue - Color del texto del valor, que se mostrara en caso de estar habilitado.
+	 * @param {string} params.backgroundTextValue - Color de fondo del texto del valor, que se mostrara en caso de estar habilitado.
+	 * @param {number} params.startValueRange - Rango inicial.
+	 * @param {number} params.startUniRange - Rango final.
 	 * @returns {ImageTopic} Nueva instancia de ImageTopic.
 	 * @author Jose Romani <jose.romani@hotmail.com>
 	 */
-	static convertToImageTopic(image, { statusTopic = 1, topic = '', field = [], startRange = '', finishRange = '' }) {
+	static convertToImageTopic(
+		image,
+		{
+			statusTopic = 1,
+			topic = '',
+			typeSensor = '',
+			optionValue = [],
+			field = [],
+			showValue = false,
+			valuePosition = 'Top',
+			sizeTextValue = 20,
+			colorTextValue = '#000000',
+			backgroundTextValue = '#ffffff',
+			startValueRange = '1',
+			startUniRange = 'm',
+		}
+	) {
 		return new ImageTopic({
 			...image,
 			statusTopic,
 			topic,
+			typeSensor,
+			optionValue,
 			field,
-			startRange,
-			finishRange,
+			showValue,
+			valuePosition,
+			sizeTextValue,
+			colorTextValue,
+			backgroundTextValue,
+			startValueRange,
+			startUniRange,
 		})
 	}
 }
@@ -240,7 +265,6 @@ export class ImageTopic extends ImageDiagram {
 	 * @param {number} params.angle - Angulo de la imagen.
 	 * @param {number} params.width - Ancho de la imagen.
 	 * @param {number} params.height - Alto de la imagen.
-	 * @param {string|number} params.value - Valor asociado al diagrama.
 	 * @param {number} params.status - Estado de la imagen (1 o 0).
 	 * @param {number} params.statusText - Estado del texto (1 para activo, 0 para inactivo).
 	 * @param {string} params.text - Texto de la imagen.
@@ -248,7 +272,6 @@ export class ImageTopic extends ImageDiagram {
 	 * @param {string} params.colorText - Color del texto de la imagen.
 	 * @param {string} params.backgroundText - Color de fondo del texto .
 	 * @param {string} params.textPosition - Ubicación del titulo/texto que querramos en la imagen
-	 * @param {boolean} params.statusAnimation - Estado para indicar si la imagen tiene o no animación
 	 * @param {boolean} params.animation - Valor para indicar si la imagen tiene activa o no animación
 	 * @param {number} params.statusTopic - Tema de la imagen.
 	 * @param {string} params.topic - Topico de la imagen.
@@ -260,8 +283,8 @@ export class ImageTopic extends ImageDiagram {
 	 * @param {number} params.sizeTextValue - Tamaño del texto del valor, que se mostrara en caso de estar habilitado.
 	 * @param {string} params.colorTextValue - Color del texto del valor, que se mostrara en caso de estar habilitado.
 	 * @param {string} params.backgroundTextValue - Color de fondo del texto del valor, que se mostrara en caso de estar habilitado.
-	 * @param {number} params.startRange - Rango inicial.
-	 * @param {number} params.finishRange - Rango final.
+	 * @param {number} params.startValueRange - Rango inicial.
+	 * @param {number} params.startUniRange - Rango final.
 	 * @author Jose Romani <jose.romani@hotmail.com>
 	 */
 	constructor({
@@ -281,7 +304,6 @@ export class ImageTopic extends ImageDiagram {
 		colorText = '#000000',
 		backgroundText = '#ffffff',
 		textPosition = 'Top',
-		statusAnimation = false,
 		animation = false,
 		statusTopic = 0,
 		topic = '',
@@ -293,8 +315,8 @@ export class ImageTopic extends ImageDiagram {
 		sizeTextValue = 20,
 		colorTextValue = '#000000',
 		backgroundTextValue = '#ffffff',
-		startValueRange = '1',
-		startUniRange = 'm',
+		// startValueRange = '1',
+		// startUniRange = 'm',
 	}) {
 		if (!id || !name || !src || !left || !top || !width || !height)
 			throw new Error('Debes pasar todo los parametros necesarios')
@@ -316,7 +338,6 @@ export class ImageTopic extends ImageDiagram {
 			colorText,
 			backgroundText,
 			textPosition,
-			statusAnimation,
 			animation,
 		})
 		Object.assign(this, {
@@ -330,8 +351,8 @@ export class ImageTopic extends ImageDiagram {
 			sizeTextValue,
 			colorTextValue,
 			backgroundTextValue,
-			startValueRange,
-			startUniRange,
+			// startValueRange,
+			// startUniRange,
 		})
 	}
 
@@ -416,23 +437,23 @@ export class ImageTopic extends ImageDiagram {
 		this.backgroundTextValue = color
 	}
 
-	/**
-	 * Establece el valor para el rango inicial de la consulta.
-	 * @param {number} value - Nuevo valor para el rango inicial de la consulta.
-	 * @author Jose Romani <jose.romani@hotmail.com>
-	 */
-	setStartValueRange(value) {
-		this.startValueRange = value
-	}
+	// /**
+	//  * Establece el valor para el rango inicial de la consulta.
+	//  * @param {number} value - Nuevo valor para el rango inicial de la consulta.
+	//  * @author Jose Romani <jose.romani@hotmail.com>
+	//  */
+	// setStartValueRange(value) {
+	// 	this.startValueRange = value
+	// }
 
-	/**
-	 * Establece una unidad para el rango inicial de la consulta.
-	 * @param {string} uni - Nueva unidad para rango inicial de la consulta.
-	 * @author Jose Romani <jose.romani@hotmail.com>
-	 */
-	setStartUniRange(uni) {
-		this.startUniRange = uni
-	}
+	// /**
+	//  * Establece una unidad para el rango inicial de la consulta.
+	//  * @param {string} uni - Nueva unidad para rango inicial de la consulta.
+	//  * @author Jose Romani <jose.romani@hotmail.com>
+	//  */
+	// setStartUniRange(uni) {
+	// 	this.startUniRange = uni
+	// }
 
 	/**
 	 * Establece el fields para la consulta.
