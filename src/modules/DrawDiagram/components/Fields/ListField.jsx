@@ -168,13 +168,6 @@ function ListField() {
 				<Typography className='text-center uppercase !font-bold ' typography={'h6'}>
 					variables
 				</Typography>
-				<IconButton
-					color='primary'
-					className='!bg-blue-200 !absolute top-0 right-5'
-					onClick={() => console.log('hola')}
-				>
-					<Add />
-				</IconButton>
 			</div>
 			<Divider />
 			<div className={`w-full p-3 flex flex-col gap-3 h-full overflow-y-auto `}>
