@@ -4,7 +4,13 @@ import EChart from './EChart'
 const BarDataSet = ({ data }) => {
     const options = {
         legend: {},
-        tooltip: {},
+        tooltip: {
+        },
+        toolbox: {
+            feature: {
+                saveAsImage: false,
+            },
+        },
         dataset: {
             source: [
                 ['product', '2015', '2016', '2017'],

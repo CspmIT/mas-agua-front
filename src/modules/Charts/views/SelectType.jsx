@@ -15,59 +15,59 @@ const chartTypes = [
     {
         id: 1,
         title: 'Porcentaje con Olas',
-        image: '/assets/img/charts/liquidPercentaje.png?height=300&width=300',
+        image: '/assets/img/charts/echarts.png?height=300&width=300',
         description:
-            'Visualización de porcentaje con olas, ideal para indicadores. La figura del grafico se puede modificar',
+            'Visualización de porcentaje con olas, ideal para indicadores. El valor se puede mostrar en porcentaje o en valor absoluto. El color del gráfico se puede personalizar.',
     },
     {
         id: 2,
         title: 'Porcentaje Circular',
-        image: '/assets/img/charts/circlePerrcentage.png?height=300&width=300',
+        image: '/assets/img/charts/porcentaje.png?height=300&width=300',
         description:
-            'Visualización de porcentaje circular, ideal para indicadores',
+            'Visualización de porcentaje circular, ideal para indicadores. El color del gráfico se puede personalizar.',
     },
     {
         id: 3,
-        title: 'Half Doughnut Chart',
-        image: '/placeholder.svg?height=200&width=200',
-        description: 'Semi-circular doughnut chart',
+        title: 'Grafico de torta',
+        image: '/assets/img/charts/graficoTorta.png?height=300&width=300',
+        description: 'Grafico de torta con bordes redondeados.',
     },
     {
         id: 4,
-        title: 'Nightingale Chart',
-        image: '/placeholder.svg?height=200&width=200',
-        description: 'Rose diagram style visualization',
+        title: 'Porcentaje rectangular',
+        image: '/assets/img/charts/echartsrectangle.png?height=300&width=300',
+        description: 'Visualización de porcentaje con olas, ideal para indicadores. El valor se puede mostrar en porcentaje o en valor absoluto. El color del gráfico se puede personalizar.',
     },
     {
         id: 5,
-        title: 'Pie with Label Lines',
-        image: '/placeholder.svg?height=200&width=200',
+        title: 'Grafico de barras',
+        image: '/assets/img/charts/graficoBarras.png?height=200&width=200',
         description: 'Pie chart with extended label lines',
     },
     {
         id: 6,
-        title: 'Nested Pies',
-        image: '/placeholder.svg?height=200&width=200',
+        title: 'Grafico de linea con superposicion',
+        image: '/assets/img/charts/StepLine.png?height=200&width=200',
         description: 'Multi-level pie chart visualization',
     },
-    {
-        id: 7,
-        title: 'Calendar Pie',
-        image: '/?height=200&width=200',
-        description: 'Time-based pie chart arrangement',
-    },
-    {
-        id: 8,
-        title: 'Geographical Pie',
-        image: '/placeholder.svg?height=200&width=200',
-        description: 'Region-based pie chart distribution',
-    },
-    {
-        id: 9,
-        title: 'Geographical Pie',
-        image: '/placeholder.svg?height=200&width=200',
-        description: 'Region-based pie chart distribution',
-    },
+    // {
+    //     id: 7,
+    //     title: 'Calendar Pie',
+    //     image: '/?height=200&width=200',
+    //     description: 'Time-based pie chart arrangement',
+    // },
+    // {
+    //     id: 8,
+    //     title: 'Geographical Pie',
+    //     image: '/placeholder.svg?height=200&width=200',
+    //     description: 'Region-based pie chart distribution',
+    // },
+    // {
+    //     id: 9,
+    //     title: 'Geographical Pie',
+    //     image: '/placeholder.svg?height=200&width=200',
+    //     description: 'Region-based pie chart distribution',
+    // },
 ]
 
 function SelectType() {
@@ -76,7 +76,7 @@ function SelectType() {
         navigate(`/config/graphic/${chart}`)
     }
     return (
-        <Box className="p-6 min-h-screen">
+        <Box className="p-6 min-[90vh]">
             <Typography variant="h4" className="text-gray-800">
                 Seleccione el tipo de grafico
             </Typography>

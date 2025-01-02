@@ -6,13 +6,17 @@ import CirclePorcentaje from '../../Charts/components/CirclePorcentaje'
 import BarDataSet from '../../Charts/components/BarDataSet'
 import StackedAreaChart from '../../Charts/components/StackedAreaChart'
 import Surface from '../../Charts/components/Surface'
+import DoughnutChart from '../../Charts/components/DoughnutChart'
+import LineChart from '../../Charts/components/LineChart'
 
 const chartData = [
     {
         title: 'Ingreso de Agua por Hora',
         component: LiquidFill,
         props: {
-            data: [{ name: 'bar', value: 0.79 }],
+            value: 1.65,
+            maxValue: 5,
+            unidad: 'm3',
         },
     },
     {
@@ -20,7 +24,8 @@ const chartData = [
         component: LiquidFill,
         props: {
             type: 'circle',
-            data: [{ name: '%', value: 0.65 }],
+            value: 0.65,
+            maxValue: 1,
             porcentage: true,
             color: '#FFEB59',
         },
@@ -29,7 +34,8 @@ const chartData = [
         title: 'Cantidad de Cloro T2 (%)',
         component: LiquidFill,
         props: {
-            data: [{ value: 0.36 }],
+            value: 0.63,
+            maxValue: 2,
             porcentage: true,
             color: '#FFEB59',
         },
@@ -38,7 +44,9 @@ const chartData = [
         title: 'Cloro libre',
         component: LiquidFill,
         props: {
-            data: [{ name: 'ppm', value: 0.35 }],
+            value: 3.65,
+            unidad: 'mg/L',
+            maxValue: 10,
             color: '#eefd01',
         },
     },
@@ -46,7 +54,8 @@ const chartData = [
         title: 'Nivel de Cisterna (%)',
         component: LiquidFill,
         props: {
-            data: [{ value: 0.75 }, { value: 0.7 }],
+            value: 2.65,
+            maxValue: 5,
             color: '#FFEB59',
             porcentage: true,
             type: 'rectCircle',
@@ -57,7 +66,8 @@ const chartData = [
         title: 'Nivel de Tanque (%)',
         component: CirclePorcentaje,
         props: {
-            data: { percentage: 64.29 },
+            value: 6.23,
+            maxValue: 10,
         },
     },
     {
@@ -71,9 +81,24 @@ const chartData = [
         props: {},
     },
     {
-        title: 'Grafico de navegable',
-        component: Surface,
+        title: 'Grafico de torta',
+        component: DoughnutChart,
         props: {},
+    },
+    {
+        title: 'Grafico de linea con superposicion',
+        component: LineChart,
+        props: {
+            xType: 'category',
+            xSeries: ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'],
+            yType: 'value',
+            ySeries: [
+                { name: 'T1', type: 'line', data: [120, 132, 101, 134, 90] },
+                { name: 'T2', type: 'line', data: [220, 182, 191, 234, 290] },
+                { name: 'T3', type: 'line', data: [150, 232, 201, 154, 190] },
+                { name: 'DeadLine', type: 'line', data: [320, 332, 301, 334, 390] },
+            ],
+        },
     },
 ]
 

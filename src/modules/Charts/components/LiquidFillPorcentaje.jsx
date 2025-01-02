@@ -1,32 +1,32 @@
 import EChart from './EChart'
 import 'echarts-liquidfill'
 
-const LiquidFill = ({ data, color, type, porcentage = false, border = true }) => {
-const isLightColor = (color) => {
-    const hex = color.replace('#', '');
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness > 155;
-};
+const LiquidFill = ({ value = 0, maxValue = 1, color, type, porcentage = false, border = true, unidad= '' }) => {
+    const isLightColor = (color) => {
+        const hex = color.replace('#', '');
+        const r = parseInt(hex.substring(0, 2), 16);
+        const g = parseInt(hex.substring(2, 4), 16);
+        const b = parseInt(hex.substring(4, 6), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness > 155;
+    };
 
-const backgroundColor = color ?? '#363f9c'; // Color de fondo por defecto
-const labelColor = isLightColor(backgroundColor) ? '#000000' : '#FFFFFF';
-
+    const backgroundColor = color ?? '#363f9c'; // Color de fondo por defecto
+    const labelColor = isLightColor(backgroundColor) ? '#000000' : '#FFFFFF';
+    const percentage = (value / maxValue).toFixed(2);
 
     const options = {
         series: [
             {
                 type: 'liquidFill',
-                data: data ?? [0],
+                data: [percentage],
                 radius: '80%',
                 label: {
                     formatter: (params) => {
                         if (porcentage) {
-                            return `${(params.value * 100).toFixed(0)} %`
+                            return `${(params.value * 100).toFixed(2)} %`
                         }
-                        return `${params.value} ${params.name}`
+                        return `${value} ${unidad}`
                     },
                     fontSize: 26,
                     color: '#000',

@@ -1,15 +1,18 @@
-import React from 'react';
-import EChart from './EChart';
+import React from 'react'
+import EChart from './EChart'
 
-const CirclePorcentaje = ({ data }) => {
+const CirclePorcentaje = ({ value= 0, maxValue=100, color= '#00FF00' }) => {
+    const percentage = ((value / maxValue) * 100).toFixed(2)
+
     const options = {
+
         series: [
             {
                 type: 'gauge',
                 startAngle: 90,
                 endAngle: -270,
                 pointer: {
-                    show: false
+                    show: false,
                 },
                 progress: {
                     show: true,
@@ -18,52 +21,51 @@ const CirclePorcentaje = ({ data }) => {
                     clip: false,
                     itemStyle: {
                         borderWidth: 1,
-                        borderColor: '#464646'
-                    }
+                        borderColor: color,
+                        color: color,
+                    },
                 },
                 axisLine: {
                     lineStyle: {
-                        width: 25
-                    }
+                        width: 25,
+                    },
                 },
                 splitLine: {
-                    show: false
+                    show: false,
                 },
                 axisTick: {
-                    show: false
+                    show: false,
                 },
                 axisLabel: {
-                    show: false
+                    show: false,
                 },
                 data: [
                     {
-                        value: data.percentage,
+                        value: percentage,
                         title: {
-                            offsetCenter: ['0%', '-30%']
+                            offsetCenter: ['0%', '-30%'],
                         },
                         detail: {
                             valueAnimation: true,
-                            offsetCenter: ['0%', '0%']
-                        }
-                    }
+                            offsetCenter: ['0%', '0%'],
+                        },
+                    },
                 ],
                 title: {
-                    fontSize: 22
+                    fontSize: 22,
                 },
                 detail: {
                     width: 50,
                     height: 14,
                     fontSize: 24,
-                    color: 'inherit',
-                    formatter: '{value} %'
-                }
-            }
-        ]
-    };
+                    color: color,
+                    formatter: '{value} %',
+                },
+            },
+        ],
+    }
 
-    return (
-        <EChart config={options} />
-    );
-};
+    return <EChart config={options} />
+}
 
-export default CirclePorcentaje;
+export default CirclePorcentaje
