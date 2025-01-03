@@ -76,7 +76,6 @@ export const saveDiagram = async (fabricCanvasRef) => {
 						acc.lines.push(obj.metadata.getDataSave())
 						break
 					case 'polyline':
-						console.log(obj.metadata.getDataSave())
 						acc.polylines.push(obj.metadata.getDataSave())
 						break
 				}
@@ -179,7 +178,7 @@ export const uploadCanvaDb = async (id, fabricCanvasRef, setSelectedObject, chan
 			newText(fabricCanvasRef, text, changeTool, setSelectedObject)
 		}
 	}
-	canvas._discardActiveObject()
+	canvas.discardActiveObject()
 	setSelectedObject(null)
 	changeTool(null)
 }

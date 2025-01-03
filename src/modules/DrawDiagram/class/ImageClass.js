@@ -358,6 +358,7 @@ export class ImageDiagram {
 			id: parseInt(this.image.id),
 			name: this.image.name,
 			src: this.image.src,
+			status: this.image.status,
 			left: this.image.position.left,
 			top: this.image.position.top,
 			angle: this.image.angle,

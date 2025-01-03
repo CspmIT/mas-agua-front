@@ -15,7 +15,7 @@ export const addTextToCanvas = async (propsImg, fabricCanvasRef) => {
 	const fabricCanvas = fabricCanvasRef.current
 	if (!fabricCanvas) return
 	// Identificación del texto basado en su tipo
-	const textId = `${propsImg.image.id}_text`
+	const textId = `${propsImg.image.id}_text_image`
 	let textObject = fabricCanvas.getObjects('textbox').find((obj) => obj.id === textId)
 
 	// Lógica para eliminar texto si no se requiere
@@ -50,7 +50,7 @@ export const addTextToCanvas = async (propsImg, fabricCanvasRef) => {
  * @returns {ImageDiagram|undefined} - Instancia del objeto ImageDiagram creado.
  * @author Jose Romani <jose.romani@hotmail.com>
  */
-export const createImage = (data, fabricCanvasRef, setSelectedObject, changeTool) => {
+export const createImage = async (data, fabricCanvasRef, setSelectedObject, changeTool) => {
 	try {
 		const canvas = fabricCanvasRef.current
 
@@ -63,10 +63,11 @@ export const createImage = (data, fabricCanvasRef, setSelectedObject, changeTool
 			imgNode.width = parseInt(data.width)
 			imgNode.height = parseInt(data.height)
 		}
+
 		const imgnueva = new ImageDiagram({
 			...data,
-			width: parseFloat(data?.width) || imgNode.width * 0.25,
-			height: parseFloat(data?.height) || imgNode.height * 0.25,
+			width: parseFloat(data?.width) || imgNode.width * 0.25 || 100,
+			height: parseFloat(data?.height) || imgNode.height * 0.25 || 100,
 		})
 		imgNode.onload = () => {
 			// Crear una imagen de Fabric.js con las dimensiones correctas
@@ -176,8 +177,9 @@ export const newTextImg = (img, fabricCanvas) => {
 	const defaultText = 'Escriba en la caja de config'
 	const texto = img.text.text || defaultText
 	const maxWidth = calcWidthText(texto, img.sizeText || 20)
+
 	const textbox = new fabric.Textbox(texto, {
-		id: `${img.image.id}_text`,
+		id: `${img.image.id}_text_image`,
 		left: img.image.position.left,
 		top: img.image.position.top,
 		fontSize: img.text.sizeText || 20,

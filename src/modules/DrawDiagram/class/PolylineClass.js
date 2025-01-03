@@ -11,8 +11,15 @@ export class Polyline {
 		}
 		this.id = id
 		this.points = points
+		this.status = 1
 	}
-
+	/**
+	 * Cambia el estado de la polilínea a inactivo.
+	 * @author Jose Romani <jose.romani@hotmail.com>
+	 */
+	delete() {
+		this.status = 0
+	}
 	/**
 	 * Establece los puntos que componen la línea.
 	 * @param {Array} points - Nuevos puntos de la línea.
@@ -255,6 +262,7 @@ export class PolylineDiagram {
 	getDataSave() {
 		return {
 			id: parseInt(this.polyline.id),
+			status: this.polyline.status,
 			points: this.polyline.points,
 			stroke: this.appearance.stroke,
 			strokeWidth: this.appearance.strokeWidth,

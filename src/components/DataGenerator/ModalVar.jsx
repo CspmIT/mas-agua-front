@@ -22,7 +22,6 @@ export default function ModalVar({ openModal, setOpenModal, data = null }) {
 					<Modal
 						className='flex justify-center items-center'
 						open={open}
-						onClose={handleClose}
 						aria-labelledby='modal-modal-title'
 						aria-describedby='modal-modal-description'
 					>

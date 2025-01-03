@@ -277,6 +277,7 @@ export class LineDiagram {
 	getDataSave() {
 		return {
 			id: parseInt(this.line.id),
+			status: this.line.status,
 			points: this.line.points,
 			stroke: this.line.stroke,
 			strokeWidth: this.line.strokeWidth,

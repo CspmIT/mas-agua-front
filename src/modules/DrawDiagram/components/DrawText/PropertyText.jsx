@@ -10,7 +10,6 @@ function PropertyText({ data, AddText, fabricCanvasRef }) {
 	const changeText = (string) => {
 		data.setText(string)
 		const infoUpdate = { ...info, text: string }
-		console.log(infoUpdate)
 		setInfo(infoUpdate)
 		AddText(infoUpdate, fabricCanvasRef)
 	}
