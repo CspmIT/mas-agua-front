@@ -120,7 +120,7 @@ const Calculadora = ({ display, setDisplay, showNumbers }) => {
 	}, [newDisplay])
 
 	return (
-		<Paper elevation={0} style={{ padding: '.5rem', margin: 'auto' }} ref={calculatorRef} onClick={handleFocus}>
+		<Paper elevation={0} ref={calculatorRef} onClick={handleFocus}>
 			<Typography variant='h6' className='!mb-2' align='center'>
 				Formula de la variable
 			</Typography>

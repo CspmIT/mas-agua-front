@@ -101,31 +101,30 @@ function DrawDiagram() {
 			if (activeObject.type == 'line' || activeObject.type == 'polyline') {
 				const back = canvas
 					.getObjects(activeObject.type)
-					.filter((obj) => obj.id == activeObject.metadata?.id + '_back')
+					.filter((obj) => obj.id == activeObject.metadata?.[activeObject.type]?.id + '_back')
 				if (back) {
 					back.forEach((element) => {
-						canvas.remove(element)
+						element.visible = false
+						// canvas.remove(element)
 					})
 				}
 			}
-			if (activeObject.type == 'text' || activeObject.type == 'image') {
+			if (activeObject.type == 'text' || activeObject.type == 'line' || activeObject.type == 'image') {
 				const text = canvas
-					.getObjects()
+					.getObjects('textbox')
 					.filter(
-						(obj) =>
-							obj.type === 'textbox' &&
-							(obj.id == activeObject.metadata?.id + '_text' ||
-								obj.id == activeObject.metadata?.id + '_text_influx' ||
-								obj.id == activeObject.metadata?.id + '_text_line')
+						(obj) => obj.id == `${activeObject.metadata?.[activeObject.type]?.id}_text_${activeObject.type}`
 					)
 				if (text) {
 					text.forEach((element) => {
-						canvas.remove(element)
+						element.visible = false
+						// canvas.remove(element)
 					})
 				}
 			}
-
-			canvas.remove(activeObject)
+			activeObject.metadata.delete()
+			activeObject.visible = false
+			canvas.discardActiveObject()
 			setSelectedObject(null)
 			e.preventDefault()
 		}

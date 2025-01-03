@@ -9,17 +9,21 @@ function ListField() {
 	const [listfilter, setListfilter] = useState([])
 	const [varSelected, setVarSelected] = useState(null)
 	const [openModal, setOpenModal] = useState(false)
+
 	const setVariables = async () => {
 		const variables = await getVarsInflux()
 		setListfilter(variables)
 		setListVariable(variables)
 	}
+
 	useEffect(() => {
 		setVariables()
 	}, [openModal])
+
 	const filter = (text) => {
 		setListfilter(listVariable.filter((variable) => variable.name.includes(`${text}`)))
 	}
+
 	return (
 		<div className={`w-full h-full pt-4 bg-white `}>
 			<div className='flex w-full justify-center items-center mb-4 relative'>
