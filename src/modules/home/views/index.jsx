@@ -1,110 +1,75 @@
-import { Grid, Typography,} from '@mui/material'
+import { Grid, Typography } from '@mui/material'
 import LiquidFill from '../../Charts/components/LiquidFillPorcentaje'
-import CardCustom from '../../../components/CardCustom'
 import CirclePorcentaje from '../../Charts/components/CirclePorcentaje'
 import BarDataSet from '../../Charts/components/BarDataSet'
 import StackedAreaChart from '../../Charts/components/StackedAreaChart'
 import DoughnutChart from '../../Charts/components/DoughnutChart'
 import LineChart from '../../Charts/components/LineChart'
+import CardCustom from '../../../components/CardCustom'
+import React, { useEffect, useState } from 'react'
+import { request } from '../../../utils/js/request'
+import Swal from 'sweetalert2'
+// import { transformTypes } from '../../../utils/js/transformTypes'
 
-const chartData = [
-    {
-        title: 'Ingreso de Agua por Hora',
-        component: LiquidFill,
-        props: {
-            value: 1.65,
-            maxValue: 5,
-            unidad: 'm3',
-        },
-    },
-    {
-        title: 'Cantidad de Cloro T1(%)',
-        component: LiquidFill,
-        props: {
-            type: 'circle',
-            value: 0.65,
-            maxValue: 1,
-            porcentage: true,
-            color: '#FFEB59',
-        },
-    },
-    {
-        title: 'Cantidad de Cloro T2 (%)',
-        component: LiquidFill,
-        props: {
-            value: 0.63,
-            maxValue: 2,
-            porcentage: true,
-            color: '#FFEB59',
-        },
-    },
-    {
-        title: 'Cloro libre',
-        component: LiquidFill,
-        props: {
-            value: 3.65,
-            unidad: 'mg/L',
-            maxValue: 10,
-            color: '#eefd01',
-        },
-    },
-    {
-        title: 'Nivel de Cisterna (%)',
-        component: LiquidFill,
-        props: {
-            value: 2.65,
-            maxValue: 5,
-            color: '#FFEB59',
-            porcentage: true,
-            type: 'rectCircle',
-            border: false,
-        },
-    },
-    {
-        title: 'Nivel de Tanque (%)',
-        component: CirclePorcentaje,
-        props: {
-            value: 6.23,
-            maxValue: 10,
-        },
-    },
-    {
-        title: 'Grafico de barras',
-        component: BarDataSet,
-        props: {},
-    },
-    {
-        title: 'Grafico de area',
-        component: StackedAreaChart,
-        props: {},
-    },
-    {
-        title: 'Grafico de torta',
-        component: DoughnutChart,
-        props: {},
-    },
-    {
-        title: 'Grafico de linea con superposicion',
-        component: LineChart,
-        props: {
-            xType: 'category',
-            xSeries: ['Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes'],
-            yType: 'value',
-            ySeries: [
-                { name: 'T1', type: 'line', data: [120, 132, 101, 134, 90] },
-                { name: 'T2', type: 'line', data: [220, 182, 191, 234, 290] },
-                { name: 'T3', type: 'line', data: [150, 232, 201, 154, 190] },
-                { name: 'DeadLine', type: 'line', data: [320, 332, 301, 334, 390] },
-            ],
-        },
-    },
-]
+const chartComponents = {
+    LiquidFill,
+    CirclePorcentaje,
+    BarDataSet,
+    StackedAreaChart,
+    DoughnutChart,
+    LineChart,
+}
 
 const Home = () => {
+    const [charts, setCharts] = useState([])
+    async function getCharts() {
+        try {
+            const { data } = await request(
+                'http://localhost:4000/api/charts',
+                'GET'
+            )
+
+            const formatConfig = data.map((chart) => {
+                const { type } = chart
+
+                const propsReduce = chart.ChartConfig.reduce((acc, config) => {
+                    const { key, value, type } = config
+                    return {
+                        ...acc,
+                        [key]: type === 'boolean' ? Boolean(value) : value,
+                    }
+                }, {})
+
+                const dataReduce = chart.ChartData.reduce((acc, config) => {
+                    const { key, value } = config
+                    return {
+                        ...acc,
+                        [key]: value ? value : config.InfluxVars.varsInflux,
+                    }
+                }, {})
+                return {
+                    component: type,
+                    props: propsReduce,
+                    data: dataReduce,
+                }
+            })
+            setCharts(formatConfig)
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.message,
+            })
+        }
+    }
+    useEffect(() => {
+        getCharts()
+    }, [])
     return (
         <Grid container spacing={3}>
-            {chartData.map((chart, index) => {
-                const ChartComponent = chart.component
+            {charts.map((chart, index) => {
+                {console.log(chart)}
+                const ChartComponentDb = chartComponents[chart.component];
                 return (
                     <Grid item xs={12} sm={6} lg={4} key={index}>
                         <CardCustom
@@ -114,9 +79,9 @@ const Home = () => {
                                 variant="h5"
                                 className="text-center pt-9"
                             >
-                                {chart.title}
+                                {chart?.props?.title}
                             </Typography>
-                            <ChartComponent {...chart.props} />
+                            <ChartComponentDb {...chart.props} {...chart.data}/>
                         </CardCustom>
                     </Grid>
                 )

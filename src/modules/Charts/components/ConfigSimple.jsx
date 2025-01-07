@@ -4,7 +4,6 @@ import {
     CardContent,
     MenuItem,
     TextField,
-    Tooltip,
     Typography,
 } from '@mui/material'
 import { configs } from '../configs/configs'
@@ -21,12 +20,6 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
     const [chartType, setChartType] = useState(configs[id].typeGraph)
     const [config, setConfig] = useState(configs[id].preConfig)
     const [title, setTitle] = useState('')
-    const [options, setOptions] = useState([])
-    const fetchVars = async () => {
-        const vars = await getVarsInflux()
-        setOptions(vars)
-        setValue('idVar', vars[0].id)
-    }
 
     useEffect(() => {
         // Validar y corregir el formato del color al inicializar
@@ -36,8 +29,6 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
                 color: '#000000', // Valor por defecto si el formato es incorrecto
             }))
         }
-
-        fetchVars()
     }, [])
 
     const handleChange = (e) => {
@@ -49,8 +40,8 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
             newValue = '#000000' // Valor por defecto si el formato es incorrecto
         }
         if (name === 'maxValue') {
-            const mitad =   value / 2 || 0
-            newValue = value || 1 
+            const mitad = value / 2 || 0
+            newValue = value || 1
             setConfig((prevConfig) => ({
                 ...prevConfig,
                 ['value']: mitad,
@@ -93,11 +84,11 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
                                 select
                                 className="w-full"
                                 label="Tipo de grafico"
-                                {...register('type', {
+                                {...register('shape', {
                                     required: 'Este campo es requerido',
                                 })}
                                 onChange={handleChange}
-                                value={config.type}
+                                value={config.shape}
                             >
                                 <MenuItem value={'circle'}>Círculo</MenuItem>
                                 <MenuItem value={'rect'}>Rectángulo</MenuItem>
@@ -115,16 +106,14 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
 
                         {configs[id].typeValue && (
                             <TextField
-                                type="text"
                                 className="w-full"
                                 label="Tipo de valor"
-                                {...register('porcentage', {
-                                    required: 'Este campo es requerido',
-                                })}
+                                {...register('porcentage')}
                                 onChange={handleChange}
-                                error={errors.asvalue}
+                                error={errors.porcentage}
                                 helperText={
-                                    errors.asvalue && errors.asvalue.message
+                                    errors.porcentage &&
+                                    errors.porcentage.message
                                 }
                                 value={config.porcentage}
                                 select
@@ -150,25 +139,31 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
 
                         <SelectVars
                             setValue={setValue}
-                            label={'Valor del grafico'}
-                            options={options}
+                            label={'Seleccione una variable para el grafico'}
+                            //! Agregar un parametro para el valor seleccionado
                         />
                         {/* <Tooltip
                             arrow
                             title="Este campo se usa para calcular el porcentaje/nivel del grafico."
                         > */}
                         <TextField
-                            type="text"
+                            type="number"
                             className="w-full"
                             label="Valor maximo del grafico"
+                            inputProps={{
+                                pattern: '^[0-9]+$',
+                            }}
                             {...register('maxValue', {
                                 required: 'Este campo es requerido',
                             })}
+                            onKeyDown={(e) => {
+                                if (e.key === 'e' || e.key === '+' || e.key === '-') {
+                                    e.preventDefault()
+                                }
+                            }}
                             onChange={handleChange}
-                            error={errors.maxValue}
-                            helperText={
-                                errors.maxValue && errors.maxValue.message
-                            }
+                            error={!!errors.maxValue}
+                            helperText={errors.maxValue?.message}
                         />
                         {/* </Tooltip> */}
                         {!config.porcentage && configs[id].typeUnity && (

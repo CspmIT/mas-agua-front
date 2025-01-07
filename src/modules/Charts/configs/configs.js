@@ -1,3 +1,4 @@
+// Preconfig: porcentaje: 1 = porcentaje, 2 = valor
 // 0 No requerido, 1 Requerido, 2 Opcional,
 export const configs = {
     1: {
@@ -20,7 +21,7 @@ export const configs = {
             color: '#363F9C',
             porcentage: false,
             unidad: undefined,
-            type: 'circle',
+            shape: 'circle',
             border: true,
         },
     },
@@ -69,8 +70,9 @@ export const configs = {
             color: '#363F9C',
             porcentage: false,
             unidad: undefined,
-            type: 'rect',
+            shape: 'rect',
             border: false,
+            other: 'Otro texto reenderizado',
         },
     },
     5: {

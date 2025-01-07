@@ -1,7 +1,7 @@
 import EChart from './EChart'
 import 'echarts-liquidfill'
 
-const LiquidFill = ({ value = 0, maxValue = 1, color, type, porcentage = false, border = true, unidad= '' }) => {
+const LiquidFill = ({ value = 0, maxValue = 1, color, shape, porcentage = false, border = true, unidad= '', other = false }) => {
     const isLightColor = (color) => {
         const hex = color.replace('#', '');
         const r = parseInt(hex.substring(0, 2), 16);
@@ -26,7 +26,7 @@ const LiquidFill = ({ value = 0, maxValue = 1, color, type, porcentage = false, 
                         if (porcentage) {
                             return `${(params.value * 100).toFixed(2)} %`
                         }
-                        return `${value} ${unidad}`
+                        return `${value} ${unidad} ${other ? `\n ${other}` : ''}`
                     },
                     fontSize: 26,
                     color: '#000',
@@ -45,7 +45,7 @@ const LiquidFill = ({ value = 0, maxValue = 1, color, type, porcentage = false, 
                         borderWidth: 8,
                     },
                 },
-                shape: type ?? 'circle',
+                shape: shape ?? 'circle',
                 animationEasing: 'cubicOut',
                 silent: true,
             },

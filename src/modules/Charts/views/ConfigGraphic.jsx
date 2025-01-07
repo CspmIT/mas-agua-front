@@ -9,6 +9,7 @@ import SelectorVars from '../../../components/SelectorVars/SelectorVars'
 import GraphVariableSelector from '../../../components/SelectorVars/GraphVariableSelector'
 import { configs } from '../configs/configs'
 import ConfigSimple from '../components/ConfigSimple'
+import Swal from 'sweetalert2'
 
 const ConfigGraphic = () => {
     const { id } = useParams()
@@ -21,6 +22,14 @@ const ConfigGraphic = () => {
 
 
     const onSubmit = (data) => {
+        if(data?.idVar === undefined){
+            Swal.fire({
+                icon: 'error',
+                title: 'Atencion!',
+                html: 'Debe seleccionar una variable para el grafico',
+            })
+            return
+        }
         console.log(data)
     }
     const onError = (errors) => console.log(errors)
