@@ -8,7 +8,7 @@ import { viewPolyline } from '../../components/DrawPolyLine/utils/js/polyline'
 import { viewText } from '../../components/DrawText/utils/js'
 import { viewImage } from '../../components/DrawImage/utils/js/actionImage'
 
-export const uploadDiagramDb = async (id, fabricCanvasRef) => {
+export const uploadDiagramDb = async (id, canvas) => {
 	try {
 		const objectDiagram = await request(
 			`${backend[import.meta.env.VITE_APP_NAME]}/getObjectCanva?id=${id}`,
@@ -26,7 +26,7 @@ export const uploadDiagramDb = async (id, fabricCanvasRef) => {
 
 			return false
 		}
-		const canvas = fabricCanvasRef.current
+
 		canvas.id = objectDiagram.id
 		canvas.backgroundColor = objectDiagram.backgroundColor
 		canvas.title = objectDiagram.title
@@ -55,29 +55,30 @@ export const uploadDiagramDb = async (id, fabricCanvasRef) => {
 					line.points.end.left,
 					line.points.end.top,
 				]
-				viewLine(points, fabricCanvasRef, line)
+				await viewLine(points, canvas, line)
 			}
 		}
 		if (objectDiagram?.polylines.length) {
 			const polylines = objectDiagram.polylines
 			for (const polyline of polylines) {
-				viewPolyline(canvas, polyline)
+				await viewPolyline(canvas, polyline)
 			}
 		}
 		if (objectDiagram?.texts.length) {
 			const texts = objectDiagram.texts
 			for (const text of texts) {
-				viewText(fabricCanvasRef, text)
+				await viewText(canvas, text)
 			}
 		}
 		if (objectDiagram?.images.length) {
 			const images = objectDiagram.images
 			for (const image of images) {
-				viewImage(image, fabricCanvasRef)
+				await viewImage(image, canvas)
 			}
 		}
 
 		Swal.close()
+		return objectDiagram
 	} catch (error) {
 		console.error(error)
 		Swal.fire({

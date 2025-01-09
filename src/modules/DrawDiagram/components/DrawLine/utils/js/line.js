@@ -541,8 +541,7 @@ export const animationDobleLine = (canvas, id) => {
 	animateLineFlow()
 }
 
-export const viewLine = (points, fabricCanvasRef, data) => {
-	const canvas = fabricCanvasRef.current
+export const viewLine = async (points, canvas, data) => {
 	const id = data?.id || data
 	if (canvas.getObjects('line').find((obj) => obj.id == id)) return false
 	const finalLine = new fabric.Line(points, {

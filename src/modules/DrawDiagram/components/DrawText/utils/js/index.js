@@ -107,11 +107,10 @@ export const editText = async (propsText, fabricCanvasRef) => {
  * @returns {Promise<fabric.Textbox>} Objeto textbox de Fabric.js.
  * @author Jose Romani
  */
-export const viewText = (fabricCanvasRef, data) => {
-	const fabricCanvas = fabricCanvasRef?.current
-	if (!fabricCanvas) return
+export const viewText = async (canvas, data) => {
+	if (!canvas) return
 	const id = data.id || Math.random().toString(36).substring(2, 9)
-	if (fabricCanvas.getObjects('textbox').find((obj) => obj.id == id)) return false
+	if (canvas.getObjects('textbox').find((obj) => obj.id == id)) return false
 	// Crear las propiedades iniciales del texto
 	const variable = data?.id_influxvars ? { variable: data.id_influxvars } : {}
 	const textnew = new TextDiagram({
@@ -143,6 +142,6 @@ export const viewText = (fabricCanvasRef, data) => {
 	textbox.metadata = textnew
 
 	// Agregar el textbox al canvas
-	fabricCanvas.add(textbox)
-	fabricCanvas.renderAll()
+	canvas.add(textbox)
+	canvas.renderAll()
 }

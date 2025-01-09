@@ -310,46 +310,71 @@ export const waveEffect = (canvas, data) => {
 		top: data.top + data.height * data.configAnimation.margenTop,
 		selectable: false,
 		fill: data.configAnimation.color,
+		id: `${data.id}_wave`,
+		metadata: data,
 	})
 	let wavePath2 = new fabric.Path('M 0 200 Q 100 180 200 200 T 400 200 L 400 400 L 0 400 Z', {
 		left: data.left + data.width * data.configAnimation.margenLeft,
 		top: data.top + data.height * data.configAnimation.margenTop,
 		selectable: false,
 		fill: darkenColor(data.configAnimation.color),
+		id: `${data.id}_wave2`,
+		metadata: data,
 	})
-
-	const totalWidth = data.width // Ancho total del canvas
-	const totalHeight = data.height // Alto total del canvas
-	const waveHeight = data.height * 0.025 // Amplitud de la ola
-	const waveWidth = data.width * 0.1 // Longitud de onda
-	const baseHeight = 0 // altura base necesaria
-
+	if (data.id == '61') {
+		console.log(data.top, data.height, data.configAnimation.margenTop)
+	}
 	// Agregar los paths al canvas
 	canvas.add(wavePath2)
 	canvas.add(wavePath)
 	// Función para animar el movimiento de la ola
-	function animatedWave() {
-		let offsetX = 0
-		let offsetX2 = 0
 
-		function moveWave() {
-			offsetX += 0.02 // Incrementar el desplazamiento
-			offsetX2 -= 0.01 // Incrementar el desplazamiento
+	// Iniciar la animación de la ola
+	animatedWave(canvas, wavePath, wavePath2)
+	return [wavePath2, wavePath]
+}
 
-			// Cálculo del ancho superior e inferior basado en los porcentajes
-			const widthTop = totalWidth * (data.configAnimation.widthTop / 100)
-			const widthBottom = totalWidth * (data.configAnimation.widthBottom / 100)
-			const heightLeft = totalHeight * (data.configAnimation.heightLeft / 100)
-			const heightRight = totalHeight * (data.configAnimation.heightRight / 100)
-			const initDraw = ((totalWidth - widthBottom) / 2) * data.configAnimation.margenBotonLeft
-			// Generar path para wavePath
-			let pathData = `M ${initDraw} ${heightLeft} `
-			for (let x = 0; x <= widthTop; x += waveWidth / 4) {
-				const y = baseHeight + Math.sin(((x + offsetX * 50) * Math.PI) / waveWidth) * waveHeight
-				pathData += `L ${x} ${y} `
-			}
-			pathData += `L ${widthBottom} ${heightRight} L ${initDraw} ${heightLeft} Z`
+export const animatedWave = (canvas, wavePath, wavePath2 = false, porcentajes = 100) => {
+	let offsetX = 0
+	let offsetX2 = 0
+	const data = wavePath.metadata
+	let percent = porcentajes
+	if (percent == 0) {
+		percent = 1
+	}
+	const totalWidth = data.width // Ancho total del canvas
+	const totalHeight = data.height * (percent / 100) // Alto total del canvas
+	let waveHeight = data.height * 0.01 // Amplitud de la ola
+	const waveWidth = data.width * 0.1 // Longitud de onda
+	const baseHeight = 0 // altura base necesaria
 
+	if (percent <= 100 && percent >= 0) {
+		const margen =
+			(data.configAnimation.margenTopMin - data.configAnimation.margenTopMax) * (percent / 100) +
+			data.configAnimation.margenTopMax
+		wavePath.set('top', data.top + data.height * margen)
+		if (wavePath2) {
+			wavePath2.set('top', data.top + data.height * margen)
+		}
+	}
+	function moveWave() {
+		offsetX += 0.02 // Incrementar el desplazamiento
+		offsetX2 -= 0.01 // Incrementar el desplazamiento
+
+		// Cálculo del ancho superior e inferior basado en los porcentajes
+		const widthTop = totalWidth * (data.configAnimation.widthTop / 100)
+		const widthBottom = totalWidth * (data.configAnimation.widthBottom / 100)
+		const heightLeft = totalHeight * (data.configAnimation.heightLeft / 100)
+		const heightRight = totalHeight * (data.configAnimation.heightRight / 100)
+		const initDraw = ((totalWidth - widthBottom) / 2) * data.configAnimation.margenBotonLeft
+		// Generar path para wavePath
+		let pathData = `M ${initDraw} ${heightLeft} `
+		for (let x = 0; x <= widthTop; x += waveWidth / 4) {
+			const y = baseHeight + Math.sin(((x + offsetX * 50) * Math.PI) / waveWidth) * waveHeight
+			pathData += `L ${x} ${y} `
+		}
+		pathData += `L ${widthBottom} ${heightRight} L ${initDraw} ${heightLeft} Z`
+		if (wavePath2) {
 			// Generar path para wavePath2
 			let pathData2 = `M ${initDraw} ${heightLeft} `
 			for (let x = 0; x <= widthTop; x += waveWidth / 4) {
@@ -357,20 +382,18 @@ export const waveEffect = (canvas, data) => {
 				pathData2 += `L ${x} ${y} `
 			}
 			pathData2 += `L ${widthBottom} ${heightRight} L ${initDraw} ${heightLeft} Z`
-
-			wavePath.path = new fabric.Path(pathData).path
 			wavePath2.path = new fabric.Path(pathData2).path
-			wavePath.setBoundingBox()
 			wavePath2.setBoundingBox()
-			canvas.renderAll()
-
-			requestAnimationFrame(moveWave)
 		}
-		moveWave()
+
+		wavePath.path = new fabric.Path(pathData).path
+
+		wavePath.setBoundingBox()
+		canvas.renderAll()
+
+		requestAnimationFrame(moveWave)
 	}
-	// Iniciar la animación de la ola
-	animatedWave()
-	return [wavePath2, wavePath]
+	moveWave()
 }
 
 /**
@@ -383,10 +406,8 @@ export const waveEffect = (canvas, data) => {
  * @returns {ImageDiagram|undefined} - Instancia del objeto ImageDiagram creado.
  * @author Jose Romani <jose.romani@hotmail.com>
  */
-export const viewImage = async (data, fabricCanvasRef) => {
+export const viewImage = async (data, canvas) => {
 	try {
-		const canvas = fabricCanvasRef.current
-
 		if (canvas.getObjects('image').find((obj) => obj.id == data.id)) return false
 
 		const imgNode = new Image()
@@ -416,7 +437,8 @@ export const viewImage = async (data, fabricCanvasRef) => {
 			width: parseFloat(data?.width) || imgNode.width * 0.25 || 100,
 			height: parseFloat(data?.height) || imgNode.height * 0.25 || 100,
 		})
-		imgNode.onload = () => {
+
+		imgNode.onload = async () => {
 			// Crear una imagen de Fabric.js con las dimensiones correctas
 			const img = new fabric.FabricImage(imgNode, {
 				left: data.left,
@@ -438,29 +460,23 @@ export const viewImage = async (data, fabricCanvasRef) => {
 			if (data.statusText) {
 				newTextImg(imgnueva, canvas)
 			}
-
 			canvas.add(img)
-			switch (imgBuffer?.animation) {
-				case 'wave':
-					const data = {
-						left: parseFloat(img.left.toFixed(2)),
-						top: parseFloat(img.top.toFixed(2)),
-						height: parseFloat(imgNode.height.toFixed(2)),
-						width: parseFloat(imgNode.width.toFixed(2)),
-						configAnimation: imgBuffer.configAnimation,
-					}
-					const waves = waveEffect(canvas, data)
-					const gruopImgWaves = new fabric.Group([...waves, img], {
-						selectable: false,
-						hasControls: false,
-					})
-					canvas.add(gruopImgWaves)
-					break
-				default:
-					break
-			}
 		}
-
+		switch (imgBuffer?.animation) {
+			case 'wave':
+				const info = {
+					left: parseFloat(data.left.toFixed(2)),
+					top: parseFloat(data.top.toFixed(2)),
+					height: parseFloat(imgNode.height.toFixed(2)),
+					width: parseFloat(imgNode.width.toFixed(2)),
+					configAnimation: imgBuffer.configAnimation,
+					id: data.id,
+				}
+				waveEffect(canvas, info)
+				break
+			default:
+				break
+		}
 		return imgnueva
 	} catch (error) {
 		console.error(error)
