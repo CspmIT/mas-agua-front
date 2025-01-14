@@ -14,7 +14,7 @@ import { Search, Add, Visibility, ExpandMore } from '@mui/icons-material'
 import ModalVar from '../../../components/DataGenerator/ModalVar'
 import { getVarsInflux } from '../../DrawDiagram/components/Fields/actions'
 
-const SelectVars = ({ label, search = true, setValue = false }) => {
+const SelectVars = ({ label, setValue }) => {
     const [anchorEl, setAnchorEl] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedOption, setSelectedOption] = useState(null)
@@ -25,12 +25,10 @@ const SelectVars = ({ label, search = true, setValue = false }) => {
         const vars = await getVarsInflux()
         setOptions(vars)
         //Obtengo la variable seleccionada para actualizarla con los datos de la base de datos
-        if (selectedOption) {
+        if (selectedOption !== null) {
             const varSelected = vars.find((v) => v.id === selectedOption.id)
             setSelectedOption(varSelected)
-            if (setValue) {
-                setValue('idVar', varSelected.id)
-            }
+            setValue('idVar', varSelected.id)
         }
     }
 
@@ -55,15 +53,12 @@ const SelectVars = ({ label, search = true, setValue = false }) => {
 
     const handleSelectOption = (option) => {
         setSelectedOption(option)
-        if (setValue) {
-            setValue('idVar', option.id)
-        }
+        setValue('idVar', option.id)
         handleClose()
     }
 
     const handleViewClick = () => {
         setModalData(selectedOption)
-
         setIsDialogOpen(true)
     }
 
