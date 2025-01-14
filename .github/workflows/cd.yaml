@@ -48,4 +48,4 @@ jobs:
                   --build-arg SECRET=${{ secrets.SECRET }} \
                   --build-arg VITE_ENTORNO=${{ secrets.VITE_ENTORNO }} \
                   -t ${{ secrets.DOCKER_USERNAME }}/${REPO_NAME}:${{ needs.bump.outputs.new_tag }} \
-                  --push 
+                  --push .
