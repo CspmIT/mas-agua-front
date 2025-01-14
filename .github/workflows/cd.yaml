@@ -54,6 +54,9 @@ jobs:
                       --build-arg VITE_APP_NAME=${{ secrets.VITE_APP_NAME }} \
                       --build-arg VITE_ENTORNO=${{ secrets.VITE_ENTORNO }} \
                       --build-arg SECRET=${{ secrets.SECRET }} \
-                      -t ${{ secrets.DOCKER_USERNAME }}/$REPO_NAME:${{ needs.bump.outputs.new_tag }} \
-                      $GITHUB_WORKSPACE
+                      -t ${{ secrets.DOCKER_USERNAME }}/$REPO_NAME:${{ needs.bump.outputs.new_tag }} ${{github.workspace}} 
                   docker push ${{ secrets.DOCKER_USERNAME }}/$REPO_NAME:${{ needs.bump.outputs.new_tag }}
+            - name: Check Docker and Buildx versions
+              run: |
+                  docker --version
+                  docker buildx version
