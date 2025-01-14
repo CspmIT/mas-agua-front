@@ -9,6 +9,7 @@ on:
 
 jobs:
     bump:
+        if: github.event.pull_request.merged == true
         runs-on: ubuntu-22.04
         permissions:
             contents: write
@@ -17,6 +18,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
               with:
+                  ref: ${{ github.event.pull_request.merge_commit_sha }}
                   fetch-depth: '0'
             - name: Bump version and push tag
               id: bump_version
@@ -25,6 +27,24 @@ jobs:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   WITH_V: true
                   PRERELEASE: false
+
+    # ci:
+    #   needs: bump
+    #   runs-on: ubuntu-latest
+
+    #   steps:
+    #       - name: Checkout
+    #         uses: actions/checkout@v3
+
+    #       - name: install dependencies
+    #         run: |
+    #           npm install
+    #         working-directory: ./
+
+    #       - name: Run tests
+    #         run: |
+    #           npm run test
+    #         working-directory: ./
 
     cd:
         needs: bump
@@ -43,9 +63,9 @@ jobs:
             - name: Build and push
               run: |
                   REPO_NAME=$(echo ${{ github.repository }} | cut -d'/' -f2)
-                  docker buildx build \
+                  docker build \
                   --build-arg VITE_APP_NAME=${{ secrets.VITE_APP_NAME }} \
                   --build-arg SECRET=${{ secrets.SECRET }} \
                   --build-arg VITE_ENTORNO=${{ secrets.VITE_ENTORNO }} \
-                  -t ${{ secrets.DOCKER_USERNAME }}/${REPO_NAME}:${{ needs.bump.outputs.new_tag }} \
-                  --push .
+                  -t ${{ secrets.DOCKER_USERNAME }}/${REPO_NAME}:${{ needs.bump.outputs.new_tag }} /Dockerfile 
+                  docker push ${{ secrets.DOCKER_USERNAME }}/${REPO_NAME}:${{ needs.bump.outputs.new_tag }}
