@@ -1,7 +1,7 @@
 import EChart from './EChart'
 import 'echarts-liquidfill'
 
-const LiquidFill = ({ value = 0, maxValue = 1, color, shape, porcentage = false, border = true, unidad= '', other = false }) => {
+const LiquidFillPorcentaje = ({ value = 0, maxValue = 1, color, shape, porcentage = false, border = true, unidad= '', other = false }) => {
     const isLightColor = (color) => {
         const hex = color.replace('#', '');
         const r = parseInt(hex.substring(0, 2), 16);
@@ -13,7 +13,7 @@ const LiquidFill = ({ value = 0, maxValue = 1, color, shape, porcentage = false,
 
     const backgroundColor = color ?? '#363f9c'; // Color de fondo por defecto
     const labelColor = isLightColor(backgroundColor) ? '#000000' : '#FFFFFF';
-    const percentage = (value / maxValue).toFixed(2);
+    const percentage = (value / maxValue);
 
     const options = {
         series: [
@@ -24,7 +24,7 @@ const LiquidFill = ({ value = 0, maxValue = 1, color, shape, porcentage = false,
                 label: {
                     formatter: (params) => {
                         if (porcentage) {
-                            return `${(params.value * 100).toFixed(2)} %`
+                            return `${parseFloat((params.value * 100)).toFixed(2)} %`
                         }
                         return `${value} ${unidad} ${other ? `\n ${other}` : ''}`
                     },
@@ -55,4 +55,4 @@ const LiquidFill = ({ value = 0, maxValue = 1, color, shape, porcentage = false,
     return <EChart config={options} />
 }
 
-export default LiquidFill
+export default LiquidFillPorcentaje

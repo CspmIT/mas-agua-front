@@ -9,6 +9,7 @@ import {
     Box,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import Swal from 'sweetalert2'
 
 // Chart type definitions
 const chartTypes = [
@@ -31,6 +32,7 @@ const chartTypes = [
         title: 'Grafico de torta',
         image: '/assets/img/charts/graficoTorta.png?height=300&width=300',
         description: 'Grafico de torta con bordes redondeados.',
+        disabled: true,
     },
     {
         id: 4,
@@ -43,37 +45,21 @@ const chartTypes = [
         title: 'Grafico de barras',
         image: '/assets/img/charts/graficoBarras.png?height=200&width=200',
         description: 'Pie chart with extended label lines',
+        disabled: true,
     },
     {
         id: 6,
         title: 'Grafico de linea con superposicion',
         image: '/assets/img/charts/StepLine.png?height=200&width=200',
         description: 'Multi-level pie chart visualization',
+        disabled: true,
     },
-    // {
-    //     id: 7,
-    //     title: 'Calendar Pie',
-    //     image: '/?height=200&width=200',
-    //     description: 'Time-based pie chart arrangement',
-    // },
-    // {
-    //     id: 8,
-    //     title: 'Geographical Pie',
-    //     image: '/placeholder.svg?height=200&width=200',
-    //     description: 'Region-based pie chart distribution',
-    // },
-    // {
-    //     id: 9,
-    //     title: 'Geographical Pie',
-    //     image: '/placeholder.svg?height=200&width=200',
-    //     description: 'Region-based pie chart distribution',
-    // },
 ]
 
 function SelectType() {
     const navigate = useNavigate()
     const selectedChart = (chart) => {
-        navigate(`/config/graphic/${chart}`)
+        navigate(`/config/graphic/${chart}`);
     }
     return (
         <Box className="p-6 min-[90vh]">
@@ -85,6 +71,14 @@ function SelectType() {
                     <Grid item sm={12} md={6} lg={4} key={index}>
                         <Card
                             onClick={() => {
+                                if(chart?.disabled){
+                                    Swal.fire({
+                                        icon: 'error',
+                                        title: 'Error',
+                                        text: 'Esta funcionalidad no está disponible en la versión actual',
+                                    })
+                                    return
+                                }
                                 selectedChart(chart.id)
                             }}
                             className="hover:shadow-lg transition-shadow duration-200 h-80 cursor-pointer w-full"

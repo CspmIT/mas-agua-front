@@ -1,6 +1,11 @@
 // Preconfig: porcentaje: 1 = porcentaje, 2 = valor
 // 0 No requerido, 1 Requerido, 2 Opcional,
 export const configs = {
+    // LiquidFill,
+    // CirclePorcentaje,
+    // BarDataSet,
+    // DoughnutChart,
+    // LineChart,
     1: {
         // Porcentaje con olas
         typeGraph: 'LiquidFillPorcentaje',
@@ -19,7 +24,7 @@ export const configs = {
             value: undefined,
             maxValue: undefined,
             color: '#363F9C',
-            porcentage: false,
+            porcentage: true,
             unidad: undefined,
             shape: 'circle',
             border: true,
@@ -72,7 +77,7 @@ export const configs = {
             unidad: undefined,
             shape: 'rect',
             border: false,
-            other: 'Otro texto reenderizado',
+            // other: 'Otro texto reenderizado',
         },
     },
     5: {

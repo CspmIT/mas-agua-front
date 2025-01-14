@@ -1,15 +1,17 @@
 import { Button, MenuItem, TextField, Typography } from '@mui/material'
 import React, { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { useParams } from 'react-router-dom'
-import DataGenerator from '../../../components/DataGenerator/DataGenerator'
+import { useNavigate, useParams } from 'react-router-dom'
+// import DataGenerator from '../../../components/DataGenerator/DataGenerator'
 import VarsProvider, {
 } from '../../../components/DataGenerator/ProviderVars'
-import SelectorVars from '../../../components/SelectorVars/SelectorVars'
+// import SelectorVars from '../../../components/SelectorVars/SelectorVars'
 import GraphVariableSelector from '../../../components/SelectorVars/GraphVariableSelector'
 import { configs } from '../configs/configs'
 import ConfigSimple from '../components/ConfigSimple'
 import Swal from 'sweetalert2'
+import { backend } from '../../../utils/routes/app.routes'
+import { request } from '../../../utils/js/request'
 
 const ConfigGraphic = () => {
     const { id } = useParams()
@@ -20,8 +22,9 @@ const ConfigGraphic = () => {
         formState: { errors },
     } = useForm()
 
+    const navigate = useNavigate()
 
-    const onSubmit = (data) => {
+    const onSubmit = async (data) => {
         if(data?.idVar === undefined){
             Swal.fire({
                 icon: 'error',
@@ -30,9 +33,37 @@ const ConfigGraphic = () => {
             })
             return
         }
-        console.log(data)
+        data.porcentage = data.porcentage == true
+        data.border = data.border == true
+        data.maxValue = parseFloat(data.maxValue)
+        const endPoint = `${backend['Mas Agua']}/charts`
+        try {
+            
+            const response = await request(endPoint, 'POST', data)
+            if(response){
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Exito!',
+                    html: 'Se guardo correctamente la configuracion',
+                })
+                navigate('/')
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Atencion!',
+                html: 'Ocurrio un error al intentar guardar la configuracion',
+            })
+            console.error(error.message) 
+        }
     }
-    const onError = (errors) => console.log(errors)
+    const onError = (errors) => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Atencion!',
+            html: 'Debe completar todos los campos',
+        })
+    } 
 
     return (
         <VarsProvider>
@@ -44,6 +75,7 @@ const ConfigGraphic = () => {
                     onSubmit={handleSubmit(onSubmit, onError)}
                     className="flex flex-col gap-4 items-center"
                 >
+                    <input type="hidden" {...register('type')} value={configs[id].typeGraph}/>
                     {
                         !configs[id].singleValue ? (
                             <GraphVariableSelector />

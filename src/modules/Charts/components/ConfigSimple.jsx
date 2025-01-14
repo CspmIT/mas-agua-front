@@ -10,12 +10,6 @@ import { configs } from '../configs/configs'
 import SelectVars from './SelectVars'
 import { getVarsInflux } from '../../DrawDiagram/components/Fields/actions'
 
-const Title = memo(({ title }) => (
-    <Typography variant="h6" component="div" align="center" className="mb-2">
-        {title}
-    </Typography>
-))
-
 const ConfigSimple = ({ register, errors, id, setValue }) => {
     const [chartType, setChartType] = useState(configs[id].typeGraph)
     const [config, setConfig] = useState(configs[id].preConfig)
@@ -29,6 +23,10 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
                 color: '#000000', // Valor por defecto si el formato es incorrecto
             }))
         }
+
+        // Establecer valores iniciales en el estado del formulario
+        setValue('porcentage', config.porcentage)
+        setValue('border', config.border)
     }, [])
 
     const handleChange = (e) => {
@@ -52,9 +50,9 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
             ...prevConfig,
             [name]: newValue,
         }))
-    }
 
-    const ChartComponent = lazy(() => import(`./${chartType}`))
+    }
+    const ChartComponent = lazy(() => import(`../components/${chartType}.jsx`))
     return (
         <div className="flex max-sm:flex-col w-full gap-3">
             <Card className="mb-4 max-sm:w-full w-1/2">
@@ -157,7 +155,11 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
                                 required: 'Este campo es requerido',
                             })}
                             onKeyDown={(e) => {
-                                if (e.key === 'e' || e.key === '+' || e.key === '-') {
+                                if (
+                                    e.key === 'e' ||
+                                    e.key === '+' ||
+                                    e.key === '-'
+                                ) {
                                     e.preventDefault()
                                 }
                             }}
@@ -198,7 +200,14 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
                 </CardContent>
             </Card>
             <Card className="w-1/2 max-sm:w-full p-3 mb-4">
-                <Title title={title} />
+                <Typography
+                    variant="h6"
+                    component="div"
+                    align="center"
+                    className="mb-2"
+                >
+                    {title}
+                </Typography>
                 <Suspense fallback={<div>Cargando...</div>}>
                     <ChartComponent {...config} />
                 </Suspense>
