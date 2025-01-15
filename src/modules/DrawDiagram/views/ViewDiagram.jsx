@@ -37,7 +37,7 @@ function ViewDiagram() {
 				for (const element of objects.images) {
 					// Llama a la función de edición con el ID y el factor de escala deseado
 
-					editWaveMetadata(canvas, element.id, 0.5)
+					editWaveMetadata(canvas, element.id, 0.6)
 				}
 			}, 200)
 		}
