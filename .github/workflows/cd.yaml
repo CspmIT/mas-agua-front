@@ -54,6 +54,5 @@ jobs:
                       --build-arg VITE_APP_NAME=${{ secrets.VITE_APP_NAME }} \
                       --build-arg VITE_ENTORNO=${{ secrets.VITE_ENTORNO }} \
                       --build-arg SECRET=${{ secrets.SECRET }} \
-                      -t ${{ secrets.DOCKER_USERNAME }}/$REPO_NAME:${{ needs.bump.outputs.new_tag }} \
-                      /home/runner/work/mas-agua-front/mas-agua-front
+                      -t ${{ secrets.DOCKER_USERNAME }}/$REPO_NAME:${{ needs.bump.outputs.new_tag }} .
                   docker push ${{ secrets.DOCKER_USERNAME }}/$REPO_NAME:${{ needs.bump.outputs.new_tag }}
