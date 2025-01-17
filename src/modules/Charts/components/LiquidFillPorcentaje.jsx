@@ -14,7 +14,7 @@ const LiquidFillPorcentaje = ({ value = 0, maxValue = 1, color, shape, porcentag
     const backgroundColor = color ?? '#363f9c'; // Color de fondo por defecto
     const labelColor = isLightColor(backgroundColor) ? '#000000' : '#FFFFFF';
     const percentage = (value / maxValue);
-
+    // Opciones para configurar los datos
     const options = {
         series: [
             {
