@@ -46,7 +46,7 @@ const CirclePorcentaje = ({ value= 0, maxValue=100, color= '#00FF00' }) => {
                             offsetCenter: ['0%', '-30%'],
                         },
                         detail: {
-                            valueAnimation: true,
+                            valueAnimation: false,
                             offsetCenter: ['0%', '0%'],
                         },
                     },

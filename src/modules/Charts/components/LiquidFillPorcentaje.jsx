@@ -26,7 +26,7 @@ const LiquidFillPorcentaje = ({ value = 0, maxValue = 1, color, shape, porcentag
                         if (porcentage) {
                             return `${parseFloat((params.value * 100)).toFixed(2)} %`
                         }
-                        return `${value} ${unidad} ${other ? `\n ${other}` : ''}`
+                        return `${parseFloat(value).toFixed(2)} ${unidad} ${other ? `\n ${other}` : ''}`
                     },
                     fontSize: 26,
                     color: '#000',
