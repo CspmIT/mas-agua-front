@@ -1,8 +1,8 @@
-name: CI/CD
+name: CD-MASTER
 
 on:
-    pull_request:
-        types:
+    pull_request: 
+        types: 
             - closed
         branches:
             - master
@@ -10,7 +10,7 @@ on:
 jobs:
     bump:
         if: github.event.pull_request.merged == true
-        runs-on: ubuntu-22.04
+        runs-on: ubuntu-latest
         permissions:
             contents: write
         outputs:
@@ -37,22 +37,16 @@ jobs:
 
             - name: Login to docker
               uses: docker/login-action@v3
-              with:
-                  username: ${{ secrets.DOCKER_USERNAME}}
-                  password: ${{ secrets.DOCKER_PASSWORD}}
-            - name: Debug current directory
-              run: |
-                  echo "Current directory:"
-                  pwd
-                  echo "Contents:"
-                  ls -la
+              with: 
+                username: ${{secrets.DOCKER_USERNAME}}
+                password: ${{secrets.DOCKER_PASSWORD}}
+
             - name: Build and push
               run: |
-                  REPO_NAME=$(echo ${{ github.repository }} | cut -d'/' -f2)
-                  echo "Repository name: $REPO_NAME"
+                  REPO_NAME=$(echo ${{github.repository}} | cut -d'/' -f2)
                   docker build \
-                      --build-arg VITE_APP_NAME=${{ secrets.VITE_APP_NAME }} \
-                      --build-arg VITE_ENTORNO=${{ secrets.VITE_ENTORNO }} \
-                      --build-arg SECRET=${{ secrets.SECRET }} \
-                      -t ${{ secrets.DOCKER_USERNAME }}/${REPO_NAME}:${{ needs.bump.outputs.new_tag }} .
-                  docker push ${{ secrets.DOCKER_USERNAME }}/${REPO_NAME}:${{ needs.bump.outputs.new_tag }}
+                    --build-arg VITE_APP_NAME=${{secrets.VITE_APP_NAME}} \
+                    --build-arg VITE_ENTORNO=${{secrets.VITE_ENTORNO}} \
+                    --build-arg SECRET=${{secrets.SECRET}} \
+                    -t ${{secrets.DOCKER_USERNAME}}/${REPO_NAME}:${{needs.bump.outputs.new_tag}} .
+                  docker push ${{secrets.DOCKER_USERNAME}}/${REPO_NAME}:${{needs.bump.outputs.new_tag}}
