@@ -56,11 +56,13 @@
 			"targets": ["deb", "updater", "msi", "app", "dmg"],
 			"identifier": "com.cooptech.masAgua",
 			"icon": [
-				"icons/32x32.png",
-				"icons/128x128.png",
-				"icons/128x128@2x.png",
-				"icons/icon.icns",
-				"icons/icon.ico"
+				"icons/MasAgua.png",
+                "icons/MasAgua_16x16.png",
+                "icons/MasAgua_32x32.png",
+                "icons/MasAgua_128x128.png",
+                "icons/MasAgua_256x256.png",
+                "icons/MasAgua_512x512.png",
+				"icons/MasAgua.ico"
 			]
 		}
 	},
