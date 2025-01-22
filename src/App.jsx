@@ -47,7 +47,7 @@ function App() {
 		{ path: '/viewDiagram/:id', element: <ViewDiagram /> },
 		{ path: '/AddMenu', element: <AddMenu /> },
 		{ path: '/config/graphic', element: <SelectType /> },
-		{ path: '/config/bombs', element: <PumpControl/> },
+		{ path: '/config/pumps', element: <PumpControl/> },
 		{ path: '/config/graphic/:id', element: <ConfigGraphic /> },
 	]
 	//Incorporo el theme de mui

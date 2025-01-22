@@ -38,7 +38,8 @@ const chartTypes = [
         id: 4,
         title: 'Porcentaje rectangular',
         image: '/assets/img/charts/echartsrectangle.png?height=300&width=300',
-        description: 'Visualización de porcentaje con olas, ideal para indicadores. El valor se puede mostrar en porcentaje o en valor absoluto. El color del gráfico se puede personalizar.',
+        description:
+            'Visualización de porcentaje con olas, ideal para indicadores. El valor se puede mostrar en porcentaje o en valor absoluto. El color del gráfico se puede personalizar.',
     },
     {
         id: 5,
@@ -54,12 +55,24 @@ const chartTypes = [
         description: 'Multi-level pie chart visualization',
         disabled: true,
     },
+    {
+        id: 7,
+        title: 'Porcentajes con estado',
+        image: '/assets/img/charts/Bombas.png?height=200&width=200',
+        description: 'Visualiza el porcentaje y el estado de x variables',
+        bomb: true,
+        disabled: false,
+    },
 ]
 
 function SelectType() {
     const navigate = useNavigate()
     const selectedChart = (chart) => {
-        navigate(`/config/graphic/${chart}`);
+        if(chart?.bomb){
+            navigate('/config/pumps')
+            return
+        }
+        navigate(`/config/graphic/${chart.id}`)
     }
     return (
         <Box className="p-6 min-[90vh]">
@@ -71,7 +84,7 @@ function SelectType() {
                     <Grid item sm={12} md={6} lg={4} key={index}>
                         <Card
                             onClick={() => {
-                                if(chart?.disabled){
+                                if (chart?.disabled) {
                                     Swal.fire({
                                         icon: 'error',
                                         title: 'Error',
@@ -79,7 +92,7 @@ function SelectType() {
                                     })
                                     return
                                 }
-                                selectedChart(chart.id)
+                                selectedChart(chart)
                             }}
                             className="hover:shadow-lg transition-shadow duration-200 h-80 cursor-pointer w-full"
                         >

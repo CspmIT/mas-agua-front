@@ -1,25 +1,6 @@
-'use client'
-
-import { useState } from 'react'
-// import {
-//     PlusIcon,
-//     XMarkIcon,
-//     DropletIcon,
-//     ClockIcon,
-// } from '@heroicons/react/24/outline'
-// import { Button } from '@/components/ui/button'
-// import { Card, CardContent } from '@/components/ui/card'
-// import {
-//     Dialog,
-//     DialogContent,
-//     DialogFooter,
-//     DialogHeader,
-//     DialogTitle,
-// } from '@/components/ui/dialog'
-// import { Input } from '@/components/ui/input'
+import { useState, useEffect } from 'react'
 import { PiPlusCircleDuotone } from 'react-icons/pi'
-import { Close, X } from '@mui/icons-material'
-import { BiDroplet } from 'react-icons/bi'
+import { Close } from '@mui/icons-material'
 import { BsClock } from 'react-icons/bs'
 import {
     Button,
@@ -28,29 +9,112 @@ import {
     Dialog,
     DialogContent,
     DialogTitle,
-    Input,
+    TextField,
     Typography,
 } from '@mui/material'
+import VarsProvider from '../../../components/DataGenerator/ProviderVars'
+import SelectVars from '../components/SelectVars'
+import Swal from 'sweetalert2'
+import { backend } from '../../../utils/routes/app.routes'
+import { request } from '../../../utils/js/request'
+import { useNavigate } from 'react-router-dom'
 
-export default function PumpControl() {
-    const [pumps, setPumps] = useState([
-        { id: 1, name: 'Bomba 1', percentage: 88.58 },
-        { id: 2, name: 'Bomba 2', percentage: 88.58 },
-        { id: 3, name: 'Bomba 3', percentage: 0 },
-    ])
+export default function PumpControl({
+    edit = true,
+    initialPumps = [],
+    initialStates = [],
+    initialTitle = '',
+}) {
+    const [pumps, setPumps] = useState(initialPumps)
+    const [states, setStates] = useState(initialStates)
+    const [title, setTitle] = useState(initialTitle)
+    const navigate = useNavigate()
+    useEffect(() => {
+        if (!edit) {
+            setPumps(initialPumps)
+            setStates(initialStates)
+        }
+    }, [initialPumps, initialStates])
+
     const [open, setOpen] = useState(false)
-    const [newPumpName, setNewPumpName] = useState('')
+    const [type, setType] = useState('')
+    const [dialogText, setDialogText] = useState('')
+    const [newName, setNewName] = useState('')
+    const [varId, setVarId] = useState('')
 
-    const handleAddPump = () => {
-        if (newPumpName.trim()) {
-            const newPump = {
-                id: Math.max(0, ...pumps.map((p) => p.id)) + 1,
-                name: newPumpName,
-                percentage: 0,
+    const handleAdd = (type) => {
+        if (!varId) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Atencion',
+                html: 'Debe agregar una variable para guardar',
+            })
+            return
+        }
+        if (type === 'state') {
+            if (newName.trim()) {
+                const newState = {
+                    id: Math.max(0, ...states.map((s) => s.id)) + 1,
+                    name: newName,
+                    varId: varId,
+                    value: null,
+                    unit: null,
+                    type: 'status',
+                }
+                setStates([...states, newState])
+                setNewName('')
+                setVarId('')
+                setOpen(false)
             }
-            setPumps([...pumps, newPump])
-            setNewPumpName('')
-            setOpen(false)
+        }
+        if (type === 'pump') {
+            if (newName.trim()) {
+                const newPump = {
+                    id: Math.max(0, ...pumps.map((p) => p.id)) + 1,
+                    name: newName,
+                    varId: varId,
+                    value: null,
+                    unit: null,
+                    type: 'pump',
+                }
+                setPumps([...pumps, newPump])
+                setNewName('')
+                setVarId('')
+                setOpen(false)
+            }
+        }
+    }
+
+    const handleSave = async () => {
+        if (pumps.length === 0 && states.length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Atencion',
+                text: 'Debe enviar al menos una bomba o un estado',
+            })
+            return false
+        }
+
+        const url = `${backend[import.meta.env.VITE_APP_NAME]}/bombs`
+        try {
+            const { data } = await request(url, 'POST', {
+                pumps: pumps,
+                title: title,
+                states: states,
+            })
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'Exito',
+                html: `Se cargo con exito el grafico ${data.name}`
+            })
+            navigate('/')
+        } catch (error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                html: `Ocurrio un error al querer cargar el grafico. <br> ${error.message}`
+            })
         }
     }
 
@@ -58,66 +122,151 @@ export default function PumpControl() {
         setPumps(pumps.filter((pump) => pump.id !== id))
     }
 
+    const handleRemoveState = (id) =>
+        setStates(states.filter((item) => item.id !== id))
+
     return (
-        <div className="container mx-auto mt-8 p-4">
-            <Card className="max-w-2xl mx-auto">
+        <>
+            <Card className={`${edit ? 'max-w-2xl' : 'w-full'} mx-auto h-fit`}>
                 <CardContent className="p-6">
-                    <div className="flex justify-between items-center mb-4">
-                        <h2 className="text-2xl font-bold">
-                            Control de Bombas
-                        </h2>
-                        <Button onClick={() => setOpen(true)}>
-                            <PiPlusCircleDuotone className="h-5 w-5 mr-2" />
-                            Agregar Bomba
-                        </Button>
-                    </div>
+                    {edit && (
+                        <TextField
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
+                            label="Título"
+                            fullWidth
+                            className="mb-4"
+                        />
+                    )}
 
-                    <div className="bg-gray-100 p-4 rounded-md flex gap-1 justify-center items-center mb-6">
-                        <Typography variant='h6'>Estado:</Typography>
-                        <Typography variant='h6' className="font-bold text-green-600">Normal</Typography>
-                    </div>
+                    {edit && (
+                        <div className="flex justify-center items-center mb-4">
+                            <Button
+                                onClick={() => {
+                                    setType('pump')
+                                    setDialogText('Agregar nueva Bomba')
+                                    setOpen(true)
+                                }}
+                            >
+                                <PiPlusCircleDuotone className="h-5 w-5 mr-2" />
+                                Agregar Bomba
+                            </Button>
+                            <Button
+                                onClick={() => {
+                                    setType('state')
+                                    setDialogText('Agregar nuevo Estado')
+                                    setOpen(true)
+                                }}
+                            >
+                                <PiPlusCircleDuotone className="h-5 w-5 mr-2" />
+                                Agregar Estado
+                            </Button>
+                        </div>
+                    )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        {pumps.map((pump) => (
-                            <Card key={pump.id} className="!relative !bg-gray-100">
+                    {states.map((item) => (
+                        <div
+                            key={item.id}
+                            className="bg-gray-100 p-4 rounded-md relative flex gap-1 justify-center items-center mb-6"
+                        >
+                            {edit && (
                                 <Button
                                     variant="ghost"
                                     size="icon"
                                     className="!absolute !-right-4 !top-1 !p-0"
-                                    onClick={() => handleRemovePump(pump.id)}
+                                    onClick={() => handleRemoveState(item.id)}
                                 >
                                     <Close className="!h-4 !w-4" />
                                 </Button>
-                                <CardContent className="p-4">
-                                    <h4 className="text-lg font-medium mb-2">
-                                        {pump.name}
-                                    </h4>
-                                    <p className="text-3xl font-bold text-blue-500">
-                                        {pump.percentage}%
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        ))}
+                            )}
+
+                            <Typography variant="h6">{item.name}: </Typography>
+                            <Typography
+                                variant="h6"
+                                className={`font-bold ${item.color}`}
+                            >
+                                {item.value ?? 'Sin datos'}
+                            </Typography>
+                        </div>
+                    ))}
+
+                    <div
+                        className={`grid gap-4 ${
+                            pumps.length === 1
+                                ? 'grid-cols-1 justify-items-center'
+                                : pumps.length === 2
+                                ? 'grid-cols-2'
+                                : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
+                        }`}
+                    >
+                        {pumps.map((pump) => {
+                            return (
+                                <Card
+                                    key={pump.id}
+                                    className="!relative !bg-gray-100 w-full max-w-sm"
+                                >
+                                    {edit && (
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="!absolute !-right-4 !top-1 !p-0"
+                                            onClick={() =>
+                                                handleRemovePump(pump.id)
+                                            }
+                                        >
+                                            <Close className="!h-4 !w-4" />
+                                        </Button>
+                                    )}
+
+                                    <CardContent className="p-4">
+                                        <h4 className="text-lg text-center font-medium mb-2">
+                                            {pump.name}
+                                        </h4>
+                                        <p className="text-3xl text-center font-bold text-blue-500">
+                                            {pump.value
+                                                ? pump.value + ' ' + pump.unit
+                                                : 'Sin datos'}
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            )
+                        })}
                     </div>
 
-                    <div className="flex items-center mt-4 text-gray-500">
-                        <BsClock className="h-5 w-5 mr-2" />
-                        <span className="text-sm">
-                            {new Date().toLocaleString()}
-                        </span>
+                    <div className="flex justify-between items-center mt-4 text-gray-500">
+                        <div className="flex">
+                            <BsClock className="h-5 w-5 mr-2" />
+                            <span className="text-sm">
+                                {new Date().toLocaleString()}
+                            </span>
+                        </div>
+                        {edit && (
+                            <Button variant="contained" onClick={handleSave}>
+                                Guardar
+                            </Button>
+                        )}
                     </div>
                 </CardContent>
             </Card>
             <Dialog open={open} onOpenChange={setOpen}>
                 <DialogContent>
                     <div>
-                        <DialogTitle>Agregar Nueva Bomba</DialogTitle>
+                        <DialogTitle>{dialogText}</DialogTitle>
                     </div>
-                    <Input
-                        placeholder="Nombre de la Bomba"
-                        value={newPumpName}
-                        onChange={(e) => setNewPumpName(e.target.value)}
-                    />
+                    <div className="flex flex-col gap-3">
+                        <TextField
+                            placeholder="Nombre"
+                            value={newName}
+                            onChange={(e) => setNewName(e.target.value)}
+                        />
+                        <VarsProvider>
+                            <SelectVars
+                                setValueState={setVarId}
+                                label={'Seleccione una variable'}
+                            />
+                        </VarsProvider>
+                    </div>
+
                     <div>
                         <Button
                             variant="outline"
@@ -125,10 +274,10 @@ export default function PumpControl() {
                         >
                             Cancelar
                         </Button>
-                        <Button onClick={handleAddPump}>Agregar</Button>
+                        <Button onClick={() => handleAdd(type)}>Agregar</Button>
                     </div>
                 </DialogContent>
             </Dialog>
-        </div>
+        </>
     )
 }
