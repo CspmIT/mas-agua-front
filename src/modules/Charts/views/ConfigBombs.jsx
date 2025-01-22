@@ -222,7 +222,7 @@ export default function PumpControl({
                                         <h4 className="text-lg text-center font-medium mb-2">
                                             {pump.name}
                                         </h4>
-                                        <p className="text-3xl text-center font-bold text-blue-500">
+                                        <p className="text-2xl text-center font-bold text-blue-500">
                                             {pump.value
                                                 ? pump.value + ' ' + pump.unit
                                                 : 'Sin datos'}

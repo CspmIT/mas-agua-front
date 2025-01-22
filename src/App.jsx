@@ -23,6 +23,7 @@ import SelectType from './modules/Charts/views/SelectType'
 import ConfigGraphic from './modules/Charts/views/ConfigGraphic'
 import ViewDiagram from './modules/DrawDiagram/views/ViewDiagram'
 import PumpControl from './modules/Charts/views/ConfigBombs'
+import ChartsTable from './modules/Charts/views/ChartsTable'
 
 function App() {
 	const { darkMode } = useContext(MainContext)
@@ -49,6 +50,7 @@ function App() {
 		{ path: '/config/graphic', element: <SelectType /> },
 		{ path: '/config/pumps', element: <PumpControl/> },
 		{ path: '/config/graphic/:id', element: <ConfigGraphic /> },
+		{ path: '/config/allGraphic', element: <ChartsTable /> },
 	]
 	//Incorporo el theme de mui
 	const lightTheme = createTheme({
