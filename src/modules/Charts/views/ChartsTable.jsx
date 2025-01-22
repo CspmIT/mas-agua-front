@@ -4,6 +4,7 @@ import { backend } from '../../../utils/routes/app.routes'
 import TableCustom from '../../../components/TableCustom'
 import { Box, Button, Container, Typography } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import Swal from 'sweetalert2'
 
 const ChartsTable = () => {
     const navigate = useNavigate()
@@ -11,7 +12,7 @@ const ChartsTable = () => {
     const [columnsTable, setColumnsTable] = useState([])
     const fetchCharts = async () => {
         const url = backend[import.meta.env.VITE_APP_NAME]
-        const endpoint = url + '/charts'
+        const endpoint = url + '/allCharts'
         const { data } = await request(endpoint, 'GET')
         const columnsCel = [
             {
@@ -28,6 +29,81 @@ const ChartsTable = () => {
             },
             {
                 header: 'Acciones',
+                accessorKey: 'actions',
+                Cell: ({ row }) => (
+                    <Box display="flex" gap={1}>
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            size="small"
+                            onClick={() =>
+                                console.log(`Editar ID: ${row.original.id}`)
+                            }
+                        >
+                            Editar
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color={row.original.status ? 'error' : 'success'} // Cambia el color según el estado
+                            size="small"
+                            onClick={async () => {
+                                const question = await Swal.fire({
+                                    icon: 'question',
+                                    html: `Esta seguro que desea ${
+                                        row.original.status
+                                            ? 'desactivar'
+                                            : 'activar'
+                                    } este grafico?`,
+                                    showCancelButton: true,
+                                    cancelButtonText: 'Cancelar',
+                                    confirmButtonText: `${
+                                        row.original.status
+                                            ? 'Desactivar'
+                                            : 'Activar'
+                                    }`,
+                                })
+                                if (!question.isConfirmed) {
+                                    return false
+                                }
+                                const endpoint = `${url}/charts/status`
+                                try {
+                                    const { data } = await request(
+                                        endpoint,
+                                        'POST',
+                                        {
+                                            id: row.original.id,
+                                            status: row.original.status,
+                                        }
+                                    )
+                                    if (data) {
+                                        await Swal.fire({
+                                            icon: 'success',
+                                            html: 'Grafico actualizado correctamnte',
+                                        })
+                                        // Actualiza el estado local
+                                        setCharts((prevCharts) =>
+                                            prevCharts.map((chart) =>
+                                                chart.id === row.original.id
+                                                    ? {
+                                                          ...chart,
+                                                          status: !chart.status,
+                                                      }
+                                                    : chart
+                                            )
+                                        )
+                                    }
+                                } catch (error) {
+                                    Swal.fire({
+                                        icon: 'error',
+                                        html: 'No se puedo actualizar el grafico',
+                                    })
+                                }
+                            }}
+                        >
+                            {row.original.status ? 'Desactivar' : 'Activar'}
+                        </Button>
+                    </Box>
+                ),
             },
         ]
         setColumnsTable(columnsCel)
@@ -49,7 +125,13 @@ const ChartsTable = () => {
                         <Typography variant="h3" align="center" flexGrow={1}>
                             Graficos
                         </Typography>
-                        <Button variant="contained" color="primary" onClick={()=> {navigate('/config/graphic')}}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => {
+                                navigate('/config/graphic')
+                            }}
+                        >
                             Crear grafico
                         </Button>
                     </Box>
