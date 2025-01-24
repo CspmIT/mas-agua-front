@@ -59,7 +59,8 @@ const ChartsTable = () => {
                             variant="outlined"
                             color={row.original.status ? 'error' : 'success'} // Cambia el color según el estado
                             size="small"
-                            onClick={async () => {
+                            onClick={async (e) => {
+                                e.preventDefault()
                                 const question = await Swal.fire({
                                     icon: 'question',
                                     html: `Esta seguro que desea ${
@@ -82,7 +83,7 @@ const ChartsTable = () => {
                                 try {
                                     const { data } = await request(
                                         endpoint,
-                                        'POST',
+                                        'PUT',
                                         {
                                             id: row.original.id,
                                             status: row.original.status,
@@ -106,6 +107,7 @@ const ChartsTable = () => {
                                         )
                                     }
                                 } catch (error) {
+                                    console.log(error)
                                     Swal.fire({
                                         icon: 'error',
                                         html: 'No se puedo actualizar el grafico',
