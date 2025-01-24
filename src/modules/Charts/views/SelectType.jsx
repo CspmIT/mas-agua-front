@@ -1,5 +1,6 @@
 'use client'
 
+import { ArrowBack } from '@mui/icons-material'
 import {
     Card,
     CardContent,
@@ -7,6 +8,7 @@ import {
     Typography,
     Grid,
     Box,
+    IconButton,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
@@ -68,7 +70,7 @@ const chartTypes = [
 function SelectType() {
     const navigate = useNavigate()
     const selectedChart = (chart) => {
-        if(chart?.bomb){
+        if (chart?.bomb) {
             navigate('/config/pumps')
             return
         }
@@ -76,9 +78,25 @@ function SelectType() {
     }
     return (
         <Box className="p-6 min-[90vh]">
-            <Typography variant="h4" className="text-gray-800">
-                Seleccione el tipo de grafico
-            </Typography>
+            <div className="flex justify-between items-center">
+                <Typography variant="h4" className="text-gray-800">
+                    Seleccione el tipo de grafico
+                </Typography>
+                <IconButton
+                    sx={{
+                        color: 'black',
+                        marginRight: 2,
+                        padding: '8px',
+                    }}
+                    aria-label="volver atrás"
+                    onClick={() => {
+                        navigate('/config/allGraphic')
+                    }}
+                >
+                    <ArrowBack sx={{ fontSize: '1.5rem' }} />
+                </IconButton>
+            </div>
+
             <Grid container spacing={3} className="pt-3">
                 {chartTypes.map((chart, index) => (
                     <Grid item sm={12} md={6} lg={4} key={index}>

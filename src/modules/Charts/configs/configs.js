@@ -8,6 +8,7 @@ export const configs = {
     // LineChart,
     1: {
         // Porcentaje con olas
+        id: 1,
         typeGraph: 'LiquidFillPorcentaje',
         format: true,
         typeValue: true,
@@ -33,6 +34,7 @@ export const configs = {
     // value, maxValue, color, type, porcentage = false, border = true, name = '' -> Valores de LiquidFillPorcentaje
     2: {
         // Circulo con porcentaje
+        id: 2,
         typeGraph: 'CirclePorcentaje',
         format: false,
         typeValue: false,
@@ -51,6 +53,7 @@ export const configs = {
     },
     3: {
         // Grafico de torta
+        id: 3,
         typeGraph: 'DoughnutChart',
         //! Terminar de armar configuracion
         singleValue: false,
@@ -58,6 +61,7 @@ export const configs = {
     },
     4: {
         //Rectangulo con porcentaje
+        id: 4,
         typeGraph: 'LiquidFillPorcentaje',
         format: true,
         typeValue: true,
@@ -82,11 +86,13 @@ export const configs = {
     },
     5: {
         // Grafico de barras
+        id: 5,
         typeGraph: 'BarDataSet',
         //! Terminar de armar configuracion
     },
     6: {
         // Grafico de linea con superposicion
+        id: 6,
         typeGraph: 'LineChart',
         title: 1,
         format: true,

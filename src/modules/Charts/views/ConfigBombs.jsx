@@ -18,6 +18,7 @@ import Swal from 'sweetalert2'
 import { backend } from '../../../utils/routes/app.routes'
 import { request } from '../../../utils/js/request'
 import { useNavigate } from 'react-router-dom'
+import { ArrowBack } from '@mui/icons-material'
 
 export default function PumpControl({
     edit = true,
@@ -106,14 +107,14 @@ export default function PumpControl({
             await Swal.fire({
                 icon: 'success',
                 title: 'Exito',
-                html: `Se cargo con exito el grafico ${data.name}`
+                html: `Se cargo con exito el grafico ${data.name}`,
             })
             navigate('/')
         } catch (error) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                html: `Ocurrio un error al querer cargar el grafico. <br> ${error.message}`
+                html: `Ocurrio un error al querer cargar el grafico. <br> ${error.message}`,
             })
         }
     }
@@ -128,6 +129,15 @@ export default function PumpControl({
     return (
         <>
             <Card className={`${edit ? 'max-w-2xl' : 'w-full'} mx-auto h-fit`}>
+                {edit && (
+                    <Button
+                        onClick={() => navigate(-1)} // Volver atrás
+                        className="!absolute !top-2 !right-2 !z-10"
+                    >
+                        <ArrowBack className="!h-6 !w-6" />
+                    </Button>
+                )}
+
                 <CardContent className="p-6">
                     {edit && (
                         <TextField

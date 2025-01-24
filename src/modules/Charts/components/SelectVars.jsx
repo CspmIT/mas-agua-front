@@ -14,7 +14,12 @@ import { Search, Add, Visibility, ExpandMore } from '@mui/icons-material'
 import ModalVar from '../../../components/DataGenerator/ModalVar'
 import { getVarsInflux } from '../../DrawDiagram/components/Fields/actions'
 
-const SelectVars = ({ label, setValue, setValueState = false }) => {
+const SelectVars = ({
+    label,
+    setValue,
+    setValueState = false,
+    initialVar = false,
+}) => {
     const [anchorEl, setAnchorEl] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
     const [selectedOption, setSelectedOption] = useState(null)
@@ -25,6 +30,9 @@ const SelectVars = ({ label, setValue, setValueState = false }) => {
         const vars = await getVarsInflux()
         setOptions(vars)
         //Obtengo la variable seleccionada para actualizarla con los datos de la base de datos
+        if (initialVar) {
+            setSelectedOption(initialVar)
+        }
         if (selectedOption !== null) {
             const varSelected = vars.find((v) => v.id === selectedOption.id)
             setSelectedOption(varSelected)
@@ -35,6 +43,12 @@ const SelectVars = ({ label, setValue, setValueState = false }) => {
             }
         }
     }
+
+    useEffect(() => {
+        if (initialVar) {
+            handleSelectOption(initialVar)
+        }
+    }, [initialVar])
 
     useEffect(() => {
         fetchVars()

@@ -50,6 +50,7 @@ function App() {
 		{ path: '/config/graphic', element: <SelectType /> },
 		{ path: '/config/pumps', element: <PumpControl/> },
 		{ path: '/config/graphic/:id', element: <ConfigGraphic /> },
+		{ path: '/config/graphic/:id/:idChart', element: <ConfigGraphic /> },
 		{ path: '/config/allGraphic', element: <ChartsTable /> },
 	]
 	//Incorporo el theme de mui

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { request } from '../../../utils/js/request'
+import { configs } from '../configs/configs'
 import { backend } from '../../../utils/routes/app.routes'
 import TableCustom from '../../../components/TableCustom'
 import { Box, Button, Container, Typography } from '@mui/material'
@@ -33,12 +34,24 @@ const ChartsTable = () => {
                 Cell: ({ row }) => (
                     <Box display="flex" gap={1}>
                         <Button
+                            disabled={row.original.type=== 'PumpControl'}
                             variant="outlined"
                             color="primary"
                             size="small"
-                            onClick={() =>
-                                console.log(`Editar ID: ${row.original.id}`)
-                            }
+                            onClick={() => {
+                                const type = row.original.type
+                                if (type === 'PumpControl') {
+                                    navigate('/config/pumps')
+                                    return
+                                }
+                                const matchingConfig = Object.values(
+                                    configs
+                                ).find((config) => config.typeGraph === type)
+
+                                navigate(
+                                    `/config/graphic/${matchingConfig.id}/${row.original.id}`
+                                )
+                            }}
                         >
                             Editar
                         </Button>

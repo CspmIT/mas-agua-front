@@ -8,35 +8,56 @@ import {
 } from '@mui/material'
 import { configs } from '../configs/configs'
 import SelectVars from './SelectVars'
-import { getVarsInflux } from '../../DrawDiagram/components/Fields/actions'
 
-const ConfigSimple = ({ register, errors, id, setValue }) => {
+const ConfigSimple = ({ register, errors, id, setValue, chartData }) => {
     const [chartType, setChartType] = useState(configs[id].typeGraph)
-    const [config, setConfig] = useState(configs[id].preConfig)
-    const [title, setTitle] = useState('')
+    const [config, setConfig] = useState(() =>
+        chartData
+            ? chartData.ChartConfig.reduce(
+                  (acc, item) => ({
+                      ...acc,
+                      [item.key]:
+                          item.type === 'boolean'
+                              ? item.value === '1'
+                              : item.value,
+                  }),
+                  {}
+              )
+            : configs[id].preConfig
+    )
+    const [title, setTitle] = useState(
+        chartData?.ChartConfig.find((c) => c.key === 'title')?.value || ''
+    )
+    const [influxVar, setInfluxVar] = useState(null)
 
     useEffect(() => {
-        // Validar y corregir el formato del color al inicializar
-        if (!/^#[0-9A-F]{6}$/i.test(config.color)) {
-            setConfig((prevConfig) => ({
-                ...prevConfig,
-                color: '#000000', // Valor por defecto si el formato es incorrecto
-            }))
+        if (chartData) {
+            // Inicializar valores del formulario con los datos existentes
+            console.log(chartData)
+            chartData.ChartConfig.forEach(({ key, value, type }) => {
+                setValue(key, type === 'boolean' ? value === '1' : value)
+            })
+            chartData.ChartData.forEach(({ key, value, InfluxVars }) => {
+                if (InfluxVars) {
+                    setInfluxVar(InfluxVars)
+                }
+                setValue(key, value)
+            })
+        } else {
+            // Valores por defecto
+            setValue('porcentage', config.porcentage)
+            setValue('border', config.border)
         }
-
-        // Establecer valores iniciales en el estado del formulario
-        setValue('porcentage', config.porcentage)
-        setValue('border', config.border)
     }, [])
 
     const handleChange = (e) => {
         const { name, value } = e.target
-
-        // Validar y corregir el formato del color
         let newValue = value
+
         if (name === 'color' && !/^#[0-9A-F]{6}$/i.test(value)) {
             newValue = '#000000' // Valor por defecto si el formato es incorrecto
         }
+
         if (name === 'maxValue') {
             const mitad = value / 2 || 0
             newValue = value || 1
@@ -48,10 +69,13 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
 
         setConfig((prevConfig) => ({
             ...prevConfig,
-            [name]: newValue,
+            [name]:
+                name === 'porcentage' || name === 'border'
+                    ? value === 'true'
+                    : newValue,
         }))
-
     }
+
     const ChartComponent = lazy(() => import(`../components/${chartType}.jsx`))
     return (
         <div className="flex max-sm:flex-col w-full gap-3">
@@ -113,11 +137,11 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
                                     errors.porcentage &&
                                     errors.porcentage.message
                                 }
-                                value={config.porcentage}
+                                value={String(config.porcentage)} // Convertir el valor a string para asegurar compatibilidad
                                 select
                             >
-                                <MenuItem value={true}>Porcentaje</MenuItem>
-                                <MenuItem value={false}>Valor</MenuItem>
+                                <MenuItem value="true">Porcentaje</MenuItem>
+                                <MenuItem value="false">Valor</MenuItem>
                             </TextField>
                         )}
 
@@ -128,22 +152,18 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
                                 label="Borde"
                                 {...register('border')}
                                 onChange={handleChange}
-                                value={config.border}
+                                value={String(config.border)} // Convertir el valor a string para asegurar compatibilidad
                             >
-                                <MenuItem value={true}>Si</MenuItem>
-                                <MenuItem value={false}>No</MenuItem>
+                                <MenuItem value="true">Sí</MenuItem>
+                                <MenuItem value="false">No</MenuItem>
                             </TextField>
                         )}
 
                         <SelectVars
                             setValue={setValue}
                             label={'Seleccione una variable para el grafico'}
-                            //! Agregar un parametro para el valor seleccionado
+                            initialVar={influxVar}
                         />
-                        {/* <Tooltip
-                            arrow
-                            title="Este campo se usa para calcular el porcentaje/nivel del grafico."
-                        > */}
                         <TextField
                             type="number"
                             className="w-full"
@@ -167,7 +187,6 @@ const ConfigSimple = ({ register, errors, id, setValue }) => {
                             error={!!errors.maxValue}
                             helperText={errors.maxValue?.message}
                         />
-                        {/* </Tooltip> */}
                         {!config.porcentage && configs[id].typeUnity && (
                             <TextField
                                 type="text"
