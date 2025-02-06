@@ -55,7 +55,6 @@ const chartTypes = [
         title: 'Grafico de linea con superposicion',
         image: '/assets/img/charts/StepLine.png?height=200&width=200',
         description: 'Multi-level pie chart visualization',
-        disabled: true,
     },
     {
         id: 7,
