@@ -1,12 +1,22 @@
+import { memo, useMemo } from 'react'
 import EChart from './EChart'
 
-const LineChart = ({ xType, xSeries, yType, ySeries }) => {
-    const options = {
+const LineChart = memo(({ xType, xSeries, yType, ySeries }) => {
+    const memoizedXSeries = useMemo(() => [...xSeries], [xSeries])
+
+    const memoizedYSeries = useMemo(() => {
+        return ySeries.map(series => ({
+            ...series,
+            data: [...series.data] // Evita cambios de referencia innecesarios
+        }))
+    }, [ySeries])
+
+    const options = useMemo(() => ({
         tooltip: {
             trigger: 'axis',
         },
         legend: {
-            data: ySeries.map((serie) => serie.name),
+            data: memoizedYSeries.map(serie => serie.name),
         },
         grid: {
             left: '3%',
@@ -14,23 +24,26 @@ const LineChart = ({ xType, xSeries, yType, ySeries }) => {
             bottom: '3%',
             containLabel: true,
         },
-        // toolbox: {
-        //     feature: {
-        //         saveAsImage: {},
-        //     },
-        // },
+        toolbox: {
+            feature: {
+                dataZoom: { yAxisIndex: 'none' },
+            },
+        },
         xAxis: {
             type: xType,
-            data: xSeries,
-            // data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            data: memoizedXSeries,
+            axisLabel: {
+                interval: 'auto',
+                rotate: 65
+            }
         },
         yAxis: {
             type: yType,
         },
-        series: ySeries
-    }
+        series: memoizedYSeries
+    }), [xType, memoizedXSeries, yType, memoizedYSeries])
 
     return <EChart config={options} />
-}
+})
 
 export default LineChart

@@ -37,7 +37,7 @@ const SelectVars = ({
             const varSelected = vars.find((v) => v.id === selectedOption.id)
             setSelectedOption(varSelected)
             if (setValueState) {
-                setValueState(varSelected.id)
+                setValueState(varSelected)
             } else {
                 setValue('idVar', varSelected.id)
             }
@@ -72,7 +72,7 @@ const SelectVars = ({
     const handleSelectOption = (option) => {
         setSelectedOption(option)
         if (setValueState) {
-            setValueState(option.id)
+            setValueState(option)
         } else {
             setValue('idVar', option.id)
         }

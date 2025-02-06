@@ -10,6 +10,7 @@ import Swal from 'sweetalert2'
 import { backend } from '../../../utils/routes/app.routes'
 import { request } from '../../../utils/js/request'
 import { ArrowBack } from '@mui/icons-material'
+import ConfigMultiple from './ConfigMultiple'
 
 const ConfigGraphic = () => {
     const { id, idChart = false } = useParams()
@@ -24,8 +25,71 @@ const ConfigGraphic = () => {
     const [loading, setLoading] = useState(!!idChart) // Estado de carga: true si hay idChart
 
     const navigate = useNavigate()
+    function isSimpleChart(type) {
+        return type === 'LiquidFillPorcentaje' || type === 'CirclePorcentaje'
+    }
 
-    const onSubmit = async (data) => {
+    function isValidXConfig(xAxisConfig) {
+        if (xAxisConfig.dateTimeType === 'date') {
+            return (
+                xAxisConfig.dateRange !== '' &&
+                xAxisConfig.samplingPeriod !== ''
+            )
+        }
+        if (xAxisConfig.dateTimeType === 'time') {
+            return (
+                xAxisConfig.timeRange !== '' &&
+                xAxisConfig.samplingPeriod !== ''
+            )
+        }
+        return false
+    }
+
+    const saveLineChart = async (data) => {
+        const { title, type, xAxisConfig, yData } = data
+
+        if (!title.trim()) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Atencion!',
+                html: 'El titulo no puede estar vacio',
+            })
+            return false
+        }
+        if (!isValidXConfig(xAxisConfig)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Atencion!',
+                html: 'Faltan datos en la configuracion del eje X',
+            })
+            return false
+        }
+        if (yData.length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Atencion!',
+                html: 'El eje Y debe tener al menos una variable',
+            })
+            return false
+        }
+        const url = backend[import.meta.env.VITE_APP_NAME]
+        const endpoint = `${url}/chartSeries`
+        try {
+            const response = await request(endpoint, 'POST', data)
+            if (response) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    html: 'Se guardó correctamente la configuración',
+                })
+                navigate('/')
+            }
+        } catch (error) {
+            console.log(error.message)
+        }
+    }
+
+    const saveSimpleChart = async (data) => {
         if (data?.idVar === undefined) {
             Swal.fire({
                 icon: 'error',
@@ -69,6 +133,17 @@ const ConfigGraphic = () => {
                 html: 'Ocurrió un error al intentar guardar la configuración',
             })
             console.error(error.message)
+        }
+    }
+
+    const onSubmit = async (data) => {
+        const { type } = data
+        if (type === 'LineChart') {
+            await saveLineChart(data)
+        }
+
+        if (isSimpleChart(type)) {
+            saveSimpleChart(data)
         }
     }
 
@@ -135,7 +210,7 @@ const ConfigGraphic = () => {
                         value={configs[id].typeGraph}
                     />
                     {!configs[id].singleValue ? (
-                        <GraphVariableSelector />
+                        <ConfigMultiple id={id} setValue={setValue} />
                     ) : (
                         // Muestra ConfigSimple solo si no está cargando o no hay idChart
                         (!idChart || !loading) && (

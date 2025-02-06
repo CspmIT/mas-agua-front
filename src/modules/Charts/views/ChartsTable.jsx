@@ -34,7 +34,7 @@ const ChartsTable = () => {
                 Cell: ({ row }) => (
                     <Box display="flex" gap={1}>
                         <Button
-                            disabled={row.original.type=== 'PumpControl'}
+                            disabled={row.original.type=== 'PumpControl' ||row.original.type=== 'LineChart'  }
                             variant="outlined"
                             color="primary"
                             size="small"

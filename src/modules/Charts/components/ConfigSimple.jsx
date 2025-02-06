@@ -33,7 +33,6 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData }) => {
     useEffect(() => {
         if (chartData) {
             // Inicializar valores del formulario con los datos existentes
-            console.log(chartData)
             chartData.ChartConfig.forEach(({ key, value, type }) => {
                 setValue(key, type === 'boolean' ? value === '1' : value)
             })
