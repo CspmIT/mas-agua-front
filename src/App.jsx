@@ -6,7 +6,7 @@ import { MainContext } from './context/MainContext'
 
 import LoginApp from './modules/LoginApp/view'
 import ListClients from './modules/LoginApp/view/ListClient'
-import DashBoard from './modules/dashBoard/views'
+// import DashBoard from './modules/dashBoard/views'
 import TabDinamic from './modules/tabs/views'
 import Notification from './modules/Notification'
 import Home from './modules/home/views'
@@ -36,7 +36,7 @@ function App() {
 	]
 	const userRoutes = [
 		{ path: '/*', element: <Home /> },
-		{ path: '/Dashboard', element: <DashBoard /> },
+		// { path: '/Dashboard', element: <DashBoard /> },
 		{ path: '/tabs', element: <TabDinamic /> },
 		{ path: '/config/security', element: <ConfigSecurity /> },
 		{ path: '/config/menu', element: <ConfigMenu /> },
