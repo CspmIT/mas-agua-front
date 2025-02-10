@@ -11,6 +11,8 @@ const LineChart = memo(({ xType, xSeries, yType, ySeries }) => {
         }))
     }, [ySeries])
 
+    const maxLabels = 24
+    const interval = Math.ceil(memoizedXSeries.length / maxLabels)
     const options = useMemo(() => ({
         tooltip: {
             trigger: 'axis',
@@ -32,9 +34,11 @@ const LineChart = memo(({ xType, xSeries, yType, ySeries }) => {
         xAxis: {
             type: xType,
             data: memoizedXSeries,
+            splitNumber: 5,
             axisLabel: {
-                interval: 'auto',
-                rotate: 65
+                interval: interval,
+                rotate: 65,
+                showMinLabel: false 
             }
         },
         yAxis: {

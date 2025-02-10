@@ -99,6 +99,7 @@ const Home = () => {
                         id: `${chart.id}-${chart.type}`,
                         component: type,
                         props: {
+                            title: propsReduce.title,
                             xType: 'category',
                             yType: 'value',
                         },
@@ -282,7 +283,7 @@ const ChartComponentDbWrapper = ({
                 ...series,
                 data:
                     data[series.idVar.id].map((data) =>
-                        data.value ? parseFloat(data.value).toFixed(3) : '-'
+                        data.value !== null && data.value !== undefined ? parseFloat(data.value).toFixed(3) : '-'
                     ) || [],
             }))
 
