@@ -23,6 +23,7 @@ const MapView = () => {
                 lat: lat,
                 lng: lng,
                 name: idVar,
+                data: null
             }
         }
     }
@@ -83,12 +84,15 @@ const MapView = () => {
                     setValue={setValue}
                     label={'Seleccione una variable'}
                 />
-                <Button onClick={saveMap} className="w-1/5" variant="contained">
+                <Button onClick={saveMap} className="w-[10%]" variant="contained">
                     Agregar
+                </Button>
+                <Button onClick={()=> console.log('guarda mapa')} className="w-[10%]" color='success' variant="contained">
+                   Guardar Mapa 
                 </Button>
             </div>
 
-            <MapBase height={'100%'} controlPanel={false} markers={markers} setMarkers={setMarkers} />
+            <MapBase height={'100%'} markers={markers} setMarkers={setMarkers} />
         </div>
     )
 }
