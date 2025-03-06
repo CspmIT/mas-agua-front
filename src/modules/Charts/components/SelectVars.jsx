@@ -19,6 +19,7 @@ const SelectVars = ({
     setValue,
     setValueState = false,
     initialVar = false,
+    className = false,
 }) => {
     const [anchorEl, setAnchorEl] = useState(null)
     const [searchTerm, setSearchTerm] = useState('')
@@ -85,7 +86,7 @@ const SelectVars = ({
     }
 
     return (
-        <Box sx={{ width: '100%', margin: 'auto', display: 'flex' }}>
+        <Box sx={{ width: '100%', margin: 'auto', display: 'flex' }} className={className} >
             <Button
                 aria-describedby={id}
                 variant="outlined"

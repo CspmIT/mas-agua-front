@@ -206,6 +206,7 @@ const ChartComponentDbWrapper = ({
             items.map(async (item) => {
                 try {
                     const influxVar = item.value
+                    console.log(influxVar)
                     const { data } = await request(
                         `${backend['Mas Agua']}/dataInflux`,
                         'POST',

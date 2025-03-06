@@ -57,7 +57,7 @@ export default function PumpControl({
                 const newState = {
                     id: Math.max(0, ...states.map((s) => s.id)) + 1,
                     name: newName,
-                    varId: varId,
+                    varId: varId.id,
                     value: null,
                     unit: null,
                     type: 'status',
@@ -73,7 +73,7 @@ export default function PumpControl({
                 const newPump = {
                     id: Math.max(0, ...pumps.map((p) => p.id)) + 1,
                     name: newName,
-                    varId: varId,
+                    varId: varId.id,
                     value: null,
                     unit: null,
                     type: 'pump',

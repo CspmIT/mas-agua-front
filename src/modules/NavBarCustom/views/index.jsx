@@ -50,6 +50,7 @@ function NavBarCustom({ setLoading }) {
 	const handleDrawerClose = () => {
 		setOpen(false)
 	}
+    
 	useEffect(() => {
 		const handleClickOutside = (event) => {
 			if (NavBarRef.current && !NavBarRef.current.contains(event.target)) {

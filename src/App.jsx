@@ -54,6 +54,7 @@ function App() {
 		{ path: '/config/graphic/:id/:idChart', element: <ConfigGraphic /> },
 		{ path: '/config/allGraphic', element: <ChartsTable /> },
 		{ path: '/map', element: <MapView /> },
+		{ path: '/map/create', element: <MapView create={true}/> },
 	]
 	//Incorporo el theme de mui
 	const lightTheme = createTheme({
