@@ -206,7 +206,6 @@ const ChartComponentDbWrapper = ({
             items.map(async (item) => {
                 try {
                     const influxVar = item.value
-                    console.log(influxVar)
                     const { data } = await request(
                         `${backend['Mas Agua']}/dataInflux`,
                         'POST',
@@ -240,7 +239,7 @@ const ChartComponentDbWrapper = ({
                 value: data?.[accessKey.calc_field]?.value,
             }
         } catch (error) {
-            console.log(error)
+            console.error(error)
             return null
         }
     }
@@ -293,7 +292,7 @@ const ChartComponentDbWrapper = ({
                 xSeries,
             }
         } catch (error) {
-            console.log(error)
+            console.error(error)
             return {
                 xSeries: [],
                 ySeries: ySeries.map((series) => ({ ...series, data: [] })),

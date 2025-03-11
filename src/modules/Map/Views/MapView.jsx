@@ -8,7 +8,7 @@ import { backend } from '../../../utils/routes/app.routes'
 import { request } from '../../../utils/js/request'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 
-const MapView = ({ create = false }) => {
+const MapView = ({ create = false, search = false }) => {
     const {
         register,
         getValues,
@@ -19,7 +19,6 @@ const MapView = ({ create = false }) => {
 
     const navigate = useNavigate()
     const [searchParam] = useSearchParams()
-
 
     const [markers, setMarkers] = useState([])
     const [loading, setLoading] = useState(true)
@@ -63,7 +62,32 @@ const MapView = ({ create = false }) => {
         setMarkers([...markers, marker])
     }
 
-    const saveMap = async () => {
+    const editMap = async (map) => {
+        const id = searchParam.get('id')
+        if (!id) {
+            await Swal.fire({
+                title: 'Error',
+                icon: 'error',
+                html: '<h3>No se puede editar el mapa sin el ID</h3>',
+            })
+        }
+        console.log(map)
+        const url = `${backend[import.meta.env.VITE_APP_NAME]}/map/${id}`
+        const updated = await request(url, 'POST', map)
+        return updated
+    }
+
+    const saveMap = async (map) => {
+        const url = `${backend[import.meta.env.VITE_APP_NAME]}/map`
+        const result = await request(url, 'POST', map)
+        return result
+    }
+
+    const handleSubmit = async () => {
+        const map = {
+            viewState,
+            markers,
+        }
         if (!markers || markers.length === 0) {
             await Swal.fire({
                 icon: 'error',
@@ -72,15 +96,16 @@ const MapView = ({ create = false }) => {
             })
             return false
         }
-
-        const url = `${backend[import.meta.env.VITE_APP_NAME]}/map`
-        const map = {
-            viewState,
-            markers,
-        }
-
         try {
-            const result = await request(url, 'POST', map)
+            let result = false
+            if (create && search) {
+                result = await editMap(map)
+            }
+
+            if (create && !search) {
+                result = await saveMap(map)
+            }
+
             if (result) {
                 await Swal.fire({
                     title: 'Exito:',
@@ -90,7 +115,7 @@ const MapView = ({ create = false }) => {
                 navigate('/')
             }
         } catch (error) {
-            console.log(error.message)
+            console.error(error.message)
             Swal.fire({
                 title: 'Atencion',
                 icon: 'error',
@@ -130,7 +155,7 @@ const MapView = ({ create = false }) => {
                 )
                 return marker
             })
-            
+
             setMarkers(markers)
         } catch (error) {
             Swal.fire({
@@ -148,9 +173,12 @@ const MapView = ({ create = false }) => {
             const id = searchParam.get('id')
             searchMap(id)
         }
+
+        if (create && search) {
+            const id = searchParam.get('id')
+            searchMap(id)
+        }
     }, [])
-
-
 
     return (
         <div className="w-full h-[85vh] flex flex-col gap-3">
@@ -204,12 +232,12 @@ const MapView = ({ create = false }) => {
                         Agregar
                     </Button>
                     <Button
-                        onClick={saveMap}
+                        onClick={handleSubmit}
                         className="w-[10%]"
                         color="success"
                         variant="contained"
                     >
-                        Guardar Mapa
+                        {create && search ? 'Editar mapa' : 'Guardar mapa'}
                     </Button>
                 </div>
             )}

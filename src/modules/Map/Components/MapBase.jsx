@@ -20,7 +20,6 @@ const MapBase = ({
     fullScreen = true,
     geolocation = true,
     controlPanel = true,
-    whithPopup = true,
     markers = false,
     setMarkers = false,
     viewState,
@@ -28,18 +27,6 @@ const MapBase = ({
     draggable = false,
     withInfo = false, // Determina si se consulta InfluxDB
 }) => {
-    useEffect(() => {
-        if (withInfo && markers.length > 0) {
-            fetchInfluxData(markers)
-
-            const interval = setInterval(() => {
-                fetchInfluxData(markers)
-            }, 15000)
-            return () => clearInterval(interval)
-        }
-    }, [withInfo, markers])
-
-    // Función para obtener los datos de gráficos y actualizarlos
     const fetchInfluxData = async (markers) => {
         try {
             const updateMarkers = await Promise.all(
@@ -64,13 +51,23 @@ const MapBase = ({
                     }
                 })
             )
-            console.log(updateMarkers)
             setMarkers(updateMarkers)
         } catch (error) {
             console.log(error)
             return null
         }
     }
+
+    useEffect(() => {
+        if (withInfo && markers.length > 0) {
+            fetchInfluxData(markers)
+
+            const interval = setInterval(() => {
+                fetchInfluxData(markers)
+            }, 15000)
+            return () => clearInterval(interval)
+        }
+    }, [])
 
     return (
         <div style={{ position: 'relative', width, height }}>
@@ -90,6 +87,15 @@ const MapBase = ({
                         longitude={marker.longitude}
                         latitude={marker.latitude}
                         anchor="bottom"
+                        onDragEnd={(e) => {
+                            const { lng, lat } = e.lngLat
+                            const updatedMarkers = markers.map((m, i) =>
+                                i === index
+                                    ? { ...m, longitude: lng, latitude: lat }
+                                    : m
+                            )
+                            setMarkers(updatedMarkers)
+                        }}
                     >
                         <Pin label={marker.name} color="#3498db" />
                         {marker?.popupInfo &&
