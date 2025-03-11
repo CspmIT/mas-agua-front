@@ -25,6 +25,7 @@ import ViewDiagram from './modules/DrawDiagram/views/ViewDiagram'
 import PumpControl from './modules/Charts/views/ConfigBombs'
 import ChartsTable from './modules/Charts/views/ChartsTable'
 import MapView from './modules/Map/Views/MapView'
+import Maps from './modules/Map/Views/Maps'
 
 function App() {
 	const { darkMode } = useContext(MainContext)
@@ -54,7 +55,9 @@ function App() {
 		{ path: '/config/graphic/:id/:idChart', element: <ConfigGraphic /> },
 		{ path: '/config/allGraphic', element: <ChartsTable /> },
 		{ path: '/map', element: <MapView /> },
+		{ path: '/maps', element: <Maps /> },
 		{ path: '/map/create', element: <MapView create={true}/> },
+		{ path: '/map/edit', element: <MapView create={true} search={true}/> },
 	]
 	//Incorporo el theme de mui
 	const lightTheme = createTheme({

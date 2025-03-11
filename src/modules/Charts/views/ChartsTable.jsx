@@ -121,8 +121,10 @@ const ChartsTable = () => {
                 ),
             },
         ]
+        console.log(columnsCel)
         setColumnsTable(columnsCel)
         setCharts(data)
+        console.log(data)
     }
     useEffect(() => {
         fetchCharts()

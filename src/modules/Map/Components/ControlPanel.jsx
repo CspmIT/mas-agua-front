@@ -9,7 +9,7 @@ import {
     List,
     ListItemButton,
 } from '@mui/material'
-import { Delete, Folder } from '@mui/icons-material'
+import { Delete } from '@mui/icons-material'
 
 const ControlPanel = ({ markers, setMarkers }) => {
     const deleteMarker = (marker) => {
