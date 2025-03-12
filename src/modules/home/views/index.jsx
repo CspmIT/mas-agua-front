@@ -12,6 +12,7 @@ import { backend } from '../../../utils/routes/app.routes'
 import PumpControl from '../../Charts/views/ConfigBombs'
 import StackedAreaChart from '../../Charts/components/StackedAreaChart'
 import FiltersChart from '../../Charts/components/FiltersChart'
+import GaugeSpeed from '../../Charts/components/GaugeSpeed'
 
 const chartComponents = {
     LiquidFillPorcentaje,
@@ -20,6 +21,7 @@ const chartComponents = {
     DoughnutChart,
     LineChart,
     PumpControl,
+    GaugeSpeed,
 }
 
 const Home = () => {
@@ -160,7 +162,7 @@ const Home = () => {
                                 ChartComponentDb === LineChart
                                     ? 'h-[33rem]'
                                     : ''
-                            }`}
+                            } `}
                         >
                             {ChartComponentDb === LineChart && (
                                 <FiltersChart
@@ -198,7 +200,6 @@ const ChartComponentDbWrapper = ({
 }) => {
     const [chartData, setChartData] = useState(initialData)
     const [loading, setLoading] = useState(true) // Estado para controlar la carga
-
 
     // Función para obtener los datos de las bombas o estados desde la API
     const fetchPumpOrStateValues = async (items) => {
@@ -260,7 +261,9 @@ const ChartComponentDbWrapper = ({
                         xConfig.dateTimeType === 'date'
                             ? filters[idChart]?.dateRange || xConfig.dateRange
                             : filters[idChart]?.dateRange || xConfig.timeRange, // '-7d'
-                    samplingPeriod: filters[idChart]?.samplingPeriod ||xConfig.samplingPeriod, // '6h'
+                    samplingPeriod:
+                        filters[idChart]?.samplingPeriod ||
+                        xConfig.samplingPeriod, // '6h'
                     typePeriod: influxVars.calc_type_period,
                     render: true,
                     type: 'history',
@@ -275,15 +278,15 @@ const ChartComponentDbWrapper = ({
 
             const xSeries =
                 data[ySeries[0].idVar.id].map((item) =>
-                    xConfig.dateTimeType == 'date'
-                        ? item.time
-                        : item.time
+                    xConfig.dateTimeType == 'date' ? item.time : item.time
                 ) || [] // Suponiendo que InfluxDB devuelve timestamps
             const updatedYSeries = ySeries.map((series) => ({
                 ...series,
                 data:
                     data[series.idVar.id].map((data) =>
-                        data.value !== null && data.value !== undefined ? parseFloat(data.value).toFixed(3) : '-'
+                        data.value !== null && data.value !== undefined
+                            ? parseFloat(data.value).toFixed(3)
+                            : '-'
                     ) || [],
             }))
 

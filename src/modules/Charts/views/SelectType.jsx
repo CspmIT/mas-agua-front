@@ -64,6 +64,12 @@ const chartTypes = [
         bomb: true,
         disabled: false,
     },
+    {
+        id: 8, 
+        title: 'Speed Gauge',
+        image: '/assets/img/charts/gauge-speed.png?height=200&width=200',
+        description: 'some description'
+    }
 ]
 
 function SelectType() {

@@ -1,4 +1,3 @@
-import React from 'react'
 import EChart from './EChart'
 
 const CirclePorcentaje = ({ value= 0, maxValue=100, color= '#00FF00' }) => {

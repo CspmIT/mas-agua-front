@@ -25,7 +25,7 @@ const ConfigGraphic = () => {
 
     const navigate = useNavigate()
     function isSimpleChart(type) {
-        return type === 'LiquidFillPorcentaje' || type === 'CirclePorcentaje'
+        return type === 'LiquidFillPorcentaje' || type === 'CirclePorcentaje' || type === 'GaugeSpeed'
     }
 
     function isValidXConfig(xAxisConfig) {

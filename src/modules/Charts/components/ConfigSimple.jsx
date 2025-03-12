@@ -202,6 +202,24 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData }) => {
                             />
                         )}
 
+                        {configs[id].description && (
+                            <TextField
+                                type="text"
+                                className="w-full"
+                                label="Descripcion"
+                                {...register('description')}
+                                onChange={handleChange}
+                            />
+                        )}
+                        {configs[id].description2 && (
+                            <TextField
+                                type="text"
+                                className="w-full"
+                                label="Descripcion 2"
+                                {...register('description2')}
+                                onChange={handleChange}
+                            />
+                        )}
                         <TextField
                             defaultValue={config.color}
                             type="color"
@@ -217,7 +235,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData }) => {
                     </div>
                 </CardContent>
             </Card>
-            <Card className="w-1/2 max-sm:w-full p-3 mb-4">
+            <Card className={`w-1/2 max-sm:w-full p-3 mb-4 `}>
                 <Typography
                     variant="h6"
                     component="div"
