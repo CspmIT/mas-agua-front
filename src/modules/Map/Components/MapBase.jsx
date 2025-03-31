@@ -40,13 +40,16 @@ const MapBase = ({
                         'POST',
                         influxVar
                     )
+                    const value = data[accessKey.calc_field]?.value
+                        ? `${data[accessKey.calc_field].value} ${
+                              marker.popupInfo.data.unit
+                          }`
+                        : null
                     return {
                         ...marker,
                         popupInfo: {
                             ...marker.popupInfo,
-                            value: `${data[accessKey.calc_field].value} ${
-                                marker.popupInfo.data.unit
-                            }`,
+                            value: value,
                         },
                     }
                 })
