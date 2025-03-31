@@ -276,14 +276,24 @@ const ChartComponentDbWrapper = ({
                 queries
             )
 
+            // Encontrar la primera serie que tenga datos
+            let referenceSeries = Object.keys(data).find(
+                (key) => data[key].length > 0
+            )
+
             const xSeries =
-                data[ySeries[0].idVar.id].map((item) =>
-                    xConfig.dateTimeType == 'date' ? item.time : item.time
-                ) || [] // Suponiendo que InfluxDB devuelve timestamps
+                referenceSeries && data[referenceSeries]
+                    ? data[referenceSeries].map((item) =>
+                          xConfig.dateTimeType === 'date'
+                              ? item.time
+                              : item.time
+                      )
+                    : []
+
             const updatedYSeries = ySeries.map((series) => ({
                 ...series,
                 data:
-                    data[series.idVar.id].map((data) =>
+                    data[series.idVar.id]?.map((data) =>
                         data.value !== null && data.value !== undefined
                             ? parseFloat(data.value).toFixed(3)
                             : '-'

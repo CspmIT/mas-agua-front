@@ -38,7 +38,10 @@ const ChartsTable = () => {
                 Cell: ({ row }) => (
                     <Box display="flex" gap={1}>
                         <Button
-                            disabled={row.original.type=== 'PumpControl' ||row.original.type=== 'LineChart'  }
+                            disabled={
+                                row.original.type === 'PumpControl' ||
+                                row.original.type === 'LineChart'
+                            }
                             variant="outlined"
                             color="primary"
                             size="small"
@@ -135,30 +138,29 @@ const ChartsTable = () => {
     }, [])
     return (
         <Container>
-            {charts.length > 0 && columnsTable.length > 0 ? (
-                <div className="flex flex-col gap-3">
-                    <Box
-                        display="flex"
-                        justifyContent={'space-between'}
-                        alignItems={'center'}
-                        mb={3}
+            <div className="flex flex-col gap-3">
+                <Box
+                    display="flex"
+                    justifyContent={'space-between'}
+                    alignItems={'center'}
+                    mb={3}
+                >
+                    <Typography variant="h3" align="center" flexGrow={1}>
+                        Graficos
+                    </Typography>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                            navigate('/config/graphic')
+                        }}
                     >
-                        <Typography variant="h3" align="center" flexGrow={1}>
-                            Graficos
-                        </Typography>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={() => {
-                                navigate('/config/graphic')
-                            }}
-                        >
-                            Crear grafico
-                        </Button>
-                    </Box>
-
-                    <TableCustom columns={columnsTable} data={charts} />
-                </div>
+                        Crear grafico
+                    </Button>
+                </Box>
+            </div>
+            {charts.length > 0 && columnsTable.length > 0 ? (
+                <TableCustom columns={columnsTable} data={charts} />
             ) : (
                 <p>Cargando datos...</p>
             )}

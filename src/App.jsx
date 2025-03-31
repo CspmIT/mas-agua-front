@@ -26,6 +26,7 @@ import PumpControl from './modules/Charts/views/ConfigBombs'
 import ChartsTable from './modules/Charts/views/ChartsTable'
 import MapView from './modules/Map/Views/MapView'
 import Maps from './modules/Map/Views/Maps'
+import Vars from './modules/ConfigVars/views/Vars'
 
 function App() {
 	const { darkMode } = useContext(MainContext)
@@ -58,6 +59,7 @@ function App() {
 		{ path: '/maps', element: <Maps /> },
 		{ path: '/map/create', element: <MapView create={true}/> },
 		{ path: '/map/edit', element: <MapView create={true} search={true}/> },
+		{ path: '/vars', element: <Vars/> },
 	]
 	//Incorporo el theme de mui
 	const lightTheme = createTheme({
