@@ -59,7 +59,7 @@ function App() {
 		{ path: '/maps', element: <Maps /> },
 		{ path: '/map/create', element: <MapView create={true}/> },
 		{ path: '/map/edit', element: <MapView create={true} search={true}/> },
-		{ path: '/vars', element: <Vars/> },
+		{ path: '/config/vars', element: <Vars/> },
 	]
 	//Incorporo el theme de mui
 	const lightTheme = createTheme({

@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom'
 const Maps = () => {
     const [maps, setMaps] = useState([])
     const [columnsTable, setColumnsTable] = useState([])
+    const [loader, setLoader]  = useState(true)
     const navigate = useNavigate()
     async function getMaps() {
         const url = backend[import.meta.env.VITE_APP_NAME]
@@ -50,6 +51,7 @@ const Maps = () => {
                 ),
             },
         ])
+        setLoader(false)
     }
     useEffect(() => {
         getMaps()
@@ -75,8 +77,8 @@ const Maps = () => {
                     Crear mapa
                 </Button>
             </Box>
-            {maps.length > 0 && columnsTable.length > 0 ? (
-                <TableCustom columns={columnsTable} data={maps} />
+            {!loader ? (
+                <TableCustom columns={columnsTable} data={maps.length > 0 ? maps : []} />
             ) : (
                 <>Cargando</>
             )}

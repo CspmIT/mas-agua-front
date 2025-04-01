@@ -11,6 +11,7 @@ const ChartsTable = () => {
     const navigate = useNavigate()
     const [charts, setCharts] = useState([])
     const [columnsTable, setColumnsTable] = useState([])
+    const [loader, setLoader] = useState(true)
     const fetchCharts = async () => {
         const url = backend[import.meta.env.VITE_APP_NAME]
         const endpoint = url + '/allCharts'
@@ -130,12 +131,13 @@ const ChartsTable = () => {
         ]
         console.log(columnsCel)
         setColumnsTable(columnsCel)
-        setCharts(data)
-        console.log(data)
+        // setCharts(data)
+        setLoader(false)
     }
     useEffect(() => {
         fetchCharts()
     }, [])
+
     return (
         <Container>
             <div className="flex flex-col gap-3">
@@ -159,8 +161,8 @@ const ChartsTable = () => {
                     </Button>
                 </Box>
             </div>
-            {charts.length > 0 && columnsTable.length > 0 ? (
-                <TableCustom columns={columnsTable} data={charts} />
+            {!loader ? (
+                <TableCustom columns={columnsTable} data={charts.length > 0 ? charts : []} />
             ) : (
                 <p>Cargando datos...</p>
             )}
