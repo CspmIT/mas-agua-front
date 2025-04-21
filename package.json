@@ -17,6 +17,7 @@
 		"@emotion/styled": "^11.11.0",
 		"@formkit/tempo": "^0.1.2",
 		"@grpc/grpc-js": "^1.10.9",
+		"@hookform/resolvers": "^5.0.0",
 		"@mui/icons-material": "^5.15.10",
 		"@mui/joy": "^5.0.0-beta.30",
 		"@mui/material": "^5.15.10",
@@ -46,7 +47,8 @@
 		"socket.io-client": "^4.8.1",
 		"sweetalert2": "^11.6.13",
 		"sweetalert2-react-content": "^5.0.7",
-		"tauri-plugin-store-api": "github:tauri-apps/tauri-plugin-store#v1"
+		"tauri-plugin-store-api": "github:tauri-apps/tauri-plugin-store#v1",
+		"zod": "^3.24.2"
 	},
 	"devDependencies": {
 		"@tauri-apps/cli": "^1.5.11",
