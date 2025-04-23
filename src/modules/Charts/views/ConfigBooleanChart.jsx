@@ -3,7 +3,7 @@ import VarsProvider from '../../../components/DataGenerator/ProviderVars'
 import { Button, Card, IconButton, TextField, Typography } from '@mui/material'
 import { ArrowBack } from '@mui/icons-material'
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { set, useForm } from 'react-hook-form'
 import BooleanChart from '../components/BooleanChart'
 import SelectVars from '../components/SelectVars'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -175,6 +175,7 @@ const ConfigBooleanChart = () => {
         if (id) {
             fetchChartData()
         }
+        setLoader(false)
     }, [id])
 
     if (loader) {
