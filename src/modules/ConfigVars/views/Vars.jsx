@@ -1,21 +1,52 @@
-import {
-    Box,
-    Button,
-    Container,
-    Typography,
-} from '@mui/material'
+import { Box, Button, Container, Typography } from '@mui/material'
 import TableCustom from '../../../components/TableCustom'
 import { useEffect, useState } from 'react'
 import { getVarsInflux } from '../../DrawDiagram/components/Fields/actions'
 import ModalVar from '../../../components/DataGenerator/ModalVar'
 import { FaPencil } from 'react-icons/fa6'
 import { FaTrash } from 'react-icons/fa'
+import { backend } from '../../../utils/routes/app.routes'
+import { request } from '../../../utils/js/request'
+import Swal from 'sweetalert2'
 
 const Vars = () => {
     const [loading, setLoading] = useState(true)
     const [modal, setModal] = useState(false)
     const [detailVar, setDetailVar] = useState(null)
     const [vars, setVars] = useState([])
+    const deleteVar = async (id) => {
+        const url = `${backend[import.meta.env.VITE_APP_NAME]}/deleteVar/${id}`
+        const aprovationUser = await Swal.fire({
+            icon: 'warning',
+            title: 'Atencion!',
+            html: 'Esta seguro que desea eliminar esta variable?',
+            showConfirmButton: true,
+            showConfirmButton: true,
+            confirmButtonText: 'Si, eliminar',
+            showCancelButton: true,
+            cancelButtonText: 'Cancelar'
+        })
+        if(!aprovationUser.isConfirmed){
+            return false
+        }
+        try {
+            const { data } = await request(url, 'POST')
+            if (data.influxVar) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Exito!',
+                    html: 'La variable fue eliminada con exito.',
+                })
+                getVars()
+            }
+        } catch (error) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                html: 'Ocurrio un error al actualizar la variable',
+            })
+        }
+    }
     const [columns, setColumns] = useState([
         { header: 'ID', accessorKey: 'id' },
         { header: 'Nombre', accessorKey: 'name' },
@@ -29,7 +60,7 @@ const Vars = () => {
             accessorKey: 'options',
             Cell: ({ row }) => {
                 return (
-                    <div className='flex gap-2'>
+                    <div className="flex gap-2">
                         <Button
                             size="small"
                             color="success"
@@ -45,12 +76,9 @@ const Vars = () => {
                             size="small"
                             color="error"
                             variant="contained"
-                            onClick={() => {
-                                setDetailVar(row.original)
-                                setModal(true)
-                            }}
+                            onClick={() => deleteVar(row.original.id)}
                         >
-                            <FaTrash className="me-2" /> Eliminar 
+                            <FaTrash className="me-2" /> Eliminar
                         </Button>
                     </div>
                 )
