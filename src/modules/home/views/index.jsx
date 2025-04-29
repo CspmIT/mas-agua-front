@@ -9,7 +9,6 @@ import { request } from '../../../utils/js/request'
 import Swal from 'sweetalert2'
 import { backend } from '../../../utils/routes/app.routes'
 import PumpControl from '../../Charts/views/ConfigBombs'
-import StackedAreaChart from '../../Charts/components/StackedAreaChart'
 import GaugeSpeed from '../../Charts/components/GaugeSpeed'
 import BooleanChart from '../../Charts/components/BooleanChart'
 
