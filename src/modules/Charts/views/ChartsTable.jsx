@@ -40,8 +40,7 @@ const ChartsTable = () => {
                     <Box display="flex" gap={1}>
                         <Button
                             disabled={
-                                row.original.type === 'PumpControl' ||
-                                row.original.type === 'LineChart'
+                                row.original.type === 'PumpControl'
                             }
                             variant="outlined"
                             color="primary"
@@ -119,7 +118,7 @@ const ChartsTable = () => {
                                         )
                                     }
                                 } catch (error) {
-                                    console.log(error)
+                                    console.error(error)
                                     Swal.fire({
                                         icon: 'error',
                                         html: 'No se puedo actualizar el grafico',

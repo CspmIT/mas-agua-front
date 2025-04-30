@@ -159,7 +159,7 @@ const ConfigBooleanChart = () => {
                 setInfluxVar(varData);
             }
         } catch (error) {
-            console.log(error);
+            console.error(error);
             await Swal.fire({
                 title: 'Error',
                 text: 'Error al cargar los datos del gráfico',

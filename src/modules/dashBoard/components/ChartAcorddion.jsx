@@ -32,7 +32,6 @@ const ChartAccordion = ({ chart }) => {
             )
 
             const query = lineChart.generateQuery(filters)
-            console.log(filters)
 
             const { data } = await request(
                 `${backend['Mas Agua']}/seriesDataInflux`,

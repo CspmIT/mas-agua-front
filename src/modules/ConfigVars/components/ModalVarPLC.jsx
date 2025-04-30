@@ -227,7 +227,7 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                 icon: 'error',
                 html: htmlContent,
             })
-            console.log(error.response.data.message)
+            console.error(error.response.data.message)
         } finally {
             setLoadingSubmit(false)
         }

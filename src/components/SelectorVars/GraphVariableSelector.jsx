@@ -24,18 +24,36 @@ const GraphVariableSelector = ({
     setValue,
     setCustomColorProp,
     setLineStyleProp,
+    dataChart = false,
 }) => {
     const [valueState, setValueState] = useState(null)
     const [customName, setCustomName] = useState('')
     const [customColor, setCustomColor] = useState('#000000')
     const [lineStyle, setLineStyle] = useState('line')
-    const [xAxisConfig, setXAxisConfig] = useState({
-        dateTimeType: 'date',
-        dateRange: '',
-        timeRange: '',
-        samplingPeriod: '',
-    })
+    const [xAxisConfig, setXAxisConfig] = useState( dataChart ?
+        dataChart.getConfig() : {
+            dateTimeType: 'date',
+            dateRange: '',
+            timeRange: '',
+            samplingPeriod: '',
+        }
+    )
     const [yAxisData, setYAxisData] = useState([])
+
+    useEffect(() => {
+        if (dataChart) {
+            const series = dataChart.getYSeries()
+            const yData = series.map((serie, index) => ({
+                id: `y${index}`,
+                name: serie.name,
+                line: serie.type,
+                source_id: serie.idVar.id,
+                smooth: serie.smooth,
+                color: serie.color,
+            }))
+            setYAxisData(yData)
+        }
+    }, [dataChart])
 
     useEffect(() => {
         setValue('xAxisConfig', xAxisConfig)
