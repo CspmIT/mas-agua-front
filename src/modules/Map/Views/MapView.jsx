@@ -71,7 +71,6 @@ const MapView = ({ create = false, search = false }) => {
                 html: '<h3>No se puede editar el mapa sin el ID</h3>',
             })
         }
-        console.log(map)
         const url = `${backend[import.meta.env.VITE_APP_NAME]}/map/${id}`
         const updated = await request(url, 'POST', map)
         return updated

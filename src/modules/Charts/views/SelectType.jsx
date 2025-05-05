@@ -34,7 +34,6 @@ const chartTypes = [
         title: 'Grafico de torta',
         image: '/assets/img/charts/graficoTorta.png?height=300&width=300',
         description: 'Grafico de torta con bordes redondeados.',
-        disabled: true,
     },
     {
         id: 4,
@@ -42,13 +41,6 @@ const chartTypes = [
         image: '/assets/img/charts/echartsrectangle.png?height=300&width=300',
         description:
             'Visualización de porcentaje con olas, ideal para indicadores. El valor se puede mostrar en porcentaje o en valor absoluto. El color del gráfico se puede personalizar.',
-    },
-    {
-        id: 5,
-        title: 'Grafico de barras',
-        image: '/assets/img/charts/graficoBarras.png?height=200&width=200',
-        description: 'Pie chart with extended label lines',
-        disabled: true,
     },
     {
         id: 6,
@@ -65,11 +57,18 @@ const chartTypes = [
         disabled: false,
     },
     {
-        id: 8, 
+        id: 8,
         title: 'Speed Gauge',
         image: '/assets/img/charts/gauge-speed.png?height=200&width=200',
-        description: 'some description'
-    }
+        description: 'some description',
+    },
+    {
+        id: 9,
+        title: 'Boolean chart',
+        image: '/assets/img/charts/boolean-chart.png?height=200&width=200',
+        description: 'Led de encendido o apagado con colores y palabras personalizables',
+        boolean: true
+    },
 ]
 
 function SelectType() {
@@ -78,6 +77,10 @@ function SelectType() {
         if (chart?.bomb) {
             navigate('/config/pumps')
             return
+        }
+        if(chart?.boolean){
+            navigate('/config/graphic/boolean')
+            return 
         }
         navigate(`/config/graphic/${chart.id}`)
     }

@@ -11,6 +11,7 @@ const ChartsTable = () => {
     const navigate = useNavigate()
     const [charts, setCharts] = useState([])
     const [columnsTable, setColumnsTable] = useState([])
+    const [loader, setLoader] = useState(true)
     const fetchCharts = async () => {
         const url = backend[import.meta.env.VITE_APP_NAME]
         const endpoint = url + '/allCharts'
@@ -39,14 +40,17 @@ const ChartsTable = () => {
                     <Box display="flex" gap={1}>
                         <Button
                             disabled={
-                                row.original.type === 'PumpControl' ||
-                                row.original.type === 'LineChart'
+                                row.original.type === 'PumpControl'
                             }
                             variant="outlined"
                             color="primary"
                             size="small"
                             onClick={() => {
                                 const type = row.original.type
+                                if(type === 'BooleanChart') {
+                                    navigate(`/config/graphic/boolean/${row.original.id}`)
+                                    return
+                                }
                                 if (type === 'PumpControl') {
                                     navigate('/config/pumps')
                                     return
@@ -114,7 +118,7 @@ const ChartsTable = () => {
                                         )
                                     }
                                 } catch (error) {
-                                    console.log(error)
+                                    console.error(error)
                                     Swal.fire({
                                         icon: 'error',
                                         html: 'No se puedo actualizar el grafico',
@@ -128,14 +132,14 @@ const ChartsTable = () => {
                 ),
             },
         ]
-        console.log(columnsCel)
         setColumnsTable(columnsCel)
         setCharts(data)
-        console.log(data)
+        setLoader(false)
     }
     useEffect(() => {
         fetchCharts()
     }, [])
+
     return (
         <Container>
             <div className="flex flex-col gap-3">
@@ -159,8 +163,8 @@ const ChartsTable = () => {
                     </Button>
                 </Box>
             </div>
-            {charts.length > 0 && columnsTable.length > 0 ? (
-                <TableCustom columns={columnsTable} data={charts} />
+            {!loader ? (
+                <TableCustom columns={columnsTable} data={charts.length > 0 ? charts : []} />
             ) : (
                 <p>Cargando datos...</p>
             )}

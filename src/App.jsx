@@ -27,6 +27,10 @@ import ChartsTable from './modules/Charts/views/ChartsTable'
 import MapView from './modules/Map/Views/MapView'
 import Maps from './modules/Map/Views/Maps'
 import Vars from './modules/ConfigVars/views/Vars'
+import ProfilePLC from './modules/ProfilePLC/views/ProfilePLC'
+import ConfigBooleanChart from './modules/Charts/views/ConfigBooleanChart'
+import NotFound from './modules/Errors/Not-Found'
+import ChartsDashboard from './modules/dashBoard/views/ChartsDashboard'
 
 function App() {
 	const { darkMode } = useContext(MainContext)
@@ -35,10 +39,12 @@ function App() {
 		{ path: '/ListClients', element: <ListClients /> },
 		{ path: '/ListClients/:action', element: <ListClients /> },
 		{ path: '/LoginCooptech/:token', element: <LoginCooptech /> },
+		{ path: '/*', element: <NotFound/> },
 	]
 	const userRoutes = [
-		{ path: '/*', element: <Home /> },
-		// { path: '/Dashboard', element: <DashBoard /> },
+		{ path: '/', element: <Home /> },
+		{ path: '/home', element: <Home /> },
+		{ path: '/chart', element: <ChartsDashboard /> },
 		{ path: '/tabs', element: <TabDinamic /> },
 		{ path: '/config/security', element: <ConfigSecurity /> },
 		{ path: '/config/menu', element: <ConfigMenu /> },
@@ -52,6 +58,8 @@ function App() {
 		{ path: '/AddMenu', element: <AddMenu /> },
 		{ path: '/config/graphic', element: <SelectType /> },
 		{ path: '/config/pumps', element: <PumpControl/> },
+        { path: '/config/graphic/boolean', element: <ConfigBooleanChart/>},
+        { path: '/config/graphic/boolean/:id', element: <ConfigBooleanChart/>},
 		{ path: '/config/graphic/:id', element: <ConfigGraphic /> },
 		{ path: '/config/graphic/:id/:idChart', element: <ConfigGraphic /> },
 		{ path: '/config/allGraphic', element: <ChartsTable /> },
@@ -59,7 +67,8 @@ function App() {
 		{ path: '/maps', element: <Maps /> },
 		{ path: '/map/create', element: <MapView create={true}/> },
 		{ path: '/map/edit', element: <MapView create={true} search={true}/> },
-		{ path: '/vars', element: <Vars/> },
+		{ path: '/config/vars', element: <Vars/> },
+		{ path: '/config/plc', element: <ProfilePLC/> },
 	]
 	//Incorporo el theme de mui
 	const lightTheme = createTheme({

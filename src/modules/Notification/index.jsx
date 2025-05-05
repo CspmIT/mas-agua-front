@@ -12,7 +12,7 @@ function Notification() {
 	const activarMensajes = async () => {
 		const token = await getToken(messaging, {
 			vapidKey: 'BHMQ3KSUNfj4j3qTUVadPqOPjaejIzsVHXq7-owOLLnEsnZD3GfhGWstVMp0LhZEG_XdZ_-CXXqDyqJVsYfgXGE',
-		}).catch((error) => console.log('Error:', error))
+		}).catch((error) => console.error('Error:', error))
 		if (token) {
 			setTokenView(token)
 		}

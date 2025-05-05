@@ -25,7 +25,11 @@ const ConfigGraphic = () => {
 
     const navigate = useNavigate()
     function isSimpleChart(type) {
-        return type === 'LiquidFillPorcentaje' || type === 'CirclePorcentaje' || type === 'GaugeSpeed'
+        return (
+            type === 'LiquidFillPorcentaje' ||
+            type === 'CirclePorcentaje' ||
+            type === 'GaugeSpeed'
+        )
     }
 
     function isValidXConfig(xAxisConfig) {
@@ -71,8 +75,13 @@ const ConfigGraphic = () => {
             })
             return false
         }
+
         const url = backend[import.meta.env.VITE_APP_NAME]
-        const endpoint = `${url}/chartSeries`
+        let endpoint = `${url}/chartSeries`
+        if (id) {
+            endpoint = `${url}/chartSeries/${idChart}`
+        }
+
         try {
             const response = await request(endpoint, 'POST', data)
             if (response) {
@@ -84,7 +93,7 @@ const ConfigGraphic = () => {
                 navigate('/')
             }
         } catch (error) {
-            console.log(error.message)
+            console.error(error.message)
         }
     }
 
@@ -97,8 +106,8 @@ const ConfigGraphic = () => {
             })
             return
         }
-        data.porcentage = data.porcentage == 'true'
-        data.border = data.border == 'true'
+        data.porcentage = data.porcentage === 'true' || data.porcentage === true
+        data.border = data.border === 'true' || data.border === true
         data.maxValue = parseFloat(data.maxValue)
         const endPoint = `${backend['Mas Agua']}/charts`
         try {
@@ -209,7 +218,11 @@ const ConfigGraphic = () => {
                         value={configs[id].typeGraph}
                     />
                     {!configs[id].singleValue ? (
-                        <ConfigMultiple id={id} setValue={setValue} />
+                        <ConfigMultiple
+                            id={id}
+                            setValue={setValue}
+                            chartData={idChart ? chart : false} // Pasar los datos del gráfico si está en modo edición
+                        />
                     ) : (
                         // Muestra ConfigSimple solo si no está cargando o no hay idChart
                         (!idChart || !loading) && (

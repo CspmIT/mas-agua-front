@@ -3,35 +3,32 @@ import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
 import CirclePorcentaje from '../../Charts/components/CirclePorcentaje'
 import BarDataSet from '../../Charts/components/BarDataSet'
 import DoughnutChart from '../../Charts/components/DoughnutChart'
-import LineChart from '../../Charts/components/LineChart'
 import CardCustom from '../../../components/CardCustom'
 import React, { useEffect, useState } from 'react'
 import { request } from '../../../utils/js/request'
 import Swal from 'sweetalert2'
 import { backend } from '../../../utils/routes/app.routes'
 import PumpControl from '../../Charts/views/ConfigBombs'
-import StackedAreaChart from '../../Charts/components/StackedAreaChart'
-import FiltersChart from '../../Charts/components/FiltersChart'
 import GaugeSpeed from '../../Charts/components/GaugeSpeed'
+import BooleanChart from '../../Charts/components/BooleanChart'
 
 const chartComponents = {
     LiquidFillPorcentaje,
     CirclePorcentaje,
     BarDataSet,
     DoughnutChart,
-    LineChart,
     PumpControl,
     GaugeSpeed,
+    BooleanChart,
 }
 
 const Home = () => {
     const [charts, setCharts] = useState([])
-    const [filters, setFilters] = useState({})
 
     async function getCharts() {
         try {
             const { data } = await request(
-                `${backend['Mas Agua']}/charts`,
+                `${backend['Mas Agua']}/indicatorCharts`,
                 'GET'
             )
 
@@ -86,33 +83,6 @@ const Home = () => {
                     }
                 }
 
-                // Si el gráfico es LineChart, procesamos xSeries e ySeries
-                if (type === 'LineChart') {
-                    const ySeries = chart.ChartSeriesData.map((series) => ({
-                        name: series.name,
-                        type: series.line,
-                        data: [], // Se llenará con datos de InfluxDB
-                        idVar: series.InfluxVars,
-                        smooth: series.smooth,
-                        color: series.color,
-                    }))
-
-                    return {
-                        id: `${chart.id}-${chart.type}`,
-                        component: type,
-                        props: {
-                            title: propsReduce.title,
-                            xType: 'category',
-                            yType: 'value',
-                        },
-                        data: {
-                            xConfig: propsReduce,
-                            xSeries: [], // Se llenará con datos de InfluxDB
-                            ySeries,
-                        },
-                    }
-                }
-
                 const dataReduce = chart.ChartData.reduce((acc, data) => {
                     const { key, value } = data
                     return {
@@ -146,30 +116,14 @@ const Home = () => {
             {charts.map((chart, index) => {
                 const ChartComponentDb = chartComponents[chart.component]
                 return (
-                    <Grid
-                        item
-                        xs={12}
-                        sm={ChartComponentDb === LineChart ? 12 : 6}
-                        lg={ChartComponentDb === LineChart ? 12 : 4}
-                        key={index}
-                    >
+                    <Grid item xs={12} sm={6} lg={4} key={index}>
                         <CardCustom
                             className={`flex flex-col items-center ${
                                 ChartComponentDb === PumpControl
                                     ? 'h-fit'
                                     : 'h-80'
-                            } ${
-                                ChartComponentDb === LineChart
-                                    ? 'h-[33rem]'
-                                    : ''
-                            } `}
+                            }`}
                         >
-                            {ChartComponentDb === LineChart && (
-                                <FiltersChart
-                                    id_chart={chart.id}
-                                    setFilters={setFilters}
-                                />
-                            )}
                             <Typography
                                 variant="h5"
                                 className="text-center pt-3"
@@ -181,7 +135,6 @@ const Home = () => {
                                 ChartComponent={ChartComponentDb}
                                 initialProps={chart.props}
                                 initialData={chart.data}
-                                filters={filters}
                             />
                         </CardCustom>
                     </Grid>
@@ -196,7 +149,6 @@ const ChartComponentDbWrapper = ({
     ChartComponent,
     initialProps,
     initialData,
-    filters = false,
 }) => {
     const [chartData, setChartData] = useState(initialData)
     const [loading, setLoading] = useState(true) // Estado para controlar la carga
@@ -235,6 +187,7 @@ const ChartComponentDbWrapper = ({
                 'POST',
                 influxVar
             )
+            
             const accessKey = Object.values(initialData.value).shift()
             return {
                 value: data?.[accessKey.calc_field]?.value,
@@ -245,102 +198,8 @@ const ChartComponentDbWrapper = ({
         }
     }
 
-    const fetchChartSeriesData = async (ySeries, xConfig, idChart, filters) => {
-        try {
-            const queries = ySeries.map((series) => {
-                const influxVars = Object.values(
-                    series.idVar.varsInflux
-                ).shift() // Extrae la primera clave de varsInflux
-
-                return {
-                    varId: series.idVar.id,
-                    field: influxVars.calc_field, // 'pres'
-                    topic: influxVars.calc_topic, // 'coop/agua/red/presion/SPR003/status'
-                    name: series.name,
-                    dateRange:
-                        xConfig.dateTimeType === 'date'
-                            ? filters[idChart]?.dateRange || xConfig.dateRange
-                            : filters[idChart]?.dateRange || xConfig.timeRange, // '-7d'
-                    samplingPeriod:
-                        filters[idChart]?.samplingPeriod ||
-                        xConfig.samplingPeriod, // '6h'
-                    typePeriod: influxVars.calc_type_period,
-                    render: true,
-                    type: 'history',
-                }
-            })
-
-            const { data } = await request(
-                `${backend['Mas Agua']}/seriesDataInflux`,
-                'POST',
-                queries
-            )
-
-            // Encontrar la primera serie que tenga datos
-            let referenceSeries = Object.keys(data).find(
-                (key) => data[key].length > 0
-            )
-
-            const xSeries =
-                referenceSeries && data[referenceSeries]
-                    ? data[referenceSeries].map((item) =>
-                          xConfig.dateTimeType === 'date'
-                              ? item.time
-                              : item.time
-                      )
-                    : []
-
-            const updatedYSeries = ySeries.map((series) => ({
-                ...series,
-                data:
-                    data[series.idVar.id]?.map((data) =>
-                        data.value !== null && data.value !== undefined
-                            ? parseFloat(data.value).toFixed(3)
-                            : '-'
-                    ) || [],
-            }))
-
-            return {
-                ySeries: updatedYSeries,
-                xSeries,
-            }
-        } catch (error) {
-            console.error(error)
-            return {
-                xSeries: [],
-                ySeries: ySeries.map((series) => ({ ...series, data: [] })),
-            }
-        }
-    }
-
     useEffect(() => {
         const fetchData = async () => {
-            if (ChartComponent === LineChart) {
-                const updatedData = await fetchChartSeriesData(
-                    initialData.ySeries,
-                    initialData.xConfig,
-                    chartId,
-                    filters
-                )
-
-                setChartData((prevData) => {
-                    // Solo actualiza el estado si los valores realmente cambiaron
-                    const hasChanged =
-                        JSON.stringify(prevData.xSeries) !==
-                            JSON.stringify(updatedData.xSeries) ||
-                        JSON.stringify(prevData.ySeries) !==
-                            JSON.stringify(updatedData.ySeries)
-
-                    return hasChanged
-                        ? {
-                              ...prevData,
-                              xSeries: updatedData.xSeries,
-                              ySeries: updatedData.ySeries,
-                          }
-                        : prevData
-                })
-            }
-
             if (ChartComponent === PumpControl) {
                 // Si el componente es PumpControl, actualiza bombas y estados
                 const { initialPumps, initialStates } = initialData
@@ -365,6 +224,7 @@ const ChartComponentDbWrapper = ({
 
             if (initialData?.value) {
                 const data = await fetchChartData(initialData.value)
+
                 if (data) {
                     setChartData((prevData) => ({
                         ...prevData,
@@ -380,7 +240,7 @@ const ChartComponentDbWrapper = ({
         fetchData()
         const intervalId = setInterval(fetchData, 15000) // Refresca los datos cada 15 segundos
         return () => clearInterval(intervalId)
-    }, [chartId, ChartComponent, initialData, filters]) // Dependencias ajustadas para asegurar la actualización
+    }, [chartId, ChartComponent, initialData, ]) // Dependencias ajustadas para asegurar la actualización
 
     // Si los datos aún no están listos, muestra un mensaje de carga
     if (loading) {
