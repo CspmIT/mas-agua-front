@@ -16,7 +16,7 @@ export const front = {
         import.meta.env.VITE_ENTORNO === 'local'
             ? 'http://localhost:1420'
             : import.meta.env.VITE_ENTORNO === 'desarrollo'
-            ? 'https://172.26.5.15.sslip.io'
+            ? 'http://172.26.5.17:32000'
             : 'https://masagua.cooptech.com.ar',
     Centinela: 'http://localhost:8082',
     Cloud: 'http://localhost:8082',
@@ -31,7 +31,7 @@ export const backend = {
         import.meta.env.VITE_ENTORNO == 'local'
             ? 'http://localhost:4000/api'
             : import.meta.env.VITE_ENTORNO === 'desarrollo'
-            ? `${front['Mas Agua']}/api`
+            ? `http://172.26.5.17:32001/api`
             : 'https://masagua.cooptech.com.ar/api',
     Centinela: `${front.Centinela}/api`,
     Cloud: `${front.Cloud}/api`,
