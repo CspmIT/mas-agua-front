@@ -1,172 +1,677 @@
-import * as fabric from 'fabric'
-import { useEffect, useRef, useState } from 'react'
-import CardCustom from '../../../components/CardCustom'
-import styles from '../utils/css/style.module.css'
-import { handleDrop } from '../components/DrawImage/utils/js/actionImage'
-import { Accordion, AccordionDetails, AccordionSummary, Button, Checkbox, TextField } from '@mui/material'
-import { drawLine } from '../components/DrawLine/utils/js/line'
-import { newText } from '../components/DrawText/utils/js'
-import { drawPolyline } from '../components/DrawPolyLine/utils/js/polyline'
-import ToolsCanvas from '../components/ToolsCanvas/ToolsCanvas'
-import { saveDiagram, uploadCanvaDb } from '../utils/js/drawActions'
-import { useParams } from 'react-router-dom'
-import { ExpandMore, Save } from '@mui/icons-material'
+import React, { useEffect, useRef, useState } from 'react';
+import { ListImg } from '../utils/js/ListImg';
+import Swal from 'sweetalert2';
+import ListField from '../components/Fields/ListField';
+import ImageSelector from '../components/ImageSelector/ImageSelector';
+import LineStylePanel from '../components/LineStylePanel/LineStylePanel';
+import TextStyler from '../components/TextStyler/TextStyler';
+import TextEditor from '../components/TextEditor/TextEditor';
+import Sidebar from '../components/Sidebar/Sidebar';
+import DiagramCanvas from '../components/DiagramCanvas/DiagramCanvas';
+import TopNavbar from '../components/TopNavbar/TopNavbar';
+import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
+import { useParams } from 'react-router-dom';
 
-function DrawDiagram() {
-	const { id } = useParams()
-	const canvasRef = useRef(null)
-	const fabricCanvasRef = useRef(null)
-	const activeToolRef = useRef(null)
-	const [selectedObject, setSelectedObject] = useState(null)
+const imageList = ListImg();
 
-	// Cambiar herramienta activa
-	const changeTool = (tool) => {
-		updateSelectionObject()
-		activeToolRef.current = tool
+const DrawDiagram = () => {
+  const { id } = useParams();
+  const [elements, setElements] = useState([]);
+  const [tool, setTool] = useState(null);
+  const [showImageSelector, setShowImageSelector] = useState(false);
+  const isDrawing = useRef(false);
+  const stageRef = useRef();
+  const [selectedId, setSelectedId] = useState(null);
+  const transformerRef = useRef();
+  const [lineStart, setLineStart] = useState(null);
+  const [reverseDirection, setReverseDirection] = useState(false);
+  const [circles, setCircles] = useState([]);
+  const [tempLine, setTempLine] = useState(null);
+  const [lineStyle, setLineStyle] = useState({
+    color: '#040255',
+    strokeWidth: 10,
+  });
+  const [showLineStyleSelector, setShowLineStyleSelector] = useState(false);
+  const [dashOffset, setDashOffset] = useState(0);
+  const [textInput, setTextInput] = useState('');
+  const [textPosition, setTextPosition] = useState(null);
+  const [editingTextId, setEditingTextId] = useState(null);
+  const [textStyle, setTextStyle] = useState({
+    fontSize: 16,
+    fill: '#000000',
+    fontStyle: 'normal',
+  });
+  const [showTextStyler, setShowTextStyler] = useState(false);
+  const [showListField, setShowListField] = useState(false);
+  const [diagramMetadata, setDiagramMetadata] = useState({
+    id: null,
+    title: '',
+    backgroundColor: '#ffffff',
+    backgroundImg: ''
+  });
+  const [deletedItems, setDeletedItems] = useState({
+    lines: [],
+    texts: [],
+    images: []
+  });
+  const [newElementsIds, setNewElementsIds] = useState([]);
+
+
+  const handleSelect = (e, id) => {
+    setSelectedId(id);
+
+    // Si estás editando un texto y tocás otro, terminá la edición
+	if (editingTextId && editingTextId !== id) {
+		setEditingTextId(null);
+		setTextInput('');
+		setTextPosition(null);
 	}
+  
+    const selectedElement = elements.find((el) => el.id === id);
+  
+    if (selectedElement?.type === 'line') {
+      setTool('simpleLine');
+      setShowLineStyleSelector(true);
+      setLineStyle({
+        color: selectedElement.stroke,
+        strokeWidth: selectedElement.strokeWidth,
+        invertAnimation: selectedElement.invertAnimation || false,
+      });
+      setShowTextStyler(false);
+      setLineStart(null);
+      setTempLine(null);
+      
+    } else if (selectedElement?.type === 'text') {
+      setTool('text');
+      setShowLineStyleSelector(false);
+      setShowTextStyler(true);
+      setTextInput(selectedElement.text);
+      setTextPosition({ x: selectedElement.x, y: selectedElement.y });
+      setEditingTextId(id);
+      setTextStyle({
+        fontSize: selectedElement.fontSize || 16,
+        fill: selectedElement.fill || '#000000',
+        fontStyle: selectedElement.fontStyle || 'normal',
+      });
+    } else {
+      setTool(null);
+      setShowLineStyleSelector(false);
+      setShowTextStyler(false);
+      setLineStart(null);
+      setTempLine(null);
+    }
+  };
 
-	// actualizo si hay algun objeto seleccionado
-	const updateSelectionObject = () => {
-		const canvas = fabricCanvasRef.current
-		const selected = canvas.getActiveObject()
-		setSelectedObject(selected?.metadata || null)
-	}
+  const handleMouseDown = (e) => {
+    const stage = stageRef.current;
+    const pos = stage.getPointerPosition();
+  
+    if (!pos) {
+      return;
+    }
+  
+    const clickedOnEmpty = e.target === e.target.getStage();
+  
+    if (tool === 'text' && clickedOnEmpty) {
+      
+      if (editingTextId) return;
 
-	// Evento principal: Maneja clics y herramientas
-	const handleCanvasClick = async (e) => {
-		const canvas = fabricCanvasRef.current
-		if (!canvas) return
+      setTextPosition(pos);
+      setTextInput('');
+      setEditingTextId(null);
+      return;
+    }
+  
+    if (tool === 'simpleLine') {
+      if (selectedId) {
+        return;
+      }
+      if (!lineStart) {
+        if (!clickedOnEmpty) {
+          return;
+        }
+        setLineStart(pos);
+        setTempLine({
+          points: [pos.x, pos.y, pos.x, pos.y],
+          stroke: lineStyle.color,
+          strokeWidth: lineStyle.strokeWidth,
+        });
+      } else {
+    
+        const isSamePoint = pos.x === lineStart.x && pos.y === lineStart.y;
+        if (isSamePoint) {
+          return;
+        }
+    
+        const id = Date.now();
+        const x = Math.min(lineStart.x, pos.x);
+        const y = Math.min(lineStart.y, pos.y);
+    
+        const relativePoints = [
+          lineStart.x - x,
+          lineStart.y - y,
+          pos.x - x,
+          pos.y - y,
+        ];
+    
+        const newLine = {
+          id,
+          type: 'line',
+          x,
+          y,
+          points: relativePoints,
+          stroke: lineStyle.color,
+          strokeWidth: lineStyle.strokeWidth,
+          draggable: true,
+          dataInflux: null,
+        };
+    
+        const newCircles = [
+          {
+            id: `${id}-start`,
+            x: lineStart.x,
+            y: lineStart.y,
+            lineId: id,
+            fill: 'blue',
+            visible: false,
+          },
+          {
+            id: `${id}-end`,
+            x: pos.x,
+            y: pos.y,
+            lineId: id,
+            fill: 'red',
+            visible: false,
+          },
+        ];
+  
+        setElements((prev) => [...prev, newLine]);
+        setNewElementsIds((prev) => [...prev, newLine.id]);
+        setCircles((prev) => [...prev, ...newCircles]);
+        setNewElementsIds((prev) => [...prev, newCircles.id]);
+        setLineStart(null);
+        setTempLine(null);
+        setShowLineStyleSelector(false);
+        setTool(null);
+      }
 
-		const { defaultCursor } = canvas
-		const selected = canvas.getActiveObject()
+      return;
+    }
+  };
+  
+  const handleMouseMove = (e) => {
+    const stage = e.target.getStage();
+    const point = stage.getPointerPosition();
 
-		if (defaultCursor === 'default') {
-			setSelectedObject(selected?.metadata || null)
-		} else if (defaultCursor === 'text') {
-			const { offsetX: left, offsetY: top } = e.e
-			await newText(fabricCanvasRef, { left, top }, changeTool, setSelectedObject)
-			canvas?.set({ defaultCursor: 'default' })
-		} else if (defaultCursor === 'crosshair') {
-			await handleLineTool(e)
-		}
-	}
+    if (tool === 'simpleLine' && lineStart) {
+      setTempLine({
+        points: [lineStart.x, lineStart.y, point.x, point.y],
+        stroke: lineStyle.color,
+        strokeWidth: lineStyle.strokeWidth,
+      });
+    }
+    if (!isDrawing.current || tool !== 'line') return;
 
-	// Manejar la herramienta de líneas
-	const handleLineTool = async (event) => {
-		if (activeToolRef.current !== 'Polyline' && activeToolRef.current !== 'Line') {
-			fabricCanvasRef?.current?.set({ defaultCursor: 'default' })
-		} else {
-			if (activeToolRef.current === 'Polyline') {
-				drawPolyline(event.pointer, fabricCanvasRef, setSelectedObject, changeTool)
-			}
-			if (activeToolRef.current === 'Line') {
-				drawLine(event.pointer, fabricCanvasRef, changeTool, setSelectedObject)
-			}
-		}
-	}
+    setElements((prevElements) => {
+      const lastLine = prevElements[prevElements.length - 1];
+      const updatedLine = {
+        ...lastLine,
+        points: [...lastLine.points, point.x, point.y],
+      };
+      return [...prevElements.slice(0, -1), updatedLine];
+    });
+  };
 
-	// Configuración inicial del canvas
-	useEffect(() => {
-		const canvasElement = canvasRef.current
-		if (!canvasElement) return
+  const handleMouseUp = () => {
+    isDrawing.current = false;
+  };
 
-		const parent = canvasElement.parentNode
-		const canvas = new fabric.Canvas(canvasElement, {
-			width: parent.offsetWidth,
-			height: parent.offsetHeight,
-			selection: false,
-		})
+  const addImageToCanvas = (src) => {
+    const img = new window.Image();
+    img.src = src;
+    img.onload = () => {
+      const originalWidth = img.width;
+      const originalHeight = img.height;
+      const maxSize = 100;
+      let width = originalWidth;
+      let height = originalHeight;
 
-		fabricCanvasRef.current = canvas
+      if (width > height) {
+        if (width > maxSize) {
+          height = (maxSize / width) * height;
+          width = maxSize;
+        }
+      } else {
+        if (height > maxSize) {
+          width = (maxSize / height) * width;
+          height = maxSize;
+        }
+      }
 
-		// Manejar eventos
-		canvas.on('mouse:down', handleCanvasClick)
+      const newImage = {
+        id: Date.now(),
+        type: 'image',
+        src,
+        x: 100,
+        y: 100,
+        width,
+        height,
+        draggable: true,
+        dataInflux: null,
+      };
+      setElements((prev) => [...prev, newImage]);
+      setNewElementsIds((prev) => [...prev, newImage.id]);
+      setShowImageSelector(false);
+    };
+  };
 
-		return () => canvas.dispose()
-	}, [])
+  const handleTransformEnd = (e) => {
+    const node = e.target;
+    const id = node.id();
+  
+    const scaleX = node.scaleX();
+    const scaleY = node.scaleY();
+  
+    const updated = {
+      x: node.x(),
+      y: node.y(),
+      width: node.width() * scaleX,
+      height: node.height() * scaleY,
+      rotation: node.rotation(),
+    };
+  
+    node.scaleX(1);
+    node.scaleY(1);
+  
+    setElements((prev) =>
+      prev.map((el) =>
+        String(el.id) === id && el.type === 'image'
+          ? { ...el, ...updated }
+          : el
+      )
+    );
+  };
+  
+  const saveText = () => {
+    if (!textInput.trim() || !textPosition) {
+      setTextPosition(null);
+      return;
+    }
 
-	// Configuración inicial del canvas
-	useEffect(() => {
-		if (id && fabricCanvasRef) {
-			uploadCanvaDb(id, fabricCanvasRef, setSelectedObject, changeTool)
-		}
-	}, [id, fabricCanvasRef])
+    if (editingTextId !== null) {
+      setElements((prev) =>
+        prev.map((el) =>
+          el.id === editingTextId
+            ? {
+              ...el,
+              text: textInput,
+              fontSize: textStyle.fontSize,
+              fill: textStyle.fill,
+              fontStyle: textStyle.fontStyle
+            }
+            : el
+        )
+      );
+      console.log("Text updated");
+    } else {
+      const id = Date.now();
+      const newText = {
+        id,
+        type: 'text',
+        text: textInput,
+        x: textPosition.x,
+        y: textPosition.y,
+        fontSize: textStyle.fontSize,
+        fill: textStyle.fill,
+        fontStyle: textStyle.fontStyle,
+        draggable: true,
+        dataInflux: null,
+      };
 
-	// Eliminar objetos con tecla Delete
-	useEffect(() => {
-		const handleKeyDown = (e) => {
-			if (e.key !== 'Delete' || activeToolRef.current) return
-			const canvas = fabricCanvasRef.current
-			const activeObject = canvas?.getActiveObject()
-			if (!activeObject) return
-			if (activeObject.type == 'line' || activeObject.type == 'polyline') {
-				const back = canvas
-					.getObjects(activeObject.type)
-					.filter((obj) => obj.id == activeObject.metadata?.[activeObject.type]?.id + '_back')
-				if (back) {
-					back.forEach((element) => {
-						element.visible = false
-					})
-				}
-			}
-			if (activeObject.type == 'text' || activeObject.type == 'line' || activeObject.type == 'image') {
-				const text = canvas
-					.getObjects('textbox')
-					.filter(
-						(obj) => obj.id == `${activeObject.metadata?.[activeObject.type]?.id}_text_${activeObject.type}`
-					)
-				if (text) {
-					text.forEach((element) => {
-						element.visible = false
-					})
-				}
-			}
-			activeObject.metadata.delete()
-			activeObject.visible = false
-			canvas.discardActiveObject()
-			canvas.requestRenderAll()
-			setSelectedObject(null)
-			e.preventDefault()
-		}
+      setElements(prev => [...prev, newText]);
+      setNewElementsIds((prev) => [...prev, newText.id]);
+      console.log("New text created:", newText);
+    }
+    setTextPosition(null);
+    setTextInput('');
+    setEditingTextId(null);
+  };
 
-		window.addEventListener('keydown', handleKeyDown)
-		return () => window.removeEventListener('keydown', handleKeyDown)
-	}, [activeToolRef.current])
+  const handleAssignVariable = (dataInflux) => {
+    if (!selectedId) return;
 
-	return (
-		<CardCustom
-			className={
-				'w-full  h-full flex flex-col items-center justify-center text-black dark:text-white relative p-3 rounded-md'
-			}
-		>
-			<Button
-				variant='contained'
-				className='!absolute bottom-5 right-5 z-50'
-				onClick={() => saveDiagram(fabricCanvasRef)}
-			>
-				<Save />
-			</Button>
+    setElements((prev) =>
+      prev.map((el) =>
+        el.id === selectedId ? { ...el, dataInflux } : el
+      )
+    );
+  };
 
-			<div
-				key={'canvasDiseno'}
-				id={'canva'}
-				className='flex w-full bg-slate-200 relative'
-				onDrop={(e) => handleDrop(e, fabricCanvasRef, setSelectedObject, changeTool)}
-				onDragOver={(e) => e.preventDefault()}
-			>
-				<div className={`flex w-full ${styles.hscreenCustom} `}>
-					<canvas ref={canvasRef} width={1000} height={600} style={{ border: '1px solid black' }} />
-				</div>
-				<div className='absolute top-1 left-2 w-1/4 '>
-					<ToolsCanvas
-						selectedObject={selectedObject}
-						fabricCanvasRef={fabricCanvasRef}
-						onPropertySelected={changeTool}
-					/>
-				</div>
-			</div>
-		</CardCustom>
-	)
-}
+  const handleClearCanvas = () => {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esto eliminará todo el diagrama actual.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, borrar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setElements([]);
+        setCircles([]);
+        setSelectedId(null);
+        setLineStart(null);
+        setTempLine(null);
+        setTextInput('');
+        setTextPosition(null);
+        setEditingTextId(null);
+        setTool(null);
+        setShowImageSelector(false);
+        setShowLineStyleSelector(false);
+        setShowTextStyler(false);
+        Swal.fire('¡Eliminado!', 'El diagrama fue borrado.', 'success');
+      }
+    });
+  };
 
-export default DrawDiagram
+  const handleSaveDiagram = async () => {
+    const { value: nombre } = await Swal.fire({
+      title: 'Guardar diagrama',
+      input: 'text',
+      inputLabel: 'Nombre del diagrama',
+      inputValue: diagramMetadata.title || '',
+      showCancelButton: true,
+      confirmButtonText: 'Guardar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      inputValidator: (value) => {
+        if (!value.trim()) {
+          return '¡Debes ingresar un nombre!';
+        }
+        return null;
+      }
+    });
+  
+    if (!nombre) return;
+   
+    const isNewDiagram = !diagramMetadata.id; 
+  
+    const elementsToSave = elements.map(el => {
+      const element = { ...el };
+      if (!diagramMetadata.id || newElementsIds.includes(el.id)) {
+        delete element.id; 
+      }
+      return element;
+    });
+  
+    const diagramToSave = {
+      elements: elementsToSave,
+      circles,
+      diagramMetadata: {
+        ...diagramMetadata,
+        title: nombre,
+      },
+      deleted: deletedItems,
+    };
+  
+    if (isNewDiagram) {
+      delete diagramToSave.diagramMetadata.id;
+    }
+  
+    await saveDiagramKonva(diagramToSave);
+  
+    setNewElementsIds([]);
+    setDeletedItems({
+      lines: [],
+      texts: [],
+      images: [],
+    });
+  };
+  
+  const handleUndo = () => {
+    if (elements.length === 0) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Nada para deshacer',
+        text: 'No hay elementos en el diagrama.',
+        confirmButtonColor: '#3085d6',
+      });
+      return;
+    }
+
+    setElements((prev) => prev.slice(0, -1));
+  };
+
+  const handleDeleteElement = (id) => {
+    const elementToDelete = elements.find(el => el.id === id);
+    if (!elementToDelete) return;
+  
+    setElements((prev) => prev.filter((el) => el.id !== id));
+  
+    if (Number.isInteger(id)) {
+      setDeletedItems((prev) => {
+        const typeKey = `${elementToDelete.type}s`; 
+        return {
+          ...prev,
+          [typeKey]: [...prev[typeKey], id]
+        };
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (transformerRef.current && selectedId) {
+      const stage = stageRef.current;
+      const selectedNode = stage.findOne(`#${selectedId}`);
+      if (selectedNode) {
+        transformerRef.current.nodes([selectedNode]);
+        transformerRef.current.getLayer().batchDraw();
+      }
+    }
+  }, [selectedId]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowLineStyleSelector(false);
+        setLineStart(null);
+        if (textPosition) {
+          setTextPosition(null);
+          setTextInput('');
+          setEditingTextId(null);
+        }
+      }
+      if (e.key === 'Delete' && selectedId) {
+        setElements((prev) => prev.filter((el) => String(el.id) !== String(selectedId)));
+        setCircles((prev) => prev.filter((c) => String(c.lineId) !== String(selectedId)));
+        handleDeleteElement(selectedId);
+        setSelectedId(null);
+        setShowLineStyleSelector(false);
+        setShowTextStyler(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedId, lineStart, textPosition]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+
+    setElements((prev) =>
+      prev.map((el) => {
+        if (el.id === selectedId && el.type === 'line') {
+          return {
+            ...el,
+            stroke: lineStyle.color,
+            strokeWidth: lineStyle.strokeWidth,
+          };
+        }
+        return el;
+      })
+    );
+  }, [lineStyle]);
+
+  useEffect(() => {
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+      setLineStart(null);
+      setTempLine(null);
+      setShowLineStyleSelector(false);
+    };
+    window.addEventListener('contextmenu', handleContextMenu);
+    return () => window.removeEventListener('contextmenu', handleContextMenu);
+  }, []);
+
+  useEffect(() => {
+    let frameId;
+  
+    const animate = () => {
+      setDashOffset((prev) => (reverseDirection ? prev - 1 : prev + 1));
+      frameId = requestAnimationFrame(animate);
+    };
+  
+    frameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameId);
+  }, [reverseDirection]);
+  
+  useEffect(() => {
+    if (id) {
+      uploadCanvaDb(id, {
+        setElements,
+        setCircles,
+        setDiagramMetadata,
+        setTool,
+      });
+    }
+  }, [id]);
+
+  return (
+    <>
+      <div className="w-full">
+        {/* Barra arriba */}
+        <TopNavbar
+          onClear={handleClearCanvas}
+          onSave={handleSaveDiagram}
+          onUndo={handleUndo}
+          elements={elements}
+        />
+        {/* Contenedor horizontal de sidebar + canvas */}
+        <div className="flex w-full min-h-screen">
+          <Sidebar
+            tool={tool}
+            setTool={setTool}
+            selectedId={selectedId}
+            setShowImageSelector={setShowImageSelector}
+            setShowLineStyleSelector={setShowLineStyleSelector}
+            setShowTextStyler={setShowTextStyler}
+            setShowListField={setShowListField}
+            setElements={setElements}
+            setCircles={setCircles}
+            setSelectedId={setSelectedId}
+            setTextPosition={setTextPosition}
+            setTextInput={setTextInput}
+            handleDeleteElement={handleDeleteElement}
+          />
+          {/* Contenido principal (canvas + overlays) */}
+          <div className="flex-1 bg-gray-300 rounded-br-lg relative">
+            {/* Selector de imágenes */}
+            {showImageSelector && (
+              <ImageSelector
+                visible={showImageSelector}
+                images={imageList}
+                onSelectImage={addImageToCanvas}
+              />
+            )}
+            {/* Panel de estilo de línea */}
+            {showLineStyleSelector && (
+              <LineStylePanel
+              tool={tool}
+              setTool={setTool}
+              selectedId={selectedId}
+              visible={showLineStyleSelector}
+              lineStyle={lineStyle}
+              onChange={setLineStyle}
+              setElements={setElements}
+            />
+            )}
+            {/* Panel de estilo de texto */}
+            <TextStyler
+              visible={showTextStyler}
+              textStyle={textStyle}
+              onStyleChange={setTextStyle}
+              onApply={() => {
+                if (editingTextId) {
+                  setElements((prev) =>
+                    prev.map((el) =>
+                      el.id === editingTextId
+                        ? {
+                          ...el,
+                          fontSize: textStyle.fontSize,
+                          fill: textStyle.fill,
+                          fontStyle: textStyle.fontStyle
+                        }
+                        : el
+                    )
+                  );
+                  setShowTextStyler(false);
+                  setTextPosition(null);
+                }
+              }}
+              isEditing={!!editingTextId}
+            />
+            {/* Selector de variables */}
+            {showListField && (
+              <div className="absolute left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 max-w-md">
+                <ListField
+                  onSelectVariable={handleAssignVariable}
+                  onClose={() => setShowListField(false)}
+                />
+              </div>
+            )}
+            {/* Canvas */}
+            <DiagramCanvas
+              elements={elements}
+              circles={circles}
+              tempLine={tempLine}
+              dashOffset={dashOffset}
+              selectedId={selectedId}
+              stageRef={stageRef}
+              transformerRef={transformerRef}
+              handleMouseDown={handleMouseDown}
+              handleMouseMove={handleMouseMove}
+              handleMouseUp={handleMouseUp}
+              handleSelect={handleSelect}
+              setElements={setElements}
+              setCircles={setCircles}
+              setSelectedId={setSelectedId}
+              setTextInput={setTextInput}
+              setTextPosition={setTextPosition}
+              setEditingTextId={setEditingTextId}
+              setTextStyle={setTextStyle}
+              tool={tool}
+              handleTransformEnd={handleTransformEnd}
+            />
+            {/* Editor de texto */}
+            <TextEditor
+              textPosition={textPosition}
+              textStyle={textStyle}
+              textInput={textInput}
+              onChange={setTextInput}
+              onSave={saveText}
+              onCancel={() => {
+                setTextPosition(null);
+                setTextInput('');
+                setEditingTextId(null);
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
+
+export default DrawDiagram;
