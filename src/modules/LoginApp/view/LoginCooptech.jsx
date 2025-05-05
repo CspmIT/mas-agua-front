@@ -31,8 +31,8 @@ const LoginCooptech = () => {
 			const expirationDate = new Date(decodedToken.exp)
 			await saveData('token', token, {
 				expires: expirationDate,
-				secure: true,
-				sameSite: 'Lax',
+				secure: import.meta.env.VITE_ENTORNO === 'desarrollo' ? false : true,
+				sameSite: import.meta.env.VITE_ENTORNO === 'desarrollo' ? 'Lax' : 'None',
 			})
 			storage.set('usuario', decodedToken)
 			navigate('/')
