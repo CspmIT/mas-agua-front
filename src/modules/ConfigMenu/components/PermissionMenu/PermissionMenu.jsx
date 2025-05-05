@@ -16,6 +16,7 @@ import { request } from '../../../../utils/js/request'
 import { backend } from '../../../../utils/routes/app.routes'
 import { MainContext } from '../../../../context/MainContext'
 import { getPermissionDb } from '../../../NavBarCustom/utils/js'
+import { list_menu, permisos } from './components/data'
 
 const PermissionMenu = ({ data, id_user, profile }) => {
 	const { setPermission } = useContext(MainContext)
@@ -79,7 +80,10 @@ const PermissionMenu = ({ data, id_user, profile }) => {
 	}
 
 	const getDataMenu = async () => {
-		const menus = await request(`${backend[`${import.meta.env.VITE_APP_NAME}`]}/getAllMenu`, 'GET')
+		const menus =
+			import.meta.env.VITE_WIFI == 'sin'
+				? { data: list_menu }
+				: await request(`${backend[`${import.meta.env.VITE_APP_NAME}`]}/getAllMenu`, 'GET')
 		setGroupedMenus(await groupedMenu(menus.data))
 	}
 	const groupedMenu = async (data) => {
@@ -120,12 +124,15 @@ const PermissionMenu = ({ data, id_user, profile }) => {
 		}, [])
 	}
 	const getPermission = async () => {
-		const permission = await request(
-			`${backend[`${import.meta.env.VITE_APP_NAME}`]}/getPermission?id=${id_user ? id_user : profile}&type=${
-				id_user ? 'id_user' : 'id_profile'
-			}&profile=${id_user ? data.profile : profile}`,
-			'GET'
-		)
+		const permission =
+			import.meta.env.VITE_WIFI == 'sin'
+				? permisos
+				: await request(
+						`${backend[`${import.meta.env.VITE_APP_NAME}`]}/getPermission?id=${
+							id_user ? id_user : profile
+						}&type=${id_user ? 'id_user' : 'id_profile'}&profile=${id_user ? data.profile : profile}`,
+						'GET'
+				  )
 		const userPermission = permission.data.filter((item) => item.id_user)
 		const profilePermission = permission.data.filter((item) => item.id_profile)
 		setPermissonUserData(userPermission)

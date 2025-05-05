@@ -1,10 +1,11 @@
 import { Circle, Edit } from '@mui/icons-material'
 import { IconButton } from '@mui/material'
+import { FaEye } from 'react-icons/fa'
 
-export const ColumnsListDiagram = (editDiagram) => [
+export const ColumnsListDiagram = (editDiagram, viewDiagram) => [
 	{
 		header: 'Nombre',
-		accessorKey: 'name',
+		accessorKey: 'title',
 	},
 	{
 		header: 'Estado',
@@ -35,12 +36,20 @@ export const ColumnsListDiagram = (editDiagram) => [
 				...row.origin,
 			}
 			return (
-				<IconButton
-					onClick={() => editDiagram(row.original)}
-					className=' !bg-[#ffbf1e] hover:!bg-[#ffde89] !text-black !shadow-md'
-				>
-					<Edit />
-				</IconButton>
+				<>
+					<IconButton
+						onClick={() => editDiagram(row.original)}
+						className=' !bg-[#ffbf1e] hover:!bg-[#ffde89] !text-black !shadow-md'
+					>
+						<Edit />
+					</IconButton>
+					<IconButton
+						onClick={() => viewDiagram(row.original)}
+						className=' !bg-[#1eceff] hover:!bg-[#89e5ff] !text-black !shadow-md'
+					>
+						<FaEye />
+					</IconButton>
+				</>
 			)
 		},
 	},

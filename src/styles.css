@@ -93,6 +93,10 @@ button {
 	margin-right: 5px;
 }
 
+.maplibregl-popup-content {
+    padding: 5px 10px !important;
+}
+
 @media (prefers-color-scheme: dark) {
 	:root {
 		color: #000000;

@@ -1,16 +1,16 @@
-import { Slider, TextField } from '@mui/material'
+import { Slider, TextField, Typography } from '@mui/material'
 import React, { useState } from 'react'
-import { hexToRgb } from './utils'
+import { hexToRgb, parseRgba } from './utils'
 
 function InputColor({ updateBackground, backgroundText }) {
-	const [color, setColor] = useState(backgroundText)
-	const [opacity, setOpacity] = useState(1) // Controlar la opacidad
+	const initialParsed = parseRgba(backgroundText)
+	const [color, setColor] = useState(initialParsed.color || '#000000') // Color en formato HEX
+	const [opacity, setOpacity] = useState(initialParsed.opacity || 1) // Opacidad inicial
 	const changeColorBackground = (newColor) => {
 		const rgbaColor = `rgba(${hexToRgb(newColor).join(', ')}, ${opacity})`
 		setColor(newColor)
 		updateBackground(rgbaColor)
 	}
-
 	const changeOpacity = (newOpacity) => {
 		const rgbaColor = `rgba(${hexToRgb(color).join(', ')}, ${newOpacity})`
 		setOpacity(newOpacity)
@@ -24,18 +24,21 @@ function InputColor({ updateBackground, backgroundText }) {
 				id='backgroundcolor'
 				name='backgroundcolor'
 				onChange={(e) => changeColorBackground(e.target.value)}
-				className='w-2/6'
+				className='w-1/2'
 				value={color || ''}
 			/>
-			<Slider
-				value={opacity}
-				min={0}
-				max={1}
-				step={0.01}
-				onChange={(e, value) => changeOpacity(value)}
-				aria-labelledby='opacity-slider'
-				className='w-4/6'
-			/>
+			<div className='w-1/2 flex flex-col'>
+				<Typography typography={'p'}>Trasparencia</Typography>
+				<Slider
+					value={opacity}
+					min={0}
+					max={1}
+					step={0.01}
+					onChange={(e, value) => changeOpacity(value)}
+					aria-labelledby='opacity-slider'
+					className='w-1/2'
+				/>
+			</div>
 		</div>
 	)
 }

@@ -1,6 +1,7 @@
 import { Accordion, AccordionSummary, AccordionDetails, Checkbox, Typography, List, ListItem } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import BtnActions from '../../AddMenu/components/BtnActions'
+import { useEffect, useState } from 'react'
 
 function MenuItems({
 	items,
@@ -18,9 +19,19 @@ function MenuItems({
 	return items.map((item) => {
 		const number = 240 - parseInt(item.level) * 20
 		const isExpanded = expandedAccordions[item.id] || false
-		if (calculateCheckboxState) {
-			const { checked, indeterminate } = calculateCheckboxState(item)
-		}
+
+		// Estado local
+		const [check, setChecked] = useState(false)
+		const [indeter, setIndeterminate] = useState(false)
+
+		// Actualizar estado basado en calculateCheckboxState
+		useEffect(() => {
+			if (calculateCheckboxState) {
+				const { checked, indeterminate } = calculateCheckboxState(item)
+				setChecked(checked)
+				setIndeterminate(indeterminate)
+			}
+		}, [calculateCheckboxState, item])
 		return (
 			<div key={item.id} className='!w-full'>
 				{item.subMenus.length ? (
@@ -39,8 +50,8 @@ function MenuItems({
 						>
 							{calculateCheckboxState && (
 								<Checkbox
-									checked={checked}
-									indeterminate={indeterminate}
+									checked={check}
+									indeterminate={indeter}
 									disabled={permissonProfileData.some(
 										(perm) =>
 											Boolean(perm.id_profile) && Boolean(perm.status) && perm.id_menu == item.id

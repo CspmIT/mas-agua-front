@@ -26,7 +26,8 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   WITH_V: true
-                  PRERELEASE: false
+                  PRERELEASE: true
+                  PRERELEASE_SUFFIX: dev
 
     # ci:
     #   needs: bump
