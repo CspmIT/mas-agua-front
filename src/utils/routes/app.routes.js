@@ -16,7 +16,7 @@ export const front = {
         import.meta.env.VITE_ENTORNO === 'local'
             ? 'http://localhost:1420'
             : import.meta.env.VITE_ENTORNO === 'desarrollo'
-            ? 'https://devmasagua.172.26.5.15.sslip.io'
+            ? 'https://172.26.5.15.sslip.io'
             : 'https://masagua.cooptech.com.ar',
     Centinela: 'http://localhost:8082',
     Cloud: 'http://localhost:8082',
