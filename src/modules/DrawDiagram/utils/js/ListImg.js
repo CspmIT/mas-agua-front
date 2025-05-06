@@ -1,5 +1,6 @@
-const urlBase = '../assets/img/newDiagram'
-const urlBaseView = '../assets/img/diagramAction'
+const urlBase = '/assets/img/Diagram/newDiagram'
+const urlBaseView = '/assets/img/Diagram/diagramAction'
+
 export const ListImg = () => [
     {
         id: 1,
@@ -161,11 +162,11 @@ export const ListImg = () => [
         srcView: `${urlBase}/Valvula_OFF.png`,
         animation: 'boolean',
         optionsImage: {
-            error: '/src/modules/DrawDiagram/utils/assets/img/diagramAction/Valvula__BAD.png',
+            error: '/assets/img/Diagram/diagramAction/Valvula__BAD.png',
             success:
-                '/src/modules/DrawDiagram/utils/assets/img/diagramAction/Valvula__OK.png',
+                '/assets/img/Diagram/diagramAction/Valvula__OK.png',
             default:
-                '/src/modules/DrawDiagram/utils/assets/img/diagramAction/Valvula_OFF.png',
+                '/assets/img/Diagram/diagramAction/Valvula_OFF.png',
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
