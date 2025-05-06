@@ -79,7 +79,7 @@ const ConfigGraphic = () => {
 
         const url = backend[import.meta.env.VITE_APP_NAME]
         let endpoint = `${url}/chartSeries`
-        if (id) {
+        if (idChart) {
             endpoint = `${url}/chartSeries/${idChart}`
         }
 
