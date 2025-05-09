@@ -1,10 +1,3 @@
-import { ArrowDownward } from '@mui/icons-material'
-import {
-    Accordion,
-    AccordionDetails,
-    AccordionSummary,
-    Typography,
-} from '@mui/material'
 import { useEffect, useState } from 'react'
 import LoaderComponent from '../../../components/Loader'
 import { backend } from '../../../utils/routes/app.routes'

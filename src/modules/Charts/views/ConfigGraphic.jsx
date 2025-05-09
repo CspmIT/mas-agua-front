@@ -10,6 +10,7 @@ import { backend } from '../../../utils/routes/app.routes'
 import { request } from '../../../utils/js/request'
 import { ArrowBack } from '@mui/icons-material'
 import ConfigMultiple from './ConfigMultiple'
+import HeaderForms from '../components/HeaderForms'
 
 const ConfigGraphic = () => {
     const { id, idChart = false } = useParams()
@@ -78,7 +79,7 @@ const ConfigGraphic = () => {
 
         const url = backend[import.meta.env.VITE_APP_NAME]
         let endpoint = `${url}/chartSeries`
-        if (id) {
+        if (idChart) {
             endpoint = `${url}/chartSeries/${idChart}`
         }
 
@@ -185,28 +186,7 @@ const ConfigGraphic = () => {
     return (
         <VarsProvider>
             <div className="w-full bg-white p-5 rounded-lg shadow-md h-fit">
-                <div className="flex justify-end">
-                    <IconButton
-                        sx={{
-                            color: 'black',
-                            marginRight: 2,
-                            padding: '8px',
-                        }}
-                        aria-label="volver atrás"
-                        onClick={() => {
-                            idChart
-                                ? navigate('/config/allGraphic')
-                                : navigate('/config/graphic')
-                        }}
-                    >
-                        <ArrowBack sx={{ fontSize: '1.5rem' }} />
-                    </IconButton>
-                </div>
-                <Typography className="text-center !mb-5" variant="h3">
-                    {idChart
-                        ? `Edición del gráfico "${chart.name || ''}"`
-                        : 'Configuración de gráfico'}
-                </Typography>
+                <HeaderForms idChart={idChart} chartName={idChart ? chart : false}/>
 
                 <form
                     onSubmit={handleSubmit(onSubmit, onError)}

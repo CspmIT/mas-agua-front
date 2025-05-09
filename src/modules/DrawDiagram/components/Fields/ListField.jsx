@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import ModalVar from '../../../../components/DataGenerator/ModalVar'
 import { getVarsInflux } from './actions'
 
-function ListField() {
+function ListField({ onSelectVariable, onClose }) {
 	const [listVariable, setListVariable] = useState([])
 	const [listfilter, setListfilter] = useState([])
 	const [varSelected, setVarSelected] = useState(null)
@@ -44,7 +44,7 @@ function ListField() {
 				</IconButton>
 			</div>
 			<Divider />
-			<div className={`w-full p-3 flex flex-col gap-3 h-full overflow-y-auto `}>
+			<div className={`w-full flex flex-col gap-3 h-full overflow-y-auto `}>
 				<TextField
 					onChange={(e) => filter(e.target.value)}
 					label='Buscar'
@@ -58,23 +58,29 @@ function ListField() {
 					}}
 				/>
 				{listVariable.length ? (
-					<List dense={false}>
-						{listfilter.map((variable, index) => (
-							<ListItem key={index} onDrag={null}>
-								<ListItemText primary={variable.name} />
-								<IconButton
-									color='warning'
-									className='!bg-yellow-200'
-									onClick={() => {
-										setVarSelected(variable)
-										setOpenModal(true)
-									}}
-								>
-									<Edit />
-								</IconButton>
-							</ListItem>
-						))}
-					</List>
+					<List
+					dense={false}
+					className="overflow-y-auto max-h-[400px]"
+				  >
+					{listfilter.map((variable, index) => (
+					  <ListItem key={index} button onClick={() => {
+						onSelectVariable(variable); 
+						onClose?.(); 
+					  }}>
+						<ListItemText primary={variable.name} />
+						<IconButton
+						  color='warning'
+						  className='!bg-yellow-200'
+						  onClick={() => {
+							setVarSelected(variable)
+							setOpenModal(true)
+						  }}
+						>
+						  <Edit />
+						</IconButton>
+					  </ListItem>
+					))}
+				  </List>
 				) : null}
 			</div>
 		</div>

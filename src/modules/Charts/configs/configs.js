@@ -59,9 +59,7 @@ export const configs = {
         // Grafico de torta
         id: 3,
         typeGraph: 'DoughnutChart',
-        //! Terminar de armar configuracion
         singleValue: false,
-        format: false,
     },
     4: {
         //Rectangulo con porcentaje

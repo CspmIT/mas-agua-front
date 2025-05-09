@@ -1,81 +1,157 @@
-import { IconButton } from '@mui/material'
-import CardCustom from '../../../components/CardCustom'
-import TableCustom from '../../../components/TableCustom'
-import { ColumnsListDiagram } from '../utils/js/ColumnsList'
-import { Add } from '@mui/icons-material'
-import { useNavigate } from 'react-router-dom'
-import { request } from '../../../utils/js/request'
-import { backend } from '../../../utils/routes/app.routes'
-import { useEffect, useState } from 'react'
-import Swal from 'sweetalert2'
+import { useEffect, useState } from 'react';
+import { Box, Button, Container, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { request } from '../../../utils/js/request';
+import { backend } from '../../../utils/routes/app.routes';
+import TableCustom from '../../../components/TableCustom';
+import Swal from 'sweetalert2';
+import LoaderComponent from '../../../components/Loader';
 
 const ListDrawDiagram = () => {
-	const navigate = useNavigate()
-	const [listDiagram, setListDiagram] = useState([])
-	const editDiagram = (diagram) => {
-		navigate(`/newDiagram/${diagram.id}`)
-	}
-	const viewDiagram = (diagram) => {
-		navigate(`/viewDiagram/${diagram.id}`)
-	}
-	const getDiagrams = async () => {
+	const navigate = useNavigate();
+	const [listDiagram, setListDiagram] = useState([]);
+	const [columnsTable, setColumnsTable] = useState([]);
+	const [loading, setLoading] = useState(true);
+
+	const fetchDiagrams = async () => {
+		const url = backend[import.meta.env.VITE_APP_NAME];
 		try {
-			const list = await request(`${backend[import.meta.env.VITE_APP_NAME]}/getDiagrams`, 'GET')
-			setListDiagram(list.data)
+			setLoading(true);
+			const { data } = await request(`${url}/getDiagrams`, 'GET');
+
+			const columns = [
+				{
+					header: 'ID',
+					accessorKey: 'id',
+				},
+				{
+					header: 'Nombre',
+					accessorKey: 'title',
+				},
+				{
+					header: 'Estado',
+					accessorKey: 'status',
+					Cell: ({ row }) => (
+						<span className={`text-sm font-semibold ${row.original.status ? 'text-green-600' : 'text-red-600'}`}>
+							{row.original.status ? 'Habilitado' : 'Deshabilitado'}
+						</span>
+					),
+				},
+				{
+					header: 'Acciones',
+					accessorKey: 'actions',
+					Cell: ({ row }) => (
+						<Box display="flex" gap={1}>
+							<Button
+								variant="outlined"
+								color="primary"
+								size="small"
+								onClick={() => navigate(`/newDiagram/${row.original.id}`)}
+							>
+								Editar
+							</Button>
+							<Button
+								variant="outlined"
+								color="secondary"
+								size="small"
+								onClick={() => navigate(`/viewDiagram/${row.original.id}`)}
+							>
+								Ver
+							</Button>
+							{/* <Button
+								variant="outlined"
+								color={row.original.status ? 'error' : 'success'}
+								size="small"
+								onClick={async (e) => {
+									e.preventDefault();
+									const confirm = await Swal.fire({
+										icon: 'question',
+										html: `¿Seguro que querés ${row.original.status ? 'desactivar' : 'activar'} este diagrama?`,
+										showCancelButton: true,
+										confirmButtonText: row.original.status ? 'Desactivar' : 'Activar',
+										cancelButtonText: 'Cancelar',
+									});
+									if (!confirm.isConfirmed) return;
+
+									try {
+										const { data: res } = await request(
+											`${url}/diagrams/status`,
+											'PUT',
+											{
+												id: row.original.id,
+												status: row.original.status,
+											}
+										);
+										if (res) {
+											await Swal.fire({
+												icon: 'success',
+												text: 'Diagrama actualizado correctamente',
+											});
+											setListDiagram((prev) =>
+												prev.map((d) =>
+													d.id === row.original.id
+														? { ...d, status: !d.status }
+														: d
+												)
+											);
+										}
+									} catch (err) {
+										console.error(err);
+										Swal.fire({
+											icon: 'error',
+											text: 'No se pudo actualizar el estado del diagrama',
+										});
+									}
+								}}
+							>
+								{row.original.status ? 'Desactivar' : 'Activar'}
+							</Button> */}
+						</Box>
+					),
+				},
+			];
+
+			setColumnsTable(columns);
+			setListDiagram(data);
 		} catch (error) {
-			console.error(error)
+			console.error(error);
 			Swal.fire({
-				title: 'Atención!',
-				text: 'Hubo un problema al intentar traer el listado de Diagramas',
+				title: 'Error',
+				text: 'No se pudieron obtener los diagramas.',
 				icon: 'error',
-			})
+			});
+		} finally {
+			setLoading(false);
 		}
-	}
+	};
+
 	useEffect(() => {
-		getDiagrams()
-	}, [])
+		fetchDiagrams();
+	}, []);
 
 	return (
-		<CardCustom
-			className={
-				'w-full h-full flex flex-col items-center justify-center text-black dark:text-white relative p-3 rounded-md'
-			}
-		>
-			<div className='w-full flex flex-col items-center md:p-5'>
-				<div className='flex w-full py-2 items-center'>
-					<h1 className='text-2xl mb-3 w-full'>Listado de Diagramas</h1>
-					<IconButton
-						title='Creacion de nuevo diagrama'
+		<Container>
+			<div className="flex flex-col gap-3">
+				<Box display="flex" justifyContent={'space-between'} alignItems={'center'} mb={3}>
+					<Typography variant="h3" align="center" flexGrow={1}>
+						Diagramas
+					</Typography>
+					<Button
+						variant="contained"
+						color="primary"
 						onClick={() => navigate('/newDiagram')}
-						className='!bg-blue-400'
-						size='small'
 					>
-						<Add />
-					</IconButton>
-				</div>
-				<div className='w-1/2'>
-					<TableCustom
-						data={listDiagram}
-						columns={ColumnsListDiagram(editDiagram, viewDiagram)}
-						density='compact'
-						header={{
-							background: 'rgb(190 190 190)',
-							fontSize: '18px',
-							fontWeight: 'bold',
-							padding: '20px 20px 10px 20px !important',
-						}}
-						toolbarClass={{ background: 'rgb(190 190 190)' }}
-						body={{ backgroundColor: 'rgba(209, 213, 219, 0.31)' }}
-						footer={{ background: 'rgb(190 190 190)', padding: '20px !important' }}
-						card={{
-							boxShadow: `1px 1px 8px 0px #00000046`,
-							borderRadius: '0.75rem',
-						}}
-					/>
-				</div>
+						Crear diagrama
+					</Button>
+				</Box>
 			</div>
-		</CardCustom>
-	)
-}
+			{!loading ? (
+				<TableCustom columns={columnsTable} data={listDiagram.length ? listDiagram : []} />
+			) : (
+				<LoaderComponent />
+			)}
+		</Container>
+	);
+};
 
-export default ListDrawDiagram
+export default ListDrawDiagram;
