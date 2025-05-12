@@ -8,7 +8,7 @@ import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
 import RenderImage from '../components/RenderImage/RenderImage';
 import LoaderComponent from '../../../components/Loader'
-import { LuZoomOut, LuZoomIn, LuArrowLeft  } from "react-icons/lu";
+import { LuZoomOut, LuZoomIn, LuArrowLeft } from "react-icons/lu";
 
 function ViewDiagram() {
 	const { id } = useParams();
@@ -22,7 +22,7 @@ function ViewDiagram() {
 		backgroundColor: '#ffffff',
 		backgroundImg: ''
 	});
-	const [isLoading, setIsLoading] = useState(true); 
+	const [isLoading, setIsLoading] = useState(true);
 	const navigate = useNavigate();
 	const [scale, setScale] = useState(1);
 	const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -32,13 +32,47 @@ function ViewDiagram() {
 	});
 
 	const renderTooltipLabel = (el) => {
-		const text = el.dataInflux?.name
-			? `${el.dataInflux.value != null
-				? el.dataInflux.value === 1
-					? 'Activa'
-					: `${el.dataInflux.value} ${el.dataInflux.unit || ''}`
-				: 'No hay datos'
-			}` : '';
+		const value = el.dataInflux?.value;
+		const unit = el.dataInflux?.unit || '';
+		let text = '';
+
+		if (value != null) {
+			if (value === 1) {
+				text = 'Activa';
+			} else if (!isNaN(value)) {
+				text = `${Number(value).toFixed(2)} ${unit}`;
+			} else {
+				text = `${value} ${unit}`;
+			}
+		} else {
+			text = 'No hay datos';
+		}
+
+		// Si es una sonda conductímetro, aplicar estilo personalizado
+		const isSondaConductimetro = el.src?.includes('Sonda_conductimetro.png');
+
+		if (isSondaConductimetro) {
+
+			const relX = 0.29;
+			const relY = 0.15;
+			const boxWidth = 0.70;
+			const fontSize = el.width * 0.13;
+
+			return (
+				<Group rotation={el.rotation || 0}>
+					<Text
+						text={text}
+						x={el.x + el.width * relX}
+						y={el.y + el.height * relY}
+						width={el.width * boxWidth}
+						align="center"
+						fontSize={fontSize}
+						fontFamily="Arial"
+						fill="white"
+					/>
+				</Group>
+			);
+		}
 
 		return (
 			<Label
@@ -74,7 +108,7 @@ function ViewDiagram() {
 				setDiagramMetadata,
 				setTool: () => { },
 			}).finally(() => {
-				setIsLoading(false); 
+				setIsLoading(false);
 			});
 		}
 	}, [id]);
@@ -124,7 +158,7 @@ function ViewDiagram() {
 					console.error('Error actualizando datos desde Influx:', err);
 				}
 			}
-		}, 10000);
+		}, 15000);
 
 		return () => clearInterval(interval);
 	}, [elements]);

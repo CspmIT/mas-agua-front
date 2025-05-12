@@ -254,13 +254,40 @@ const DrawDiagram = () => {
       }
       return;
     }
+
+    if (tool === 'floatingVariable') {
+      const img = new window.Image();
+      img.src = '/assets/img/Diagram/newDiagram/img_sinfondo.PNG'; 
+      img.onload = () => {
+        const width = 100;
+        const height = (img.height / img.width) * width;
+    
+        const newImage = {
+          id: Date.now(),
+          type: 'image',
+          src: img.src,
+          x: pos.x,
+          y: pos.y,
+          width,
+          height,
+          draggable: true,
+          dataInflux: null,
+        };
+    
+        setElements((prev) => [...prev, newImage]);
+        setNewElementsIds((prev) => [...prev, newImage.id]);
+        setTool(null);
+      };
+      return;
+    }
+
   };
 
   const handleMouseMove = (e) => {
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
     if (!point) return;
-  
+
     // Línea simple: seguir el mouse
     if (tool === 'simpleLine' && lineStart) {
       setTempLine({
@@ -270,7 +297,7 @@ const DrawDiagram = () => {
       });
       return;
     }
-  
+
     // Polilínea: seguir el mouse desde el último punto
     if (tool === 'polyline' && isDrawingPolyline && polylinePoints.length > 0) {
       const updatedPoints = [...polylinePoints, point.x, point.y];
@@ -282,540 +309,566 @@ const DrawDiagram = () => {
       return;
     }
   };
-  
 
-// Función para finalizar la polilínea
-const finishPolyline = () => {
-  if (polylinePoints.length >= 4) { // Al menos necesitamos 2 puntos (4 valores x,y)
-    const id = Date.now();
+  const finishPolyline = () => {
+    if (polylinePoints.length >= 4) { // Al menos necesitamos 2 puntos (4 valores x,y)
+      const id = Date.now();
 
-    // Calcular la posición relativa
-    let minX = Number.MAX_VALUE;
-    let minY = Number.MAX_VALUE;
+      // Calcular la posición relativa
+      let minX = Number.MAX_VALUE;
+      let minY = Number.MAX_VALUE;
 
-    for (let i = 0; i < polylinePoints.length; i += 2) {
-      minX = Math.min(minX, polylinePoints[i]);
-      minY = Math.min(minY, polylinePoints[i + 1]);
-    }
-
-    // Crear puntos relativos a la posición (minX, minY)
-    const relativePoints = [];
-    for (let i = 0; i < polylinePoints.length; i += 2) {
-      relativePoints.push(polylinePoints[i] - minX);
-      relativePoints.push(polylinePoints[i + 1] - minY);
-    }
-
-    const newPolyline = {
-      id,
-      type: 'polyline',
-      x: minX,
-      y: minY,
-      points: relativePoints,
-      stroke: lineStyle.color,
-      strokeWidth: lineStyle.strokeWidth,
-      draggable: true,
-      dataInflux: null,
-    };
-
-    // Crear círculos para cada punto de la polilínea
-    const newCircles = [];
-    for (let i = 0; i < polylinePoints.length; i += 2) {
-      newCircles.push({
-        id: `${id}-point-${i / 2}`,
-        x: polylinePoints[i],
-        y: polylinePoints[i + 1],
-        lineId: id,
-        fill: i === 0 ? 'blue' : i === polylinePoints.length - 2 ? 'red' : 'green',
-        visible: false,
-      });
-    }
-
-    setElements((prev) => [...prev, newPolyline]);
-    setNewElementsIds((prev) => [...prev, newPolyline.id]);
-    setCircles((prev) => [...prev, ...newCircles]);
-
-    // Resetear estados
-    setIsDrawingPolyline(false);
-    setPolylinePoints([]);
-    setTempLine(null);
-    setShowLineStyleSelector(false);
-    setTool(null);
-  }
-};
-
-
-const handleMouseUp = () => {
-  isDrawing.current = false;
-};
-
-const addImageToCanvas = (src) => {
-  const img = new window.Image();
-  img.src = src;
-  img.onload = () => {
-    const originalWidth = img.width;
-    const originalHeight = img.height;
-    const maxSize = 100;
-    let width = originalWidth;
-    let height = originalHeight;
-
-    if (width > height) {
-      if (width > maxSize) {
-        height = (maxSize / width) * height;
-        width = maxSize;
+      for (let i = 0; i < polylinePoints.length; i += 2) {
+        minX = Math.min(minX, polylinePoints[i]);
+        minY = Math.min(minY, polylinePoints[i + 1]);
       }
-    } else {
-      if (height > maxSize) {
-        width = (maxSize / height) * width;
-        height = maxSize;
+
+      // Crear puntos relativos a la posición (minX, minY)
+      const relativePoints = [];
+      for (let i = 0; i < polylinePoints.length; i += 2) {
+        relativePoints.push(polylinePoints[i] - minX);
+        relativePoints.push(polylinePoints[i + 1] - minY);
       }
+
+      const newPolyline = {
+        id,
+        type: 'polyline',
+        x: minX,
+        y: minY,
+        points: relativePoints,
+        stroke: lineStyle.color,
+        strokeWidth: lineStyle.strokeWidth,
+        draggable: true,
+        dataInflux: null,
+      };
+
+      // Crear círculos para cada punto de la polilínea
+      const newCircles = [];
+      for (let i = 0; i < polylinePoints.length; i += 2) {
+        newCircles.push({
+          id: `${id}-point-${i / 2}`,
+          x: polylinePoints[i],
+          y: polylinePoints[i + 1],
+          lineId: id,
+          fill: i === 0 ? 'blue' : i === polylinePoints.length - 2 ? 'red' : 'green',
+          visible: false,
+        });
+      }
+
+      setElements((prev) => [...prev, newPolyline]);
+      setNewElementsIds((prev) => [...prev, newPolyline.id]);
+      setCircles((prev) => [...prev, ...newCircles]);
+
+      // Resetear estados
+      setIsDrawingPolyline(false);
+      setPolylinePoints([]);
+      setTempLine(null);
+      setShowLineStyleSelector(false);
+      setTool(null);
     }
-
-    const newImage = {
-      id: Date.now(),
-      type: 'image',
-      src,
-      x: 100,
-      y: 100,
-      width,
-      height,
-      draggable: true,
-      dataInflux: null,
-    };
-    setElements((prev) => [...prev, newImage]);
-    setNewElementsIds((prev) => [...prev, newImage.id]);
-    setShowImageSelector(false);
-  };
-};
-
-const handleTransformEnd = (e) => {
-  const node = e.target;
-  const id = node.id();
-
-  const scaleX = node.scaleX();
-  const scaleY = node.scaleY();
-
-  const updated = {
-    x: node.x(),
-    y: node.y(),
-    width: node.width() * scaleX,
-    height: node.height() * scaleY,
-    rotation: node.rotation(),
   };
 
-  node.scaleX(1);
-  node.scaleY(1);
 
-  setElements((prev) =>
-    prev.map((el) =>
-      String(el.id) === id && el.type === 'image'
-        ? { ...el, ...updated }
-        : el
-    )
-  );
-};
+  const handleMouseUp = () => {
+    isDrawing.current = false;
+  };
 
-const saveText = () => {
-  if (!textInput.trim() || !textPosition) {
-    setTextPosition(null);
-    return;
-  }
+  const addImageToCanvas = (src) => {
+    const img = new window.Image();
+    img.src = src;
+    img.onload = () => {
+      const originalWidth = img.width;
+      const originalHeight = img.height;
+      const maxSize = 100;
+      let width = originalWidth;
+      let height = originalHeight;
 
-  if (editingTextId !== null) {
+      if (width > height) {
+        if (width > maxSize) {
+          height = (maxSize / width) * height;
+          width = maxSize;
+        }
+      } else {
+        if (height > maxSize) {
+          width = (maxSize / height) * width;
+          height = maxSize;
+        }
+      }
+
+      const newImage = {
+        id: Date.now(),
+        type: 'image',
+        src,
+        x: 100,
+        y: 100,
+        width,
+        height,
+        draggable: true,
+        dataInflux: null,
+      };
+      setElements((prev) => [...prev, newImage]);
+      setNewElementsIds((prev) => [...prev, newImage.id]);
+      setShowImageSelector(false);
+    };
+  };
+
+  const handleTransformEnd = (e) => {
+    const node = e.target;
+    const id = node.id();
+
+    const scaleX = node.scaleX();
+    const scaleY = node.scaleY();
+
+    const updated = {
+      x: node.x(),
+      y: node.y(),
+      width: node.width() * scaleX,
+      height: node.height() * scaleY,
+      rotation: node.rotation(),
+    };
+
+    node.scaleX(1);
+    node.scaleY(1);
+
     setElements((prev) =>
       prev.map((el) =>
-        el.id === editingTextId
-          ? {
-            ...el,
-            text: textInput,
-            fontSize: textStyle.fontSize,
-            fill: textStyle.fill,
-            fontStyle: textStyle.fontStyle
-          }
+        String(el.id) === id && el.type === 'image'
+          ? { ...el, ...updated }
           : el
       )
     );
-    console.log("Text updated");
-  } else {
-    const id = Date.now();
-    const newText = {
-      id,
-      type: 'text',
-      text: textInput,
-      x: textPosition.x,
-      y: textPosition.y,
-      fontSize: textStyle.fontSize,
-      fill: textStyle.fill,
-      fontStyle: textStyle.fontStyle,
-      draggable: true,
-      dataInflux: null,
+  };
+
+  const saveText = () => {
+    if (!textInput.trim() || !textPosition) {
+      setTextPosition(null);
+      return;
+    }
+
+    if (editingTextId !== null) {
+      setElements((prev) =>
+        prev.map((el) =>
+          el.id === editingTextId
+            ? {
+              ...el,
+              text: textInput,
+              fontSize: textStyle.fontSize,
+              fill: textStyle.fill,
+              fontStyle: textStyle.fontStyle
+            }
+            : el
+        )
+      );
+      console.log("Text updated");
+    } else {
+      const id = Date.now();
+      const newText = {
+        id,
+        type: 'text',
+        text: textInput,
+        x: textPosition.x,
+        y: textPosition.y,
+        fontSize: textStyle.fontSize,
+        fill: textStyle.fill,
+        fontStyle: textStyle.fontStyle,
+        draggable: true,
+        dataInflux: null,
+      };
+
+      setElements(prev => [...prev, newText]);
+      setNewElementsIds((prev) => [...prev, newText.id]);
+      console.log("New text created:", newText);
+    }
+    setTextPosition(null);
+    setTextInput('');
+    setEditingTextId(null);
+  };
+
+  const handleAssignVariable = (dataInflux) => {
+    if (tool === 'floatingVariable') {
+      const img = new window.Image();
+      img.src = '/assets/img/Diagram/newDiagram/img_sinfondo.PNG';
+      img.onload = () => {
+        const width = 100;
+        const height = (img.height / img.width) * width;
+  
+        const newImage = {
+          id: Date.now(),
+          type: 'image',
+          src: img.src,
+          x: 150,
+          y: 150,
+          width,
+          height,
+          draggable: true,
+          dataInflux: dataInflux, // ASIGNAR VARIABLE
+        };
+  
+        setElements((prev) => [...prev, newImage]);
+        setNewElementsIds((prev) => [...prev, newImage.id]);
+        setTool(null); // salir del modo variable suelta
+        setShowListField(false);
+      };
+      return;
+    }
+  
+    // comportamiento normal para línea, texto, imagen, etc.
+    if (!selectedId) return;
+  
+    setElements((prev) =>
+      prev.map((el) =>
+        el.id === selectedId ? { ...el, dataInflux } : el
+      )
+    );
+  };
+
+  const handleClearCanvas = () => {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'Esto eliminará todo el diagrama actual.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, borrar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setElements([]);
+        setCircles([]);
+        setSelectedId(null);
+        setLineStart(null);
+        setTempLine(null);
+        setTextInput('');
+        setTextPosition(null);
+        setEditingTextId(null);
+        setTool(null);
+        setShowImageSelector(false);
+        setShowLineStyleSelector(false);
+        setShowTextStyler(false);
+        Swal.fire('¡Eliminado!', 'El diagrama fue borrado.', 'success');
+      }
+    });
+  };
+
+  const handleSaveDiagram = async () => {
+    const { value: nombre } = await Swal.fire({
+      title: 'Guardar diagrama',
+      input: 'text',
+      inputLabel: 'Nombre del diagrama',
+      inputValue: diagramMetadata.title || '',
+      showCancelButton: true,
+      confirmButtonText: 'Guardar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      inputValidator: (value) => {
+        if (!value.trim()) {
+          return '¡Debes ingresar un nombre!';
+        }
+        return null;
+      }
+    });
+
+    if (!nombre) return;
+
+    const isNewDiagram = !diagramMetadata.id;
+
+    const elementsToSave = elements.map(el => {
+      const element = { ...el };
+      if (!diagramMetadata.id || newElementsIds.includes(el.id)) {
+        delete element.id;
+      }
+      return element;
+    });
+
+    const diagramToSave = {
+      elements: elementsToSave,
+      circles,
+      diagramMetadata: {
+        ...diagramMetadata,
+        title: nombre,
+      },
+      deleted: deletedItems,
     };
 
-    setElements(prev => [...prev, newText]);
-    setNewElementsIds((prev) => [...prev, newText.id]);
-    console.log("New text created:", newText);
-  }
-  setTextPosition(null);
-  setTextInput('');
-  setEditingTextId(null);
-};
+    if (isNewDiagram) {
+      delete diagramToSave.diagramMetadata.id;
+    }
 
-const handleAssignVariable = (dataInflux) => {
-  if (!selectedId) return;
+    await saveDiagramKonva(diagramToSave);
 
-  setElements((prev) =>
-    prev.map((el) =>
-      el.id === selectedId ? { ...el, dataInflux } : el
-    )
-  );
-};
+    setNewElementsIds([]);
+    setDeletedItems({
+      lines: [],
+      texts: [],
+      images: [],
+    });
+  };
 
-const handleClearCanvas = () => {
-  Swal.fire({
-    title: '¿Estás seguro?',
-    text: 'Esto eliminará todo el diagrama actual.',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Sí, borrar',
-    cancelButtonText: 'Cancelar',
-    confirmButtonColor: '#d33',
-    cancelButtonColor: '#3085d6',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      setElements([]);
-      setCircles([]);
-      setSelectedId(null);
+  const handleUndo = () => {
+    if (elements.length === 0) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Nada para deshacer',
+        text: 'No hay elementos en el diagrama.',
+        confirmButtonColor: '#3085d6',
+      });
+      return;
+    }
+
+    setElements((prev) => prev.slice(0, -1));
+  };
+
+  const handleDeleteElement = (id) => {
+    const elementToDelete = elements.find(el => el.id === id);
+    if (!elementToDelete) return;
+
+    setElements((prev) => prev.filter((el) => el.id !== id));
+
+    // Eliminar los círculos asociados con el elemento
+    setCircles((prev) => prev.filter((c) => c.lineId !== id));
+
+    if (Number.isInteger(id)) {
+      setDeletedItems((prev) => {
+        const typeKey = `${elementToDelete.type}s`;
+        return {
+          ...prev,
+          [typeKey]: [...(prev[typeKey] || []), id]
+        };
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (transformerRef.current && selectedId) {
+      const stage = stageRef.current;
+      const selectedNode = stage.findOne(`#${selectedId}`);
+      if (selectedNode) {
+        transformerRef.current.nodes([selectedNode]);
+        transformerRef.current.getLayer().batchDraw();
+      }
+    }
+  }, [selectedId]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setShowLineStyleSelector(false);
+        setLineStart(null);
+        if (textPosition) {
+          setTextPosition(null);
+          setTextInput('');
+          setEditingTextId(null);
+        }
+        if (isDrawingPolyline) {
+          setIsDrawingPolyline(false);
+          setPolylinePoints([]);
+          setTempLine(null);
+        }
+      }
+      if (e.key === 'Enter' && isDrawingPolyline) {
+        finishPolyline();
+      }
+      if (e.key === 'Delete' && selectedId) {
+        handleDeleteElement(selectedId);
+        setSelectedId(null);
+        setShowLineStyleSelector(false);
+        setShowTextStyler(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedId, lineStart, textPosition, isDrawingPolyline, polylinePoints]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+
+    setElements((prev) =>
+      prev.map((el) => {
+        if (el.id === selectedId && el.type === 'line') {
+          return {
+            ...el,
+            stroke: lineStyle.color,
+            strokeWidth: lineStyle.strokeWidth,
+          };
+        }
+        return el;
+      })
+    );
+  }, [lineStyle]);
+
+  useEffect(() => {
+    const handleContextMenu = (e) => {
+      e.preventDefault();
       setLineStart(null);
       setTempLine(null);
-      setTextInput('');
-      setTextPosition(null);
-      setEditingTextId(null);
-      setTool(null);
-      setShowImageSelector(false);
       setShowLineStyleSelector(false);
-      setShowTextStyler(false);
-      Swal.fire('¡Eliminado!', 'El diagrama fue borrado.', 'success');
-    }
-  });
-};
-
-const handleSaveDiagram = async () => {
-  const { value: nombre } = await Swal.fire({
-    title: 'Guardar diagrama',
-    input: 'text',
-    inputLabel: 'Nombre del diagrama',
-    inputValue: diagramMetadata.title || '',
-    showCancelButton: true,
-    confirmButtonText: 'Guardar',
-    cancelButtonText: 'Cancelar',
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    inputValidator: (value) => {
-      if (!value.trim()) {
-        return '¡Debes ingresar un nombre!';
-      }
-      return null;
-    }
-  });
-
-  if (!nombre) return;
-
-  const isNewDiagram = !diagramMetadata.id;
-
-  const elementsToSave = elements.map(el => {
-    const element = { ...el };
-    if (!diagramMetadata.id || newElementsIds.includes(el.id)) {
-      delete element.id;
-    }
-    return element;
-  });
-
-  const diagramToSave = {
-    elements: elementsToSave,
-    circles,
-    diagramMetadata: {
-      ...diagramMetadata,
-      title: nombre,
-    },
-    deleted: deletedItems,
-  };
-
-  if (isNewDiagram) {
-    delete diagramToSave.diagramMetadata.id;
-  }
-
-  await saveDiagramKonva(diagramToSave);
-
-  setNewElementsIds([]);
-  setDeletedItems({
-    lines: [],
-    texts: [],
-    images: [],
-  });
-};
-
-const handleUndo = () => {
-  if (elements.length === 0) {
-    Swal.fire({
-      icon: 'info',
-      title: 'Nada para deshacer',
-      text: 'No hay elementos en el diagrama.',
-      confirmButtonColor: '#3085d6',
-    });
-    return;
-  }
-
-  setElements((prev) => prev.slice(0, -1));
-};
-
-const handleDeleteElement = (id) => {
-  const elementToDelete = elements.find(el => el.id === id);
-  if (!elementToDelete) return;
-
-  setElements((prev) => prev.filter((el) => el.id !== id));
-
-  // Eliminar los círculos asociados con el elemento
-  setCircles((prev) => prev.filter((c) => c.lineId !== id));
-
-  if (Number.isInteger(id)) {
-    setDeletedItems((prev) => {
-      const typeKey = `${elementToDelete.type}s`;
-      return {
-        ...prev,
-        [typeKey]: [...(prev[typeKey] || []), id]
-      };
-    });
-  }
-};
-
-useEffect(() => {
-  if (transformerRef.current && selectedId) {
-    const stage = stageRef.current;
-    const selectedNode = stage.findOne(`#${selectedId}`);
-    if (selectedNode) {
-      transformerRef.current.nodes([selectedNode]);
-      transformerRef.current.getLayer().batchDraw();
-    }
-  }
-}, [selectedId]);
-
-useEffect(() => {
-  const handleKeyDown = (e) => {
-    if (e.key === 'Escape') {
-      setShowLineStyleSelector(false);
-      setLineStart(null);
-      if (textPosition) {
-        setTextPosition(null);
-        setTextInput('');
-        setEditingTextId(null);
-      }
+      // Añadir esto para polilíneas
       if (isDrawingPolyline) {
-        setIsDrawingPolyline(false);
-        setPolylinePoints([]);
-        setTempLine(null);
+        // Si hay al menos 4 puntos (2 vértices), finaliza la polilínea
+        if (polylinePoints.length >= 4) {
+          finishPolyline();
+        } else {
+          // Si no hay suficientes puntos, cancela la polilínea
+          setIsDrawingPolyline(false);
+          setPolylinePoints([]);
+          setTempLine(null);
+        }
       }
-    }
-    if (e.key === 'Enter' && isDrawingPolyline) {
-      finishPolyline();
-    }
-    if (e.key === 'Delete' && selectedId) {
-      handleDeleteElement(selectedId);
-      setSelectedId(null);
-      setShowLineStyleSelector(false);
-      setShowTextStyler(false);
-    }
-  };
-  window.addEventListener('keydown', handleKeyDown);
-  return () => window.removeEventListener('keydown', handleKeyDown);
-}, [selectedId, lineStart, textPosition, isDrawingPolyline, polylinePoints]);
+    };
+    window.addEventListener('contextmenu', handleContextMenu);
+    return () => window.removeEventListener('contextmenu', handleContextMenu);
+  }, [isDrawingPolyline, polylinePoints]);
 
-useEffect(() => {
-  if (!selectedId) return;
+  useEffect(() => {
+    let frameId;
 
-  setElements((prev) =>
-    prev.map((el) => {
-      if (el.id === selectedId && el.type === 'line') {
-        return {
-          ...el,
-          stroke: lineStyle.color,
-          strokeWidth: lineStyle.strokeWidth,
-        };
-      }
-      return el;
-    })
-  );
-}, [lineStyle]);
+    const animate = () => {
+      setDashOffset((prev) => (reverseDirection ? prev - 1 : prev + 1));
+      frameId = requestAnimationFrame(animate);
+    };
 
-useEffect(() => {
-  const handleContextMenu = (e) => {
-    e.preventDefault();
-    setLineStart(null);
-    setTempLine(null);
-    setShowLineStyleSelector(false);
-    // Añadir esto para polilíneas
-    if (isDrawingPolyline) {
-      // Si hay al menos 4 puntos (2 vértices), finaliza la polilínea
-      if (polylinePoints.length >= 4) {
-        finishPolyline();
-      } else {
-        // Si no hay suficientes puntos, cancela la polilínea
-        setIsDrawingPolyline(false);
-        setPolylinePoints([]);
-        setTempLine(null);
-      }
-    }
-  };
-  window.addEventListener('contextmenu', handleContextMenu);
-  return () => window.removeEventListener('contextmenu', handleContextMenu);
-}, [isDrawingPolyline, polylinePoints]);
-
-useEffect(() => {
-  let frameId;
-
-  const animate = () => {
-    setDashOffset((prev) => (reverseDirection ? prev - 1 : prev + 1));
     frameId = requestAnimationFrame(animate);
-  };
+    return () => cancelAnimationFrame(frameId);
+  }, [reverseDirection]);
 
-  frameId = requestAnimationFrame(animate);
-  return () => cancelAnimationFrame(frameId);
-}, [reverseDirection]);
+  useEffect(() => {
+    if (id) {
+      uploadCanvaDb(id, {
+        setElements,
+        setCircles,
+        setDiagramMetadata,
+        setTool,
+      });
+    }
+  }, [id]);
 
-useEffect(() => {
-  if (id) {
-    uploadCanvaDb(id, {
-      setElements,
-      setCircles,
-      setDiagramMetadata,
-      setTool,
-    });
-  }
-}, [id]);
-
-return (
-  <>
-    <div className="w-full">
-      {/* Barra arriba */}
-      <TopNavbar
-        onClear={handleClearCanvas}
-        onSave={handleSaveDiagram}
-        onUndo={handleUndo}
-        elements={elements}
-      />
-      {/* Contenedor horizontal de sidebar + canvas */}
-      <div className="flex w-full min-h-screen">
-        <Sidebar
-          tool={tool}
-          setTool={setTool}
-          selectedId={selectedId}
-          setShowImageSelector={setShowImageSelector}
-          setShowLineStyleSelector={setShowLineStyleSelector}
-          setShowTextStyler={setShowTextStyler}
-          setShowListField={setShowListField}
-          setElements={setElements}
-          setCircles={setCircles}
-          setSelectedId={setSelectedId}
-          setTextPosition={setTextPosition}
-          setTextInput={setTextInput}
-          handleDeleteElement={handleDeleteElement}
+  return (
+    <>
+      <div className="w-full">
+        {/* Barra arriba */}
+        <TopNavbar
+          onClear={handleClearCanvas}
+          onSave={handleSaveDiagram}
+          onUndo={handleUndo}
+          elements={elements}
         />
-        {/* Contenido principal (canvas + overlays) */}
-        <div className="flex-1 bg-gray-300 rounded-br-lg relative">
-          {/* Selector de imágenes */}
-          {showImageSelector && (
-            <ImageSelector
-              visible={showImageSelector}
-              images={imageList}
-              onSelectImage={addImageToCanvas}
-            />
-          )}
-          {/* Panel de estilo de línea */}
-          {showLineStyleSelector && (
-            <LineStylePanel
-              tool={tool}
-              setTool={setTool}
-              selectedId={selectedId}
-              visible={showLineStyleSelector}
-              lineStyle={lineStyle}
-              onChange={setLineStyle}
-              setElements={setElements}
-              elements={elements}
-            />
-          )}
-          {/* Panel de estilo de texto */}
-          <TextStyler
-            visible={showTextStyler}
-            textStyle={textStyle}
-            onStyleChange={setTextStyle}
-            onApply={() => {
-              if (editingTextId) {
-                setElements((prev) =>
-                  prev.map((el) =>
-                    el.id === editingTextId
-                      ? {
-                        ...el,
-                        fontSize: textStyle.fontSize,
-                        fill: textStyle.fill,
-                        fontStyle: textStyle.fontStyle
-                      }
-                      : el
-                  )
-                );
-                setShowTextStyler(false);
-                setTextPosition(null);
-              }
-            }}
-            isEditing={!!editingTextId}
-          />
-          {/* Selector de variables */}
-          {showListField && (
-            <div className="absolute left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 max-w-md">
-              <ListField
-                onSelectVariable={handleAssignVariable}
-                onClose={() => setShowListField(false)}
-              />
-            </div>
-          )}
-          {/* Canvas */}
-          <DiagramCanvas
-            elements={elements}
-            circles={circles}
-            tempLine={tempLine}
-            dashOffset={dashOffset}
+        {/* Contenedor horizontal de sidebar + canvas */}
+        <div className="flex w-full min-h-screen">
+          <Sidebar
+            tool={tool}
+            setTool={setTool}
             selectedId={selectedId}
-            stageRef={stageRef}
-            transformerRef={transformerRef}
-            handleMouseDown={handleMouseDown}
-            handleMouseMove={handleMouseMove}
-            handleMouseUp={handleMouseUp}
-            handleSelect={handleSelect}
+            setShowImageSelector={setShowImageSelector}
+            setShowLineStyleSelector={setShowLineStyleSelector}
+            setShowTextStyler={setShowTextStyler}
+            setShowListField={setShowListField}
             setElements={setElements}
             setCircles={setCircles}
             setSelectedId={setSelectedId}
-            setTextInput={setTextInput}
             setTextPosition={setTextPosition}
-            setEditingTextId={setEditingTextId}
-            setTextStyle={setTextStyle}
-            tool={tool}
-            handleTransformEnd={handleTransformEnd}
+            setTextInput={setTextInput}
+            handleDeleteElement={handleDeleteElement}
           />
-          {/* Editor de texto */}
-          <TextEditor
-            textPosition={textPosition}
-            textStyle={textStyle}
-            textInput={textInput}
-            onChange={setTextInput}
-            onSave={saveText}
-            onCancel={() => {
-              setTextPosition(null);
-              setTextInput('');
-              setEditingTextId(null);
-            }}
-          />
+          {/* Contenido principal (canvas + overlays) */}
+          <div className="flex-1 bg-gray-300 rounded-br-lg relative">
+            {/* Selector de imágenes */}
+            {showImageSelector && (
+              <ImageSelector
+                visible={showImageSelector}
+                images={imageList}
+                onSelectImage={addImageToCanvas}
+              />
+            )}
+            {/* Panel de estilo de línea */}
+            {showLineStyleSelector && (
+              <LineStylePanel
+                tool={tool}
+                setTool={setTool}
+                selectedId={selectedId}
+                visible={showLineStyleSelector}
+                lineStyle={lineStyle}
+                onChange={setLineStyle}
+                setElements={setElements}
+                elements={elements}
+              />
+            )}
+            {/* Panel de estilo de texto */}
+            <TextStyler
+              visible={showTextStyler}
+              textStyle={textStyle}
+              onStyleChange={setTextStyle}
+              onApply={() => {
+                if (editingTextId) {
+                  setElements((prev) =>
+                    prev.map((el) =>
+                      el.id === editingTextId
+                        ? {
+                          ...el,
+                          fontSize: textStyle.fontSize,
+                          fill: textStyle.fill,
+                          fontStyle: textStyle.fontStyle
+                        }
+                        : el
+                    )
+                  );
+                  setShowTextStyler(false);
+                  setTextPosition(null);
+                }
+              }}
+              isEditing={!!editingTextId}
+            />
+            {/* Selector de variables */}
+            {showListField && (
+              <div className="absolute left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 max-w-md">
+                <ListField
+                  onSelectVariable={handleAssignVariable}
+                  onClose={() => setShowListField(false)}
+                />
+              </div>
+            )}
+            {/* Canvas */}
+            <DiagramCanvas
+              elements={elements}
+              circles={circles}
+              tempLine={tempLine}
+              dashOffset={dashOffset}
+              selectedId={selectedId}
+              stageRef={stageRef}
+              transformerRef={transformerRef}
+              handleMouseDown={handleMouseDown}
+              handleMouseMove={handleMouseMove}
+              handleMouseUp={handleMouseUp}
+              handleSelect={handleSelect}
+              setElements={setElements}
+              setCircles={setCircles}
+              setSelectedId={setSelectedId}
+              setTextInput={setTextInput}
+              setTextPosition={setTextPosition}
+              setEditingTextId={setEditingTextId}
+              setTextStyle={setTextStyle}
+              tool={tool}
+              handleTransformEnd={handleTransformEnd}
+            />
+            {/* Editor de texto */}
+            <TextEditor
+              textPosition={textPosition}
+              textStyle={textStyle}
+              textInput={textInput}
+              onChange={setTextInput}
+              onSave={saveText}
+              onCancel={() => {
+                setTextPosition(null);
+                setTextInput('');
+                setEditingTextId(null);
+              }}
+            />
+          </div>
         </div>
       </div>
-    </div>
-  </>
-);
+    </>
+  );
 };
 
 export default DrawDiagram;

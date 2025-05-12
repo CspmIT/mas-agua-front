@@ -79,7 +79,7 @@ const Sidebar = ({
       >
         T
       </button>
-      
+
       <button
         onClick={() => {
           if (tool === 'polyline') {
@@ -97,7 +97,27 @@ const Sidebar = ({
       >
         <MdPolyline className="text-2xl" />
       </button>
-
+      
+      {!selectedId ? (
+        <button
+              onClick={() => {
+                if (tool === 'floatingVariable') {
+                  setTool(null);
+                  setShowListField(false);
+                } else {
+                  setTool('floatingVariable');
+                  setShowListField(true);
+                  setShowImageSelector(false);
+                  setShowLineStyleSelector(false);
+                  setShowTextStyler(false);
+                }
+              }}
+              className={`w-full mb-2 p-3 h-14 rounded-lg flex items-center justify-center ${tool === 'floatingVariable' ? 'bg-slate-800' : 'bg-slate-600'
+                } text-white text-2xl font-bold`}
+            >
+              <HiOutlineVariable className="text-2xl" />
+            </button>
+      ): null}
       {selectedId && (
         <div>
           <hr className="my-4 border-gray-200" />
@@ -114,9 +134,8 @@ const Sidebar = ({
                 setShowTextStyler(false);
               }
             }}
-            className={`w-full mb-2 p-3 h-14 rounded-lg flex items-center justify-center ${
-              tool === 'fields' ? 'bg-slate-800' : 'bg-slate-600'
-            } text-white text-2xl font-bold`}
+            className={`w-full mb-2 p-3 h-14 rounded-lg flex items-center justify-center ${tool === 'fields' ? 'bg-slate-800' : 'bg-slate-600'
+              } text-white text-2xl font-bold`}
           >
             <HiOutlineVariable className="text-2xl" />
           </button>

@@ -252,12 +252,22 @@ export const ListImg = () => [
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
         },
+
     },
     {
         id: 19,
         name: 'Indicador Luminoso',
         src: `${urlBase}/Sonda_conductimetro.png`,
         srcView: `${urlBaseView}/Sonda_conductimetro.png`,
+        variables: {
+            variable1: { id_variable: 0, show: false, require: false },
+        },
+    },
+    {
+        id: 20,
+        name: 'Img sin fondo',
+        src: `${urlBase}/img_sinfondo.PNG`,
+        srcView: `${urlBaseView}/img_sinfondo.PNG`,
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
         },
