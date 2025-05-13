@@ -34,6 +34,7 @@ const chartTypes = [
         title: 'Grafico de torta',
         image: '/assets/img/charts/graficoTorta.png?height=300&width=300',
         description: 'Grafico de torta con bordes redondeados.',
+        pie: true
     },
     {
         id: 4,
@@ -74,6 +75,7 @@ const chartTypes = [
 function SelectType() {
     const navigate = useNavigate()
     const selectedChart = (chart) => {
+        console.log(chart)
         if (chart?.bomb) {
             navigate('/config/pumps')
             return
@@ -81,6 +83,10 @@ function SelectType() {
         if(chart?.boolean){
             navigate('/config/graphic/boolean')
             return 
+        }
+        if(chart?.pie){
+            navigate('/config/graphic/pie')
+            return
         }
         navigate(`/config/graphic/${chart.id}`)
     }
