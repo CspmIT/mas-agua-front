@@ -24,6 +24,7 @@ const Sidebar = ({
   return (
     <div className="w-20 p-3 bg-slate-400 rounded-bl-lg">
       <button
+        title="Agregar imagen"
         onClick={() => {
           if (tool === 'imageSelector') {
             setTool(null);
@@ -42,6 +43,7 @@ const Sidebar = ({
       </button>
 
       <button
+        title="Agregar línea"
         onClick={() => {
           if (tool === 'simpleLine') {
             setTool(null);
@@ -60,6 +62,7 @@ const Sidebar = ({
       </button>
 
       <button
+        title="Agregar texto"
         onClick={() => {
           if (tool === 'text') {
             setTool(null);
@@ -81,6 +84,7 @@ const Sidebar = ({
       </button>
 
       <button
+        title="Agregar polilínea"
         onClick={() => {
           if (tool === 'polyline') {
             setTool(null);
@@ -100,6 +104,7 @@ const Sidebar = ({
       
       {!selectedId ? (
         <button
+              title="Asignar variable"
               onClick={() => {
                 if (tool === 'floatingVariable') {
                   setTool(null);
@@ -122,6 +127,7 @@ const Sidebar = ({
         <div>
           <hr className="my-4 border-gray-200" />
           <button
+            title="Asignar variable"
             onClick={() => {
               if (tool === 'fields') {
                 setTool(null);
@@ -141,6 +147,7 @@ const Sidebar = ({
           </button>
 
           <button
+            title="Borrar elemento"
             onClick={() => {
               setElements((prev) => prev.filter((el) => String(el.id) !== String(selectedId)));
               setCircles((prev) => prev.filter((c) => String(c.lineId) !== String(selectedId)));

@@ -66,12 +66,14 @@ const TopNavbar = ({
                         <>
                             <button
                             onClick={onSendToBack}
+                            title="Mover al fondo"
                             className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-800 rounded text-sm text-white"
                             >
                             <MdOutlineMoveDown className="text-lg" />
                             </button>
                             <button
                             onClick={onBringToFront}
+                            title="Mover al frente"
                             className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-800 rounded text-sm text-white"
                             >
                             <MdOutlineMoveUp className="text-lg" />
@@ -82,6 +84,7 @@ const TopNavbar = ({
 
                 <div className="flex items-center gap-4">
                     <button
+                        title="Volver al listado"
                         onClick={listDiagram}
                         className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-800 rounded text-sm text-white"
                     >
