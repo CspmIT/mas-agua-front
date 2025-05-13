@@ -5,42 +5,29 @@ const DoughnutChart = ({ data }) => {
     const options = {
         tooltip: {
             trigger: 'item',
+            formatter: '{b}: {c} ({d}%)',
         },
         legend: {
-            top: '5%',
-            left: 'center',
+            orient: 'horizontal',
+            left: 'center'
         },
         series: [
             {
-                name: 'Access From',
+                name: 'Categorías',
                 type: 'pie',
-                radius: ['40%', '70%'],
-                avoidLabelOverlap: false,
-                itemStyle: {
-                    borderRadius: 10,
-                    borderColor: '#fff',
-                    borderWidth: 2,
-                },
-                label: {
-                    show: false,
-                    position: 'center',
-                },
+                radius: ['0%', '70%'],
+                data: data ? data : [],
                 emphasis: {
-                    label: {
-                        show: true,
-                        fontSize: 40,
-                        fontWeight: 'bold',
+                    itemStyle: {
+                        shadowBlur: 10,
+                        shadowOffsetX: 0,
+                        shadowColor: 'rgba(0, 0, 0, 0.5)',
                     },
                 },
-                labelLine: {
-                    show: false,
-                },
-                data: [
-                    { value: 1, name: 'Search Engine' },
-                ],
             },
         ],
     }
+
     return <EChart config={options} />
 }
 
