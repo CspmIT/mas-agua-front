@@ -25,9 +25,10 @@ jobs:
               uses: anothrNick/github-tag-action@v1
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-                  WITH_V: true
+                  WITH_V: false 
                   PRERELEASE: true
                   PRERELEASE_SUFFIX: dev
+                  SKIP_TAG: true
 
     cd:
         needs: bump
