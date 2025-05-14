@@ -39,7 +39,10 @@ function ViewDiagram() {
 		if (value != null) {
 			if (value === 1) {
 				text = 'Activa';
-			} else if (!isNaN(value)) {
+			} else if (value === 0) {
+				text = 'Inactiva';
+			}
+			else if (!isNaN(value)) {
 				text = `${Number(value).toFixed(2)} ${unit}`;
 			} else {
 				text = `${value} ${unit}`;

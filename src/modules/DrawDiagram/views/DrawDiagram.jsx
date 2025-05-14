@@ -63,6 +63,9 @@ const DrawDiagram = () => {
 
 
   const handleSelect = (e, id) => {
+
+    if ((tool === 'polyline' && isDrawingPolyline) || (tool === 'simpleLine' && lineStart)) return;
+    
     setSelectedId(id);
 
     // Si estás editando un texto y tocás otro, terminá la edición
@@ -127,14 +130,24 @@ const DrawDiagram = () => {
   const handleMouseDown = (e) => {
     const stage = stageRef.current;
     const pos = stage.getPointerPosition();
-
-    if (!pos) {
-      return;
-    }
-
+  
+    if (!pos) return;
+  
     const clickedOnEmpty = e.target === e.target.getStage();
-
-    // Manejo de texto
+  
+    // Evita seleccionar elementos mientras se dibuja una polilínea
+    if (tool !== 'polyline' || !isDrawingPolyline) {
+      if (clickedOnEmpty) {
+        setSelectedId(null);
+      } else {
+        const clickedId = e.target.getAttr('id');
+        if (clickedId) {
+          setSelectedId(clickedId);
+        }
+      }
+    }
+  
+    // Texto
     if (tool === 'text' && clickedOnEmpty) {
       if (editingTextId) return;
       setTextPosition(pos);
@@ -142,16 +155,17 @@ const DrawDiagram = () => {
       setEditingTextId(null);
       return;
     }
-
-    // Manejo de líneas simples
+  
+    // Línea simple
     if (tool === 'simpleLine') {
-      if (selectedId) {
-        return;
-      }
+      if (selectedId) return;
+  
       if (!lineStart) {
-        if (!clickedOnEmpty) {
-          return;
-        }
+        setSelectedId(null);
+        setShowLineStyleSelector(false);
+
+        setShowLineStyleSelector(false);
+  
         setLineStart(pos);
         setTempLine({
           points: [pos.x, pos.y, pos.x, pos.y],
@@ -159,23 +173,20 @@ const DrawDiagram = () => {
           strokeWidth: lineStyle.strokeWidth,
         });
       } else {
-
         const isSamePoint = pos.x === lineStart.x && pos.y === lineStart.y;
-        if (isSamePoint) {
-          return;
-        }
-
+        if (isSamePoint) return;
+  
         const id = Date.now();
         const x = Math.min(lineStart.x, pos.x);
         const y = Math.min(lineStart.y, pos.y);
-
+  
         const relativePoints = [
           lineStart.x - x,
           lineStart.y - y,
           pos.x - x,
           pos.y - y,
         ];
-
+  
         const newLine = {
           id,
           type: 'line',
@@ -187,7 +198,7 @@ const DrawDiagram = () => {
           draggable: true,
           dataInflux: null,
         };
-
+  
         const newCircles = [
           {
             id: `${id}-start`,
@@ -206,7 +217,7 @@ const DrawDiagram = () => {
             visible: false,
           },
         ];
-
+  
         setElements((prev) => [...prev, newLine]);
         setNewElementsIds((prev) => [...prev, newLine.id]);
         setCircles((prev) => [...prev, ...newCircles]);
@@ -218,51 +229,45 @@ const DrawDiagram = () => {
       }
       return;
     }
-    // Manejo de polilíneas
+  
+    // Polilínea
     if (tool === 'polyline') {
-      if (selectedId) return;
-
-      if (clickedOnEmpty) {
-        // Si es el primer clic para esta polilínea
-        if (!isDrawingPolyline) {
-          setIsDrawingPolyline(true);
-          setPolylinePoints([pos.x, pos.y]);
+      e.cancelBubble = true; // evitar propagación
+      if (!isDrawingPolyline) {
+        // Primer punto de la polilínea
+        setShowLineStyleSelector(false);
+        setSelectedId(null); // 🔐 aseguramos que no se dispare handleSelect
+        setIsDrawingPolyline(true);
+        setPolylinePoints([pos.x, pos.y]);
+        setTempLine({
+          points: [pos.x, pos.y, pos.x, pos.y],
+          stroke: lineStyle.color,
+          strokeWidth: lineStyle.strokeWidth,
+        });
+      } else {
+        // Agregar nuevo punto
+        setSelectedId(null);
+        setPolylinePoints((prev) => {
+          const updated = [...prev, pos.x, pos.y];
           setTempLine({
-            points: [pos.x, pos.y, pos.x, pos.y],
+            points: updated,
             stroke: lineStyle.color,
             strokeWidth: lineStyle.strokeWidth,
           });
-        } else {
-          // Si es un clic subsiguiente para la polilínea
-          const updatedPoints = [...polylinePoints, pos.x, pos.y];
-          setPolylinePoints(updatedPoints);
-          setTempLine({
-            points: updatedPoints,
-            stroke: lineStyle.color,
-            strokeWidth: lineStyle.strokeWidth,
-          });
-
-          // Detección de doble clic para finalizar la polilínea
-          const now = Date.now();
-          if (lastClickTime && now - lastClickTime < 300 &&
-            Math.abs(pos.x - polylinePoints[polylinePoints.length - 2]) < 10 &&
-            Math.abs(pos.y - polylinePoints[polylinePoints.length - 1]) < 10) {
-            // Finalizar la polilínea si se hizo doble clic cerca del último punto
-            finishPolyline();
-          }
-          setLastClickTime(now);
-        }
+          return updated;
+        });
       }
       return;
     }
-
+  
+    // Variable flotante (imagen sin fondo)
     if (tool === 'floatingVariable') {
       const img = new window.Image();
-      img.src = '/assets/img/Diagram/newDiagram/img_sinfondo.PNG'; 
+      img.src = '/assets/img/Diagram/newDiagram/img_sinfondo.PNG';
       img.onload = () => {
         const width = 100;
         const height = (img.height / img.width) * width;
-    
+  
         const newImage = {
           id: Date.now(),
           type: 'image',
@@ -274,15 +279,15 @@ const DrawDiagram = () => {
           draggable: true,
           dataInflux: null,
         };
-    
+  
         setElements((prev) => [...prev, newImage]);
         setNewElementsIds((prev) => [...prev, newImage.id]);
         setTool(null);
       };
       return;
     }
-
   };
+  
 
   const handleMouseMove = (e) => {
     const stage = e.target.getStage();
@@ -524,21 +529,27 @@ const DrawDiagram = () => {
 
   const moveElementToBack = () => {
     if (!selectedId) return;
+  
     setElements((prev) => {
-      const selected = prev.find(el => el.id === selectedId);
-      const remaining = prev.filter(el => el.id !== selectedId);
+      const selected = prev.find(el => el?.id === selectedId);
+      if (!selected) return prev; 
+  
+      const remaining = prev.filter(el => el?.id !== selectedId);
       return [selected, ...remaining];
     });
   };
   
   const moveElementToFront = () => {
     if (!selectedId) return;
+  
     setElements((prev) => {
-      const selected = prev.find(el => el.id === selectedId);
-      const remaining = prev.filter(el => el.id !== selectedId);
+      const selected = prev.find(el => el?.id === selectedId);
+      if (!selected) return prev; 
+  
+      const remaining = prev.filter(el => el?.id !== selectedId);
       return [...remaining, selected];
     });
-  };
+  };  
 
   const handleClearCanvas = () => {
     Swal.fire({
@@ -693,6 +704,7 @@ const DrawDiagram = () => {
       }
       if (e.key === 'Delete' && selectedId) {
         handleDeleteElement(selectedId);
+        setTool('');
         setSelectedId(null);
         setShowLineStyleSelector(false);
         setShowTextStyler(false);

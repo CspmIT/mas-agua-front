@@ -61,7 +61,8 @@ const DiagramCanvas = ({
         }}
       >
         <Layer>
-          {elements.map((el) => {
+          {
+          elements.map((el) => {
             if (el.type === 'line') {
               return (
                 <Fragment key={el.id}>
