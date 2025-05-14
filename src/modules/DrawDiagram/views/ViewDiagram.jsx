@@ -68,7 +68,7 @@ function ViewDiagram() {
 						align="center"
 						fontSize={fontSize}
 						fontFamily="Arial"
-						fill="white"
+						fill="yellow"
 					/>
 				</Group>
 			);

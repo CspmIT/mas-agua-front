@@ -56,6 +56,9 @@ const DiagramCanvas = ({
         }}
         onMousemove={handleMouseMove}
         onMouseup={handleMouseUp}
+        style={{
+          cursor: ['simpleLine', 'polyline'].includes(tool) ? 'crosshair' : 'default',
+        }}
       >
         <Layer>
           {elements.map((el) => {

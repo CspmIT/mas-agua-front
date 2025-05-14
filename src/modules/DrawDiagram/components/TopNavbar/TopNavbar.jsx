@@ -14,7 +14,8 @@ const TopNavbar = ({
     elements = [],
     selectedId,
     onSendToBack,
-    onBringToFront }) => {
+    onBringToFront,
+    }) => {
     const navigate = useNavigate()
 
     const listDiagram = async () => {

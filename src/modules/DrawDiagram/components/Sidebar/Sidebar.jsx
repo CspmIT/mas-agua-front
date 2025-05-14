@@ -158,7 +158,7 @@ const Sidebar = ({
             }}
             className="w-full mb-5 bg-red-500 text-white p-3 rounded-lg flex items-center justify-center"
           >
-            <MdDelete className='text-3xl' />
+            <MdDelete className='text-2xl' />
           </button>
         </div>
       )}

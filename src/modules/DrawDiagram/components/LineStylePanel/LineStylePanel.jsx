@@ -53,7 +53,7 @@ const LineStylePanel = ({
     if (!visible) return null;
 
     return (
-        <div className="absolute top-5 left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 max-w-md">
+        <div className="absolute top-5 left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 w-48">
             <h4 className="text-sm font-bold mb-2">
                 {canEdit 
                     ? `Editar ${isLine ? 'línea' : 'polilínea'}` 
@@ -103,6 +103,7 @@ const LineStylePanel = ({
                     }
                 }}
                 className="w-full"
+                style={{ padding: 0 }}
             />
 
             {canEdit && (
@@ -120,8 +121,8 @@ const LineStylePanel = ({
                             invertAnimation: !lineStyle.invertAnimation 
                         });
                     }}
-                    className="mt-3 flex items-center gap-2 px-3 py-2 bg-slate-600 text-white rounded hover:bg-slate-700"
-                >
+                    className="mt-3 flex items-center gap-1 px-2 py-2 bg-slate-600 text-white rounded hover:bg-slate-700"
+                >               
                     <BiSync 
                         className={`transform transition-transform ${lineStyle.invertAnimation ? 'rotate-180' : ''}`} 
                     />
@@ -131,7 +132,9 @@ const LineStylePanel = ({
 
             {!canEdit && (
                 <button
-                    onClick={() => setTool(null)}
+                    onClick={() => 
+                        setTool(null)
+                    }
                     className="mt-3 px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
                 >
                     Cancelar

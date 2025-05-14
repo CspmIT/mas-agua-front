@@ -340,6 +340,7 @@ export const saveDiagramKonva = async ({
 			text: 'Se guardó correctamente',
 			icon: 'success',
 		});
+		navigate('/config/diagram');
 
 	} catch (error) {
 		console.error(error);

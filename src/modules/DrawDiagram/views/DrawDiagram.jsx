@@ -10,7 +10,7 @@ import Sidebar from '../components/Sidebar/Sidebar';
 import DiagramCanvas from '../components/DiagramCanvas/DiagramCanvas';
 import TopNavbar from '../components/TopNavbar/TopNavbar';
 import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const imageList = ListImg();
 
@@ -59,6 +59,7 @@ const DrawDiagram = () => {
   const [polylinePoints, setPolylinePoints] = useState([]);
   const [isDrawingPolyline, setIsDrawingPolyline] = useState(false);
   const [lastClickTime, setLastClickTime] = useState(null);
+  const navigate = useNavigate();
 
 
   const handleSelect = (e, id) => {
@@ -568,7 +569,7 @@ const DrawDiagram = () => {
     });
   };
 
-  const handleSaveDiagram = async () => {
+  const handleSaveDiagram = async (navigate) => {
     const { value: nombre } = await Swal.fire({
       title: 'Guardar diagrama',
       input: 'text',
@@ -613,7 +614,10 @@ const DrawDiagram = () => {
       delete diagramToSave.diagramMetadata.id;
     }
 
-    await saveDiagramKonva(diagramToSave);
+    await saveDiagramKonva({
+      ...diagramToSave,
+      navigate 
+    });
 
     setNewElementsIds([]);
     setDeletedItems({
@@ -767,7 +771,7 @@ const DrawDiagram = () => {
         {/* Barra arriba */}
         <TopNavbar
           onClear={handleClearCanvas}
-          onSave={handleSaveDiagram}
+          onSave={() => handleSaveDiagram(navigate)}
           onUndo={handleUndo}
           elements={elements}
           selectedId={selectedId}
