@@ -213,128 +213,122 @@ function ViewDiagram() {
 
 	return (
 		<>
-			{isLoading ? (
-				<Box
-					className="absolute inset-0 flex items-center justify-center"
-					style={{ zIndex: 1000 }}
-				>
-					<LoaderComponent />
-				</Box>
-			) : (
-				<CardCustom className="w-full h-auto flex flex-col items-center justify-center !bg-gray-300 text-black relative p-1 rounded-md">
-					<div className="flex-1 w-full rounded-br-lg relative text-end">
-
-						<div className="absolute left-3 top-3 flex flex-col gap-2 z-10">
-							<IconButton onClick={zoomIn} title="Acercar" className="!bg-blue-400">
-								<LuZoomIn />
-							</IconButton>
-							<IconButton onClick={zoomOut} title="Alejar" className="!bg-blue-400">
-								<LuZoomOut />
-							</IconButton>
-						</div>
-
-						<div className="absolute right-3 top-3 z-10">
-							<IconButton
-								title="Volver"
-								onClick={() => navigate('/config/diagram')}
-								className="!bg-blue-400"
-							>
-								<LuArrowLeft />
-							</IconButton>
-						</div>
-
-						{/* Canvas Konva */}
-						<Stage
-							width={dimensions.width}
-							height={dimensions.height}
-							scaleX={scale}
-							scaleY={scale}
-							x={position.x}
-							y={position.y}
-							ref={stageRef}
-							draggable
-							onDragEnd={(e) => {
-								setPosition({
-									x: e.target.x(),
-									y: e.target.y(),
-								});
-							}}
-						>
-							<Layer>
-								{elements.map((el) => {
-									if (el.type === 'text') {
-										return (
-											<Group key={el.id}>
-												<Text
-													x={el.x}
-													y={el.y}
-													text={el.text}
-													fontSize={el.fontSize}
-													fill={el.fill}
-													fontStyle={el.fontStyle}
-												/>
-											</Group>
-										);
-									}
-									if (el.type === 'line') {
-										return (
-											<Group key={el.id}>
-												<Line points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
-												<Line points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
-												<Line
-													points={el.points}
-													stroke={el.stroke}
-													strokeWidth={el.strokeWidth}
-													dash={[20, 10]}
-													dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
-												/>
-											</Group>
-										);
-									}
-									if (el.type === 'polyline') {
-										return (
-											<Group key={el.id}>
-												<Line points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
-												<Line points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
-												<Line
-													points={el.points}
-													stroke={el.stroke}
-													strokeWidth={el.strokeWidth}
-													dash={[20, 10]}
-													dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
-												/>
-											</Group>
-										);
-									}
-
-
-									if (el.type === 'image') {
-										return <RenderImage key={el.id} el={el} />;
-									}
-									return null;
-								})}
-
-								{/* Tooltips nativos */}
-								{elements.map((el) => {
-									if (!el.dataInflux?.name) return null;
-
-									let tooltipX = el.x + 10;
-									let tooltipY = el.y - 30;
-
-									return (
-										<React.Fragment key={`tooltip-${el.id}`}>
-											{renderTooltipLabel(el, tooltipX, tooltipY)}
-										</React.Fragment>
-									);
-								})}
-							</Layer>
-						</Stage>
-
-					</div>
-				</CardCustom>
-			)}
+		  {isLoading ? (
+			<Box
+			  className="absolute inset-0 flex items-center justify-center"
+			  style={{ zIndex: 1000 }}
+			>
+			  <LoaderComponent />
+			</Box>
+		  ) : (
+			<>
+			  {/* Título "DIAGRAMA" */}
+			  <div className="w-full">
+				<div className="absolute ms-2 px-3 z-30 bg-blue-600 text-white font-semibold rounded-t-md shadow-md">
+					{diagramMetadata.title}
+				</div>
+			  </div>
+	  
+			  {/* Card principal */}
+			  <CardCustom className="w-full h-auto flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md">
+				<div className="flex-1 w-full rounded-br-lg relative text-end">
+	  
+				  {/* Botones de zoom */}
+				  <div className="absolute left-2 flex flex-col gap-2 z-10">
+					<IconButton onClick={zoomIn} title="Acercar" className="!bg-blue-400">
+					  <LuZoomIn />
+					</IconButton>
+					<IconButton onClick={zoomOut} title="Alejar" className="!bg-blue-400">
+					  <LuZoomOut />
+					</IconButton>
+				  </div>
+	  
+				  {/* Botón de volver */}
+				  <div className="absolute right-2 z-10">
+					<IconButton
+					  title="Volver"
+					  onClick={() => navigate('/config/diagram')}
+					  className="!bg-blue-400"
+					>
+					  <LuArrowLeft />
+					</IconButton>
+				  </div>
+	  
+				  {/* Canvas de Konva */}
+				  <Stage
+					width={dimensions.width}
+					height={dimensions.height}
+					scaleX={scale}
+					scaleY={scale}
+					x={position.x}
+					y={position.y}
+					ref={stageRef}
+					draggable
+					onDragEnd={(e) => {
+					  setPosition({
+						x: e.target.x(),
+						y: e.target.y(),
+					  });
+					}}
+				  >
+					<Layer>
+					  {elements.map((el) => {
+						if (el.type === 'text') {
+						  return (
+							<Group key={el.id}>
+							  <Text
+								x={el.x}
+								y={el.y}
+								text={el.text}
+								fontSize={el.fontSize}
+								fill={el.fill}
+								fontStyle={el.fontStyle}
+							  />
+							</Group>
+						  );
+						}
+	  
+						if (el.type === 'line' || el.type === 'polyline') {
+						  return (
+							<Group key={el.id}>
+							  <Line points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
+							  <Line points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
+							  <Line
+								points={el.points}
+								stroke={el.stroke}
+								strokeWidth={el.strokeWidth}
+								dash={[20, 10]}
+								dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
+							  />
+							</Group>
+						  );
+						}
+	  
+						if (el.type === 'image') {
+						  return <RenderImage key={el.id} el={el} />;
+						}
+	  
+						return null;
+					  })}
+	  
+					  {/* Tooltips */}
+					  {elements.map((el) => {
+						if (!el.dataInflux?.name) return null;
+	  
+						return (
+						  <React.Fragment key={`tooltip-${el.id}`}>
+							{renderTooltipLabel(el)}
+						  </React.Fragment>
+						);
+					  })}
+					</Layer>
+				  </Stage>
+				</div>
+			  </CardCustom>
+			</>
+		  )}
 		</>
-	);
+	  );	  
 }
 
 export default ViewDiagram;
