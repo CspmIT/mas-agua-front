@@ -31,6 +31,7 @@ import ProfilePLC from './modules/ProfilePLC/views/ProfilePLC'
 import ConfigBooleanChart from './modules/Charts/views/ConfigBooleanChart'
 import NotFound from './modules/Errors/Not-Found'
 import ChartsDashboard from './modules/dashBoard/views/ChartsDashboard'
+import ConfigPie from './modules/Charts/views/ConfigPie'
 
 function App() {
 	const { darkMode } = useContext(MainContext)
@@ -60,6 +61,8 @@ function App() {
 		{ path: '/config/pumps', element: <PumpControl/> },
         { path: '/config/graphic/boolean', element: <ConfigBooleanChart/>},
         { path: '/config/graphic/boolean/:id', element: <ConfigBooleanChart/>},
+        { path: '/config/graphic/pie', element: <ConfigPie/>},
+        { path: '/config/graphic/pie/:id', element: <ConfigPie/>},
 		{ path: '/config/graphic/:id', element: <ConfigGraphic /> },
 		{ path: '/config/graphic/:id/:idChart', element: <ConfigGraphic /> },
 		{ path: '/config/allGraphic', element: <ChartsTable /> },
