@@ -62,346 +62,345 @@ const DiagramCanvas = ({
       >
         <Layer>
           {
-          elements.map((el) => {
-            if (el.type === 'line') {
-              return (
-                <Fragment key={el.id}>
-                  <Group
-                    x={el.x}
-                    y={el.y}
-                    draggable={el.draggable}
-                    id={String(el.id)}
-                    onClick={(e) => handleSelect(e, el.id)}
-                    onDragEnd={(e) => {
-                      const { x, y } = e.target.position();
-                      setElements((prev) =>
-                        prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
-                      );
-                    }}
-                  >
-                    {/* Fondo, borde blanco y línea principal */}
-                    <Line key={`${el.id}-bg`} points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
-                    <Line key={`${el.id}-white`} points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
-                    <Line
-                      key={`${el.id}-main`}
-                      points={el.points}
-                      stroke={el.stroke}
-                      strokeWidth={el.strokeWidth}
-                      dash={[20, 10]}
-                      dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
-                    />
-
-                    {/* Label para mostrar la variable asignada a la linea */}
-                    {el.dataInflux?.name && (() => {
-                      const [x1, y1, x2, y2] = el.points;
-                      const midX = (x1 + x2) / 2;
-                      const midY = (y1 + y2) / 2;
-                      const angleRadians = Math.atan2(y2 - y1, x2 - x1);
-                      const angleDegrees = (angleRadians * 180) / Math.PI;
-
-                      return (
-                        <Label
-                          x={midX - 25} y={midY - 20} rotation={angleDegrees}
-                        >
-                          <Tag
-                            fill="white"
-                            pointerDirection="down"
-                            pointerWidth={10}
-                            pointerHeight={10}
-                            lineJoin="round"
-                            cornerRadius={5}
-                          />
-                          <Text
-                            text={el.dataInflux.name}
-                            fontFamily="arial"
-                            fontSize={14}
-                            padding={8}
-                            fill="black "
-                          />
-                        </Label>
-                      );
-                    })()}
-                  </Group>
-                </Fragment>
-              );
-            }
-
-            if (el.type === 'text') {
-              return (
-                <Fragment key={el.id}>
-                  <Group
-                    x={el.x}
-                    y={el.y}
-                    draggable
-                    id={String(el.id)}
-                    onClick={(e) => {
-                      e.cancelBubble = true;
-                      handleSelect(e, el.id);
-                    }}
-                    onDblClick={(e) => {
-                      e.cancelBubble = true;
-                      setTextPosition({ x: el.x, y: el.y });
-                      setTextInput(el.text);
-                      setEditingTextId(el.id);
-                      setTextStyle({
-                        fontSize: el.fontSize || 16,
-                        fill: el.fill || '#000',
-                        fontStyle: el.fontStyle || 'normal',
-                      });
-                    }}
-                    onDragEnd={(e) => {
-                      const { x, y } = e.target.position();
-                      setElements((prev) =>
-                        prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
-                      );
-                    }}
-                  >
-                    <Text
-                      text={el.text}
-                      x={0}
-                      y={0}
-                      fontSize={el.fontSize || 16}
-                      fill={el.fill || '#000'}
-                      fontStyle={el.fontStyle || 'normal'}
-                      hitStrokeWidth={20}
-                    />
-                  </Group>
-                  {/* Label para mostrar la variable asignada a l texto*/}
-                  {el.dataInflux && el.dataInflux.name && (
-                    <Label
-                      x={el.x + (el.width || 0) / 2}
+            elements.map((el) => {
+              if (el.type === 'line') {
+                return (
+                  <Fragment key={el.id}>
+                    <Group
+                      x={el.x}
                       y={el.y}
+                      draggable={el.draggable}
+                      id={String(el.id)}
+                      onClick={(e) => handleSelect(e, el.id)}
+                      onDragEnd={(e) => {
+                        const { x, y } = e.target.position();
+                        setElements((prev) =>
+                          prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
+                        );
+                      }}
                     >
-                      <Tag
-                        fill="white"
-                        pointerDirection="down"
-                        pointerWidth={10}
-                        pointerHeight={10}
-                        lineJoin="round"
-                        cornerRadius={5}
+                      {/* Fondo, borde blanco y línea principal */}
+                      <Line key={`${el.id}-bg`} points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
+                      <Line key={`${el.id}-white`} points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
+                      <Line
+                        key={`${el.id}-main`}
+                        points={el.points}
+                        stroke={el.stroke}
+                        strokeWidth={el.strokeWidth}
+                        dash={[20, 10]}
+                        dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
                       />
-                      <Text
-                        text={el.dataInflux.name}
-                        fontFamily="arial"
-                        fontSize={14}
-                        padding={8}
-                        fill="black "
-                      />
-                    </Label>
-                  )}
-                </Fragment>
-              );
-            }
 
+                      {/* Label para mostrar la variable asignada a la linea */}
+                      {el.dataInflux?.name && (() => {
+                        const [x1, y1, x2, y2] = el.points;
+                        const midX = (x1 + x2) / 2;
+                        const midY = (y1 + y2) / 2;
+                        const angleRadians = Math.atan2(y2 - y1, x2 - x1);
+                        const angleDegrees = (angleRadians * 180) / Math.PI;
 
-            if (el.type === 'image') {
-              return (
-                <Fragment key={el.id}>
-                  <ImageElement
-                    src={el.src}
-                    x={el.x}
-                    y={el.y}
-                    width={el.width}
-                    height={el.height}
-                    draggable={el.draggable}
-                    id={String(el.id)}
-                    onClick={(e) => handleSelect(e, el.id)}
-                    onDragEnd={(e) => {
-                      const { x, y } = e.target.position();
-                      setElements((prev) =>
-                        prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
-                      );
-                    }}
-                    onTransformEnd={handleTransformEnd}
+                        return (
+                          <Label
+                            x={midX - 25} y={midY - 20} rotation={angleDegrees}
+                          >
+                            <Tag
+                              fill="white"
+                              pointerDirection="down"
+                              pointerWidth={10}
+                              pointerHeight={10}
+                              lineJoin="round"
+                              cornerRadius={5}
+                            />
+                            <Text
+                              text={el.dataInflux.name}
+                              fontFamily="arial"
+                              fontSize={14}
+                              padding={8}
+                              fill="black "
+                            />
+                          </Label>
+                        );
+                      })()}
+                    </Group>
+                  </Fragment>
+                );
+              }
 
-                  />
-                  {/* Label para mostrar la variable asignada a la imagen */}
-                  {el.dataInflux && el.dataInflux.name && (
-                    <Label
-                      x={el.x + (el.width || 0) / 2}
+              if (el.type === 'text') {
+                return (
+                  <Fragment key={el.id}>
+                    <Group
+                      x={el.x}
                       y={el.y}
+                      draggable
+                      id={String(el.id)}
+                      onClick={(e) => {
+                        e.cancelBubble = true;
+                        handleSelect(e, el.id);
+                      }}
+                      onDblClick={(e) => {
+                        e.cancelBubble = true;
+                        setTextPosition({ x: el.x, y: el.y });
+                        setTextInput(el.text);
+                        setEditingTextId(el.id);
+                        setTextStyle({
+                          fontSize: el.fontSize || 16,
+                          fill: el.fill || '#000',
+                          fontStyle: el.fontStyle || 'normal',
+                        });
+                      }}
+                      onDragEnd={(e) => {
+                        const { x, y } = e.target.position();
+                        setElements((prev) =>
+                          prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
+                        );
+                      }}
                     >
-                      <Tag
-                        fill="white"
-                        pointerDirection="down"
-                        pointerWidth={10}
-                        pointerHeight={10}
-                        lineJoin="round"
-                        cornerRadius={5}
-                      />
                       <Text
-                        text={el.dataInflux.name}
-                        fontFamily="arial"
-                        fontSize={14}
-                        padding={8}
-                        fill="black "
+                        text={el.text}
+                        x={0}
+                        y={0}
+                        fontSize={el.fontSize || 16}
+                        fill={el.fill || '#000'}
+                        fontStyle={el.fontStyle || 'normal'}
+                        hitStrokeWidth={20}
                       />
-                    </Label>
-                  )}
-                </Fragment>
-              );
-            }
+                    </Group>
+                    {/* Label para mostrar la variable asignada a l texto*/}
+                    {el.dataInflux && el.dataInflux.name && (
+                      <Label
+                        x={el.x + (el.width || 0) / 2}
+                        y={el.y}
+                      >
+                        <Tag
+                          fill="white"
+                          pointerDirection="down"
+                          pointerWidth={10}
+                          pointerHeight={10}
+                          lineJoin="round"
+                          cornerRadius={5}
+                        />
+                        <Text
+                          text={el.dataInflux.name}
+                          fontFamily="arial"
+                          fontSize={14}
+                          padding={8}
+                          fill="black "
+                        />
+                      </Label>
+                    )}
+                  </Fragment>
+                );
+              }
 
-            if (el.type === 'polyline') {
-              return (
-                <Fragment key={el.id}>
-                  <Group
-                    x={el.x}
-                    y={el.y}
-                    draggable={el.draggable}
-                    id={String(el.id)}
-                    onClick={(e) => handleSelect(e, el.id)}
-                    onDragEnd={(e) => {
-                      const { x, y } = e.target.position();
 
-                      // Actualizar la posición de la polilínea
-                      setElements((prev) =>
-                        prev.map((item) =>
-                          item.id === el.id ? { ...item, x, y } : item
-                        )
-                      );
+              if (el.type === 'image') {
+                return (
+                  <Fragment key={el.id}>
+                    <ImageElement
+                      src={el.src}
+                      x={el.x}
+                      y={el.y}
+                      width={el.width}
+                      height={el.height}
+                      draggable={el.draggable}
+                      id={String(el.id)}
+                      onClick={(e) => handleSelect(e, el.id)}
+                      onDragEnd={(e) => {
+                        const { x, y } = e.target.position();
+                        setElements((prev) =>
+                          prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
+                        );
+                      }}
+                      onTransformEnd={handleTransformEnd}
+                    />
+                    {/* Label para mostrar la variable asignada a la imagen */}
+                    {el.dataInflux && el.dataInflux.name && (
+                      <Label
+                        x={el.x + (el.width || 0) / 2}
+                        y={el.y}
+                      >
+                        <Tag
+                          fill="white"
+                          pointerDirection="down"
+                          pointerWidth={10}
+                          pointerHeight={10}
+                          lineJoin="round"
+                          cornerRadius={5}
+                        />
+                        <Text
+                          text={el.dataInflux.name}
+                          fontFamily="arial"
+                          fontSize={14}
+                          padding={8}
+                          fill="black "
+                        />
+                      </Label>
+                    )}
+                  </Fragment>
+                );
+              }
 
-                      // Actualizar las posiciones de los puntos de control
-                      setCircles((prev) =>
-                        prev.map((circle) =>
-                          circle.lineId === el.id
-                            ? {
-                              ...circle,
-                              x: circle.x + (x - el.x),
-                              y: circle.y + (y - el.y),
-                            }
-                            : circle
-                        )
-                      );
-                    }}
-                    onDblClick={(e) => {
-                      if (el.type !== 'polyline') return;
+              if (el.type === 'polyline') {
+                return (
+                  <Fragment key={`polyline-${el.id}`}>
+                    <Group
+                      x={el.x}
+                      y={el.y}
+                      draggable={el.draggable}
+                      id={`group-polyline-${el.id}`}
+                      onClick={(e) => handleSelect(e, el.id)}
+                      onDragEnd={(e) => {
+                        const { x, y } = e.target.position();
 
-                      // Obtener la posición del clic relativa al grupo
-                      const stage = stageRef.current;
-                      const pointerPos = stage.getPointerPosition();
-                      const relativePos = {
-                        x: pointerPos.x - el.x,
-                        y: pointerPos.y - el.y
-                      };
-
-                      // Encontrar el segmento más cercano al clic
-                      let minDist = Infinity;
-                      let insertIndex = -1;
-
-                      for (let i = 0; i < el.points.length - 2; i += 2) {
-                        const x1 = el.points[i];
-                        const y1 = el.points[i + 1];
-                        const x2 = el.points[i + 2];
-                        const y2 = el.points[i + 3];
-
-                        // Calcular distancia del punto al segmento
-                        const dist = distToSegment(relativePos, { x: x1, y: y1 }, { x: x2, y: y2 });
-
-                        if (dist < minDist) {
-                          minDist = dist;
-                          insertIndex = i + 2;
-                        }
-                      }
-
-                      // Si está lo suficientemente cerca, insertar un nuevo punto
-                      if (minDist < 20 && insertIndex !== -1) {
-                        const newPoints = [...el.points];
-                        newPoints.splice(insertIndex, 0, relativePos.x, relativePos.y);
-
-                        // Actualizar el elemento
-                        const updatedElements = elements.map(item =>
-                          item.id === el.id ? { ...item, points: newPoints } : item
+                        // Actualizar la posición de la polilínea
+                        setElements((prev) =>
+                          prev.map((item) =>
+                            item.id === el.id ? { ...item, x, y } : item
+                          )
                         );
 
-                        // Crear un nuevo círculo para el punto
-                        const newCircleId = `${el.id}-point-${insertIndex / 2}`;
-                        const newCircle = {
-                          id: newCircleId,
-                          x: el.x + relativePos.x,
-                          y: el.y + relativePos.y,
-                          lineId: el.id,
-                          fill: 'green',
-                          visible: false,
+                        // Actualizar las posiciones de los puntos de control
+                        setCircles((prev) =>
+                          prev.map((circle) =>
+                            circle.lineId === el.id
+                              ? {
+                                ...circle,
+                                x: circle.x + (x - el.x),
+                                y: circle.y + (y - el.y),
+                              }
+                              : circle
+                          )
+                        );
+                      }}
+                      onDblClick={(e) => {
+                        if (el.type !== 'polyline') return;
+
+                        // Obtener la posición del clic relativa al grupo
+                        const stage = stageRef.current;
+                        const pointerPos = stage.getPointerPosition();
+                        const relativePos = {
+                          x: pointerPos.x - el.x,
+                          y: pointerPos.y - el.y
                         };
 
-                        // Actualizar los IDs de los círculos existentes
-                        const updatedCircles = circles
-                          .map(c => {
-                            if (c.lineId === el.id) {
-                              const parts = c.id.split('-point-');
-                              const currentIndex = parseInt(parts[1]);
-                              if (currentIndex >= insertIndex / 2) {
-                                return {
-                                  ...c,
-                                  id: `${parts[0]}-point-${currentIndex + 1}`
-                                };
+                        // Encontrar el segmento más cercano al clic
+                        let minDist = Infinity;
+                        let insertIndex = -1;
+
+                        for (let i = 0; i < el.points.length - 2; i += 2) {
+                          const x1 = el.points[i];
+                          const y1 = el.points[i + 1];
+                          const x2 = el.points[i + 2];
+                          const y2 = el.points[i + 3];
+
+                          // Calcular distancia del punto al segmento
+                          const dist = distToSegment(relativePos, { x: x1, y: y1 }, { x: x2, y: y2 });
+
+                          if (dist < minDist) {
+                            minDist = dist;
+                            insertIndex = i + 2;
+                          }
+                        }
+
+                        // Si está lo suficientemente cerca, insertar un nuevo punto
+                        if (minDist < 20 && insertIndex !== -1) {
+                          const newPoints = [...el.points];
+                          newPoints.splice(insertIndex, 0, relativePos.x, relativePos.y);
+
+                          // Actualizar el elemento
+                          const updatedElements = elements.map(item =>
+                            item.id === el.id ? { ...item, points: newPoints } : item
+                          );
+
+                          // Crear un nuevo círculo para el punto
+                          const newCircleId = `${el.id}-point-${insertIndex / 2}`;
+                          const newCircle = {
+                            id: newCircleId,
+                            x: el.x + relativePos.x,
+                            y: el.y + relativePos.y,
+                            lineId: el.id,
+                            fill: 'green',
+                            visible: false,
+                          };
+
+                          // Actualizar los IDs de los círculos existentes
+                          const updatedCircles = circles
+                            .map(c => {
+                              if (c.lineId === el.id) {
+                                const parts = c.id.split('-point-');
+                                const currentIndex = parseInt(parts[1]);
+                                if (currentIndex >= insertIndex / 2) {
+                                  return {
+                                    ...c,
+                                    id: `${parts[0]}-point-${currentIndex + 1}`
+                                  };
+                                }
                               }
-                            }
-                            return c;
-                          })
-                          .concat(newCircle);
+                              return c;
+                            })
+                            .concat(newCircle);
 
-                        setElements(updatedElements);
-                        setCircles(updatedCircles);
-                      }
-                    }}
-                  >
-                    {/* Fondo, borde blanco y línea principal para polilíneas */}
-                    <Line key={`${el.id}-bg`} points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
-                    <Line key={`${el.id}-white`} points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
-                    <Line
-                      key={`${el.id}-main`}
-                      points={el.points}
-                      stroke={el.stroke}
-                      strokeWidth={el.strokeWidth}
-                      dash={[20, 10]}
-                      dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
-                    />
+                          setElements(updatedElements);
+                          setCircles(updatedCircles);
+                        }
+                      }}
+                    >
+                      {/* Fondo, borde blanco y línea principal para polilíneas */}
+                      <Line key={`polyline-${el.id}-bg`} points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
+                      <Line key={`polyline-${el.id}-white`} points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
+                      <Line
+                        key={`polyline-${el.id}-main`}
+                        points={el.points}
+                        stroke={el.stroke}
+                        strokeWidth={el.strokeWidth}
+                        dash={[20, 10]}
+                        dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
+                      />
 
-                    {/* Label para mostrar la variable asignada a la polilinea */}
-                    {el.dataInflux?.name && (() => {
-                     
-                      const segmentIndex = Math.floor(el.points.length / 4) * 2;
-                      const x1 = el.points[segmentIndex];
-                      const y1 = el.points[segmentIndex + 1];
-                      const x2 = el.points[segmentIndex + 2];
-                      const y2 = el.points[segmentIndex + 3];
+                      {/* Label para mostrar la variable asignada a la polilinea */}
+                      {el.dataInflux?.name && (() => {
 
-                      const midX = (x1 + x2) / 2;
-                      const midY = (y1 + y2) / 2;
-                      const angleRadians = Math.atan2(y2 - y1, x2 - x1);
-                      const angleDegrees = (angleRadians * 180) / Math.PI;
+                        const segmentIndex = Math.floor(el.points.length / 4) * 2;
+                        const x1 = el.points[segmentIndex];
+                        const y1 = el.points[segmentIndex + 1];
+                        const x2 = el.points[segmentIndex + 2];
+                        const y2 = el.points[segmentIndex + 3];
 
-                      return (
-                        <Label
-                          x={midX - 25} y={midY - 20} rotation={angleDegrees}
-                        >
-                          <Tag
-                            fill="white"
-                            pointerDirection="down"
-                            pointerWidth={10}
-                            pointerHeight={10}
-                            lineJoin="round"
-                            cornerRadius={5}
-                          />
-                          <Text
-                            text={el.dataInflux.name}
-                            fontFamily="arial"
-                            fontSize={14}
-                            padding={8}
-                            fill="black "
-                          />
-                        </Label>
-                      );
-                    })()}
-                  </Group>
-                </Fragment>
-              );
-            }
+                        const midX = (x1 + x2) / 2;
+                        const midY = (y1 + y2) / 2;
+                        const angleRadians = Math.atan2(y2 - y1, x2 - x1);
+                        const angleDegrees = (angleRadians * 180) / Math.PI;
 
-            return null;
-          })}
+                        return (
+                          <Label
+                            x={midX - 25} y={midY - 20} rotation={angleDegrees}
+                          >
+                            <Tag
+                              fill="white"
+                              pointerDirection="down"
+                              pointerWidth={10}
+                              pointerHeight={10}
+                              lineJoin="round"
+                              cornerRadius={5}
+                            />
+                            <Text
+                              text={el.dataInflux.name}
+                              fontFamily="arial"
+                              fontSize={14}
+                              padding={8}
+                              fill="black "
+                            />
+                          </Label>
+                        );
+                      })()}
+                    </Group>
+                  </Fragment>
+                );
+              }
+
+              return null;
+            })}
 
           {selectedId && (
             <Transformer

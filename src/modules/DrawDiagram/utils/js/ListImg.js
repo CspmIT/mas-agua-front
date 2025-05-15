@@ -129,6 +129,7 @@ export const ListImg = () => [
         optionsImage: {
             error: `${urlBaseView}/Presostato_rojo.png`,
             success: `${urlBaseView}/Presostato_verde.png`,
+            default: `${urlBaseView}/Presostato_rojo.png`,
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
