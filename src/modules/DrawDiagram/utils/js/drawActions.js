@@ -49,7 +49,7 @@ export const uploadCanvaDb = async (id, {
 			}
 
 			elements.push({
-				id: line.id,
+				id: `line-${line.id}`,
 				type: 'line',
 				x: 0,
 				y: 0,
@@ -79,7 +79,7 @@ export const uploadCanvaDb = async (id, {
 			}
 
 			elements.push({
-				id: poly.id,
+				id: `poly-${poly.id}`,
 				type: 'polyline',
 				x: 0,
 				y: 0,
@@ -107,7 +107,7 @@ export const uploadCanvaDb = async (id, {
 			}
 
 			elements.push({
-				id: text.id,
+				id: `text-${text.id}`,
 				type: 'text',
 				x: text.left,
 				y: text.top,
@@ -129,6 +129,7 @@ export const uploadCanvaDb = async (id, {
 		
 			dataInflux = {
 				id: image.id, 
+				id_variable: variable.id_influxvars,
 				name: variable.name_var,
 				unit: variable.variable.unit,
 				varsInflux: vars,
@@ -138,7 +139,7 @@ export const uploadCanvaDb = async (id, {
 			}
 
 			elements.push({
-				id: image.id,
+				id: `image-${image.id}`,
 				type: 'image',
 				src: image.src,
 				x: image.left,
@@ -218,11 +219,17 @@ export const saveDiagramKonva = async ({
 			deleted,
 		};
 
+		const getNumericId = (compositeId) => {
+			const match = compositeId?.toString().match(/-(\d+)$/);
+			return match ? parseInt(match[1], 10) : null;
+		  };
+
 		elements.forEach((el) => {
+			console.log(el);
 			switch (el.type) {
 				case 'image':
 					saveObjects.images.push({
-						...(el.id ? { id: el.id } : {}),
+						...(el.id ? { id: getNumericId(el.id) } : {}),
 						name: el.name || '',
 						src: el.src,
 						left: el.x,
@@ -233,7 +240,7 @@ export const saveDiagramKonva = async ({
 						status: 1,
 						variables: el.dataInflux ? {
 							[el.dataInflux.name]: {
-								id_variable: el.dataInflux.id || null,
+								id_variable: el.dataInflux.id_variable || null,
 								show: true
 							}
 						} : {}
@@ -251,7 +258,7 @@ export const saveDiagramKonva = async ({
 					}
 
 					saveObjects.polylines.push({
-						...(el.id ? { id: el.id } : {}),
+						...(el.id ? { id: getNumericId(el.id) } : {}),
 						id_influxvars: el.dataInflux?.id || null,
 						points: polylinePoints,
 						stroke: el.stroke,
@@ -279,7 +286,7 @@ export const saveDiagramKonva = async ({
 
 				case 'text':
 					saveObjects.texts.push({
-						...(el.id ? { id: el.id } : {}),
+						...(el.id ? { id: getNumericId(el.id) } : {}),
 						name: '',
 						left: el.x,
 						top: el.y,
@@ -306,7 +313,7 @@ export const saveDiagramKonva = async ({
 					};
 
 					saveObjects.lines.push({
-						...(el.id ? { id: el.id } : {}),
+						...(el.id ? { id: getNumericId(el.id) } : {}),
 						id_influxvars: el.dataInflux?.id || null,
 						points: absPoints,
 						stroke: el.stroke,

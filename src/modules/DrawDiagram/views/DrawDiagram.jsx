@@ -78,6 +78,7 @@ const DrawDiagram = () => {
     }
 
     const selectedElement = elements.find((el) => el.id === id);
+    console.log(selectedElement);
 
     if (selectedElement?.type === 'polyline') {
       setTool('polyline');
@@ -88,14 +89,16 @@ const DrawDiagram = () => {
         invertAnimation: selectedElement.invertAnimation || false,
       });
       setShowTextStyler(false);
+      setLineStart(null);
+      setTempLine(null);
 
-      // Mostrar círculos de control para la polilínea
       setCircles((prev) =>
         prev.map((c) => ({
           ...c,
-          visible: c.lineId === id
+          visible: c.lineId === selectedElement.id,
         }))
       );
+      
     } else if (selectedElement?.type === 'line') {
       setTool('simpleLine');
       setShowLineStyleSelector(true);
@@ -233,12 +236,11 @@ const DrawDiagram = () => {
     }
 
     // Polilínea
-    if (tool === 'polyline') {
-      e.cancelBubble = true; // evitar propagación
+    if (tool === 'polyline' && !selectedId) {
+      e.cancelBubble = true; 
       if (!isDrawingPolyline) {
-        // Primer punto de la polilínea
         setShowLineStyleSelector(false);
-        setSelectedId(null); // 🔐 aseguramos que no se dispare handleSelect
+        setSelectedId(null); 
         setIsDrawingPolyline(true);
         setPolylinePoints([pos.x, pos.y]);
         setTempLine({
@@ -289,7 +291,6 @@ const DrawDiagram = () => {
       return;
     }
   };
-
 
   const handleMouseMove = (e) => {
     const stage = e.target.getStage();
@@ -359,7 +360,7 @@ const DrawDiagram = () => {
           y: polylinePoints[i + 1],
           lineId: id,
           fill: i === 0 ? 'blue' : i === polylinePoints.length - 2 ? 'red' : 'green',
-          visible: false,
+          visible: true,
         });
       }
 
@@ -513,7 +514,7 @@ const DrawDiagram = () => {
 
         setElements((prev) => [...prev, newImage]);
         setNewElementsIds((prev) => [...prev, newImage.id]);
-        setTool(null); // salir del modo variable suelta
+        setTool(null); 
         setShowListField(false);
       };
       return;
@@ -637,7 +638,7 @@ const DrawDiagram = () => {
       lines: [],
       texts: [],
       images: [],
-      polilynes: [],
+      polylines: [],
     });
   };
 
@@ -660,18 +661,15 @@ const DrawDiagram = () => {
     if (!elementToDelete) return;
 
     setElements((prev) => prev.filter((el) => el.id !== id));
-
-    // Eliminar los círculos asociados con el elemento
     setCircles((prev) => prev.filter((c) => c.lineId !== id));
 
-    if (Number.isInteger(id)) {
-      setDeletedItems((prev) => {
-        const typeKey = `${elementToDelete.type}s`;
-        return {
-          ...prev,
-          [typeKey]: [...(prev[typeKey] || []), id]
-        };
-      });
+    const numericId = parseInt(id.split('-').pop(), 10);
+    if (!isNaN(numericId)) {
+      const typeKey = `${elementToDelete.type}s`;
+      setDeletedItems((prev) => ({
+        ...prev,
+        [typeKey]: [...(prev[typeKey] || []), numericId]
+      }));
     }
   };
 
@@ -691,6 +689,7 @@ const DrawDiagram = () => {
       if (e.key === 'Escape') {
         setShowLineStyleSelector(false);
         setLineStart(null);
+        setTool('');
         if (textPosition) {
           setTextPosition(null);
           setTextInput('');
@@ -761,7 +760,7 @@ const DrawDiagram = () => {
     let frameId;
 
     const animate = () => {
-      setDashOffset((prev) => (reverseDirection ? prev - 1 : prev + 1));
+      setDashOffset((prev) => (reverseDirection ? prev - 1 : prev + 0.35));
       frameId = requestAnimationFrame(animate);
     };
 

@@ -217,6 +217,7 @@ function ViewDiagram() {
 		setPosition(newPos);
 	};
 
+
 	return (
 		<>
 			{isLoading ? (

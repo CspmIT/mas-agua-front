@@ -87,7 +87,7 @@ const DiagramCanvas = ({
                         points={el.points}
                         stroke={el.stroke}
                         strokeWidth={el.strokeWidth}
-                        dash={[20, 10]}
+                        dash={[25, 15]}
                         dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
                       />
 
@@ -243,12 +243,12 @@ const DiagramCanvas = ({
 
               if (el.type === 'polyline') {
                 return (
-                  <Fragment key={`polyline-${el.id}`}>
+                  <Fragment key={el.id}>
                     <Group
                       x={el.x}
                       y={el.y}
                       draggable={el.draggable}
-                      id={`group-polyline-${el.id}`}
+                      id={String(el.id)}
                       onClick={(e) => handleSelect(e, el.id)}
                       onDragEnd={(e) => {
                         const { x, y } = e.target.position();
@@ -347,14 +347,14 @@ const DiagramCanvas = ({
                       }}
                     >
                       {/* Fondo, borde blanco y línea principal para polilíneas */}
-                      <Line key={`polyline-${el.id}-bg`} points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
-                      <Line key={`polyline-${el.id}-white`} points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
+                      <Line key={`${el.id}--bg`} points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
+                      <Line key={`${el.id}--white`} points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
                       <Line
-                        key={`polyline-${el.id}-main`}
+                        key={`${el.id}--main`}
                         points={el.points}
                         stroke={el.stroke}
                         strokeWidth={el.strokeWidth}
-                        dash={[20, 10]}
+                        dash={[25, 15]}
                         dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
                       />
 
@@ -444,7 +444,7 @@ const DiagramCanvas = ({
                 }
                 // Manejar círculos para polilíneas
                 else if (circle.id.includes('-point-')) {
-                  const lineElement = elements.find(el => el.id === circle.lineId);
+                  const lineElement = elements.find((el) => el.id === circle.lineId);
                   if (lineElement && lineElement.type === 'polyline') {
                     const pointIndex = parseInt(circle.id.split('-point-')[1]);
 
@@ -474,7 +474,7 @@ const DiagramCanvas = ({
               points={tempLine.points}
               stroke={tempLine.stroke}
               strokeWidth={tempLine.strokeWidth}
-              dash={[10, 10]}
+              dash={[15, 15]}
             />
           )}
         </Layer>
