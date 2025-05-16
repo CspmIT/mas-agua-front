@@ -146,7 +146,12 @@ const ListDrawDiagram = () => {
 				</Box>
 			</div>
 			{!loading ? (
-				<TableCustom columns={columnsTable} data={listDiagram.length ? listDiagram : []} />
+				<TableCustom 
+					columns={columnsTable} 
+					data={listDiagram.length ? listDiagram : []}
+					pagination={true}
+					pageSize={10}
+					/>
 			) : (
 				<LoaderComponent />
 			)}

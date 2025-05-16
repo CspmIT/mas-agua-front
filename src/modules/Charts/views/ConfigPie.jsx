@@ -6,8 +6,6 @@ import {
     Button,
     Card,
     CardContent,
-    Checkbox,
-    FormControlLabel,
     IconButton,
     InputAdornment,
     List,
@@ -26,12 +24,13 @@ import { DoughnutChartschema } from '../schemas/DoughnutChartSchema'
 import Swal from 'sweetalert2'
 import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
+import { useNavigate } from 'react-router-dom'
 
 const ConfigPie = () => {
     const [title, setTitle] = useState('')
     const [categories, setCategories] = useState([])
-    const [showLastValue, setShowLastValue] = useState(true)
     const [keySelectorVar, setKeySelectorVar] = useState(0)
+    const navigate = useNavigate()
 
     const addCategory = () => {
         const { categoryName, idVar, colorCategory } = getValues()
@@ -50,14 +49,11 @@ const ConfigPie = () => {
         setValue('idVar', false)
     }
     const send = async () => {
-        const fieldsToValidate = ['title', 'lastValue']
+        const fieldsToValidate = ['title']
         if (categories.length === 0) {
             fieldsToValidate.push('categoryName', 'colorCategory', 'idVar')
         }
 
-        if (!showLastValue) {
-            fieldsToValidate.push('startDate', 'endDate')
-        }
         const isValid = await trigger(fieldsToValidate)
         if (!isValid) {
             return
@@ -71,35 +67,31 @@ const ConfigPie = () => {
             })
             return
         }
-        const { title, lastValue, startDate, endDate } = getValues()
-        if (!showLastValue && (!startDate || !endDate)) {
-            await Swal.fire({
-                icon: 'error',
-                title: 'Atencion',
-                text: 'Si no se selecciona el mostrar el ultimo valor se debe asignar un rango de consulta.',
-            })
-            return
-        }
+        const { title } = getValues()
 
         const formatedCategories = categories.map(category =>  ({
-            value: category.value,
+            var_id: category.value,
             name: category.name,
             color: category?.itemStyle?.color
         }))
-        console.log(formatedCategories)
 
         const sendObject = {
             type: 'PieChart',
             categories: formatedCategories,
             title,
-            lastValue,
-            startDate,
-            endDate,
         }
 
         try {
-            const url = `${backend[import.meta.env.VITE_APP_NAME]}/charts`
-            await request(url, 'POST', sendObject)
+            const url = `${backend[import.meta.env.VITE_APP_NAME]}/pie`
+            const newChart = await request(url, 'POST', sendObject)
+            if(newChart.data){
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Exito',
+                    text: 'El grafico se creo correctamente' 
+                })
+                navigate('/')
+            }
         } catch (error) {
             Swal.fire({
                 icon: 'error',
@@ -174,55 +166,6 @@ const ConfigPie = () => {
                                 defaultValue={'#000000'}
                                 {...register('colorCategory')}
                             />
-                            <Typography variant="overline" align="center">
-                                Configuracion general del grafico
-                            </Typography>
-                            <FormControlLabel
-                                className="w-full justify-center"
-                                control={
-                                    <Checkbox
-                                        checked={showLastValue}
-                                        {...register('lastValue', {
-                                            onChange: (e) => {
-                                                const checked = e.target.checked
-                                                setShowLastValue(checked)
-                                            },
-                                        })}
-                                    />
-                                }
-                                label={'Mostrar ulimo valor de las variables'}
-                            />
-                            {!showLastValue && (
-                                <>
-                                    <Typography align="center">
-                                        Rango de consulta de las variables
-                                    </Typography>
-                                    <div className="flex flex-col sm:flex-row gap-3">
-                                        <TextField
-                                            className="w-full"
-                                            type="date"
-                                            label="Desde"
-                                            InputLabelProps={{ shrink: true }}
-                                            error={!!errors.startDate}
-                                            helperText={
-                                                errors?.startDate?.message
-                                            }
-                                            {...register('startDate')}
-                                        />
-                                        <TextField
-                                            error={!!errors.endDate}
-                                            helperText={
-                                                errors?.endDate?.message
-                                            }
-                                            className="w-full"
-                                            type="date"
-                                            label="Hasta"
-                                            InputLabelProps={{ shrink: true }}
-                                            {...register('endDate')}
-                                        />
-                                    </div>
-                                </>
-                            )}
                             <Card className="flex-grow">
                                 <CardContent>
                                     <Typography

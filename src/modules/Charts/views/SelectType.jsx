@@ -75,7 +75,6 @@ const chartTypes = [
 function SelectType() {
     const navigate = useNavigate()
     const selectedChart = (chart) => {
-        console.log(chart)
         if (chart?.bomb) {
             navigate('/config/pumps')
             return

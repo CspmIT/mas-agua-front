@@ -7,52 +7,60 @@ const LineStylePanel = ({
     onChange, 
     setElements,
     selectedId,
+    setSelectedId,
     elements,
     tool,
     setTool
 }) => {
-    // Actualizar lineStyle cuando se selecciona un elemento existente
+    // Buscar elemento seleccionado
+    const selectedElement = selectedId && elements 
+        ? elements.find(el => el.id === selectedId) 
+        : null;
+
+    const elementType = selectedElement?.type || tool;
+
+    // Determinar si el elemento seleccionado es una línea o polilínea
+    const isLine = elementType === 'line' || elementType === 'simpleLine';
+    const isPolyline = elementType === 'polyline';
+
+    const canEdit = selectedId && (isLine || isPolyline);
+
+    // Deseleccionar si el elemento no es linea o polilinea
     useEffect(() => {
-        if (selectedId && elements) {
-            const selectedElement = elements.find(el => el.id === selectedId);
-            if (selectedElement) {
-                const newStyle = {
-                    color: selectedElement.stroke,
-                    strokeWidth: selectedElement.strokeWidth,
-                    invertAnimation: selectedElement.invertAnimation || false
-                };
-    
-                // Solo actualiza si hay un cambio real
-                if (
-                    newStyle.color !== lineStyle.color ||
-                    newStyle.strokeWidth !== lineStyle.strokeWidth ||
-                    newStyle.invertAnimation !== lineStyle.invertAnimation
-                ) {
-                    onChange(newStyle);
-                }
+        if (selectedId && !canEdit) {
+            setSelectedId(null);
+        }
+    }, [selectedId, canEdit, setSelectedId]);
+
+    useEffect(() => {
+        if (canEdit && selectedElement) {
+            const newStyle = {
+                color: selectedElement.stroke,
+                strokeWidth: selectedElement.strokeWidth,
+                invertAnimation: selectedElement.invertAnimation || false
+            };
+
+            if (
+                newStyle.color !== lineStyle.color ||
+                newStyle.strokeWidth !== lineStyle.strokeWidth ||
+                newStyle.invertAnimation !== lineStyle.invertAnimation
+            ) {
+                onChange(newStyle);
             }
         }
     }, [selectedId, elements]);
 
     if (!visible) return null;
 
-    const isEditing = Boolean(selectedId);
-    const selectedElement = isEditing && elements ? 
-        elements.find(el => el.id === selectedId) : null;
-    const elementType = selectedElement?.type || tool;
-
-    // Determinar si estamos trabajando con una línea o polilínea
-    const isLine = elementType === 'line' || elementType === 'simpleLine';
-    const isPolyline = elementType === 'polyline';
-
     return (
-        <div className="absolute top-5 left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 max-w-md">
+        <div className="absolute top-5 left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 w-48">
             <h4 className="text-sm font-bold mb-2">
-                {isEditing ? 
-                    `Editar ${isLine ? 'línea' : isPolyline ? 'polilínea' : 'elemento'}` : 
-                    `Estilo de ${isLine ? 'la línea' : isPolyline ? 'la polilínea' : 'elemento'}`}
+                {canEdit 
+                    ? `Editar ${isLine ? 'línea' : 'polilínea'}` 
+                    : `Estilo de ${tool === 'polyline' ? 'la polilínea' : 'la línea'}`
+                }
             </h4>
-            
+
             <label className="block text-sm font-medium mb-1">Color</label>
             <input
                 type="color"
@@ -60,8 +68,8 @@ const LineStylePanel = ({
                 onChange={(e) => {
                     const newColor = e.target.value;
                     onChange({ ...lineStyle, color: newColor });
-            
-                    if (selectedId) {
+
+                    if (canEdit) {
                         setElements((prev) =>
                             prev.map((el) =>
                                 el.id === selectedId
@@ -83,8 +91,8 @@ const LineStylePanel = ({
                 onChange={(e) => {
                     const newWidth = parseInt(e.target.value);
                     onChange({ ...lineStyle, strokeWidth: newWidth });
-            
-                    if (selectedId) {
+
+                    if (canEdit) {
                         setElements((prev) =>
                             prev.map((el) =>
                                 el.id === selectedId
@@ -95,39 +103,42 @@ const LineStylePanel = ({
                     }
                 }}
                 className="w-full"
+                style={{ padding: 0 }}
             />
 
-            {selectedId && (
-            <button
-                onClick={() => {
-                    setElements((prev) =>
-                        prev.map((el) =>
-                            el.id === selectedId
-                                ? { ...el, invertAnimation: !el.invertAnimation }
-                                : el
-                        )
-                    );
-                    onChange({ 
-                        ...lineStyle, 
-                        invertAnimation: !lineStyle.invertAnimation 
-                    });
-                }}
-                className="mt-3 flex items-center gap-2 px-3 py-2 bg-slate-600 text-white rounded hover:bg-slate-700"
-            >
-                <BiSync 
-                    className={`transform transition-transform ${lineStyle.invertAnimation ? 'rotate-180' : ''}`} 
-                />
-                Cambiar sentido
-            </button>
+            {canEdit && (
+                <button
+                    onClick={() => {
+                        setElements((prev) =>
+                            prev.map((el) =>
+                                el.id === selectedId
+                                    ? { ...el, invertAnimation: !el.invertAnimation }
+                                    : el
+                            )
+                        );
+                        onChange({ 
+                            ...lineStyle, 
+                            invertAnimation: !lineStyle.invertAnimation 
+                        });
+                    }}
+                    className="mt-3 flex items-center gap-1 px-2 py-2 bg-slate-600 text-white rounded hover:bg-slate-700"
+                >               
+                    <BiSync 
+                        className={`transform transition-transform ${lineStyle.invertAnimation ? 'rotate-180' : ''}`} 
+                    />
+                    Cambiar sentido
+                </button>
             )}
 
-            {!selectedId && (
-            <button
-                onClick={() => setTool(null)}
-                className="mt-3 px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-            >
-                Cancelar
-            </button>
+            {!canEdit && (
+                <button
+                    onClick={() => 
+                        setTool(null)
+                    }
+                    className="mt-3 px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+                >
+                    Cancelar
+                </button>
             )}
         </div>
     );

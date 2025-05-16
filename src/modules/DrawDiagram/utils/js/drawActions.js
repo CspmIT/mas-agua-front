@@ -123,15 +123,18 @@ export const uploadCanvaDb = async (id, {
 		for (const image of objectDiagram?.images || []) {
 			let dataInflux = null;
 			const variable = image.variables?.[0];
+		
 			if (variable?.variable?.varsInflux) {
-				const vars = Object.values(variable.variable.varsInflux)[0];
-				dataInflux = {
-					id: variable.id_influxvars,
-					name: variable.name_var,
-					unit: variable.variable.unit,
-					varsInflux: vars,
-				};
-				influxVarsToRequest.push({ id: image.id, varsInflux: vars });
+			const vars = Object.values(variable.variable.varsInflux)[0];
+		
+			dataInflux = {
+				id: image.id, 
+				name: variable.name_var,
+				unit: variable.variable.unit,
+				varsInflux: vars,
+			};
+		
+			influxVarsToRequest.push({ id: image.id, varsInflux: vars }); 
 			}
 
 			elements.push({
@@ -148,53 +151,52 @@ export const uploadCanvaDb = async (id, {
 			});
 		}
 
-		// CONSULTA A /multipleDataInflux UNA VEZ PARA TODOS
-		if (influxVarsToRequest.length > 0) {
-			const response = await request(
-				`${backend['Mas Agua']}/multipleDataInflux`,
-				'POST',
-				influxVarsToRequest
-			);
-
-			const valuesResponse = response.data; // <-- acceso correcto
-
-			setElements(
-				elements.map((el) => {
-					if (el.dataInflux && valuesResponse?.[el.id] !== undefined) {
-						const updatedEl = {
-							...el,
-							dataInflux: {
-								...el.dataInflux,
-								value: valuesResponse[el.id] ?? 'Sin datos',
-							},
-						};
-						return updatedEl;
-					}
-					return el;
-				})
-			);
-
-		} else {
-			setElements(elements);
-		}
 		
+    // === VALORES INFLUX ===
+    let finalElements = elements;
 
-		// Los círculos solo si querés editar
-		const circles = elements
-			.filter((el) => el.type === 'line')
-			.flatMap((el) => {
-				const [x1, y1, x2, y2] = el.points;
-				return [
-					{ id: `${el.id}-start`, x: x1, y: y1, lineId: el.id, fill: 'blue', visible: false },
-					{ id: `${el.id}-end`, x: x2, y: y2, lineId: el.id, fill: 'red', visible: false }
-				];
-			});
-		setCircles(circles);
+    if (influxVarsToRequest.length > 0) {
+      const response = await request(
+        `${backend['Mas Agua']}/multipleDataInflux`,
+        'POST',
+        influxVarsToRequest
+      );
 
-		setTool(null);
-	} catch (err) {
-		console.error('Error en uploadCanvaDb:', err);
-	}
+      const valuesResponse = response.data;
+
+      finalElements = elements.map((el) => {
+        if (el.dataInflux && valuesResponse?.[el.dataInflux.id] !== undefined) {
+          return {
+            ...el,
+            dataInflux: {
+              ...el.dataInflux,
+              value: valuesResponse[el.dataInflux.id],
+            },
+          };
+        }
+        return el;
+      });
+    }
+
+    // CÍRCULOS PARA EDICIÓN
+    const circles = finalElements
+      .filter((el) => el.type === 'line')
+      .flatMap((el) => {
+        const [x1, y1, x2, y2] = el.points;
+        return [
+          { id: `${el.id}-start`, x: x1, y: y1, lineId: el.id, fill: 'blue', visible: false },
+          { id: `${el.id}-end`, x: x2, y: y2, lineId: el.id, fill: 'red', visible: false },
+        ];
+      });
+
+    setCircles(circles);
+    setTool(null);
+
+    return finalElements; // ✅ retornamos los elementos con valores
+  } catch (err) {
+    console.error('Error en uploadCanvaDb:', err);
+    return []; // en caso de error
+  }
 };
 
 
@@ -202,7 +204,8 @@ export const saveDiagramKonva = async ({
 	elements,
 	circles,
 	diagramMetadata,
-	deleted
+	deleted,
+	navigate
 }) => {
 	try {
 		Swal.fire({ title: 'Guardando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -339,6 +342,7 @@ export const saveDiagramKonva = async ({
 			text: 'Se guardó correctamente',
 			icon: 'success',
 		});
+		navigate('/config/diagram');
 
 	} catch (error) {
 		console.error(error);

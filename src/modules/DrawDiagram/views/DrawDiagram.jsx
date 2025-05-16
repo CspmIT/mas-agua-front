@@ -10,7 +10,9 @@ import Sidebar from '../components/Sidebar/Sidebar';
 import DiagramCanvas from '../components/DiagramCanvas/DiagramCanvas';
 import TopNavbar from '../components/TopNavbar/TopNavbar';
 import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Box } from '@mui/material';
+import LoaderComponent from '../../../components/Loader';
 
 const imageList = ListImg();
 
@@ -58,10 +60,14 @@ const DrawDiagram = () => {
   const [newElementsIds, setNewElementsIds] = useState([]);
   const [polylinePoints, setPolylinePoints] = useState([]);
   const [isDrawingPolyline, setIsDrawingPolyline] = useState(false);
-  const [lastClickTime, setLastClickTime] = useState(null);
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
 
 
   const handleSelect = (e, id) => {
+
+    if ((tool === 'polyline' && isDrawingPolyline) || (tool === 'simpleLine' && lineStart)) return;
+
     setSelectedId(id);
 
     // Si estás editando un texto y tocás otro, terminá la edición
@@ -127,13 +133,23 @@ const DrawDiagram = () => {
     const stage = stageRef.current;
     const pos = stage.getPointerPosition();
 
-    if (!pos) {
-      return;
-    }
+    if (!pos) return;
 
     const clickedOnEmpty = e.target === e.target.getStage();
 
-    // Manejo de texto
+    // Evita seleccionar elementos mientras se dibuja una polilínea
+    if (tool !== 'polyline' || !isDrawingPolyline) {
+      if (clickedOnEmpty) {
+        setSelectedId(null);
+      } else {
+        const clickedId = e.target.getAttr('id');
+        if (clickedId) {
+          setSelectedId(clickedId);
+        }
+      }
+    }
+
+    // Texto
     if (tool === 'text' && clickedOnEmpty) {
       if (editingTextId) return;
       setTextPosition(pos);
@@ -142,15 +158,16 @@ const DrawDiagram = () => {
       return;
     }
 
-    // Manejo de líneas simples
+    // Línea simple
     if (tool === 'simpleLine') {
-      if (selectedId) {
-        return;
-      }
+      if (selectedId) return;
+
       if (!lineStart) {
-        if (!clickedOnEmpty) {
-          return;
-        }
+        setSelectedId(null);
+        setShowLineStyleSelector(false);
+
+        setShowLineStyleSelector(false);
+
         setLineStart(pos);
         setTempLine({
           points: [pos.x, pos.y, pos.x, pos.y],
@@ -158,11 +175,8 @@ const DrawDiagram = () => {
           strokeWidth: lineStyle.strokeWidth,
         });
       } else {
-
         const isSamePoint = pos.x === lineStart.x && pos.y === lineStart.y;
-        if (isSamePoint) {
-          return;
-        }
+        if (isSamePoint) return;
 
         const id = Date.now();
         const x = Math.min(lineStart.x, pos.x);
@@ -217,51 +231,45 @@ const DrawDiagram = () => {
       }
       return;
     }
-    // Manejo de polilíneas
+
+    // Polilínea
     if (tool === 'polyline') {
-      if (selectedId) return;
-
-      if (clickedOnEmpty) {
-        // Si es el primer clic para esta polilínea
-        if (!isDrawingPolyline) {
-          setIsDrawingPolyline(true);
-          setPolylinePoints([pos.x, pos.y]);
+      e.cancelBubble = true; // evitar propagación
+      if (!isDrawingPolyline) {
+        // Primer punto de la polilínea
+        setShowLineStyleSelector(false);
+        setSelectedId(null); // 🔐 aseguramos que no se dispare handleSelect
+        setIsDrawingPolyline(true);
+        setPolylinePoints([pos.x, pos.y]);
+        setTempLine({
+          points: [pos.x, pos.y, pos.x, pos.y],
+          stroke: lineStyle.color,
+          strokeWidth: lineStyle.strokeWidth,
+        });
+      } else {
+        // Agregar nuevo punto
+        setSelectedId(null);
+        setPolylinePoints((prev) => {
+          const updated = [...prev, pos.x, pos.y];
           setTempLine({
-            points: [pos.x, pos.y, pos.x, pos.y],
+            points: updated,
             stroke: lineStyle.color,
             strokeWidth: lineStyle.strokeWidth,
           });
-        } else {
-          // Si es un clic subsiguiente para la polilínea
-          const updatedPoints = [...polylinePoints, pos.x, pos.y];
-          setPolylinePoints(updatedPoints);
-          setTempLine({
-            points: updatedPoints,
-            stroke: lineStyle.color,
-            strokeWidth: lineStyle.strokeWidth,
-          });
-
-          // Detección de doble clic para finalizar la polilínea
-          const now = Date.now();
-          if (lastClickTime && now - lastClickTime < 300 &&
-            Math.abs(pos.x - polylinePoints[polylinePoints.length - 2]) < 10 &&
-            Math.abs(pos.y - polylinePoints[polylinePoints.length - 1]) < 10) {
-            // Finalizar la polilínea si se hizo doble clic cerca del último punto
-            finishPolyline();
-          }
-          setLastClickTime(now);
-        }
+          return updated;
+        });
       }
       return;
     }
 
+    // Variable flotante (imagen sin fondo)
     if (tool === 'floatingVariable') {
       const img = new window.Image();
-      img.src = '/assets/img/Diagram/newDiagram/img_sinfondo.PNG'; 
+      img.src = '/assets/img/Diagram/newDiagram/img_sinfondo.PNG';
       img.onload = () => {
         const width = 100;
         const height = (img.height / img.width) * width;
-    
+
         const newImage = {
           id: Date.now(),
           type: 'image',
@@ -273,15 +281,15 @@ const DrawDiagram = () => {
           draggable: true,
           dataInflux: null,
         };
-    
+
         setElements((prev) => [...prev, newImage]);
         setNewElementsIds((prev) => [...prev, newImage.id]);
         setTool(null);
       };
       return;
     }
-
   };
+
 
   const handleMouseMove = (e) => {
     const stage = e.target.getStage();
@@ -367,7 +375,6 @@ const DrawDiagram = () => {
       setTool(null);
     }
   };
-
 
   const handleMouseUp = () => {
     isDrawing.current = false;
@@ -491,7 +498,7 @@ const DrawDiagram = () => {
       img.onload = () => {
         const width = 100;
         const height = (img.height / img.width) * width;
-  
+
         const newImage = {
           id: Date.now(),
           type: 'image',
@@ -503,7 +510,7 @@ const DrawDiagram = () => {
           draggable: true,
           dataInflux: dataInflux, // ASIGNAR VARIABLE
         };
-  
+
         setElements((prev) => [...prev, newImage]);
         setNewElementsIds((prev) => [...prev, newImage.id]);
         setTool(null); // salir del modo variable suelta
@@ -511,15 +518,39 @@ const DrawDiagram = () => {
       };
       return;
     }
-  
+
     // comportamiento normal para línea, texto, imagen, etc.
     if (!selectedId) return;
-  
+
     setElements((prev) =>
       prev.map((el) =>
         el.id === selectedId ? { ...el, dataInflux } : el
       )
     );
+  };
+
+  const moveElementToBack = () => {
+    if (!selectedId) return;
+
+    setElements((prev) => {
+      const selected = prev.find(el => el?.id === selectedId);
+      if (!selected) return prev;
+
+      const remaining = prev.filter(el => el?.id !== selectedId);
+      return [selected, ...remaining];
+    });
+  };
+
+  const moveElementToFront = () => {
+    if (!selectedId) return;
+
+    setElements((prev) => {
+      const selected = prev.find(el => el?.id === selectedId);
+      if (!selected) return prev;
+
+      const remaining = prev.filter(el => el?.id !== selectedId);
+      return [...remaining, selected];
+    });
   };
 
   const handleClearCanvas = () => {
@@ -551,7 +582,7 @@ const DrawDiagram = () => {
     });
   };
 
-  const handleSaveDiagram = async () => {
+  const handleSaveDiagram = async (navigate) => {
     const { value: nombre } = await Swal.fire({
       title: 'Guardar diagrama',
       input: 'text',
@@ -596,13 +627,17 @@ const DrawDiagram = () => {
       delete diagramToSave.diagramMetadata.id;
     }
 
-    await saveDiagramKonva(diagramToSave);
+    await saveDiagramKonva({
+      ...diagramToSave,
+      navigate
+    });
 
     setNewElementsIds([]);
     setDeletedItems({
       lines: [],
       texts: [],
       images: [],
+      polilynes: [],
     });
   };
 
@@ -672,6 +707,7 @@ const DrawDiagram = () => {
       }
       if (e.key === 'Delete' && selectedId) {
         handleDeleteElement(selectedId);
+        setTool('');
         setSelectedId(null);
         setShowLineStyleSelector(false);
         setShowTextStyler(false);
@@ -735,140 +771,162 @@ const DrawDiagram = () => {
 
   useEffect(() => {
     if (id) {
+      setIsLoading(true);
+
       uploadCanvaDb(id, {
-        setElements,
         setCircles,
         setDiagramMetadata,
         setTool,
+      }).then((elements) => {
+        setElements(elements);
+      }).finally(() => {
+        setIsLoading(false);
       });
     }
   }, [id]);
 
   return (
     <>
-      <div className="w-full">
-        {/* Barra arriba */}
-        <TopNavbar
-          onClear={handleClearCanvas}
-          onSave={handleSaveDiagram}
-          onUndo={handleUndo}
-          elements={elements}
-        />
-        {/* Contenedor horizontal de sidebar + canvas */}
-        <div className="flex w-full min-h-screen">
-          <Sidebar
-            tool={tool}
-            setTool={setTool}
-            selectedId={selectedId}
-            setShowImageSelector={setShowImageSelector}
-            setShowLineStyleSelector={setShowLineStyleSelector}
-            setShowTextStyler={setShowTextStyler}
-            setShowListField={setShowListField}
-            setElements={setElements}
-            setCircles={setCircles}
-            setSelectedId={setSelectedId}
-            setTextPosition={setTextPosition}
-            setTextInput={setTextInput}
-            handleDeleteElement={handleDeleteElement}
-          />
-          {/* Contenido principal (canvas + overlays) */}
-          <div className="flex-1 bg-gray-300 rounded-br-lg relative">
-            {/* Selector de imágenes */}
-            {showImageSelector && (
-              <ImageSelector
-                visible={showImageSelector}
-                images={imageList}
-                onSelectImage={addImageToCanvas}
-              />
-            )}
-            {/* Panel de estilo de línea */}
-            {showLineStyleSelector && (
-              <LineStylePanel
+      {isLoading ? (
+        <Box
+          className="absolute inset-0 flex items-center justify-center"
+          style={{ zIndex: 1000 }}
+        >
+          <LoaderComponent />
+        </Box>
+      ) : (
+        <>
+          <div className="w-full">
+            {/* Barra arriba */}
+            <TopNavbar
+              onClear={handleClearCanvas}
+              onSave={() => handleSaveDiagram(navigate)}
+              onUndo={handleUndo}
+              elements={elements}
+              selectedId={selectedId}
+              onSendToBack={moveElementToBack}
+              onBringToFront={moveElementToFront}
+            />
+            {/* Contenedor horizontal de sidebar + canvas */}
+            <div className="flex w-full min-h-screen">
+              <Sidebar
                 tool={tool}
                 setTool={setTool}
                 selectedId={selectedId}
-                visible={showLineStyleSelector}
-                lineStyle={lineStyle}
-                onChange={setLineStyle}
+                setShowImageSelector={setShowImageSelector}
+                setShowLineStyleSelector={setShowLineStyleSelector}
+                setShowTextStyler={setShowTextStyler}
+                setShowListField={setShowListField}
                 setElements={setElements}
-                elements={elements}
+                setCircles={setCircles}
+                setSelectedId={setSelectedId}
+                setTextPosition={setTextPosition}
+                setTextInput={setTextInput}
+                handleDeleteElement={handleDeleteElement}
               />
-            )}
-            {/* Panel de estilo de texto */}
-            <TextStyler
-              visible={showTextStyler}
-              textStyle={textStyle}
-              onStyleChange={setTextStyle}
-              onApply={() => {
-                if (editingTextId) {
-                  setElements((prev) =>
-                    prev.map((el) =>
-                      el.id === editingTextId
-                        ? {
-                          ...el,
-                          fontSize: textStyle.fontSize,
-                          fill: textStyle.fill,
-                          fontStyle: textStyle.fontStyle
-                        }
-                        : el
-                    )
-                  );
-                  setShowTextStyler(false);
-                  setTextPosition(null);
-                }
-              }}
-              isEditing={!!editingTextId}
-            />
-            {/* Selector de variables */}
-            {showListField && (
-              <div className="absolute left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 max-w-md">
-                <ListField
-                  onSelectVariable={handleAssignVariable}
-                  onClose={() => setShowListField(false)}
+              {/* Contenido principal (canvas + overlays) */}
+              <div className="flex-1 bg-gray-300 rounded-br-lg relative">
+                {/* Selector de imágenes */}
+                {showImageSelector && (
+                  <ImageSelector
+                    visible={showImageSelector}
+                    images={imageList}
+                    onSelectImage={addImageToCanvas}
+                  />
+                )}
+                {/* Panel de estilo de línea */}
+                {showLineStyleSelector && (
+                  <LineStylePanel
+                    tool={tool}
+                    setTool={setTool}
+                    selectedId={selectedId}
+                    visible={showLineStyleSelector}
+                    lineStyle={lineStyle}
+                    onChange={setLineStyle}
+                    setElements={setElements}
+                    elements={elements}
+                    setSelectedId={setSelectedId}
+                  />
+                )}
+                {/* Panel de estilo de texto */}
+                <TextStyler
+                  visible={showTextStyler}
+                  textStyle={textStyle}
+                  onStyleChange={setTextStyle}
+                  onApply={() => {
+                    if (editingTextId) {
+                      setElements((prev) =>
+                        prev.map((el) =>
+                          el.id === editingTextId
+                            ? {
+                              ...el,
+                              fontSize: textStyle.fontSize,
+                              fill: textStyle.fill,
+                              fontStyle: textStyle.fontStyle
+                            }
+                            : el
+                        )
+                      );
+                      setShowTextStyler(false);
+                      setTextPosition(null);
+                    }
+                  }}
+                  isEditing={!!editingTextId}
+                />
+                {/* Selector de variables */}
+                {showListField && (
+                  <div className="absolute left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 max-w-md">
+                    <ListField
+                      onSelectVariable={handleAssignVariable}
+                      onClose={() => setShowListField(false)}
+                    />
+                  </div>
+                )}
+                {/* Canvas */}
+                <DiagramCanvas
+                  elements={elements}
+                  circles={circles}
+                  tempLine={tempLine}
+                  dashOffset={dashOffset}
+                  selectedId={selectedId}
+                  stageRef={stageRef}
+                  transformerRef={transformerRef}
+                  handleMouseDown={handleMouseDown}
+                  handleMouseMove={handleMouseMove}
+                  handleMouseUp={handleMouseUp}
+                  handleSelect={handleSelect}
+                  setElements={setElements}
+                  setCircles={setCircles}
+                  setSelectedId={setSelectedId}
+                  setTextInput={setTextInput}
+                  setTextPosition={setTextPosition}
+                  setEditingTextId={setEditingTextId}
+                  setTextStyle={setTextStyle}
+                  tool={tool}
+                  handleTransformEnd={handleTransformEnd}
+                />
+                {/* Editor de texto */}
+                <TextEditor
+                  textPosition={textPosition}
+                  textStyle={textStyle}
+                  textInput={textInput}
+                  onChange={setTextInput}
+                  onSave={saveText}
+                  onCancel={() => {
+                    setTextPosition(null);
+                    setTextInput('');
+                    setEditingTextId(null);
+                  }}
                 />
               </div>
-            )}
-            {/* Canvas */}
-            <DiagramCanvas
-              elements={elements}
-              circles={circles}
-              tempLine={tempLine}
-              dashOffset={dashOffset}
-              selectedId={selectedId}
-              stageRef={stageRef}
-              transformerRef={transformerRef}
-              handleMouseDown={handleMouseDown}
-              handleMouseMove={handleMouseMove}
-              handleMouseUp={handleMouseUp}
-              handleSelect={handleSelect}
-              setElements={setElements}
-              setCircles={setCircles}
-              setSelectedId={setSelectedId}
-              setTextInput={setTextInput}
-              setTextPosition={setTextPosition}
-              setEditingTextId={setEditingTextId}
-              setTextStyle={setTextStyle}
-              tool={tool}
-              handleTransformEnd={handleTransformEnd}
-            />
-            {/* Editor de texto */}
-            <TextEditor
-              textPosition={textPosition}
-              textStyle={textStyle}
-              textInput={textInput}
-              onChange={setTextInput}
-              onSave={saveText}
-              onCancel={() => {
-                setTextPosition(null);
-                setTextInput('');
-                setEditingTextId(null);
-              }}
-            />
+            </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
     </>
   );
-};
+}
+
+
 
 export default DrawDiagram;
