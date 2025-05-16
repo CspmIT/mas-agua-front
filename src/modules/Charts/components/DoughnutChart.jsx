@@ -9,7 +9,7 @@ const DoughnutChart = ({ data }) => {
         },
         legend: {
             orient: 'horizontal',
-            left: 'center'
+            left: 'center',
         },
         series: [
             {

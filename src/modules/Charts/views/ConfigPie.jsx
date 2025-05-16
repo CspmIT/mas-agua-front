@@ -82,11 +82,10 @@ const ConfigPie = () => {
         }
 
         const formatedCategories = categories.map(category =>  ({
-            value: category.value,
+            var_id: category.value,
             name: category.name,
             color: category?.itemStyle?.color
         }))
-        console.log(formatedCategories)
 
         const sendObject = {
             type: 'PieChart',

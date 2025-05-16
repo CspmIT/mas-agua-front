@@ -11,6 +11,9 @@ import LineChart from '../../Charts/components/LineChart'
 import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
 import { LineChartRepository } from '../../../class/LineChart'
+import LoaderComponent from '../../../components/Loader'
+import { ChartFactory } from './ChartFactory'
+import { chartQueryBuilderMap } from '../factories/chartQueryBuilderMap'
 
 const ChartAccordion = ({ chart }) => {
     const [loader, setLoader] = useState(true)
@@ -19,53 +22,22 @@ const ChartAccordion = ({ chart }) => {
     const [expanded, setExpanded] = useState(false) // Controlar el estado del acordeón
 
     const fetchChartData = async () => {
-        const basicChart = {
-            id: chart.id,
-            type: chart.type,
-            title: chart.name,
-        }
         try {
-            const lineChart = new LineChartRepository(
-                basicChart,
-                chart.ChartSeriesData,
-                chart.ChartConfig
-            )
+            const fetchChartFunction = chartQueryBuilderMap[chart?.type]
+            if (!fetchChartFunction) {
+                console.warn(
+                    `No existe una funcion de busqueda para ${chart.type}`
+                )
+                setLoader(false)
+                return
+            }
 
-            const query = lineChart.generateQuery(filters)
-
-            const { data } = await request(
-                `${backend['Mas Agua']}/seriesDataInflux`,
-                'POST',
-                query
-            )
-
-            // Encontrar la primera serie que tenga datos
-            let referenceSeries = Object.keys(data).find(
-                (key) => data[key].length > 0
-            )
-
-            const xSeries = referenceSeries
-                ? data[referenceSeries].map((item) => item.time)
-                : []
-            const ySeries = lineChart.getYSeries().map((series) => ({
-                ...series,
-                data:
-                    data[series.idVar.id]?.map((point) =>
-                        point.value !== null && point.value !== undefined
-                            ? parseFloat(point.value).toFixed(3)
-                            : '-'
-                    ) || [],
-            }))
-
-            setChartData({
-                xSeries,
-                ySeries,
-            })
-
+            const data = await fetchChartFunction(chart, filters)
+            setChartData(data)
             setLoader(false)
         } catch (error) {
-            console.error('Error construyendo el gráfico:', error)
-            setChartData({ xSeries: [], ySeries: [] })
+            console.error('Error construyendo el grafico', error)
+            setChartData(undefined)
             setLoader(false)
         }
     }
@@ -105,19 +77,16 @@ const ChartAccordion = ({ chart }) => {
                 <Typography variant="h5">{chart.name}</Typography>
             </AccordionSummary>
             <AccordionDetails className="flex flex-col items-center justify-center gap-5 h-fit">
-                <FiltersChart id_chart={chart.id} setFilters={setFilters} />
-                {loader ? (
-                    'Cargando...'
-                ) : (
-                    <div className="h-80 w-full">
-                        <LineChart
-                            xType={'category'}
-                            yType={'value'}
-                            xSeries={chartData?.xSeries || []}
-                            ySeries={chartData?.ySeries || []}
-                        />
-                    </div>
+                {chart.type === 'LineChart' && (
+                    <FiltersChart id_chart={chart.id} setFilters={setFilters} />
                 )}
+
+                <ChartFactory
+                    loader={loader}
+                    type={chart.type}
+                    chartData={chartData}
+                    chart={chart}
+                />
             </AccordionDetails>
         </Accordion>
     )

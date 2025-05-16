@@ -16,7 +16,7 @@ const chartComponents = {
     LiquidFillPorcentaje,
     CirclePorcentaje,
     BarDataSet,
-    DoughnutChart,
+    PieChart: DoughnutChart,
     PumpControl,
     GaugeSpeed,
     BooleanChart,
@@ -83,6 +83,16 @@ const Home = () => {
                     }
                 }
 
+                if (type === 'PieChart') {
+                    console.log(chart)
+                    return {
+                        id: `${chart.id}-${chart.type}`,
+                        component: type,
+                        props: propsReduce,
+                        data: chart.ChartPieData,
+                    }
+                }
+
                 const dataReduce = chart.ChartData.reduce((acc, data) => {
                     const { key, value } = data
                     return {
@@ -114,6 +124,7 @@ const Home = () => {
     return (
         <Grid container spacing={3}>
             {charts.map((chart, index) => {
+                console.log(chart)
                 const ChartComponentDb = chartComponents[chart.component]
                 return (
                     <Grid item xs={12} sm={6} lg={4} key={index}>
@@ -153,6 +164,27 @@ const ChartComponentDbWrapper = ({
     const [chartData, setChartData] = useState(initialData)
     const [loading, setLoading] = useState(true) // Estado para controlar la carga
 
+    const fetchPieChartData = async (influxVar) => {
+        const updatedPies = await Promise.all(
+            influxVar.map(async (item) => {
+                const { data } = await request(
+                    `${backend['Mas Agua']}/dataInflux`,
+                    'POST',
+                    item?.InfluxVars?.varsInflux
+                )
+                const accessKey = Object.values(
+                    item.InfluxVars.varsInflux
+                ).shift()
+                return {
+                    value: data?.[accessKey.calc_field]?.value,
+                    itemStyle: { color: item.color },
+                    name: item.name,
+                }
+            })
+        )
+        return updatedPies
+    }
+
     // Función para obtener los datos de las bombas o estados desde la API
     const fetchPumpOrStateValues = async (items) => {
         const updatedItems = await Promise.all(
@@ -187,7 +219,7 @@ const ChartComponentDbWrapper = ({
                 'POST',
                 influxVar
             )
-            
+
             const accessKey = Object.values(initialData.value).shift()
             return {
                 value: data?.[accessKey.calc_field]?.value,
@@ -222,6 +254,11 @@ const ChartComponentDbWrapper = ({
                 })
             }
 
+            if (ChartComponent === DoughnutChart) {
+                const updatedPie = await fetchPieChartData(initialData)
+                setChartData({ data: updatedPie })
+            }
+
             if (initialData?.value) {
                 const data = await fetchChartData(initialData.value)
 
@@ -240,7 +277,7 @@ const ChartComponentDbWrapper = ({
         fetchData()
         const intervalId = setInterval(fetchData, 15000) // Refresca los datos cada 15 segundos
         return () => clearInterval(intervalId)
-    }, [chartId, ChartComponent, initialData, ]) // Dependencias ajustadas para asegurar la actualización
+    }, [chartId, ChartComponent, initialData]) // Dependencias ajustadas para asegurar la actualización
 
     // Si los datos aún no están listos, muestra un mensaje de carga
     if (loading) {

@@ -10,7 +10,7 @@ const ChartsDashboard = () => {
 
 
     const fetchSeriesCharts = async () => {
-        const url = `${backend[import.meta.env.VITE_APP_NAME]}/seriesCharts`
+        const url = `${backend[import.meta.env.VITE_APP_NAME]}/dashboardCharts`
 
         const { data } = await request(url, 'GET')
         setCharts(data)
