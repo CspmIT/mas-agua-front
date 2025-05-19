@@ -1,7 +1,6 @@
-import { Circle, Edit } from '@mui/icons-material'
-import { IconButton } from '@mui/material'
+import { Button, Box } from '@mui/material';
 
-export const ColumnsProfile = (editProfile) => [
+export const ColumnsProfile = (editProfile, setListProfile) => [
 	{
 		header: 'Perfil',
 		accessorKey: 'description',
@@ -9,39 +8,28 @@ export const ColumnsProfile = (editProfile) => [
 	{
 		header: 'Estado',
 		accessorKey: 'status',
-		Cell: ({ row }) => {
-			return (
-				<div className='flex items-center w-full'>
-					<Circle color={row.original?.status > 0 ? 'success' : 'error'} />
-					<p className='m-0 p-0 ml-2 text-base'>{`${
-						row.original?.status > 0 ? 'Habilitado' : 'Deshabilitado'
-					}`}</p>
-				</div>
-			)
-		},
+		Cell: ({ row }) => (
+			<span className={`text-sm font-semibold ${row.original.status ? 'text-green-600' : 'text-red-600'}`}>
+				{row.original.status ? 'Habilitado' : 'Deshabilitado'}
+			</span>
+		),
 	},
 	{
-		header: '',
-		accessorKey: 'btn-dashboard',
-		size: 10,
-		enableSorting: false,
-		enableColumnFilter: false,
-		enableClickToCopy: false,
+		header: 'Acciones',
+		accessorKey: 'actions',
 		Cell: ({ row }) => {
-			const info = {
-				Name: row.original.name,
-				id: parseInt(row.original.id),
-				type_recloser: 4,
-				...row.origin,
-			}
 			return (
-				<IconButton
-					onClick={() => editProfile(row.original)}
-					className=' !bg-[#ffbf1e] hover:!bg-[#ffde89] !text-black !shadow-md'
-				>
-					<Edit />
-				</IconButton>
-			)
+				<Box display="flex" gap={1}>
+					<Button
+						variant="outlined"
+						color="primary"
+						size="small"
+						onClick={() => editProfile(row.original)}
+					>
+						Editar
+					</Button>
+				</Box>
+			);
 		},
 	},
-]
+];
