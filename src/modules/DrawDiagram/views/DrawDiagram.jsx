@@ -62,7 +62,22 @@ const DrawDiagram = () => {
   const [isDrawingPolyline, setIsDrawingPolyline] = useState(false);
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
-
+  const [stageScale, setStageScale] = useState(1);
+  const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const getTransformedPointerPosition = () => {
+    const stage = stageRef.current;
+    const pointer = stage.getPointerPosition();
+    if (!pointer) return null;
+  
+    return {
+      x: (pointer.x - stagePosition.x) / stageScale,
+      y: (pointer.y - stagePosition.y) / stageScale,
+    };
+  };
+  const [isDraggingStage, setIsDraggingStage] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState(null);
+  
 
   const handleSelect = (e, id) => {
 
@@ -134,7 +149,7 @@ const DrawDiagram = () => {
 
   const handleMouseDown = (e) => {
     const stage = stageRef.current;
-    const pos = stage.getPointerPosition();
+    const pos = getTransformedPointerPosition();
 
     if (!pos) return;
 
@@ -294,7 +309,7 @@ const DrawDiagram = () => {
 
   const handleMouseMove = (e) => {
     const stage = e.target.getStage();
-    const point = stage.getPointerPosition();
+    const point = getTransformedPointerPosition();
     if (!point) return;
 
     // Línea simple: seguir el mouse
@@ -673,6 +688,16 @@ const DrawDiagram = () => {
     }
   };
 
+  const handleZoomIn = () => {
+    const scaleBy = 1.05;
+    setStageScale((prev) => prev * scaleBy);
+  };
+  
+  const handleZoomOut = () => {
+    const scaleBy = 1.05;
+    setStageScale((prev) => prev / scaleBy);
+  };
+
   useEffect(() => {
     if (transformerRef.current && selectedId) {
       const stage = stageRef.current;
@@ -807,6 +832,10 @@ const DrawDiagram = () => {
               selectedId={selectedId}
               onSendToBack={moveElementToBack}
               onBringToFront={moveElementToFront}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              isPanning={isPanning}
+              setIsPanning={setIsPanning}
             />
             {/* Contenedor horizontal de sidebar + canvas */}
             <div className="flex w-full min-h-screen">
@@ -905,6 +934,15 @@ const DrawDiagram = () => {
                   setTextStyle={setTextStyle}
                   tool={tool}
                   handleTransformEnd={handleTransformEnd}
+                  stageScale={stageScale}
+                  stagePosition={stagePosition}
+                  setStageScale={setStageScale}         
+                  setStagePosition={setStagePosition}
+                  isPanning={isPanning}
+                  isDraggingStage={isDraggingStage}
+                  setIsDraggingStage={setIsDraggingStage}
+                  dragStartPos={dragStartPos}
+                  setDragStartPos={setDragStartPos}
                 />
                 {/* Editor de texto */}
                 <TextEditor

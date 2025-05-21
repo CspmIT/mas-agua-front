@@ -1,4 +1,3 @@
-// components/TopNavbar.jsx
 import React from 'react';
 import { PiBroomBold } from "react-icons/pi";
 import { FaSave } from "react-icons/fa";
@@ -6,6 +5,8 @@ import { IoArrowUndo, IoCaretBackOutline } from "react-icons/io5";
 import { MdOutlineMoveDown, MdOutlineMoveUp } from "react-icons/md";
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { IoMdMove } from "react-icons/io";
+
 
 const TopNavbar = ({ 
     onClear, 
@@ -15,6 +16,10 @@ const TopNavbar = ({
     selectedId,
     onSendToBack,
     onBringToFront,
+    onZoomIn,      
+    onZoomOut,
+    isPanning,
+    setIsPanning,
     }) => {
     const navigate = useNavigate()
 
@@ -40,7 +45,7 @@ const TopNavbar = ({
     return (
         <div className="w-full flex-1 bg-slate-400 rounded-t-lg">
             <div className="flex items-center justify-between px-4 py-2">
-                <div className="flex items-center gap-3 ps-16">
+                <div className="flex items-center gap-2 ps-16">
                     <button
                         onClick={onSave}
                         className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-800 rounded text-sm text-white"
@@ -61,6 +66,14 @@ const TopNavbar = ({
                     >
                         <IoArrowUndo className="text-lg" />
                         Deshacer
+                    </button>                  
+
+                    <button
+                        onClick={() => setIsPanning((prev) => !prev)}
+                        title="Mover diagrama"
+                        className={`flex items-center gap-2 px-3 py-2 rounded text-sm text-white ${isPanning ? 'bg-blue-700' : 'bg-slate-600 hover:bg-slate-800'}`}
+                        >
+                        <IoMdMove className="text-lg" />
                     </button>
 
                     {selectedId && (
