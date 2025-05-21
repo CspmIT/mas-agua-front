@@ -237,7 +237,7 @@ function ViewDiagram() {
 					</div>
 
 					{/* Card principal */}
-					<CardCustom className="w-full h-auto flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2" >
+					<CardCustom className="w-full h-auto flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
 						<div className="flex-1 w-full rounded-br-lg relative text-end">
 
 							{/* Botones de zoom */}

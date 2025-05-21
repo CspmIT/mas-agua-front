@@ -32,34 +32,88 @@ const DiagramCanvas = ({
   handleSelect,
   setElements,
   setCircles,
-  setSelectedId,
   setTextInput,
   setTextPosition,
   setEditingTextId,
   setTextStyle,
   tool,
-  handleTransformEnd
+  handleTransformEnd,
+  stageScale,
+  stagePosition,
+  isPanning,
+  setStagePosition,
+  setStageScale,
+  isDraggingStage,
+  setIsDraggingStage,
+  dragStartPos,
+  setDragStartPos,
 }) => {
 
   return (
     <>
-      <Stage
-        width={window.innerWidth - 190}
-        height={window.innerHeight}
-        ref={stageRef}
-        onMouseDown={(e) => {
-          if (e.target === e.target.getStage() && tool !== 'text') {
-            setSelectedId(null);
-            setCircles((prev) => prev.map((c) => ({ ...c, visible: false })));
-          }
-          handleMouseDown(e);
-        }}
-        onMousemove={handleMouseMove}
-        onMouseup={handleMouseUp}
-        style={{
-          cursor: ['simpleLine', 'polyline'].includes(tool) ? 'crosshair' : 'default',
-        }}
-      >
+       <Stage
+          width={window.innerWidth - 190}
+          height={window.innerHeight}
+          ref={stageRef}
+          scaleX={stageScale}
+          scaleY={stageScale}
+          x={stagePosition.x}
+          y={stagePosition.y}
+          onMouseDown={(e) => {
+            if (isPanning && e.target === e.target.getStage()) {
+              setIsDraggingStage(true);
+              const pointer = e.target.getStage().getPointerPosition();
+              setDragStartPos({ x: pointer.x, y: pointer.y });
+            } else {
+              handleMouseDown(e);
+            }
+          }}
+          onMouseMove={(e) => {
+            if (isDraggingStage && dragStartPos) {
+              const pointer = e.target.getStage().getPointerPosition();
+              const dx = pointer.x - dragStartPos.x;
+              const dy = pointer.y - dragStartPos.y;
+
+              setDragStartPos(pointer); // actualizar punto inicial
+              setStagePosition((prev) => ({
+                x: prev.x + dx,
+                y: prev.y + dy,
+              }));
+            } else {
+              handleMouseMove(e);
+            }
+          }}
+          onMouseUp={() => {
+            if (isDraggingStage) setIsDraggingStage(false);
+            handleMouseUp();
+          }}
+          onWheel={(e) => {
+            e.evt.preventDefault();
+            const scaleBy = 1.05;
+            const stage = e.target.getStage();
+            const oldScale = stage.scaleX();
+            const pointer = stage.getPointerPosition();
+
+            const mousePointTo = {
+              x: (pointer.x - stage.x()) / oldScale,
+              y: (pointer.y - stage.y()) / oldScale,
+            };
+
+            const direction = e.evt.deltaY > 0 ? -1 : 1;
+            const newScale = direction > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+            const newPos = {
+              x: pointer.x - mousePointTo.x * newScale,
+              y: pointer.y - mousePointTo.y * newScale,
+            };
+
+            setStageScale(newScale);
+            setStagePosition(newPos);
+          }}
+          style={{
+            cursor: isPanning ? 'grab' : ['simpleLine', 'polyline'].includes(tool) ? 'crosshair' : 'default',
+          }}
+        >
         <Layer>
           {
             elements.map((el) => {
@@ -278,7 +332,10 @@ const DiagramCanvas = ({
 
                         // Obtener la posición del clic relativa al grupo
                         const stage = stageRef.current;
-                        const pointerPos = stage.getPointerPosition();
+                        const pointerPos = {
+                          x: (stage.getPointerPosition().x - stage.x()) / stage.scaleX(),
+                          y: (stage.getPointerPosition().y - stage.y()) / stage.scaleY(),
+                        };
                         const relativePos = {
                           x: pointerPos.x - el.x,
                           y: pointerPos.y - el.y
