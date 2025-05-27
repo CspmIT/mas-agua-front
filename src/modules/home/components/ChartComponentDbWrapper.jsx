@@ -13,48 +13,57 @@ export const ChartComponentDbWrapper = ({
     const [chartData, setChartData] = useState(initialData)
     const [loading, setLoading] = useState(true) // Estado para controlar la carga
 
-    // Función para obtener los datos de las bombas o estados desde la API
-    // const fetchPumpOrStateValues = async (items) => {
-    //     const updatedItems = await Promise.all(
-    //         items.map(async (item) => {
-    //             try {
-    //                 const influxVar = item.value
-    //                 const { data } = await request(
-    //                     `${backend['Mas Agua']}/dataInflux`,
-    //                     'POST',
-    //                     influxVar.varsInflux // Ajusta el payload según lo que la API necesite
-    //                 )
-    //                 const accessKey = Object.values(item.value).shift()
-    //                 return {
-    //                     ...item,
-    //                     value:
-    //                         data?.[accessKey.calc_field]?.value ?? 'Sin datos',
-    //                 }
-    //             } catch (error) {
-    //                 console.error(error)
-    //                 return { ...item, value: 'Error' } // Devuelve el item con un estado de error
-    //             }
-    //         })
-    //     )
-    //     return updatedItems
-    // }
-
     // Función para obtener los datos de gráficos y actualizarlos
     const fetchChartData = async (influxVar) => {
         try {
-            console.log(influxVar)
             if (influxVar?.calc) {
-                const influx = Object.entries(influxVar.varsInflux).map(
-                    async ([varName, varConfig]) => {
-                        const sendData = { [varName]: varConfig }
-                        const { data } = await request(
-                            `${backend['Mas Agua']}/dataInflux`,
-                            'POST',
-                            sendData
-                        )
-                        console.log(data)
-                    }
+                const results = await Promise.all(
+                    Object.entries(influxVar.varsInflux).map(
+                        async ([varName, varConfig]) => {
+                            const sendData = { [varName]: varConfig }
+                            const { data } = await request(
+                                `${backend['Mas Agua']}/dataInflux`,
+                                'POST',
+                                sendData
+                            )
+                            const field = varConfig.calc_field
+                            return { varName, value: data?.[field]?.value }
+                        }
+                    )
                 )
+
+                // Crear un diccionario { varName: value }
+                const valuesMap = results.reduce((acc, { varName, value }) => {
+                    acc[varName] = value
+                    return acc
+                }, {})
+
+                // Reemplazar en la ecuación
+                let evaluableExpression = influxVar.equation
+                    .map((part) => {
+                        const match = part.match(/^{{(.+?)}}$/)
+                        return match ? valuesMap[match[1]] ?? 0 : part
+                    })
+                    .join(' ')
+                // Fusionar números separados por espacio sin operador
+                evaluableExpression = evaluableExpression.replace(
+                    /(\d)\s+(\d)/g,
+                    '$1$2'
+                )
+
+                // Evaluar la expresión
+                let result
+                try {
+                    result = eval(evaluableExpression) // ⚠️ Considerá sanitizar si recibís esto del usuario
+                    return {
+                        value: result,
+                    }
+                } catch (err) {
+                    console.error('Error al evaluar la expresión:', err)
+                    return {
+                        value: -1,
+                    }
+                }
             } else {
                 const { data } = await request(
                     `${backend['Mas Agua']}/dataInflux`,
