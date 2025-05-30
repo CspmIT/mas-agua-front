@@ -1,6 +1,6 @@
 import { Button, Card, IconButton, TextField } from '@mui/material'
 import { useEffect, useState } from 'react'
-import LogoBlanco from '../assets/img/Logo_Cooptech.png'
+import LogoBlanco from '/assets/img/logoCooptech.png'
 import { useForm } from 'react-hook-form'
 import { TbEye, TbEyeClosed } from 'react-icons/tb'
 import Swal from 'sweetalert2'
