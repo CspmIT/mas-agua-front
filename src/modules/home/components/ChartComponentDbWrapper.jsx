@@ -86,6 +86,31 @@ export const ChartComponentDbWrapper = ({
         }
     }
 
+    const fetchPumpOrStateValues = async (items) => {
+        const updatedItems = await Promise.all(
+            items.map(async (item) => {
+                try {
+                    const influxVar = item.value
+                    const { data } = await request(
+                        `${backend['Mas Agua']}/dataInflux`,
+                        'POST',
+                        influxVar // Ajusta el payload según lo que la API necesite
+                    )
+                    const accessKey = Object.values(item.value).shift()
+                    return {
+                        ...item,
+                        value:
+                            data?.[accessKey.calc_field]?.value ?? 'Sin datos',
+                    }
+                } catch (error) {
+                    console.error(error)
+                    return { ...item, value: 'Error' } // Devuelve el item con un estado de error
+                }
+            })
+        )
+        return updatedItems
+    }
+
     useEffect(() => {
         const fetchData = async () => {
             if (ChartComponent === PumpControl) {
