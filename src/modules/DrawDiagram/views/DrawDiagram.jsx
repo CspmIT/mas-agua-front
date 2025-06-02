@@ -69,7 +69,7 @@ const DrawDiagram = () => {
     const stage = stageRef.current;
     const pointer = stage.getPointerPosition();
     if (!pointer) return null;
-  
+
     return {
       x: (pointer.x - stagePosition.x) / stageScale,
       y: (pointer.y - stagePosition.y) / stageScale,
@@ -77,7 +77,7 @@ const DrawDiagram = () => {
   };
   const [isDraggingStage, setIsDraggingStage] = useState(false);
   const [dragStartPos, setDragStartPos] = useState(null);
-  
+
 
   const handleSelect = (e, id) => {
 
@@ -92,7 +92,7 @@ const DrawDiagram = () => {
       setTextPosition(null);
     }
 
-    const selectedElement = elements.find((el) => el.id === id);
+    const selectedElement = elements.find((el) => String(el.id) === String(id));
     console.log(selectedElement);
 
     if (selectedElement?.type === 'polyline') {
@@ -113,7 +113,7 @@ const DrawDiagram = () => {
           visible: c.lineId === selectedElement.id,
         }))
       );
-      
+
     } else if (selectedElement?.type === 'line') {
       setTool('simpleLine');
       setShowLineStyleSelector(true);
@@ -162,7 +162,7 @@ const DrawDiagram = () => {
       } else {
         const clickedId = e.target.getAttr('id');
         if (clickedId) {
-          setSelectedId(clickedId);
+          handleSelect(e, clickedId);
         }
       }
     }
@@ -196,7 +196,7 @@ const DrawDiagram = () => {
         const isSamePoint = pos.x === lineStart.x && pos.y === lineStart.y;
         if (isSamePoint) return;
 
-        const id = Date.now();
+        const id = String(Date.now());
         const x = Math.min(lineStart.x, pos.x);
         const y = Math.min(lineStart.y, pos.y);
 
@@ -252,10 +252,10 @@ const DrawDiagram = () => {
 
     // Polilínea
     if (tool === 'polyline' && !selectedId) {
-      e.cancelBubble = true; 
+      e.cancelBubble = true;
       if (!isDrawingPolyline) {
         setShowLineStyleSelector(false);
-        setSelectedId(null); 
+        setSelectedId(null);
         setIsDrawingPolyline(true);
         setPolylinePoints([pos.x, pos.y]);
         setTempLine({
@@ -288,7 +288,7 @@ const DrawDiagram = () => {
         const height = (img.height / img.width) * width;
 
         const newImage = {
-          id: Date.now(),
+          id: String(Date.now()),
           type: 'image',
           src: img.src,
           x: pos.x,
@@ -336,7 +336,7 @@ const DrawDiagram = () => {
 
   const finishPolyline = () => {
     if (polylinePoints.length >= 4) { // Al menos necesitamos 2 puntos (4 valores x,y)
-      const id = Date.now();
+      const id = String(Date.now());
 
       // Calcular la posición relativa
       let minX = Number.MAX_VALUE;
@@ -419,7 +419,7 @@ const DrawDiagram = () => {
       }
 
       const newImage = {
-        id: Date.now(),
+        id: String(Date.now()),
         type: 'image',
         src,
         x: 100,
@@ -484,7 +484,7 @@ const DrawDiagram = () => {
       );
       console.log("Text updated");
     } else {
-      const id = Date.now();
+      const id = String(Date.now());
       const newText = {
         id,
         type: 'text',
@@ -516,7 +516,7 @@ const DrawDiagram = () => {
         const height = (img.height / img.width) * width;
 
         const newImage = {
-          id: Date.now(),
+          id: String(Date.now()),
           type: 'image',
           src: img.src,
           x: 150,
@@ -529,7 +529,7 @@ const DrawDiagram = () => {
 
         setElements((prev) => [...prev, newImage]);
         setNewElementsIds((prev) => [...prev, newImage.id]);
-        setTool(null); 
+        setTool(null);
         setShowListField(false);
       };
       return;
@@ -540,7 +540,12 @@ const DrawDiagram = () => {
 
     setElements((prev) =>
       prev.map((el) =>
-        el.id === selectedId ? { ...el, dataInflux } : el
+        String(el.id) === String(selectedId) ? {
+          ...el, dataInflux: {
+            ...dataInflux,
+            position: 'top',
+          }
+        } : el
       )
     );
   };
@@ -678,21 +683,24 @@ const DrawDiagram = () => {
     setElements((prev) => prev.filter((el) => el.id !== id));
     setCircles((prev) => prev.filter((c) => c.lineId !== id));
 
-    const numericId = parseInt(id.split('-').pop(), 10);
-    if (!isNaN(numericId)) {
-      const typeKey = `${elementToDelete.type}s`;
-      setDeletedItems((prev) => ({
-        ...prev,
-        [typeKey]: [...(prev[typeKey] || []), numericId]
-      }));
+    if (typeof id === 'string' && id.includes('-')) {
+      const idStr = String(id);
+      const numericId = parseInt(idStr.split('-').pop(), 10);
+      if (!isNaN(numericId)) {
+        const typeKey = `${elementToDelete.type}s`;
+        setDeletedItems((prev) => ({
+          ...prev,
+          [typeKey]: [...(prev[typeKey] || []), numericId]
+        }));
+      }
     }
-  };
+  }
 
   const handleZoomIn = () => {
     const scaleBy = 1.05;
     setStageScale((prev) => prev * scaleBy);
   };
-  
+
   const handleZoomOut = () => {
     const scaleBy = 1.05;
     setStageScale((prev) => prev / scaleBy);
@@ -746,7 +754,7 @@ const DrawDiagram = () => {
 
     setElements((prev) =>
       prev.map((el) => {
-        if (el.id === selectedId && el.type === 'line') {
+        if (String(el.id) === String(selectedId) && el.type === 'line') {
           return {
             ...el,
             stroke: lineStyle.color,
@@ -796,7 +804,7 @@ const DrawDiagram = () => {
   useEffect(() => {
     if (id) {
       setIsLoading(true);
-  
+
       uploadCanvaDb(id, {
         setCircles,
         setDiagramMetadata,
@@ -936,7 +944,7 @@ const DrawDiagram = () => {
                   handleTransformEnd={handleTransformEnd}
                   stageScale={stageScale}
                   stagePosition={stagePosition}
-                  setStageScale={setStageScale}         
+                  setStageScale={setStageScale}
                   setStagePosition={setStagePosition}
                   isPanning={isPanning}
                   isDraggingStage={isDraggingStage}

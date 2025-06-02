@@ -128,14 +128,18 @@ export const uploadCanvaDb = async (id, {
 			const vars = Object.values(variable.variable.varsInflux)[0];
 		
 			dataInflux = {
-				id: image.id, 
+				id: variable.id_influxvars,  
 				id_variable: variable.id_influxvars,
-				name: variable.name_var,
+				name: variable.variable.name || variable.name_var,
 				unit: variable.variable.unit,
+				type: variable.variable.type,
+				calc: variable.variable.calc,
 				varsInflux: vars,
-			};
+				equation: variable.variable.equation,
+				status: variable.variable.status,
+			  };
 		
-			influxVarsToRequest.push({ id: image.id, varsInflux: vars }); 
+			influxVarsToRequest.push({ id: variable.id_influxvars, varsInflux: vars }); 
 			}
 
 			elements.push({
@@ -240,7 +244,7 @@ export const saveDiagramKonva = async ({
 						status: 1,
 						variables: el.dataInflux ? {
 							[el.dataInflux.name]: {
-								id_variable: el.dataInflux.id_variable || null,
+								id_variable: el.dataInflux.id || null,
 								show: true
 							}
 						} : {}
