@@ -77,6 +77,51 @@ function ViewDiagram() {
 			);
 		}
 
+		const tanqueImages = [
+			'Estanque_cloro.png',
+			'Cisterna.png',
+			'Tanques_agua_multiple.png',
+			'Tanques_agua_simple.png',
+			'tanque_horizontal.png',
+		];
+		  
+		const isEstanque = tanqueImages.some(name => el.src?.includes(name));
+		if (isEstanque) {
+			text = `${Math.round(value)}${unit}`;
+			const baseFontSize = el.width * 0.12;
+			const fontSize = Math.min(baseFontSize, 18);
+			const padding = 5;
+			const maxTextWidth = 80;
+			const textWidth = Math.min(el.width * 0.4, maxTextWidth);
+			const textHeight = fontSize + padding * 1;
+		  
+			return (
+			  <Group rotation={el.rotation || 0}>
+				<Label
+				  x={el.x + el.width / 2 - textWidth / 2.2}
+				  y={el.y + el.height / 2 - textHeight / 1.3}
+				>
+				  <Tag
+					fill="#fff"
+					cornerRadius={2}
+					lineJoin="round"
+					shadowColor="#27272a"
+					shadowBlur={5}
+				  />
+				  <Text
+					text={text}
+					fontFamily="Arial"
+					fontSize={fontSize}
+					padding={padding}
+					width={textWidth}
+					align="center"
+					fill="black"
+				  />
+				</Label>
+			  </Group>
+			);
+		  }
+
 		return (
 			<Label
 				x={el.x + (el.width || 0) / 2}

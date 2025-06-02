@@ -540,7 +540,12 @@ const DrawDiagram = () => {
 
     setElements((prev) =>
       prev.map((el) =>
-        String(el.id) === String(selectedId) ? { ...el, dataInflux } : el
+        String(el.id) === String(selectedId) ? {
+          ...el, dataInflux: {
+            ...dataInflux,
+            position: 'top',
+          }
+        } : el
       )
     );
   };
