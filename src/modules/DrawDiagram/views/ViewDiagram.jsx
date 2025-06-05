@@ -36,9 +36,9 @@ function ViewDiagram() {
 		const unit = el.dataInflux?.unit || '';
 		let text = '';
 
-		if (unit == 'binario') {
+		if (unit === 'binario' || value === 'true' || value === 'false') {
 			return null;
-		}
+		  }
 
 		if (value != null) {
 			if (!isNaN(value)) {

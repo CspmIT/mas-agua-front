@@ -13,8 +13,8 @@ const RenderImage = ({ el }) => {
     const val = el.dataInflux?.value;
 
     if (config.animation === 'boolean' && config.optionsImage) {
-      if (val === 1) return config.optionsImage.success;
-      if (val === 0) return config.optionsImage.error;
+      if (val === 1 || val === true) return config.optionsImage.success;
+      if (val === 0 || val === false) return config.optionsImage.error;
       return config.optionsImage.default;
     }
 
