@@ -31,21 +31,20 @@ function ViewDiagram() {
 		height: window.innerHeight - 10,
 	});
 
-	const renderTooltipLabel = (el) => {
+	const renderTooltipLabel = (el) => {		
 		const value = el.dataInflux?.value;
 		const unit = el.dataInflux?.unit || '';
 		let text = '';
 
+		if (unit === 'binario' || value === 'true' || value === 'false') {
+			return null;
+		  }
+
 		if (value != null) {
-			if (value === 1) {
-				text = 'Activa';
-			} else if (value === 0) {
-				text = 'Inactiva';
-			}
-			else if (!isNaN(value)) {
-				text = `${Number(value).toFixed(2)} ${unit}`;
+			if (!isNaN(value)) {
+			text = `${Number(value).toFixed(2)} ${unit}`;
 			} else {
-				text = `${value} ${unit}`;
+			text = `${value} ${unit}`;
 			}
 		} else {
 			text = 'No hay datos';
