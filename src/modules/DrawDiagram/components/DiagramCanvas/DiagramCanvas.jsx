@@ -141,7 +141,7 @@ const DiagramCanvas = ({
                         points={el.points}
                         stroke={el.stroke}
                         strokeWidth={el.strokeWidth}
-                        dash={[25, 15]}
+                        dash={[25, 10]}
                         dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
                       />
 

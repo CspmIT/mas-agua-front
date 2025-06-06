@@ -36,9 +36,9 @@ function ViewDiagram() {
 		const unit = el.dataInflux?.unit || '';
 		let text = '';
 
-		if (unit === 'binario' || value === 'true' || value === 'false') {
+		if (unit === 'binario' || value === true || value === false) {
 			return null;
-		  }
+		}
 
 		if (value != null) {
 			if (!isNaN(value)) {
@@ -342,8 +342,8 @@ function ViewDiagram() {
 										if (el.type === 'line' || el.type === 'polyline') {
 											const value = el.dataInflux?.value;
 											// si el valor es 0 mostrarla gris y sin animacion								
-											const isClosed = value == 0;
-											const strokeColor = isClosed ? '#6b7280' : el.stroke;
+											const isClosed = value == 0 || value == null ;
+											const strokeColor = isClosed ? '#0ea5e9' : el.stroke;
 											const dash = isClosed ? [] : [20, 10];
 
 

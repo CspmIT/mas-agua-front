@@ -271,7 +271,7 @@ export const ListImg = () => [
         srcView: `${urlBase}/bomba_centrifuga_off.png`,
         animation: 'boolean',
         optionsImage: {
-            error: '/assets/img/Diagram/diagramAction/bomba_centrifuga_fail.png',
+            error: '/assets/img/Diagram/diagramAction/bomba_centrifuga_off.png',
             success:
                 '/assets/img/Diagram/diagramAction/bomba_centrifuga_on.png',
             default:
@@ -288,9 +288,9 @@ export const ListImg = () => [
         srcView: `${urlBase}/led_OFF.png`,
         animation: 'boolean',
         optionsImage: {
-            error: '/assets/img/Diagram/diagramAction/led_FAIL.png',
+            error: '/assets/img/Diagram/diagramAction/led_OFF.png',
             success:
-                '/assets/img/Diagram/diagramAction/led_ON.png',
+                '/assets/img/Diagram/diagramAction/led_FAIL.png',
             default:
                 '/assets/img/Diagram/diagramAction/led_OFF.png',
         },
