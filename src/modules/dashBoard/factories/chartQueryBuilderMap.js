@@ -34,11 +34,20 @@ export const chartQueryBuilderMap = {
         const ySeries = lineChart.getYSeries().map((series) => ({
             ...series,
             data:
-                data[series.idVar.id]?.map((point) =>
-                    point.value !== null && point.value !== undefined
-                        ? parseFloat(point.value).toFixed(3)
-                        : '-'
-                ) || [],
+                data[series.idVar.id]?.map((point) => {
+                    const value = point.value
+                    if (typeof value === 'boolean') {
+                        return value ? 1 : 0
+                    }
+                    if (
+                        value !== null &&
+                        value !== undefined &&
+                        !isNaN(value)
+                    ) {
+                        return parseFloat(value).toFixed(3)
+                    }
+                    return '-'
+                }) || [],
         }))
 
         return { xSeries, ySeries }
