@@ -82,6 +82,7 @@ function ViewDiagram() {
 			'Tanques_agua_multiple.png',
 			'Tanques_agua_simple.png',
 			'tanque_horizontal.png',
+			'Tanque_elevado.png',
 		];
 		  
 		const isEstanque = tanqueImages.some(name => el.src?.includes(name));
