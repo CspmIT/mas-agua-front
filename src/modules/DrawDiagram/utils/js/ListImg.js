@@ -341,5 +341,27 @@ export const ListImg = () => [
             variable1: { id_variable: 0, show: false, require: false },
         },
     },
-    
+    {
+        id: 25,
+        name: 'Tanque Elevado',
+        src: `${urlBaseView}/Tanque_elevado.png`,
+        srcView: `${urlBaseView}/Tanque_elevado.png`,
+        animation: 'wave',
+        configAnimation: {
+            color: '#38bdf8',
+            margenLeft: 0.278,
+            margenTop: 0,
+            margenTopMin: 0.13,
+            margenTopMax: 0.33,
+            margenBotonLeft: 0.8,
+            widthTop: 47,
+            widthBottom: 45,
+            heightLeft: 64,
+            heightRight: 64,
+        },
+        variables: {
+            nivel: { id_variable: 0, show: false, require: true },
+            egreso: { id_variable: 0, show: false, require: false },
+        },
+    }
 ]
