@@ -362,7 +362,7 @@ export const ListImg = () => [
         srcView: `${urlBase}/bomba_sumergible_default.png`,
         animation: 'boolean',
         optionsImage: {
-            error: '/assets/img/Diagram/diagramAction/bomba_sumergible_FAIL.png',
+            error: '/assets/img/Diagram/diagramAction/bomba_sumergible_default.png',
             success:
                 '/assets/img/Diagram/diagramAction/bomba_sumergible_OK.png',
             default:
@@ -379,9 +379,9 @@ export const ListImg = () => [
         srcView: `${urlBase}/grupo_generador_default.png`,
         animation: 'boolean',
         optionsImage: {
-            error: '/assets/img/Diagram/diagramAction/grupo_generador_ON.png',
+            error: '/assets/img/Diagram/diagramAction/grupo_generador_OFF.png',
             success:
-                '/assets/img/Diagram/diagramAction/grupo_generador_OFF.png',
+                '/assets/img/Diagram/diagramAction/grupo_generador_ON.png',
             default:
                 '/assets/img/Diagram/diagramAction/grupo_generador_default.png',
         },
