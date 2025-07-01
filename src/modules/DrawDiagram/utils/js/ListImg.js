@@ -334,6 +334,29 @@ export const ListImg = () => [
     },
     {
         id: 24,
+        name: 'Tanque Elevado',
+        src: `${urlBaseView}/Tanque_elevado.png`,
+        srcView: `${urlBaseView}/Tanque_elevado.png`,
+        animation: 'wave',
+        configAnimation: {
+            color: '#38bdf8',
+            margenLeft: 0.278,
+            margenTop: 0,
+            margenTopMin: 0.13,
+            margenTopMax: 0.33,
+            margenBotonLeft: 0.8,
+            widthTop: 47,
+            widthBottom: 45,
+            heightLeft: 64,
+            heightRight: 64,
+        },
+        variables: {
+            nivel: { id_variable: 0, show: false, require: true },
+            egreso: { id_variable: 0, show: false, require: false },
+        },
+    },
+    {
+        id: 25,
         name: 'Bomba Sumergible 2',
         src: `${urlBase}/bomba_sumergible_default.png`,
         srcView: `${urlBase}/bomba_sumergible_default.png`,
@@ -350,7 +373,7 @@ export const ListImg = () => [
         },
     },
     {
-        id: 25,
+        id: 26,
         name: 'Grupo Generador',
         src: `${urlBase}/grupo_generador_default.png`,
         srcView: `${urlBase}/grupo_generador_default.png`,
@@ -367,7 +390,7 @@ export const ListImg = () => [
         },
     },
     {
-        id: 26,
+        id: 27,
         name: 'Img sin fondo',
         src: `${urlBase}/img_sinfondo.PNG`,
         srcView: `${urlBaseView}/img_sinfondo.PNG`,

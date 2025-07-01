@@ -12,6 +12,7 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
     const [customColor, setCustomColorProp] = useState('#f0f0f0')
     const [lineStyle, setLineStyleProp] = useState('line')
     const [title, setTitle] = useState('')
+    const [order, setOrder] = useState(undefined)
     const [lineChart, setLineChart] = useState(false)
     const ChartComponent = lazy(() => import(`../components/${chartType}.jsx`))
 
@@ -19,12 +20,12 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
     const updateStyleAndColor = useCallback(() => {
         if (data && data.ySeries) {
             const updatedYSeries = [...data.ySeries];
-            
+
             // Actualizar solo la serie de "Estilos" o "Product A" según corresponda
-            const styleIndex = chartData 
+            const styleIndex = chartData
                 ? updatedYSeries.findIndex(series => series.name === 'Estilos')
                 : updatedYSeries.findIndex(series => series.name === 'Product A');
-            
+
             if (styleIndex !== -1) {
                 updatedYSeries[styleIndex] = {
                     ...updatedYSeries[styleIndex],
@@ -32,7 +33,7 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
                     smooth: lineStyle === 'smooth',
                     color: customColor
                 };
-                
+
                 setData(prevData => ({
                     ...prevData,
                     ySeries: updatedYSeries
@@ -68,6 +69,7 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
                     id: chartData.id,
                     type: chartData.type,
                     title: chartData.name,
+                    order: chartData.order
                 }
                 const chartLine = new LineChartRepository(
                     chart,
@@ -82,6 +84,7 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
                     smooth: lineStyle === 'smooth',
                     color: customColor,
                 })
+                setOrder(chart.order)
                 setTitle(chart.title)
                 setData({ xType, xSeries, yType, ySeries })
                 setLineChart(chartLine)
@@ -142,6 +145,10 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
         setValue('title', title)
     }, [title])
 
+    useEffect(() => {
+        setValue('order', order)
+    }, [order])
+
     if (loader) {
         return <LoaderComponent />
     }
@@ -163,6 +170,14 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
                     setCustomColorProp={setCustomColorProp}
                     setLineStyleProp={setLineStyleProp}
                     dataChart={lineChart}
+                />
+                <TextField
+                    className="w-full"
+                    placeholder="Posicion en el dashboard de graficos"
+                    defaultValue={order}
+                    onChange={(e) => {
+                        setOrder(e.target.value)
+                    }}
                 />
             </Card>
             <Card className="w-full max-sm:w-full p-3 mb-4">
