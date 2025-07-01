@@ -301,15 +301,15 @@ export const ListImg = () => [
     {
         id: 22,
         name: 'Relé Térmico',
-        src: `${urlBase}/Relé térmico_OK.png`,
-        srcView: `${urlBase}/Relé Térmico_OK.png`,
+        src: `${urlBase}/Relé térmico_OFF.png`,
+        srcView: `${urlBase}/Relé Térmico_OFF.png`,
         animation: 'boolean',
         optionsImage: {
             error: '/assets/img/Diagram/diagramAction/Relé térmico_OK.png',
             success:
                 '/assets/img/Diagram/diagramAction/Relé térmico_FAIL.png',
             default:
-                '/assets/img/Diagram/diagramAction/Relé térmico_OK.png',
+                '/assets/img/Diagram/diagramAction/Relé térmico_OFF.png',
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
@@ -334,6 +334,40 @@ export const ListImg = () => [
     },
     {
         id: 24,
+        name: 'Bomba Sumergible 2',
+        src: `${urlBase}/bomba_sumergible_default.png`,
+        srcView: `${urlBase}/bomba_sumergible_default.png`,
+        animation: 'boolean',
+        optionsImage: {
+            error: '/assets/img/Diagram/diagramAction/bomba_sumergible_FAIL.png',
+            success:
+                '/assets/img/Diagram/diagramAction/bomba_sumergible_OK.png',
+            default:
+                '/assets/img/Diagram/diagramAction/bomba_sumergible_default.png',
+        },
+        variables: {
+            variable1: { id_variable: 0, show: false, require: false },
+        },
+    },
+    {
+        id: 25,
+        name: 'Grupo Generador',
+        src: `${urlBase}/grupo_generador_default.png`,
+        srcView: `${urlBase}/grupo_generador_default.png`,
+        animation: 'boolean',
+        optionsImage: {
+            error: '/assets/img/Diagram/diagramAction/grupo_generador_ON.png',
+            success:
+                '/assets/img/Diagram/diagramAction/grupo_generador_OFF.png',
+            default:
+                '/assets/img/Diagram/diagramAction/grupo_generador_default.png',
+        },
+        variables: {
+            variable1: { id_variable: 0, show: false, require: false },
+        },
+    },
+    {
+        id: 26,
         name: 'Img sin fondo',
         src: `${urlBase}/img_sinfondo.PNG`,
         srcView: `${urlBaseView}/img_sinfondo.PNG`,
