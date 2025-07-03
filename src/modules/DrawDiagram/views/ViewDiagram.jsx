@@ -36,7 +36,7 @@ function ViewDiagram() {
 		const unit = el.dataInflux?.unit || '';
 		let text = '';
 
-		if (unit === 'binario' || value === true || value === false) {
+		if (unit === 'binario' || value === true || value === false || unit === 'bool' || unit === '-') {
 			return null;
 		}
 
@@ -92,7 +92,7 @@ function ViewDiagram() {
 			const fontSize = Math.min(baseFontSize, 18);
 			const padding = 5;
 			const maxTextWidth = 80;
-			const textWidth = Math.min(el.width * 0.4, maxTextWidth);
+			const textWidth = Math.min(el.width * 0.45, maxTextWidth);
 			const textHeight = fontSize + padding * 1;
 		  
 			return (
