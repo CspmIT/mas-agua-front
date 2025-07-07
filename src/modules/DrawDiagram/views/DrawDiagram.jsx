@@ -553,6 +553,7 @@ const DrawDiagram = () => {
           ...el, dataInflux: {
             ...dataInflux,
             position: 'Centro',
+            show: true,
           }
         } : el
       )
