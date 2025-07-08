@@ -144,7 +144,9 @@ export const uploadCanvaDb = async (id, {
 				equation: variable.variable.equation,
 				status: variable.variable.status,
 				show: variable.show_var,
-				position: variable.position_var
+				position: variable.position_var,
+				max_value_var: variable.max_value_var,
+				calculatePercentage: variable.max_value_var ? true : false
 			  };
 		
 			influxVarsToRequest.push({ id: variable.id_influxvars, varsInflux: vars }); 
@@ -254,7 +256,8 @@ export const saveDiagramKonva = async ({
 							[el.dataInflux.name]: {
 								id_variable: el.dataInflux.id || null,
 								show: el.dataInflux.show,
-        						position: el.dataInflux.position
+        						position: el.dataInflux.position,
+								max_value: el.dataInflux.max_value_var
 							}
 						} : {}
 					});
@@ -291,7 +294,8 @@ export const saveDiagramKonva = async ({
 							[el.dataInflux.name]: {
 								id_variable: el.dataInflux.id || null,
 								show: el.dataInflux.show,
-        						position: el.dataInflux.position
+        						position: el.dataInflux.position,
+								max_value_var: el.dataInflux.maxValue
 							}
 						} : {}
 					});

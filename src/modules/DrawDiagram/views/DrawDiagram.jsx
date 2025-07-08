@@ -66,6 +66,10 @@ const DrawDiagram = () => {
   const [stageScale, setStageScale] = useState(1);
   const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [isDraggingStage, setIsDraggingStage] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState(null);
+  const [showTooltipPositionPanel, setShowTooltipPositionPanel] = useState(false);
+
   const getTransformedPointerPosition = () => {
     const stage = stageRef.current;
     const pointer = stage.getPointerPosition();
@@ -76,10 +80,6 @@ const DrawDiagram = () => {
       y: (pointer.y - stagePosition.y) / stageScale,
     };
   };
-  const [isDraggingStage, setIsDraggingStage] = useState(false);
-  const [dragStartPos, setDragStartPos] = useState(null);
-  const [showTooltipPositionPanel, setShowTooltipPositionPanel] = useState(false);
-
 
   const handleSelect = (e, id) => {
 
@@ -593,6 +593,26 @@ const DrawDiagram = () => {
     );
   };
 
+  const handleSetMaxValue = (value, calculatePercentage) => {
+    if (!selectedId) return;
+    setElements((prev) =>
+      prev.map((el) =>
+        String(el.id) === String(selectedId) && el.dataInflux
+          ? {
+              ...el,
+              dataInflux: {
+                ...el.dataInflux,
+                max_value_var: value,
+                calculatePercentage: calculatePercentage !== undefined 
+                  ? calculatePercentage 
+                  : el.dataInflux.calculatePercentage || false
+              }
+            }
+          : el
+      )
+    );
+  };
+  
   const moveElementToBack = () => {
     if (!selectedId) return;
 
@@ -970,6 +990,7 @@ const DrawDiagram = () => {
                   onChangePosition={handleChangeTooltipPosition}
                   onHideTooltip={handleHideTooltip}
                   onShowTooltip={handleShowTooltip}
+                  onSetMaxValue={handleSetMaxValue}
                 />
                 {/* Canvas */}
                 <DiagramCanvas

@@ -63,16 +63,27 @@ function ViewDiagram() {
 				break;
 		}
 
-		const value = el.dataInflux?.value;
+		// Verificar si el elemento tiene que calcular un valor a porcentaje
+		const rawValue = el.dataInflux.value;
+		const maxValue = el.dataInflux.max_value_var;
 		const unit = el.dataInflux?.unit || '';
 		let text = '';
 
-
-		if (value != null) {
-			if (!isNaN(value)) {
-				text = `${Number(value).toFixed(2)} ${unit}`;
+		if (
+			maxValue &&
+			!isNaN(maxValue) &&
+			Number(maxValue) !== 0 &&
+			rawValue != null &&
+			!isNaN(rawValue)
+		) {
+			// Calcular %
+			const percentage = ((Number(rawValue) * 100) / Number(maxValue)).toFixed(1);
+			text = `${percentage}%`;
+		} else if (rawValue != null) {
+			if (!isNaN(rawValue)) {
+				text = `${Number(rawValue).toFixed(2)} ${unit}`;
 			} else {
-				text = `${value} ${unit}`;
+				text = `${rawValue} ${unit}`;
 			}
 		} else {
 			text = 'No hay datos';
@@ -115,7 +126,19 @@ function ViewDiagram() {
 
 		const isEstanque = tanqueImages.some(name => el.src?.includes(name));
 		if (isEstanque) {
-			text = `${Math.round(value)}${unit}`;
+			if (
+				maxValue &&
+				!isNaN(maxValue) &&
+				Number(maxValue) !== 0 &&
+				rawValue != null &&
+				!isNaN(rawValue)
+			) {
+				// Calcular porcentaje si corresponde
+				const percentage = ((Number(rawValue) * 100) / Number(maxValue)).toFixed(1);
+				text = `${percentage}%`;
+			} else {
+				text = `${Math.round(rawValue)}${unit}`;
+			}
 			const baseFontSize = el.width * 0.12;
 			const fontSize = Math.min(baseFontSize, 18);
 			const padding = 5;
