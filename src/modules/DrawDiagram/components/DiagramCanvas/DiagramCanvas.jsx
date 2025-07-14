@@ -74,7 +74,7 @@ const DiagramCanvas = ({
             const dx = pointer.x - dragStartPos.x;
             const dy = pointer.y - dragStartPos.y;
 
-            setDragStartPos(pointer); // actualizar punto inicial
+            setDragStartPos(pointer); 
             setStagePosition((prev) => ({
               x: prev.x + dx,
               y: prev.y + dy,
@@ -153,10 +153,30 @@ const DiagramCanvas = ({
                         const angleRadians = Math.atan2(y2 - y1, x2 - x1);
                         const angleDegrees = (angleRadians * 180) / Math.PI;
 
+                        const offset = 30;
+                        let labelX = midX;
+                        let labelY = midY;
+
+                        switch (el.dataInflux.position) {
+                          case 'Arriba':
+                            labelY = midY - offset;
+                            break;
+                          case 'Abajo':
+                            labelY = midY + offset;
+                            break;
+                          case 'Derecha':
+                            labelX = midX - offset;
+                            break;
+                          case 'Izquierda':
+                            labelX = midX + offset;
+                            break;
+                          case 'Centro':
+                          default:
+                            break;
+                        }
+
                         return (
-                          <Label
-                            x={midX - 25} y={midY - 20} rotation={angleDegrees}
-                          >
+                          <Label x={labelX - 25} y={labelY - 20} rotation={angleDegrees} opacity={el.dataInflux.show ? 1 : 0.5}>
                             <Tag
                               fill="white"
                               pointerDirection="down"
@@ -170,7 +190,7 @@ const DiagramCanvas = ({
                               fontFamily="arial"
                               fontSize={14}
                               padding={8}
-                              fill="black "
+                              fill="black"
                             />
                           </Label>
                         );
@@ -181,6 +201,28 @@ const DiagramCanvas = ({
               }
 
               if (el.type === 'text') {
+                const offset = 30;
+                let labelX = el.x + (el.width || 0) / 2;
+                let labelY = el.y;
+              
+                switch (el.dataInflux?.position) {
+                  case 'Arriba':
+                    labelY = el.y - offset;
+                    break;
+                  case 'Abajo':
+                    labelY = el.y + offset;
+                    break;
+                  case 'Izquierda':
+                    labelX = el.x - offset;
+                    break;
+                  case 'Derecha':
+                    labelX = el.x + (el.width || 0) + offset;
+                    break;
+                  case 'Centro':
+                  default:
+                    break;
+                }
+              
                 return (
                   <Fragment key={el.id}>
                     <Group
@@ -220,12 +262,9 @@ const DiagramCanvas = ({
                         hitStrokeWidth={20}
                       />
                     </Group>
-                    {/* Label para mostrar la variable asignada a l texto*/}
+              
                     {el.dataInflux && el.dataInflux.name && (
-                      <Label
-                        x={el.x + (el.width || 0) / 2}
-                        y={el.y}
-                      >
+                      <Label x={labelX} y={labelY} opacity={el.dataInflux.show ? 1 : 0.5}>
                         <Tag
                           fill="white"
                           pointerDirection="down"
@@ -239,16 +278,43 @@ const DiagramCanvas = ({
                           fontFamily="arial"
                           fontSize={14}
                           padding={8}
-                          fill="black "
+                          fill="black"
                         />
                       </Label>
                     )}
                   </Fragment>
                 );
-              }
-
+              }              
 
               if (el.type === 'image') {
+                const offset = 5;
+                let labelX = el.x + (el.width || 0) / 2;
+                let labelY = el.y + (el.height || 0) / 2;
+              
+                let pointerDir = 'down';
+                switch (el.dataInflux?.position) {
+                  case 'Arriba':
+                    labelY = el.y - offset;
+                    pointerDir = 'down';
+                    break;
+                  case 'Abajo':
+                    labelY = el.y + (el.height || 0) + offset;
+                    pointerDir = 'up';
+                    break;
+                  case 'Izquierda':
+                    labelX = el.x - offset;
+                    pointerDir = 'right';
+                    break;
+                  case 'Derecha':
+                    labelX = el.x + (el.width || 0) + offset;
+                    pointerDir = 'left';
+                    break;
+                  case 'Centro':
+                  default:
+                    pointerDir = 'down';
+                    break;
+                }
+              
                 return (
                   <Fragment key={el.id}>
                     <ImageElement
@@ -268,15 +334,12 @@ const DiagramCanvas = ({
                       }}
                       onTransformEnd={handleTransformEnd}
                     />
-                    {/* Label para mostrar la variable asignada a la imagen */}
+              
                     {el.dataInflux && el.dataInflux.name && (
-                      <Label
-                        x={el.x + (el.width || 0) / 2}
-                        y={el.y}
-                      >
+                      <Label x={labelX} y={labelY} opacity={el.dataInflux.show ? 1 : 0.5}>
                         <Tag
                           fill="white"
-                          pointerDirection="down"
+                          pointerDirection={pointerDir}
                           pointerWidth={10}
                           pointerHeight={10}
                           lineJoin="round"
@@ -287,13 +350,14 @@ const DiagramCanvas = ({
                           fontFamily="arial"
                           fontSize={14}
                           padding={8}
-                          fill="black "
+                          fill="black"
                         />
                       </Label>
                     )}
                   </Fragment>
                 );
               }
+              
 
               if (el.type === 'polyline') {
                 return (
@@ -307,14 +371,12 @@ const DiagramCanvas = ({
                       onDragEnd={(e) => {
                         const { x, y } = e.target.position();
 
-                        // Actualizar la posición de la polilínea
                         setElements((prev) =>
                           prev.map((item) =>
                             item.id === el.id ? { ...item, x, y } : item
                           )
                         );
 
-                        // Actualizar las posiciones de los puntos de control
                         setCircles((prev) =>
                           prev.map((circle) =>
                             circle.lineId === el.id
@@ -330,7 +392,6 @@ const DiagramCanvas = ({
                       onDblClick={(e) => {
                         if (el.type !== 'polyline') return;
 
-                        // Obtener la posición del clic relativa al grupo
                         const stage = stageRef.current;
                         const pointerPos = {
                           x: (stage.getPointerPosition().x - stage.x()) / stage.scaleX(),
@@ -341,7 +402,6 @@ const DiagramCanvas = ({
                           y: pointerPos.y - el.y
                         };
 
-                        // Encontrar el segmento más cercano al clic
                         let minDist = Infinity;
                         let insertIndex = -1;
 
@@ -351,7 +411,6 @@ const DiagramCanvas = ({
                           const x2 = el.points[i + 2];
                           const y2 = el.points[i + 3];
 
-                          // Calcular distancia del punto al segmento
                           const dist = distToSegment(relativePos, { x: x1, y: y1 }, { x: x2, y: y2 });
 
                           if (dist < minDist) {
@@ -360,17 +419,14 @@ const DiagramCanvas = ({
                           }
                         }
 
-                        // Si está lo suficientemente cerca, insertar un nuevo punto
                         if (minDist < 20 && insertIndex !== -1) {
                           const newPoints = [...el.points];
                           newPoints.splice(insertIndex, 0, relativePos.x, relativePos.y);
 
-                          // Actualizar el elemento
                           const updatedElements = elements.map(item =>
                             item.id === el.id ? { ...item, points: newPoints } : item
                           );
 
-                          // Crear un nuevo círculo para el punto
                           const newCircleId = `${el.id}-point-${insertIndex / 2}`;
                           const newCircle = {
                             id: newCircleId,
@@ -381,7 +437,6 @@ const DiagramCanvas = ({
                             visible: false,
                           };
 
-                          // Actualizar los IDs de los círculos existentes
                           const updatedCircles = circles
                             .map(c => {
                               if (c.lineId === el.id) {
@@ -429,10 +484,30 @@ const DiagramCanvas = ({
                         const angleRadians = Math.atan2(y2 - y1, x2 - x1);
                         const angleDegrees = (angleRadians * 180) / Math.PI;
 
+                        const offset = 30;
+                        let labelX = midX;
+                        let labelY = midY;
+
+                        switch (el.dataInflux.position) {
+                          case 'Arriba':
+                            labelY = midY - offset;
+                            break;
+                          case 'Abajo':
+                            labelY = midY + offset;
+                            break;
+                          case 'Izquierda':
+                            labelX = midX - offset;
+                            break;
+                          case 'Derecha':
+                            labelX = midX + offset;
+                            break;
+                          case 'Centro':
+                          default:
+                            break;
+                        }
+
                         return (
-                          <Label
-                            x={midX - 25} y={midY - 20} rotation={angleDegrees}
-                          >
+                          <Label x={labelX - 25} y={labelY - 20} rotation={angleDegrees} opacity={el.dataInflux.show ? 1 : 0.5}>
                             <Tag
                               fill="white"
                               pointerDirection="down"
@@ -446,7 +521,7 @@ const DiagramCanvas = ({
                               fontFamily="arial"
                               fontSize={14}
                               padding={8}
-                              fill="black "
+                              fill="black"
                             />
                           </Label>
                         );
@@ -483,7 +558,6 @@ const DiagramCanvas = ({
                   c.id === circle.id ? { ...c, x, y } : c
                 );
 
-                // Manejar círculos para líneas simples
                 if (circle.id.includes('-start') || circle.id.includes('-end')) {
                   const updatedElements = elements.map((line) => {
                     if (line.id === circle.lineId) {
@@ -499,17 +573,14 @@ const DiagramCanvas = ({
                   setCircles(updatedCircles);
                   setElements(updatedElements);
                 }
-                // Manejar círculos para polilíneas
                 else if (circle.id.includes('-point-')) {
                   const lineElement = elements.find((el) => el.id === circle.lineId);
                   if (lineElement && lineElement.type === 'polyline') {
                     const pointIndex = parseInt(circle.id.split('-point-')[1]);
 
-                    // Calcular la posición relativa al grupo
                     const relativeX = x - lineElement.x;
                     const relativeY = y - lineElement.y;
 
-                    // Actualizar los puntos de la polilínea
                     const updatedPoints = [...lineElement.points];
                     updatedPoints[pointIndex * 2] = relativeX;
                     updatedPoints[pointIndex * 2 + 1] = relativeY;

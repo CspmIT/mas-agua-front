@@ -10,7 +10,7 @@ const TextStyler = ({
   if (!visible) return null;
 
   return (
-    <div className="absolute top-16 left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 max-w-md">
+    <div className="absolute top-1 left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 max-w-md">
       <label className="block text-sm font-medium mb-1">Color</label>
       <input
         type="color"

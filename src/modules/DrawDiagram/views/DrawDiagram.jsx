@@ -13,6 +13,7 @@ import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 import LoaderComponent from '../../../components/Loader';
+import TooltipPositionPanel from '../components/TooltipPositionPanel/TooltipPositionPanel';
 
 const imageList = ListImg();
 
@@ -65,6 +66,10 @@ const DrawDiagram = () => {
   const [stageScale, setStageScale] = useState(1);
   const [stagePosition, setStagePosition] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [isDraggingStage, setIsDraggingStage] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState(null);
+  const [showTooltipPositionPanel, setShowTooltipPositionPanel] = useState(false);
+
   const getTransformedPointerPosition = () => {
     const stage = stageRef.current;
     const pointer = stage.getPointerPosition();
@@ -75,9 +80,6 @@ const DrawDiagram = () => {
       y: (pointer.y - stagePosition.y) / stageScale,
     };
   };
-  const [isDraggingStage, setIsDraggingStage] = useState(false);
-  const [dragStartPos, setDragStartPos] = useState(null);
-
 
   const handleSelect = (e, id) => {
 
@@ -145,6 +147,13 @@ const DrawDiagram = () => {
       setLineStart(null);
       setTempLine(null);
     }
+
+    if (selectedElement?.dataInflux) {
+      setShowTooltipPositionPanel(true);
+    } else {
+      setShowTooltipPositionPanel(false);
+    }
+    
   };
 
   const handleMouseDown = (e) => {
@@ -543,13 +552,67 @@ const DrawDiagram = () => {
         String(el.id) === String(selectedId) ? {
           ...el, dataInflux: {
             ...dataInflux,
-            position: 'top',
+            position: 'Centro',
+            show: true,
           }
         } : el
       )
     );
   };
 
+  const handleChangeTooltipPosition = (position) => {
+    if (!selectedId) return;
+    setElements((prev) =>
+      prev.map((el) =>
+        String(el.id) === String(selectedId) && el.dataInflux
+          ? { ...el, dataInflux: { ...el.dataInflux, position } }
+          : el
+      )
+    );
+  };
+
+  const handleHideTooltip = () => {
+    if (!selectedId) return;
+    setElements(prev =>
+      prev.map(el =>
+        String(el.id) === String(selectedId) && el.dataInflux
+          ? { ...el, dataInflux: { ...el.dataInflux, show: false } }
+          : el
+      )
+    );
+  };
+  
+  const handleShowTooltip = () => {
+    if (!selectedId) return;
+    setElements(prev =>
+      prev.map(el =>
+        String(el.id) === String(selectedId) && el.dataInflux
+          ? { ...el, dataInflux: { ...el.dataInflux, show: true } }
+          : el
+      )
+    );
+  };
+
+  const handleSetMaxValue = (value, calculatePercentage) => {
+    if (!selectedId) return;
+    setElements((prev) =>
+      prev.map((el) =>
+        String(el.id) === String(selectedId) && el.dataInflux
+          ? {
+              ...el,
+              dataInflux: {
+                ...el.dataInflux,
+                max_value_var: value,
+                calculatePercentage: calculatePercentage !== undefined 
+                  ? calculatePercentage 
+                  : el.dataInflux.calculatePercentage || false
+              }
+            }
+          : el
+      )
+    );
+  };
+  
   const moveElementToBack = () => {
     if (!selectedId) return;
 
@@ -920,6 +983,15 @@ const DrawDiagram = () => {
                     />
                   </div>
                 )}
+                {/* Panel posicion de variables */}
+                <TooltipPositionPanel
+                  visible={showTooltipPositionPanel}
+                  selectedElement={elements.find(el => String(el.id) === String(selectedId))}
+                  onChangePosition={handleChangeTooltipPosition}
+                  onHideTooltip={handleHideTooltip}
+                  onShowTooltip={handleShowTooltip}
+                  onSetMaxValue={handleSetMaxValue}
+                />
                 {/* Canvas */}
                 <DiagramCanvas
                   elements={elements}

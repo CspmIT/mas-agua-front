@@ -70,10 +70,18 @@ function generateWavePoints(el, config, offset) {
   const { configAnimation } = config;
   if (!configAnimation) return [];
 
-  const value = parseFloat(el.dataInflux?.value);
-  if (isNaN(value)) return [];
+  const rawValue = parseFloat(el.dataInflux?.value);
+  const maxValue = parseFloat(el.dataInflux?.max_value_var);
 
-  const percent = Math.max(0, Math.min(value, 100));
+  let percent;
+  if (!isNaN(maxValue) && maxValue !== 0 && !isNaN(rawValue)) {
+      percent = Math.max(0, Math.min((rawValue * 100) / maxValue, 100));
+  } else if (!isNaN(rawValue)) {
+      percent = Math.max(0, Math.min(rawValue, 100));
+  } else {
+      return [];
+  }
+  
   const height = el.height;
   const width = el.width;
 

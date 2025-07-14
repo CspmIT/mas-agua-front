@@ -44,6 +44,8 @@ export const uploadCanvaDb = async (id, {
 					name: line.variable.name,
 					unit: line.variable.unit,
 					varsInflux: vars,
+					position: line.variable.position || 'Centro',
+    				show: line.variable.show_var || true
 				};
 				influxVarsToRequest.push({ id: line.id_influxvars, varsInflux: vars });
 			}
@@ -58,7 +60,7 @@ export const uploadCanvaDb = async (id, {
 				strokeWidth: line.strokeWidth || 2,
 				draggable: true,
 				invertAnimation: line.invertAnimation,
-				dataInflux, // Asegúrate de que este campo esté correctamente asignado
+				dataInflux, 
 			});
 		}
 
@@ -74,6 +76,8 @@ export const uploadCanvaDb = async (id, {
 					name: poly.variable.name,
 					unit: poly.variable.unit,
 					varsInflux: vars,
+					position: poly.variable.position || 'Centro',
+    				show: poly.variable.show_var || true
 				};
 				influxVarsToRequest.push({ id: poly.id_influxvars, varsInflux: vars });
 			}
@@ -88,7 +92,7 @@ export const uploadCanvaDb = async (id, {
 				strokeWidth: poly.strokeWidth || 2,
 				draggable: true,
 				invertAnimation: poly.invertAnimation,
-				dataInflux, // Asegúrate de que este campo esté correctamente asignado
+				dataInflux, 
 			});
 		}
 
@@ -102,6 +106,8 @@ export const uploadCanvaDb = async (id, {
 					name: text.variable.name,
 					unit: text.variable.unit,
 					varsInflux: vars,
+					position: text.variable.position || 'Centro',
+    				show: text.variable.show_var || true
 				};
 				influxVarsToRequest.push({ id: text.id, varsInflux: vars });
 			}
@@ -137,6 +143,10 @@ export const uploadCanvaDb = async (id, {
 				varsInflux: vars,
 				equation: variable.variable.equation,
 				status: variable.variable.status,
+				show: variable.show_var,
+				position: variable.position_var,
+				max_value_var: variable.max_value_var,
+				calculatePercentage: variable.max_value_var ? true : false
 			  };
 		
 			influxVarsToRequest.push({ id: variable.id_influxvars, varsInflux: vars }); 
@@ -197,10 +207,10 @@ export const uploadCanvaDb = async (id, {
     setCircles(circles);
     setTool(null);
 
-    return finalElements; // ✅ retornamos los elementos con valores
+    return finalElements; 
   } catch (err) {
     console.error('Error en uploadCanvaDb:', err);
-    return []; // en caso de error
+    return [];
   }
 };
 
@@ -245,7 +255,9 @@ export const saveDiagramKonva = async ({
 						variables: el.dataInflux ? {
 							[el.dataInflux.name]: {
 								id_variable: el.dataInflux.id || null,
-								show: true
+								show: el.dataInflux.show,
+        						position: el.dataInflux.position,
+								max_value: el.dataInflux.max_value_var
 							}
 						} : {}
 					});
@@ -281,7 +293,9 @@ export const saveDiagramKonva = async ({
 						variables: el.dataInflux ? {
 							[el.dataInflux.name]: {
 								id_variable: el.dataInflux.id || null,
-								show: true
+								show: el.dataInflux.show,
+        						position: el.dataInflux.position,
+								max_value_var: el.dataInflux.maxValue
 							}
 						} : {}
 					});

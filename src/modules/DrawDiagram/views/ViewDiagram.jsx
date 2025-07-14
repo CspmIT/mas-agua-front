@@ -31,20 +31,59 @@ function ViewDiagram() {
 		height: window.innerHeight - 10,
 	});
 
-	const renderTooltipLabel = (el) => {		
-		const value = el.dataInflux?.value;
+	const renderTooltipLabel = (el) => {
+		if (!el.dataInflux.show) return null; 
+
+		// Posición
+		const offset = 5;
+		let labelX = el.x + (el.width || 0) / 2;
+		let labelY = el.y + (el.height || 0) / 2;
+
+		let pointerDir = 'down';
+		switch (el.dataInflux?.position) {
+			case 'Arriba':
+				labelY = el.y - offset;
+				pointerDir = 'down';
+				break;
+			case 'Abajo':
+				labelY = el.y + (el.height || 0) + offset;
+				pointerDir = 'up';
+				break;
+			case 'Izquierda':
+				labelX = el.x - offset;
+				pointerDir = 'right';
+				break;
+			case 'Derecha':
+				labelX = el.x + (el.width || 0) + offset;
+				pointerDir = 'left';
+				break;
+			case 'Centro':
+			default:
+				pointerDir = 'down';
+				break;
+		}
+
+		// Verificar si el elemento tiene que calcular un valor a porcentaje
+		const rawValue = el.dataInflux.value;
+		const maxValue = el.dataInflux.max_value_var;
 		const unit = el.dataInflux?.unit || '';
 		let text = '';
 
-		if (unit === 'binario' || value === true || value === false || unit === 'bool' || unit === '-') {
-			return null;
-		}
-
-		if (value != null) {
-			if (!isNaN(value)) {
-			text = `${Number(value).toFixed(2)} ${unit}`;
+		if (
+			maxValue &&
+			!isNaN(maxValue) &&
+			Number(maxValue) !== 0 &&
+			rawValue != null &&
+			!isNaN(rawValue)
+		) {
+			// Calcular %
+			const percentage = ((Number(rawValue) * 100) / Number(maxValue)).toFixed(1);
+			text = `${percentage}%`;
+		} else if (rawValue != null) {
+			if (!isNaN(rawValue)) {
+				text = `${Number(rawValue).toFixed(2)} ${unit}`;
 			} else {
-			text = `${value} ${unit}`;
+				text = `${rawValue} ${unit}`;
 			}
 		} else {
 			text = 'No hay datos';
@@ -84,52 +123,63 @@ function ViewDiagram() {
 			'tanque_horizontal.png',
 			'Tanque_elevado.png',
 		];
-		  
+
 		const isEstanque = tanqueImages.some(name => el.src?.includes(name));
 		if (isEstanque) {
-			text = `${Math.round(value)}${unit}`;
+			if (
+				maxValue &&
+				!isNaN(maxValue) &&
+				Number(maxValue) !== 0 &&
+				rawValue != null &&
+				!isNaN(rawValue)
+			) {
+				// Calcular porcentaje si corresponde
+				const percentage = ((Number(rawValue) * 100) / Number(maxValue)).toFixed(1);
+				text = `${percentage}%`;
+			} else {
+				text = `${Math.round(rawValue)}${unit}`;
+			}
 			const baseFontSize = el.width * 0.12;
 			const fontSize = Math.min(baseFontSize, 18);
 			const padding = 5;
 			const maxTextWidth = 80;
 			const textWidth = Math.min(el.width * 0.45, maxTextWidth);
 			const textHeight = fontSize + padding * 1;
-		  
+
 			return (
-			  <Group rotation={el.rotation || 0}>
-				<Label
-				  x={el.x + el.width / 2 - textWidth / 2.2}
-				  y={el.y + el.height / 2 - textHeight / 1.3}
-				>
-				  <Tag
-					fill="#fff"
-					cornerRadius={2}
-					lineJoin="round"
-					shadowColor="#27272a"
-					shadowBlur={5}
-				  />
-				  <Text
-					text={text}
-					fontFamily="Arial"
-					fontSize={fontSize}
-					padding={padding}
-					width={textWidth}
-					align="center"
-					fill="black"
-				  />
-				</Label>
-			  </Group>
+				<Group rotation={el.rotation || 0}>
+					<Label
+						x={el.x + el.width / 2 - textWidth / 2}
+						y={el.y + el.height / 2 - textHeight / 1.3}
+					>
+						<Tag
+							fill="#fff"
+							cornerRadius={2}
+							lineJoin="round"
+							shadowColor="#27272a"
+							shadowBlur={5}
+						/>
+						<Text
+							text={text}
+							fontFamily="Arial"
+							fontSize={fontSize}
+							padding={padding}
+							width={textWidth}
+							align="center"
+							fill="black"
+						/>
+					</Label>
+				</Group>
 			);
-		  }
+		}
 
 		return (
 			<Label
-				x={el.x + (el.width || 0) / 2}
-				y={el.y}
+				x={labelX} y={labelY}
 			>
 				<Tag
 					fill='#ffff'
-					pointerDirection="down"
+					pointerDirection={pointerDir}
 					pointerWidth={10}
 					pointerHeight={10}
 					lineJoin="round"
