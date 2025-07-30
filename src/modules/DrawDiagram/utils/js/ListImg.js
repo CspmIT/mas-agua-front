@@ -396,7 +396,7 @@ export const ListImg = () => [
         srcView: `${urlBase}/Grupo generador (no cabinado) OFF.png`,
         animation: 'boolean',
         optionsImage: {
-            error: '/assets/img/Diagram/diagramAction/Grupo generador (no cabinado) FAIL.png',
+            error: '/assets/img/Diagram/diagramAction/Grupo generador (no cabinado) OFF.png',
             success:
                 '/assets/img/Diagram/diagramAction/Grupo generador (no cabinado) ON.png',
             default:
@@ -408,6 +408,23 @@ export const ListImg = () => [
     },
     {
         id: 28,
+        name: 'Contactor',
+        src: `${urlBase}/Contactor_OFF.png`,
+        srcView: `${urlBase}/Contactor_OFF.png`,
+        animation: 'boolean',
+        optionsImage: {
+            error: '/assets/img/Diagram/diagramAction/Contactor_OFF.png',
+            success:
+                '/assets/img/Diagram/diagramAction/Contactor_ON.png',
+            default:
+                '/assets/img/Diagram/diagramAction/Contactor_OFF.png',
+        },
+        variables: {
+            variable1: { id_variable: 0, show: false, require: false },
+        },
+    },
+    {
+        id: 29,
         name: 'Img sin fondo',
         src: `${urlBase}/img_sinfondo.PNG`,
         srcView: `${urlBaseView}/img_sinfondo.PNG`,

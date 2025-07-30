@@ -477,7 +477,7 @@ const DrawDiagram = () => {
                 />
                 {/* Selector de variables */}
                 {showListField && (
-                  <div className="absolute left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 max-w-md">
+                  <div className="absolute left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-20 max-w-md">
                     <ListField
                       onSelectVariable={handleAssignVariable}
                       onClose={() => setShowListField(false)}

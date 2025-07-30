@@ -25,8 +25,8 @@ function ListField({ onSelectVariable, onClose }) {
 	}
 
 	return (
-		<div className={`w-full h-full pt-4 bg-white `}>
-			<div className='flex w-full justify-center items-center mb-4 relative'>
+		<div className={`w-full h-full pt-4 bg-white`}>
+			<div className='flex w-full justify-center items-center mb-4 relative '>
 				<ModalVar openModal={openModal} setOpenModal={setOpenModal} data={varSelected} />
 
 				<Typography className='text-center uppercase !font-bold ' typography={'h6'}>
