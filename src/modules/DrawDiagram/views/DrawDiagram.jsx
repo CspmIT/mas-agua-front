@@ -14,22 +14,22 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
 import LoaderComponent from '../../../components/Loader';
 import TooltipPositionPanel from '../components/TooltipPositionPanel/TooltipPositionPanel';
+import { useDrawingTools } from '../hooks/useDrawingTools';
+import { useTooltipManager } from '../hooks/useTooltipManager';
+import { useDiagramState } from '../hooks/useDiagramState';
+import { useTextTools } from '../hooks/useTextTools';
 
 const imageList = ListImg();
 
 const DrawDiagram = () => {
   const { id } = useParams();
-  const [elements, setElements] = useState([]);
   const [tool, setTool] = useState(null);
   const [showImageSelector, setShowImageSelector] = useState(false);
   const isDrawing = useRef(false);
   const stageRef = useRef();
-  const [selectedId, setSelectedId] = useState(null);
   const transformerRef = useRef();
-  const [lineStart, setLineStart] = useState(null);
   const [reverseDirection, setReverseDirection] = useState(false);
   const [circles, setCircles] = useState([]);
-  const [tempLine, setTempLine] = useState(null);
   const [lineStyle, setLineStyle] = useState({
     color: '#3b82f6',
     strokeWidth: 5,
@@ -52,15 +52,9 @@ const DrawDiagram = () => {
     backgroundColor: '#ffffff',
     backgroundImg: ''
   });
-  const [deletedItems, setDeletedItems] = useState({
-    lines: [],
-    texts: [],
-    images: [],
-    polylines: []
-  });
+
   const [newElementsIds, setNewElementsIds] = useState([]);
-  const [polylinePoints, setPolylinePoints] = useState([]);
-  const [isDrawingPolyline, setIsDrawingPolyline] = useState(false);
+
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
   const [stageScale, setStageScale] = useState(1);
@@ -70,451 +64,56 @@ const DrawDiagram = () => {
   const [dragStartPos, setDragStartPos] = useState(null);
   const [showTooltipPositionPanel, setShowTooltipPositionPanel] = useState(false);
 
-  const getTransformedPointerPosition = () => {
-    const stage = stageRef.current;
-    const pointer = stage.getPointerPosition();
-    if (!pointer) return null;
+  const {
+    elements,
+    setElements,
+    selectedId,
+    setSelectedId,
+    deletedItems,
+    setDeletedItems,
+    handleDeleteElement,
+    moveElementToBack,
+    moveElementToFront
+  } = useDiagramState();
 
-    return {
-      x: (pointer.x - stagePosition.x) / stageScale,
-      y: (pointer.y - stagePosition.y) / stageScale,
-    };
-  };
+  const {
+    lineStart,
+    tempLine,
+    polylinePoints,
+    isDrawingPolyline,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    finishPolyline,
+    addImageToCanvas,
+    setTempLine,
+    setLineStart,
+    setPolylinePoints,
+    setIsDrawingPolyline,
+    handleSelect
+  } = useDrawingTools({ 
+    tool, setTool, 
+    lineStyle, 
+    elements, setElements, 
+    setNewElementsIds, 
+    selectedId, setSelectedId,
+    isDrawing, 
+    setCircles, 
+    setShowLineStyleSelector,
+    setShowImageSelector, 
+    setShowTooltipPositionPanel,
+    setTextInput,
+    setTextPosition,
+    editingTextId,
+    setEditingTextId,
+    setTextStyle,
+    setShowTextStyler,
+    setLineStyle
+  });
 
-  const handleSelect = (e, id) => {
+  const { handleShowTooltip, handleHideTooltip, handleChangeTooltipPosition, handleSetMaxValue } = useTooltipManager({ selectedId, elements, setElements });
 
-    if ((tool === 'polyline' && isDrawingPolyline) || (tool === 'simpleLine' && lineStart)) return;
-
-    setSelectedId(id);
-
-    // Si estás editando un texto y tocás otro, terminá la edición
-    if (editingTextId && editingTextId !== id) {
-      setEditingTextId(null);
-      setTextInput('');
-      setTextPosition(null);
-    }
-
-    const selectedElement = elements.find((el) => String(el.id) === String(id));
-    console.log(selectedElement);
-
-    if (selectedElement?.type === 'polyline') {
-      setTool('polyline');
-      setShowLineStyleSelector(true);
-      setLineStyle({
-        color: selectedElement.stroke,
-        strokeWidth: selectedElement.strokeWidth,
-        invertAnimation: selectedElement.invertAnimation || false,
-      });
-      setShowTextStyler(false);
-      setLineStart(null);
-      setTempLine(null);
-
-      setCircles((prev) =>
-        prev.map((c) => ({
-          ...c,
-          visible: c.lineId === selectedElement.id,
-        }))
-      );
-
-    } else if (selectedElement?.type === 'line') {
-      setTool('simpleLine');
-      setShowLineStyleSelector(true);
-      setLineStyle({
-        color: selectedElement.stroke,
-        strokeWidth: selectedElement.strokeWidth,
-        invertAnimation: selectedElement.invertAnimation || false,
-      });
-      setShowTextStyler(false);
-      setLineStart(null);
-      setTempLine(null);
-
-    } else if (selectedElement?.type === 'text') {
-      setTool('text');
-      setShowLineStyleSelector(false);
-      setShowTextStyler(true);
-      setTextInput(selectedElement.text);
-      setTextPosition({ x: selectedElement.x, y: selectedElement.y });
-      setEditingTextId(id);
-      setTextStyle({
-        fontSize: selectedElement.fontSize || 16,
-        fill: selectedElement.fill || '#000000',
-        fontStyle: selectedElement.fontStyle || 'normal',
-      });
-    } else {
-      setTool(null);
-      setShowLineStyleSelector(false);
-      setShowTextStyler(false);
-      setLineStart(null);
-      setTempLine(null);
-    }
-
-    if (selectedElement?.dataInflux) {
-      setShowTooltipPositionPanel(true);
-    } else {
-      setShowTooltipPositionPanel(false);
-    }
-    
-  };
-
-  const handleMouseDown = (e) => {
-    const stage = stageRef.current;
-    const pos = getTransformedPointerPosition();
-
-    if (!pos) return;
-
-    const clickedOnEmpty = e.target === e.target.getStage();
-
-    // Evita seleccionar elementos mientras se dibuja una polilínea
-    if (tool !== 'polyline' || !isDrawingPolyline) {
-      if (clickedOnEmpty) {
-        setSelectedId(null);
-      } else {
-        const clickedId = e.target.getAttr('id');
-        if (clickedId) {
-          handleSelect(e, clickedId);
-        }
-      }
-    }
-
-    // Texto
-    if (tool === 'text' && clickedOnEmpty) {
-      if (editingTextId) return;
-      setTextPosition(pos);
-      setTextInput('');
-      setEditingTextId(null);
-      return;
-    }
-
-    // Línea simple
-    if (tool === 'simpleLine') {
-      if (selectedId) return;
-
-      if (!lineStart) {
-        setSelectedId(null);
-        setShowLineStyleSelector(false);
-
-        setShowLineStyleSelector(false);
-
-        setLineStart(pos);
-        setTempLine({
-          points: [pos.x, pos.y, pos.x, pos.y],
-          stroke: lineStyle.color,
-          strokeWidth: lineStyle.strokeWidth,
-        });
-      } else {
-        const isSamePoint = pos.x === lineStart.x && pos.y === lineStart.y;
-        if (isSamePoint) return;
-
-        const id = String(Date.now());
-        const x = Math.min(lineStart.x, pos.x);
-        const y = Math.min(lineStart.y, pos.y);
-
-        const relativePoints = [
-          lineStart.x - x,
-          lineStart.y - y,
-          pos.x - x,
-          pos.y - y,
-        ];
-
-        const newLine = {
-          id,
-          type: 'line',
-          x,
-          y,
-          points: relativePoints,
-          stroke: lineStyle.color,
-          strokeWidth: lineStyle.strokeWidth,
-          draggable: true,
-          dataInflux: null,
-        };
-
-        const newCircles = [
-          {
-            id: `${id}-start`,
-            x: lineStart.x,
-            y: lineStart.y,
-            lineId: id,
-            fill: 'blue',
-            visible: false,
-          },
-          {
-            id: `${id}-end`,
-            x: pos.x,
-            y: pos.y,
-            lineId: id,
-            fill: 'red',
-            visible: false,
-          },
-        ];
-
-        setElements((prev) => [...prev, newLine]);
-        setNewElementsIds((prev) => [...prev, newLine.id]);
-        setCircles((prev) => [...prev, ...newCircles]);
-        setNewElementsIds((prev) => [...prev, newCircles.id]);
-        setLineStart(null);
-        setTempLine(null);
-        setShowLineStyleSelector(false);
-        setTool(null);
-      }
-      return;
-    }
-
-    // Polilínea
-    if (tool === 'polyline' && !selectedId) {
-      e.cancelBubble = true;
-      if (!isDrawingPolyline) {
-        setShowLineStyleSelector(false);
-        setSelectedId(null);
-        setIsDrawingPolyline(true);
-        setPolylinePoints([pos.x, pos.y]);
-        setTempLine({
-          points: [pos.x, pos.y, pos.x, pos.y],
-          stroke: lineStyle.color,
-          strokeWidth: lineStyle.strokeWidth,
-        });
-      } else {
-        // Agregar nuevo punto
-        setSelectedId(null);
-        setPolylinePoints((prev) => {
-          const updated = [...prev, pos.x, pos.y];
-          setTempLine({
-            points: updated,
-            stroke: lineStyle.color,
-            strokeWidth: lineStyle.strokeWidth,
-          });
-          return updated;
-        });
-      }
-      return;
-    }
-
-    // Variable flotante (imagen sin fondo)
-    if (tool === 'floatingVariable') {
-      const img = new window.Image();
-      img.src = '/assets/img/Diagram/newDiagram/img_sinfondo.PNG';
-      img.onload = () => {
-        const width = 100;
-        const height = (img.height / img.width) * width;
-
-        const newImage = {
-          id: String(Date.now()),
-          type: 'image',
-          src: img.src,
-          x: pos.x,
-          y: pos.y,
-          width,
-          height,
-          draggable: true,
-          dataInflux: null,
-        };
-
-        setElements((prev) => [...prev, newImage]);
-        setNewElementsIds((prev) => [...prev, newImage.id]);
-        setTool(null);
-      };
-      return;
-    }
-  };
-
-  const handleMouseMove = (e) => {
-    const stage = e.target.getStage();
-    const point = getTransformedPointerPosition();
-    if (!point) return;
-
-    // Línea simple: seguir el mouse
-    if (tool === 'simpleLine' && lineStart) {
-      setTempLine({
-        points: [lineStart.x, lineStart.y, point.x, point.y],
-        stroke: lineStyle.color,
-        strokeWidth: lineStyle.strokeWidth,
-      });
-      return;
-    }
-
-    // Polilínea: seguir el mouse desde el último punto
-    if (tool === 'polyline' && isDrawingPolyline && polylinePoints.length > 0) {
-      const updatedPoints = [...polylinePoints, point.x, point.y];
-      setTempLine({
-        points: updatedPoints,
-        stroke: lineStyle.color,
-        strokeWidth: lineStyle.strokeWidth,
-      });
-      return;
-    }
-  };
-
-  const finishPolyline = () => {
-    if (polylinePoints.length >= 4) { // Al menos necesitamos 2 puntos (4 valores x,y)
-      const id = String(Date.now());
-
-      // Calcular la posición relativa
-      let minX = Number.MAX_VALUE;
-      let minY = Number.MAX_VALUE;
-
-      for (let i = 0; i < polylinePoints.length; i += 2) {
-        minX = Math.min(minX, polylinePoints[i]);
-        minY = Math.min(minY, polylinePoints[i + 1]);
-      }
-
-      // Crear puntos relativos a la posición (minX, minY)
-      const relativePoints = [];
-      for (let i = 0; i < polylinePoints.length; i += 2) {
-        relativePoints.push(polylinePoints[i] - minX);
-        relativePoints.push(polylinePoints[i + 1] - minY);
-      }
-
-      const newPolyline = {
-        id,
-        type: 'polyline',
-        x: minX,
-        y: minY,
-        points: relativePoints,
-        stroke: lineStyle.color,
-        strokeWidth: lineStyle.strokeWidth,
-        draggable: true,
-        dataInflux: null,
-      };
-
-      // Crear círculos para cada punto de la polilínea
-      const newCircles = [];
-      for (let i = 0; i < polylinePoints.length; i += 2) {
-        newCircles.push({
-          id: `${id}-point-${i / 2}`,
-          x: polylinePoints[i],
-          y: polylinePoints[i + 1],
-          lineId: id,
-          fill: i === 0 ? 'blue' : i === polylinePoints.length - 2 ? 'red' : 'green',
-          visible: true,
-        });
-      }
-
-      setElements((prev) => [...prev, newPolyline]);
-      setNewElementsIds((prev) => [...prev, newPolyline.id]);
-      setCircles((prev) => [...prev, ...newCircles]);
-
-      // Resetear estados
-      setIsDrawingPolyline(false);
-      setPolylinePoints([]);
-      setTempLine(null);
-      setShowLineStyleSelector(false);
-      setTool(null);
-    }
-  };
-
-  const handleMouseUp = () => {
-    isDrawing.current = false;
-  };
-
-  const addImageToCanvas = (src) => {
-    const img = new window.Image();
-    img.src = src;
-    img.onload = () => {
-      const originalWidth = img.width;
-      const originalHeight = img.height;
-      const maxSize = 100;
-      let width = originalWidth;
-      let height = originalHeight;
-
-      if (width > height) {
-        if (width > maxSize) {
-          height = (maxSize / width) * height;
-          width = maxSize;
-        }
-      } else {
-        if (height > maxSize) {
-          width = (maxSize / height) * width;
-          height = maxSize;
-        }
-      }
-
-      const newImage = {
-        id: String(Date.now()),
-        type: 'image',
-        src,
-        x: 100,
-        y: 100,
-        width,
-        height,
-        draggable: true,
-        dataInflux: null,
-      };
-      setElements((prev) => [...prev, newImage]);
-      setNewElementsIds((prev) => [...prev, newImage.id]);
-      setShowImageSelector(false);
-    };
-  };
-
-  const handleTransformEnd = (e) => {
-    const node = e.target;
-    const id = node.id();
-
-    const scaleX = node.scaleX();
-    const scaleY = node.scaleY();
-
-    const updated = {
-      x: node.x(),
-      y: node.y(),
-      width: node.width() * scaleX,
-      height: node.height() * scaleY,
-      rotation: node.rotation(),
-    };
-
-    node.scaleX(1);
-    node.scaleY(1);
-
-    setElements((prev) =>
-      prev.map((el) =>
-        String(el.id) === id && el.type === 'image'
-          ? { ...el, ...updated }
-          : el
-      )
-    );
-  };
-
-  const saveText = () => {
-    if (!textInput.trim() || !textPosition) {
-      setTextPosition(null);
-      return;
-    }
-
-    if (editingTextId !== null) {
-      setElements((prev) =>
-        prev.map((el) =>
-          el.id === editingTextId
-            ? {
-              ...el,
-              text: textInput,
-              fontSize: textStyle.fontSize,
-              fill: textStyle.fill,
-              fontStyle: textStyle.fontStyle
-            }
-            : el
-        )
-      );
-      console.log("Text updated");
-    } else {
-      const id = String(Date.now());
-      const newText = {
-        id,
-        type: 'text',
-        text: textInput,
-        x: textPosition.x,
-        y: textPosition.y,
-        fontSize: textStyle.fontSize,
-        fill: textStyle.fill,
-        fontStyle: textStyle.fontStyle,
-        draggable: true,
-        dataInflux: null,
-      };
-
-      setElements(prev => [...prev, newText]);
-      setNewElementsIds((prev) => [...prev, newText.id]);
-      console.log("New text created:", newText);
-    }
-    setTextPosition(null);
-    setTextInput('');
-    setEditingTextId(null);
-  };
+  const { saveText } = useTextTools({ elements, setElements, textStyle, setTextInput, setTextPosition, setEditingTextId, setNewElementsIds });
 
   const handleAssignVariable = (dataInflux) => {
     if (tool === 'floatingVariable') {
@@ -533,7 +132,7 @@ const DrawDiagram = () => {
           width,
           height,
           draggable: true,
-          dataInflux: dataInflux, // ASIGNAR VARIABLE
+          dataInflux: dataInflux,
         };
 
         setElements((prev) => [...prev, newImage]);
@@ -544,7 +143,6 @@ const DrawDiagram = () => {
       return;
     }
 
-    // comportamiento normal para línea, texto, imagen, etc.
     if (!selectedId) return;
 
     setElements((prev) =>
@@ -558,83 +156,6 @@ const DrawDiagram = () => {
         } : el
       )
     );
-  };
-
-  const handleChangeTooltipPosition = (position) => {
-    if (!selectedId) return;
-    setElements((prev) =>
-      prev.map((el) =>
-        String(el.id) === String(selectedId) && el.dataInflux
-          ? { ...el, dataInflux: { ...el.dataInflux, position } }
-          : el
-      )
-    );
-  };
-
-  const handleHideTooltip = () => {
-    if (!selectedId) return;
-    setElements(prev =>
-      prev.map(el =>
-        String(el.id) === String(selectedId) && el.dataInflux
-          ? { ...el, dataInflux: { ...el.dataInflux, show: false } }
-          : el
-      )
-    );
-  };
-  
-  const handleShowTooltip = () => {
-    if (!selectedId) return;
-    setElements(prev =>
-      prev.map(el =>
-        String(el.id) === String(selectedId) && el.dataInflux
-          ? { ...el, dataInflux: { ...el.dataInflux, show: true } }
-          : el
-      )
-    );
-  };
-
-  const handleSetMaxValue = (value, calculatePercentage) => {
-    if (!selectedId) return;
-    setElements((prev) =>
-      prev.map((el) =>
-        String(el.id) === String(selectedId) && el.dataInflux
-          ? {
-              ...el,
-              dataInflux: {
-                ...el.dataInflux,
-                max_value_var: value,
-                calculatePercentage: calculatePercentage !== undefined 
-                  ? calculatePercentage 
-                  : el.dataInflux.calculatePercentage || false
-              }
-            }
-          : el
-      )
-    );
-  };
-  
-  const moveElementToBack = () => {
-    if (!selectedId) return;
-
-    setElements((prev) => {
-      const selected = prev.find(el => el?.id === selectedId);
-      if (!selected) return prev;
-
-      const remaining = prev.filter(el => el?.id !== selectedId);
-      return [selected, ...remaining];
-    });
-  };
-
-  const moveElementToFront = () => {
-    if (!selectedId) return;
-
-    setElements((prev) => {
-      const selected = prev.find(el => el?.id === selectedId);
-      if (!selected) return prev;
-
-      const remaining = prev.filter(el => el?.id !== selectedId);
-      return [...remaining, selected];
-    });
   };
 
   const handleClearCanvas = () => {
@@ -738,26 +259,6 @@ const DrawDiagram = () => {
 
     setElements((prev) => prev.slice(0, -1));
   };
-
-  const handleDeleteElement = (id) => {
-    const elementToDelete = elements.find(el => el.id === id);
-    if (!elementToDelete) return;
-
-    setElements((prev) => prev.filter((el) => el.id !== id));
-    setCircles((prev) => prev.filter((c) => c.lineId !== id));
-
-    if (typeof id === 'string' && id.includes('-')) {
-      const idStr = String(id);
-      const numericId = parseInt(idStr.split('-').pop(), 10);
-      if (!isNaN(numericId)) {
-        const typeKey = `${elementToDelete.type}s`;
-        setDeletedItems((prev) => ({
-          ...prev,
-          [typeKey]: [...(prev[typeKey] || []), numericId]
-        }));
-      }
-    }
-  }
 
   const handleZoomIn = () => {
     const scaleBy = 1.05;
@@ -1001,8 +502,8 @@ const DrawDiagram = () => {
                   selectedId={selectedId}
                   stageRef={stageRef}
                   transformerRef={transformerRef}
-                  handleMouseDown={handleMouseDown}
-                  handleMouseMove={handleMouseMove}
+                  handleMouseDown={e => handleMouseDown(e, stageRef, stagePosition, stageScale, setSelectedId, setShowLineStyleSelector, setTextPosition, setTextInput, setEditingTextId)}
+                  handleMouseMove={e => handleMouseMove(e, stageRef, stagePosition, stageScale)}
                   handleMouseUp={handleMouseUp}
                   handleSelect={handleSelect}
                   setElements={setElements}
@@ -1013,7 +514,7 @@ const DrawDiagram = () => {
                   setEditingTextId={setEditingTextId}
                   setTextStyle={setTextStyle}
                   tool={tool}
-                  handleTransformEnd={handleTransformEnd}
+                  handleTransformEnd={() => {}}
                   stageScale={stageScale}
                   stagePosition={stagePosition}
                   setStageScale={setStageScale}
@@ -1030,7 +531,7 @@ const DrawDiagram = () => {
                   textStyle={textStyle}
                   textInput={textInput}
                   onChange={setTextInput}
-                  onSave={saveText}
+                  onSave={() => saveText(textInput, textPosition, editingTextId)}
                   onCancel={() => {
                     setTextPosition(null);
                     setTextInput('');
@@ -1045,7 +546,5 @@ const DrawDiagram = () => {
     </>
   );
 }
-
-
 
 export default DrawDiagram;

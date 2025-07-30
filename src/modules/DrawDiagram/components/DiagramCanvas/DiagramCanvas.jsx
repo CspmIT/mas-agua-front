@@ -48,7 +48,6 @@ const DiagramCanvas = ({
   dragStartPos,
   setDragStartPos,
 }) => {
-
   return (
     <>
       <Stage
@@ -125,7 +124,10 @@ const DiagramCanvas = ({
                       y={el.y}
                       draggable={el.draggable}
                       id={String(el.id)}
-                      onClick={(e) => handleSelect(e, el.id)}
+                      onClick={(e) => {
+                        const id = e.target.getAttr('id');
+                        handleSelect(e, id);
+                      }}
                       onDragEnd={(e) => {
                         const { x, y } = e.target.position();
                         setElements((prev) =>
@@ -137,6 +139,7 @@ const DiagramCanvas = ({
                       <Line key={`${el.id}-bg`} points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
                       <Line key={`${el.id}-white`} points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
                       <Line
+                        id={String(el.id)}
                         key={`${el.id}-main`}
                         points={el.points}
                         stroke={el.stroke}
@@ -232,7 +235,8 @@ const DiagramCanvas = ({
                       id={String(el.id)}
                       onClick={(e) => {
                         e.cancelBubble = true;
-                        handleSelect(e, el.id);
+                        const id = e.target.getAttr('id');
+                        handleSelect(e, id);
                       }}
                       onDblClick={(e) => {
                         e.cancelBubble = true;
@@ -253,6 +257,7 @@ const DiagramCanvas = ({
                       }}
                     >
                       <Text
+                        id={String(el.id)}
                         text={el.text}
                         x={0}
                         y={0}
@@ -325,7 +330,10 @@ const DiagramCanvas = ({
                       height={el.height}
                       draggable={el.draggable}
                       id={String(el.id)}
-                      onClick={(e) => handleSelect(e, el.id)}
+                      onClick={(e) => {
+                        const id = e.target.getAttr('id');
+                        handleSelect(e, id);
+                      }}
                       onDragEnd={(e) => {
                         const { x, y } = e.target.position();
                         setElements((prev) =>
@@ -367,7 +375,10 @@ const DiagramCanvas = ({
                       y={el.y}
                       draggable={el.draggable}
                       id={String(el.id)}
-                      onClick={(e) => handleSelect(e, el.id)}
+                      onClick={(e) => {
+                        const id = e.target.getAttr('id');
+                        handleSelect(e, id);
+                      }}
                       onDragEnd={(e) => {
                         const { x, y } = e.target.position();
 
@@ -462,6 +473,7 @@ const DiagramCanvas = ({
                       <Line key={`${el.id}--bg`} points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
                       <Line key={`${el.id}--white`} points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
                       <Line
+                        id={String(el.id)}
                         key={`${el.id}--main`}
                         points={el.points}
                         stroke={el.stroke}

@@ -391,6 +391,23 @@ export const ListImg = () => [
     },
     {
         id: 27,
+        name: 'Grupo Generador (no cabinado)',
+        src: `${urlBase}/Grupo generador (no cabinado) OFF.png`,
+        srcView: `${urlBase}/Grupo generador (no cabinado) OFF.png`,
+        animation: 'boolean',
+        optionsImage: {
+            error: '/assets/img/Diagram/diagramAction/Grupo generador (no cabinado) FAIL.png',
+            success:
+                '/assets/img/Diagram/diagramAction/Grupo generador (no cabinado) ON.png',
+            default:
+                '/assets/img/Diagram/diagramAction/Grupo generador (no cabinado) OFF.png',
+        },
+        variables: {
+            variable1: { id_variable: 0, show: false, require: false },
+        },
+    },
+    {
+        id: 28,
         name: 'Img sin fondo',
         src: `${urlBase}/img_sinfondo.PNG`,
         srcView: `${urlBaseView}/img_sinfondo.PNG`,

@@ -23,6 +23,7 @@ const ListDrawDiagram = () => {
 				{
 					header: 'ID',
 					accessorKey: 'id',
+					size: 120,
 				},
 				{
 					header: 'Nombre',

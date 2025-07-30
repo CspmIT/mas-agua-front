@@ -56,18 +56,53 @@ const TooltipPositionPanel = ({
       </label>
 
       {/* Posiciones */}
-      <div className="grid grid-cols-3 gap-2 my-3">
-        {positions.map(pos => (
-          <button
-            key={pos}
-            className={`px-2 py-1 rounded ${
-              selectedElement.dataInflux.position === pos ? 'bg-blue-500 text-white' : 'bg-gray-200'
-            }`}
-            onClick={() => onChangePosition(pos)}
-          >
-            {pos}
-          </button>
-        ))}
+      <div className="grid grid-cols-3 gap-2 my-3 text-xs">
+        <div></div>
+        <button
+          className={`px-2 py-1 rounded ${
+            selectedElement.dataInflux.position === 'Arriba' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+          }`}
+          onClick={() => onChangePosition('Arriba')}
+        >
+          Arriba
+        </button>
+        <div></div>
+
+        <button
+          className={`px-2 py-1 rounded ${
+            selectedElement.dataInflux.position === 'Izquierda' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+          }`}
+          onClick={() => onChangePosition('Izquierda')}
+        >
+          Izquierda
+        </button>
+        <button
+          className={`px-2 py-1 rounded ${
+            selectedElement.dataInflux.position === 'Centro' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+          }`}
+          onClick={() => onChangePosition('Centro')}
+        >
+          Centro
+        </button>
+        <button
+          className={`px-2 py-1 rounded ${
+            selectedElement.dataInflux.position === 'Derecha' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+          }`}
+          onClick={() => onChangePosition('Derecha')}
+        >
+          Derecha
+        </button>
+
+        <div></div>
+        <button
+          className={`px-2 py-1 rounded ${
+            selectedElement.dataInflux.position === 'Abajo' ? 'bg-blue-500 text-white' : 'bg-gray-200'
+          }`}
+          onClick={() => onChangePosition('Abajo')}
+        >
+          Abajo
+        </button>
+        <div></div>
       </div>
 
       {/* Check Calcular valor */}
