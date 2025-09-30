@@ -340,7 +340,7 @@ const DiagramCanvas = ({
                           prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
                         );
                       }}
-                      onTransformEnd={handleTransformEnd}
+                      onTransformEnd={(e) => handleTransformEnd(el.id, e.target)}
                     />
               
                     {el.dataInflux && el.dataInflux.name && (
