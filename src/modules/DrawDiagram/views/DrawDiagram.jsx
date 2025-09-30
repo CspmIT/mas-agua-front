@@ -90,7 +90,8 @@ const DrawDiagram = () => {
     setLineStart,
     setPolylinePoints,
     setIsDrawingPolyline,
-    handleSelect
+    handleSelect,
+    handleTransformEnd
   } = useDrawingTools({ 
     tool, setTool, 
     lineStyle, 
@@ -514,7 +515,7 @@ const DrawDiagram = () => {
                   setEditingTextId={setEditingTextId}
                   setTextStyle={setTextStyle}
                   tool={tool}
-                  handleTransformEnd={() => {}}
+                  handleTransformEnd={handleTransformEnd}
                   stageScale={stageScale}
                   stagePosition={stagePosition}
                   setStageScale={setStageScale}
