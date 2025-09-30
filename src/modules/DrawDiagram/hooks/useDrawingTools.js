@@ -380,6 +380,34 @@ export const useDrawingTools = ({
     };
   }, [setElements, setNewElementsIds]);
 
+  const handleTransformEnd = useCallback((id, node) => {
+    
+    const scaleX = node.scaleX();
+    const scaleY = node.scaleY();
+
+    const newWidth = node.width() * scaleX;
+    const newHeight = node.height() * scaleY;
+  
+    setElements((prev) =>
+      prev.map((el) =>
+        el.id === id
+          ? {
+              ...el,
+              x: node.x(),
+              y: node.y(),
+              width: newWidth,
+              height: newHeight,
+            }
+          : el
+      )
+    );
+
+    // Resetear escala en el nodo para que no se acumulen transformaciones
+    node.scaleX(1);
+    node.scaleY(1);
+  }, [setElements]);
+  
+
   return {
     lineStart,
     tempLine,
@@ -389,6 +417,7 @@ export const useDrawingTools = ({
     handleMouseDown,
     handleMouseMove,
     handleMouseUp,
+    handleTransformEnd,
     finishPolyline,
     addImageToCanvas,
     setTempLine,
