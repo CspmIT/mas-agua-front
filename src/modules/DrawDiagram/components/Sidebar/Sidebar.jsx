@@ -152,7 +152,10 @@ const Sidebar = ({
               setElements((prev) => prev.filter((el) => String(el.id) !== String(selectedId)));
               setCircles((prev) => prev.filter((c) => String(c.lineId) !== String(selectedId)));
               handleDeleteElement(selectedId);
+              setTool(null);
               setSelectedId(null);
+              setShowImageSelector(false);
+              setShowLineStyleSelector(false);
               setShowTextStyler(false);
               setTextPosition(null);
             }}
