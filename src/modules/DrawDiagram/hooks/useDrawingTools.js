@@ -38,81 +38,83 @@ export const useDrawingTools = ({
     };
   };
 
+  //SELECCION DE UN ELEMENTO
   const handleSelect = (e, id) => {
-  
-      if ((tool === 'polyline' && isDrawingPolyline) || (tool === 'simpleLine' && lineStart)) return;
-  
-      setSelectedId(id);
-  
-      // Si estás editando un texto y tocás otro, terminá la edición
-      if (editingTextId && editingTextId !== id) {
-        setEditingTextId(null);
-        setTextInput('');
-        setTextPosition(null);
-      }
-  
-      const selectedElement = elements.find((el) => String(el.id) === String(id));
-      console.log(selectedElement);
-  
-      if (selectedElement?.type === 'polyline') {
-        setTool('polyline');
-        setShowLineStyleSelector(true);
-        setLineStyle({
-          color: selectedElement.stroke,
-          strokeWidth: selectedElement.strokeWidth,
-          invertAnimation: selectedElement.invertAnimation || false,
-        });
-        setShowTextStyler(false);
-        setLineStart(null);
-        setTempLine(null);
-  
-        setCircles((prev) =>
-          prev.map((c) => ({
-            ...c,
-            visible: c.lineId === selectedElement.id,
-          }))
-        );
-  
-      } else if (selectedElement?.type === 'line') {
-        setTool('simpleLine');
-        setShowLineStyleSelector(true);
-        setLineStyle({
-          color: selectedElement.stroke,
-          strokeWidth: selectedElement.strokeWidth,
-          invertAnimation: selectedElement.invertAnimation || false,
-        });
-        setShowTextStyler(false);
-        setLineStart(null);
-        setTempLine(null);
-  
-      } else if (selectedElement?.type === 'text') {
-        setTool('text');
-        setShowLineStyleSelector(false);
-        setShowTextStyler(true);
-        setTextInput(selectedElement.text);
-        setTextPosition({ x: selectedElement.x, y: selectedElement.y });
-        setEditingTextId(id);
-        setTextStyle({
-          fontSize: selectedElement.fontSize || 16,
-          fill: selectedElement.fill || '#000000',
-          fontStyle: selectedElement.fontStyle || 'normal',
-        });
-      } else {
-        setTool(null);
-        setShowLineStyleSelector(false);
-        setShowTextStyler(false);
-        setLineStart(null);
-        setTempLine(null);
-      }
-  
-      if (selectedElement?.dataInflux) {
-        setShowTooltipPositionPanel(true);
-      } else {
-        setShowTooltipPositionPanel(false);
-      }
-      
-    };
 
+    if ((tool === 'polyline' && isDrawingPolyline) || (tool === 'simpleLine' && lineStart)) return;
+
+    setSelectedId(id);
+
+    // Si estás editando un texto y tocás otro, terminá la edición
+    if (editingTextId && editingTextId !== id) {
+      setEditingTextId(null);
+      setTextInput('');
+      setTextPosition(null);
+    }
+
+    const selectedElement = elements.find((el) => String(el.id) === String(id));
+    console.log(selectedElement);
+
+    if (selectedElement?.type === 'polyline') {
+      setTool('polyline');
+      setShowLineStyleSelector(true);
+      setLineStyle({
+        color: selectedElement.stroke,
+        strokeWidth: selectedElement.strokeWidth,
+        invertAnimation: selectedElement.invertAnimation || false,
+      });
+      setShowTextStyler(false);
+      setLineStart(null);
+      setTempLine(null);
+
+      setCircles((prev) =>
+        prev.map((c) => ({
+          ...c,
+          visible: c.lineId === selectedElement.id,
+        }))
+      );
+
+    } else if (selectedElement?.type === 'line') {
+      setTool('simpleLine');
+      setShowLineStyleSelector(true);
+      setLineStyle({
+        color: selectedElement.stroke,
+        strokeWidth: selectedElement.strokeWidth,
+        invertAnimation: selectedElement.invertAnimation || false,
+      });
+      setShowTextStyler(false);
+      setLineStart(null);
+      setTempLine(null);
+
+    } else if (selectedElement?.type === 'text') {
+      setTool('text');
+      setShowLineStyleSelector(false);
+      setShowTextStyler(true);
+      setTextInput(selectedElement.text);
+      setTextPosition({ x: selectedElement.x, y: selectedElement.y });
+      setEditingTextId(id);
+      setTextStyle({
+        fontSize: selectedElement.fontSize || 16,
+        fill: selectedElement.fill || '#000000',
+        fontStyle: selectedElement.fontStyle || 'normal',
+      });
+    } else {
+      setTool(null);
+      setShowLineStyleSelector(false);
+      setShowTextStyler(false);
+      setLineStart(null);
+      setTempLine(null);
+    }
+
+    if (selectedElement?.dataInflux) {
+      setShowTooltipPositionPanel(true);
+    } else {
+      setShowTooltipPositionPanel(false);
+    }
+
+  };
+
+  //MANEJO DE EVENTOS DEL MOUSE
   const handleMouseDown = useCallback((e, stageRef, stagePosition, stageScale, setSelectedId, setShowLineStyleSelector, setTextPosition, setTextInput, setEditingTextId) => {
     const pos = getTransformedPointerPosition(stageRef, stagePosition, stageScale);
     if (!pos) return;
@@ -291,6 +293,7 @@ export const useDrawingTools = ({
     isDrawing.current = false;
   }, [isDrawing]);
 
+  //FUNCION PARA FINALIZAR LA POLILINEA
   const finishPolyline = useCallback(() => {
     if (polylinePoints.length >= 4) {
       const id = String(Date.now());
@@ -345,6 +348,7 @@ export const useDrawingTools = ({
     }
   }, [polylinePoints, lineStyle]);
 
+  //FUNCION PARA AGREGAR UNA IMAGEN AL CANVAS
   const addImageToCanvas = useCallback((src) => {
     const img = new window.Image();
     img.src = src;
@@ -380,24 +384,25 @@ export const useDrawingTools = ({
     };
   }, [setElements, setNewElementsIds]);
 
+  //FUNCION PARA SETEAR NUEVO TAMAÑO Y POSICION DE UN ELEMENTO
   const handleTransformEnd = useCallback((id, node) => {
-    
+
     const scaleX = node.scaleX();
     const scaleY = node.scaleY();
 
     const newWidth = node.width() * scaleX;
     const newHeight = node.height() * scaleY;
-  
+
     setElements((prev) =>
       prev.map((el) =>
         el.id === id
           ? {
-              ...el,
-              x: node.x(),
-              y: node.y(),
-              width: newWidth,
-              height: newHeight,
-            }
+            ...el,
+            x: node.x(),
+            y: node.y(),
+            width: newWidth,
+            height: newHeight,
+          }
           : el
       )
     );
@@ -406,7 +411,7 @@ export const useDrawingTools = ({
     node.scaleX(1);
     node.scaleY(1);
   }, [setElements]);
-  
+
 
   return {
     lineStart,
