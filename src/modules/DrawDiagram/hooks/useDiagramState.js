@@ -5,6 +5,7 @@ export const useDiagramState = () => {
   const [selectedId, setSelectedId] = useState(null);
   const [deletedItems, setDeletedItems] = useState({ lines: [], texts: [], images: [], polylines: [] });
 
+  //ELIMINAR ELEMENTO Y GUARDAR SU ID PARA PASARLO AL BACKEND
   const handleDeleteElement = useCallback((id) => {
     setElements(prev => prev.filter(el => el.id !== id));
     if (typeof id === 'string' && id.includes('-')) {
@@ -20,6 +21,7 @@ export const useDiagramState = () => {
     }
   }, []);
 
+  // MOVER ELEMENTO AL FONDO O AL FRENTE
   const moveElementToBack = useCallback(() => {
     if (!selectedId) return;
     setElements(prev => {
