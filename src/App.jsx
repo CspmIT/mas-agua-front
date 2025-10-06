@@ -32,6 +32,9 @@ import ConfigBooleanChart from './modules/Charts/views/ConfigBooleanChart'
 import NotFound from './modules/Errors/Not-Found'
 import ChartsDashboard from './modules/dashBoard/views/ChartsDashboard'
 import ConfigPie from './modules/Charts/views/ConfigPie'
+import Alert from './modules/alert/views'
+import ConfigAlarms from './modules/ConfigAlarms/views/index'
+
 
 function App() {
 	const { darkMode } = useContext(MainContext)
@@ -72,6 +75,9 @@ function App() {
 		{ path: '/map/edit', element: <MapView create={true} search={true}/> },
 		{ path: '/config/vars', element: <Vars/> },
 		{ path: '/config/plc', element: <ProfilePLC/> },
+		{ path: '/alert', element: <Alert/> },
+		{ path: '/config/alarm', element: <ConfigAlarms/> },
+		
 	]
 	//Incorporo el theme de mui
 	const lightTheme = createTheme({

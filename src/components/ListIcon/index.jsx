@@ -8,6 +8,7 @@ import {
     FaProjectDiagram,
     FaChartBar,
     FaMicrochip,
+    FaBell,
 } from 'react-icons/fa'
 import { HiVariable } from 'react-icons/hi2'
 import { MdContentPaste, MdNotificationsActive, MdSchema } from 'react-icons/md'
@@ -64,7 +65,10 @@ const ListIcon = () => [
         name: 'RiAlertFill',
         icon: <RiAlertFill className=" text-3xl" />,
     },
-    { title: 'Pagina', name: 'FaFile', icon: <FaFile className=" text-3xl" /> },
+    { 
+        title: 'Pagina', 
+        name: 'FaFile', 
+        icon: <FaFile className=" text-3xl" /> },
     {
         title: 'Graficos',
         name: 'FaChartLine',
@@ -85,6 +89,11 @@ const ListIcon = () => [
         name: 'FaMicrochip',
         icon: <FaMicrochip className=" text-3xl" />,
     },
+    { 
+        title: 'Alarma', 
+        name: 'FaBell', 
+        icon: <FaBell className=' text-3xl' /> 
+    }
 ]
 
 export default ListIcon

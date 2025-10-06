@@ -222,4 +222,17 @@ export const list_menu = [
 		createdAt: '2024-11-29T06:34:05.000Z',
 		updatedAt: '2024-11-29T06:34:05.000Z',
 	},
+	{
+		id: 11,
+		name: 'Alarma',
+		link: 'config/alarm',
+		icon: 'FaBell',
+		level: 2,
+		group_menu: 4,
+		sub_menu: 4,
+		status: true,
+		order: 12,
+		createdAt: '2024-11-29T06:34:05.000Z',
+		updatedAt: '2024-11-29T06:34:05.000Z',
+	},
 ]
