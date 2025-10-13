@@ -25,7 +25,7 @@ const ConfigAlarms = () => {
         { header: 'Nombre', accessorKey: 'name' },
         { header: 'Variable', accessorKey: 'var_name' },
         { header: 'Condicion', accessorKey: 'condition', size: 50 },
-        { header: 'Valores', accessorKey: 'value',
+        { header: 'Valores', accessorKey: 'value',  size: 50,
           Cell: ({ row }) => (
             <span className="text-sm">
               {['entre'].includes(row.original.condition)
@@ -34,13 +34,18 @@ const ConfigAlarms = () => {
             </span>
           ),
          },
-        { header: 'Estado', accessorKey: 'status',
+        { header: 'Estado', accessorKey: 'status', size: 50,
           Cell: ({ row }) => (
             <span className={`text-sm font-semibold ${row.original.status ? 'text-green-600' : 'text-red-600'}`}>
               {row.original.status ? 'Activo' : 'Inactivo'}
             </span>
           ),
         },
+        { header: 'Repetir cada', accessorKey: 'repeatInterval', size: 50,
+          Cell: ({ row }) => (
+            <span className="text-sm">{row.original.repeatInterval} min.</span>
+          ),
+         },
         {
           header: 'Acciones', accessorKey: 'actions',
           Cell: ({ row }) => (

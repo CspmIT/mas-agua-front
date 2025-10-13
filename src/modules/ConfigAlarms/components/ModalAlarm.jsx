@@ -23,7 +23,8 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
         id_influxvars: '',
         condition: '',
         value: '',
-        value2: ''
+        value2: '',
+        repeatInterval: 0,
     })
 
     // Prellenar datos si viene una alarma para editar
@@ -34,10 +35,11 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                 id_influxvars: alarmData.id_influxvars || '',
                 condition: alarmData.condition || '',
                 value: alarmData.value ?? '',
-                value2: alarmData.value2 ?? ''
+                value2: alarmData.value2 ?? '',
+                repeatInterval: alarmData.repeatInterval ?? 0,
             })
         } else {
-            setForm({ name: '', id_influxvars: '', condition: '', value: '', value2: '' })
+            setForm({ name: '', id_influxvars: '', condition: '', value: '', value2: '', repeatInterval: 0, })
         }
     }, [alarmData, openModal])
 
@@ -161,6 +163,17 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                                 required
                             />
                         )}
+
+                        <TextField
+                            type="number"
+                            className="w-2/3"
+                            label="Intervalo de repetición (minutos)"
+                            value={form.repeatInterval || ''}
+                            onChange={(e) => handleChange('repeatInterval', e.target.value)}
+                            required
+                            inputProps={{ min: 0 }}
+                        />
+
                     </div>
 
                     <Button
@@ -173,8 +186,8 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                         {loading
                             ? 'Guardando...'
                             : alarmData?.id
-                            ? 'Guardar cambios'
-                            : 'Crear alarma'}
+                                ? 'Guardar cambios'
+                                : 'Crear alarma'}
                     </Button>
                 </form>
             </Box>
