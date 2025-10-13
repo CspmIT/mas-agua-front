@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
 import TableCustom from '../../../components/TableCustom'
@@ -7,46 +7,49 @@ import LoaderComponent from '../../../components/Loader'
 import { Box, Button, FormLabel } from '@mui/material'
 import CardCustom from '../../../components/CardCustom'
 import { FaEye } from 'react-icons/fa'
+import { MainContext } from '../../../context/MainContext'
+
 
 const Alert = () => {
     const [listLogs_Alarms, setListLogs_Alarms] = useState([])
     const [columnsTable, setColumnsTable] = useState([])
     const [loading, setLoading] = useState(true)
+    const { fetchUnreadCount } = useContext(MainContext)
 
+    const ChangeColorRow = (row) => {
+        return row.original.viewed === false
+    }
     const fetchLogs_Alarms = async () => {
         const url = backend[import.meta.env.VITE_APP_NAME]
         try {
             setLoading(true)
             const { data } = await request(`${url}/listAlerts`, 'GET')
-            data.sort((a, b) => new Date(b.triggeredAt) - new Date(a.triggeredAt)) // Ordenar por fecha descendente
             const columns = [
                 {
-                    header: 'Fecha', accessorKey: 'triggeredAt', size: 100, // si TableCustom soporta `size`
+                    header: 'Fecha', accessorKey: 'triggeredAt', size: 100, 
                     cell: info => <span className="whitespace-nowrap">{info.getValue()}</span>
                 },
                 { header: 'Mensaje', accessorKey: 'message' },
-                // {
-                //     header: 'Acciones',
-                //     accessorKey: 'actions',
-                //     size: 50,
-                //     Cell: ({ row }) => (
-                //         <Box display="flex" gap={1}>
-                //             <Button
-                //                 variant="outlined"
-                //                 color="primary"
-                //                 size="small"
-                //                 onClick={() => {
-                //                     // setSelectedAlarm(row.original)
-                //                     // setModalAlarms(true)
-                //                 }}
-                //             >
-                //                 Leido
-                //             </Button>
-                //         </Box>
-                //     ),
-                // },
+                {
+                    header: '',
+                    accessorKey: 'actions',
+                    size: 50,
+                    Cell: ({ row }) => (
+                        !row.original.viewed && (  
+                            <Box>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    size="small"
+                                    onClick={() => markAsRead(row.original.id)}
+                                >
+                                    <FaEye className='text-lg' />
+                                </Button>
+                            </Box>
+                        )
+                    ),
+                },
             ]
-
             setColumnsTable(columns)
             setListLogs_Alarms(data)
         } catch (error) {
@@ -61,8 +64,24 @@ const Alert = () => {
         }
     }
 
+    const markAsRead = async (id) => {
+        const url = backend[import.meta.env.VITE_APP_NAME]
+        try {
+            await request(`${url}/alerts/viewed/${id}`, 'PUT')
+            fetchUnreadCount()
+            fetchLogs_Alarms()
+        } catch (error) {
+            console.error(error)
+            Swal.fire({
+                title: 'Error',
+                text: 'No se pudo marcar la alerta como leída.',
+                icon: 'error',
+            })
+        }
+    }
+
     useEffect(() => {
-        fetchLogs_Alarms()
+        fetchLogs_Alarms();
     }, [])
 
     return (
@@ -92,8 +111,9 @@ const Alert = () => {
                                 fontWeight: 'bold',
                             }}
                             toolbarClass={{ background: 'rgb(190 190 190)' }}
-							body={{ backgroundColor: 'rgba(209, 213, 219, 0.31)' }}
-							footer={{ background: 'rgb(190 190 190)' }}
+                            body={{ backgroundColor: 'rgba(209, 213, 219, 0.31)' }}
+                            footer={{ background: 'rgb(190 190 190)' }}
+                            ChangeColorRow={ChangeColorRow}
                             topToolbar
                         />
                     </div>

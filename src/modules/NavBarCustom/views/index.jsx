@@ -27,16 +27,17 @@ import { storage } from '../../../storage/storage'
 import { getPermissionDb } from '../utils/js'
 import { PiTabsFill } from 'react-icons/pi'
 import ListIcon from '../../../components/ListIcon'
-import { front } from '../../../utils/routes/app.routes'
+import { backend, front } from '../../../utils/routes/app.routes'
 import styles from '../utils/css/styles.module.css'
 import { io } from 'socket.io-client'
 import Cookies from 'js-cookie'
 import Logo from '/src/assets/img/Logo/LogoTextAgua.png'
 import { list_menu } from '../../ConfigMenu/components/PermissionMenu/components/data'
+import { request } from '../../../utils/js/request'
 function NavBarCustom({ setLoading }) {
 	const [open, setOpen] = useState(false)
 	const [nameCoop, setNameCoop] = useState('')
-	const { tabActive, tabs, infoNav, permission, setPermission } = useContext(MainContext)
+	const { tabActive, tabs, infoNav, permission, setPermission, unreadCount } = useContext(MainContext)
 	const navigate = useNavigate()
 	const NavBarRef = useRef(null)
 	const { pathname } = useLocation()
@@ -44,13 +45,14 @@ function NavBarCustom({ setLoading }) {
 	const location = pathname
 	const [buttonActive, setButtonActive] = useState(location)
 	const isMobile = useMediaQuery('(max-width: 600px)')
+
 	const handleDrawerOpen = () => {
 		setOpen(true)
 	}
 	const handleDrawerClose = () => {
 		setOpen(false)
 	}
-    
+
 	useEffect(() => {
 		const handleClickOutside = (event) => {
 			if (NavBarRef.current && !NavBarRef.current.contains(event.target)) {
@@ -120,6 +122,7 @@ function NavBarCustom({ setLoading }) {
 		}, [])
 		result.sort((a, b) => a.order - b.order)
 		setMenuSideBar(result.filter((item) => Object.values(item).length))
+		console.log(menuSideBar);
 	}
 
 	const getPermissions = async () => {
@@ -256,14 +259,16 @@ function NavBarCustom({ setLoading }) {
 													padding: !isMobile ? '1.25rem' : '0.2rem',
 													py: 1.8,
 												}}
-												className={`!w-full ${
-													item.link === '/Alert' && newEvent ? styles.backgroundAlert : ''
-												}`}
+												className={`!w-full ${item.link === '/Alert' && newEvent ? styles.backgroundAlert : ''
+													}`}
 												onClick={() => activeButton(item.link)}
 											>
 												<ListItemIcon
 													className={`${!isMobile && open ? '!mr-3' : ''}`}
 													sx={{
+														overflow: 'visible',
+														position: 'relative',
+														zIndex: 2000,
 														minWidth: 0,
 														mr: !isMobile && open ? 3 : 'auto',
 														justifyContent: 'center',
@@ -271,8 +276,22 @@ function NavBarCustom({ setLoading }) {
 														marginRight: !isMobile ? 'auto' : '0',
 													}}
 												>
-													{componentIcon.icon}
+													{item.link === 'alert' ? (
+														<Badge
+															badgeContent={unreadCount}
+															color="primary"
+															invisible={!unreadCount || unreadCount === 0}
+															overlap="circular"
+															anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+															sx={{ pointerEvents: 'none' }}
+														>
+															{componentIcon.icon}
+														</Badge>
+													) : (
+														componentIcon.icon
+													)}
 												</ListItemIcon>
+
 												<ListItemText
 													primary={item.name}
 													sx={{
