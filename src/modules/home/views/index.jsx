@@ -117,9 +117,9 @@ const Home = () => {
             {charts.map((chart, index) => {
                 const ChartComponentDb = chartComponents[chart.component]
                 return (
-                    <Grid item xs={12} sm={6} lg={4} key={index}>
+                    <Grid item xs={12} sm={4} lg={3} key={index}>
                         <CardCustom
-                            className={`flex flex-col items-center ${
+                            className={`flex flex-col items-center rounded-xl ${
                                 ChartComponentDb === PumpControl
                                     ? 'h-fit'
                                     : 'h-80'

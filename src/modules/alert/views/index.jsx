@@ -76,6 +76,8 @@ const Alert = () => {
                 title: 'Error',
                 text: 'No se pudo marcar la alerta como leída.',
                 icon: 'error',
+                showConfirmButton: false,
+                timer: 1500,
             })
         }
     }

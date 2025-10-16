@@ -7,7 +7,9 @@ import {
     Button,
     Typography,
     IconButton,
-    CircularProgress
+    CircularProgress,
+    FormControlLabel,
+    Switch
 } from '@mui/material'
 import { Close } from '@mui/icons-material'
 import Swal from 'sweetalert2'
@@ -18,6 +20,7 @@ import { getVarsInflux } from '../../DrawDiagram/components/Fields/actions'
 const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
     const [loading, setLoading] = useState(false)
     const [variables, setVariables] = useState([])
+
     const [form, setForm] = useState({
         name: '',
         id_influxvars: '',
@@ -25,9 +28,13 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
         value: '',
         value2: '',
         repeatInterval: 0,
+        type: 'single',
+        logicOperator: 'AND',
+        secondaryVariableId: '',
+        secondaryCondition: '',
+        secondaryValue: '',
     })
 
-    // Prellenar datos si viene una alarma para editar
     useEffect(() => {
         if (alarmData) {
             setForm({
@@ -37,13 +44,29 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                 value: alarmData.value ?? '',
                 value2: alarmData.value2 ?? '',
                 repeatInterval: alarmData.repeatInterval ?? 0,
+                type: alarmData.type || 'single',
+                logicOperator: alarmData.logicOperator || 'AND',
+                secondaryVariableId: alarmData.secondaryVariableId || '',
+                secondaryCondition: alarmData.secondaryCondition || '',
+                secondaryValue: alarmData.secondaryValue || '',
             })
         } else {
-            setForm({ name: '', id_influxvars: '', condition: '', value: '', value2: '', repeatInterval: 0, })
+            setForm({
+                name: '',
+                id_influxvars: '',
+                condition: '',
+                value: '',
+                value2: '',
+                repeatInterval: 0,
+                type: 'single',
+                logicOperator: 'AND',
+                secondaryVariableId: '',
+                secondaryCondition: '',
+                secondaryValue: '',
+            })
         }
     }, [alarmData, openModal])
 
-    // Obtener variables disponibles (InfluxVars)
     useEffect(() => {
         const fetchVars = async () => {
             const variables = await getVarsInflux()
@@ -58,7 +81,19 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
 
     const handleClose = () => {
         setOpenModal(false)
-        setForm({ name: '', id_influxvars: '', condition: '', value: '', value2: '' })
+        setForm({
+            name: '',
+            id_influxvars: '',
+            condition: '',
+            value: '',
+            value2: '',
+            repeatInterval: 0,
+            type: 'single',
+            logicOperator: 'AND',
+            secondaryVariableId: '',
+            secondaryCondition: '',
+            secondaryValue: '',
+        })
     }
 
     const handleSubmit = async (e) => {
@@ -67,21 +102,37 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
         try {
             const url = backend[import.meta.env.VITE_APP_NAME]
             const payload = { ...form }
-            if (form.condition !== 'entre') {
-                delete payload.value2
+
+            // Si no es "entre", limpiamos value2
+            if (form.condition !== 'entre') delete payload.value2
+
+            // Si es simple, no mandamos campos de la segunda condición
+            if (form.type === 'single') {
+                delete payload.secondaryVariableId
+                delete payload.secondaryCondition
+                delete payload.secondaryValue
+                delete payload.logicOperator
             }
 
             if (alarmData?.id) {
-                // EDITAR
                 await request(`${url}/updateAlarm/${alarmData.id}`, 'PUT', payload)
-                await Swal.fire('Éxito', 'Alarma editada correctamente', 'success')
+                await Swal.fire({
+                    showConfirmButton: false,
+                    timer: 1500,
+                    icon: 'success',
+                    text: 'Alarma editada correctamente',
+                })
             } else {
-                // CREAR
                 await request(`${url}/createAlarm`, 'POST', payload)
-                await Swal.fire('Éxito', 'Alarma creada correctamente', 'success')
+                await Swal.fire({
+                    showConfirmButton: false,
+                    timer: 1500,
+                    icon: 'success',
+                    text: 'Alarma creada correctamente',
+                })
             }
 
-            onSuccess?.() // refresca lista en index.jsx
+            onSuccess?.()
             handleClose()
         } catch (err) {
             console.error(err)
@@ -93,22 +144,30 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
 
     return (
         <Modal open={openModal} onClose={handleClose} className="flex justify-center items-center align-middle">
-            <Box className="relative bg-white p-6 rounded-lg shadow-lg">
-                <IconButton
-                    onClick={handleClose}
-                    className="!absolute top-3 right-3"
-                >
+            <Box className="relative bg-white p-6 rounded-lg shadow-lg max-w-[95vw]">
+                <IconButton onClick={handleClose} className="!absolute top-3 right-3">
                     <Close color="error" />
                 </IconButton>
 
-                <form onSubmit={handleSubmit} className="p-5 flex flex-col h-full gap-3 justify-start items-center min-w-[90vw] max-w-[94vw]">
+                <form onSubmit={handleSubmit} className="p-5 flex flex-col h-full gap-3 justify-start items-center">
                     <Typography variant="h5">
                         {alarmData?.id ? 'Editar alarma' : 'Crear nueva alarma'}
                     </Typography>
-                    <div className="flex w-full gap-3 justify-center my-5">
+
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={form.type === 'combined'}
+                                onChange={(e) => handleChange('type', e.target.checked ? 'combined' : 'single')}
+                            />
+                        }
+                        label="Alarma combinada"
+                    />
+
+                    <div className="flex flex-wrap w-full gap-3 justify-center my-4">
                         <TextField
                             label="Nombre"
-                            className="w-2/3"
+                            className="w-64"
                             value={form.name}
                             onChange={(e) => handleChange('name', e.target.value)}
                             required
@@ -116,7 +175,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
 
                         <TextField
                             label="Variable"
-                            className="w-2/3"
+                            className="w-64"
                             select
                             value={form.id_influxvars}
                             onChange={(e) => handleChange('id_influxvars', e.target.value)}
@@ -130,7 +189,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
 
                         <TextField
                             label="Condición"
-                            className="w-2/3"
+                            className="w-64"
                             select
                             value={form.condition}
                             onChange={(e) => handleChange('condition', e.target.value)}
@@ -146,7 +205,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
 
                         <TextField
                             type="number"
-                            className="w-2/3"
+                            className="w-64"
                             label="Valor"
                             value={form.value}
                             onChange={(e) => handleChange('value', e.target.value)}
@@ -156,7 +215,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                         {form.condition === 'entre' && (
                             <TextField
                                 type="number"
-                                className="w-2/3"
+                                className="w-64"
                                 label="Valor 2"
                                 value={form.value2}
                                 onChange={(e) => handleChange('value2', e.target.value)}
@@ -166,7 +225,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
 
                         <TextField
                             type="number"
-                            className="w-2/3"
+                            className="w-64"
                             label="Intervalo de repetición (minutos)"
                             value={form.repeatInterval || ''}
                             onChange={(e) => handleChange('repeatInterval', e.target.value)}
@@ -174,6 +233,58 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                             inputProps={{ min: 0 }}
                         />
 
+                        {form.type === 'combined' && (
+                            <>
+                                <TextField
+                                    label="Operador lógico"
+                                    className="w-64"
+                                    select
+                                    value={form.logicOperator}
+                                    onChange={(e) => handleChange('logicOperator', e.target.value)}
+                                >
+                                    <MenuItem value="AND">AND (y)</MenuItem>
+                                    <MenuItem value="OR">OR (o)</MenuItem>
+                                </TextField>
+
+                                <TextField
+                                    label="Variable secundaria"
+                                    className="w-64"
+                                    select
+                                    value={form.secondaryVariableId}
+                                    onChange={(e) => handleChange('secondaryVariableId', e.target.value)}
+                                    required
+                                >
+                                    <MenuItem value="">Selecciona una variable</MenuItem>
+                                    {variables.map((v) => (
+                                        <MenuItem key={v.id} value={v.id}>{v.name}</MenuItem>
+                                    ))}
+                                </TextField>
+
+                                <TextField
+                                    label="Condición secundaria"
+                                    className="w-64"
+                                    select
+                                    value={form.secondaryCondition}
+                                    onChange={(e) => handleChange('secondaryCondition', e.target.value)}
+                                    required
+                                >
+                                    <MenuItem value=">">Mayor que</MenuItem>
+                                    <MenuItem value="<">Menor que</MenuItem>
+                                    <MenuItem value="=">Igual a</MenuItem>
+                                    <MenuItem value=">=">Mayor o igual</MenuItem>
+                                    <MenuItem value="<=">Menor o igual</MenuItem>
+                                </TextField>
+
+                                <TextField
+                                    type="number"
+                                    className="w-64"
+                                    label="Valor secundario"
+                                    value={form.secondaryValue}
+                                    onChange={(e) => handleChange('secondaryValue', e.target.value)}
+                                    required
+                                />
+                            </>
+                        )}
                     </div>
 
                     <Button
