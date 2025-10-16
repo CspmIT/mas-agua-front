@@ -23,31 +23,85 @@ const ConfigAlarms = () => {
       const columns = [
         { header: 'ID', accessorKey: 'id', size: 50 },
         { header: 'Nombre', accessorKey: 'name' },
-        { header: 'Variable', accessorKey: 'var_name' },
-        { header: 'Condicion', accessorKey: 'condition', size: 50 },
-        { header: 'Valores', accessorKey: 'value',  size: 50,
+      
+        {
+          header: 'Condición',
+          accessorKey: 'condition',
+          Cell: ({ row }) => {
+            const alarm = row.original
+            // 🧠 Si es simple
+            if (alarm.type === 'single') {
+              return (
+                <span className="text-sm">
+                  {alarm.var_name} {alarm.condition}{' '}
+                  {alarm.condition === 'entre'
+                    ? `${alarm.value} y ${alarm.value2}`
+                    : alarm.value}
+                </span>
+              )
+            }
+      
+            return (
+              <div className="text-sm flex flex-col gap-1">
+                <span>
+                  {alarm.var_name} {alarm.condition}{' '}
+                  {alarm.condition === 'entre'
+                    ? `${alarm.value} y ${alarm.value2}`
+                    : alarm.value}
+                </span>
+                <span className="text-blue-700 font-bold text-xs">
+                  {alarm.logicOperator}
+                </span>
+                <span>
+                  {alarm.secondaryVarName} {alarm.secondaryCondition} {alarm.secondaryValue}
+                </span>
+              </div>
+            )
+          },
+        },
+      
+        {
+          header: 'Tipo',
+          accessorKey: 'type',
+          size: 100,
           Cell: ({ row }) => (
-            <span className="text-sm">
-              {['entre'].includes(row.original.condition)
-                ? `${row.original.value} y ${row.original.value2}`
-                : row.original.value}
+            <span
+              className={`text-sm font-semibold ${
+                row.original.type === 'combined' ? 'text-blue-600' : 'text-gray-600'
+              }`}
+            >
+              {row.original.type === 'combined' ? 'Combinada' : 'Simple'}
             </span>
           ),
-         },
-        { header: 'Estado', accessorKey: 'status', size: 50,
+        },
+      
+        {
+          header: 'Repetir cada',
+          accessorKey: 'repeatInterval',
+          size: 80,
           Cell: ({ row }) => (
-            <span className={`text-sm font-semibold ${row.original.status ? 'text-green-600' : 'text-red-600'}`}>
+            <span className="text-sm">{row.original.repeatInterval} min.</span>
+          ),
+        },
+      
+        {
+          header: 'Estado',
+          accessorKey: 'status',
+          size: 50,
+          Cell: ({ row }) => (
+            <span
+              className={`text-sm font-semibold ${
+                row.original.status ? 'text-green-600' : 'text-red-600'
+              }`}
+            >
               {row.original.status ? 'Activo' : 'Inactivo'}
             </span>
           ),
         },
-        { header: 'Repetir cada', accessorKey: 'repeatInterval', size: 50,
-          Cell: ({ row }) => (
-            <span className="text-sm">{row.original.repeatInterval} min.</span>
-          ),
-         },
+      
         {
-          header: 'Acciones', accessorKey: 'actions',
+          header: 'Acciones',
+          accessorKey: 'actions',
           Cell: ({ row }) => (
             <Box display="flex" gap={1}>
               <Button
@@ -66,15 +120,15 @@ const ConfigAlarms = () => {
                 color={row.original.status ? 'error' : 'success'}
                 size="small"
                 onClick={async (e) => {
-                  e.preventDefault();
+                  e.preventDefault()
                   const confirm = await Swal.fire({
                     icon: 'question',
                     html: `¿Seguro que querés ${row.original.status ? 'desactivar' : 'activar'} esta alarma?`,
                     showCancelButton: true,
                     confirmButtonText: row.original.status ? 'Desactivar' : 'Activar',
                     cancelButtonText: 'Cancelar',
-                  });
-                  if (!confirm.isConfirmed) return;
+                  })
+                  if (!confirm.isConfirmed) return
                   try {
                     const { data: res } = await request(
                       `${url}/changeStatusAlarm`,
@@ -83,26 +137,32 @@ const ConfigAlarms = () => {
                         id: row.original.id,
                         status: row.original.status,
                       }
-                    );
+                    )
                     if (res) {
                       await Swal.fire({
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500,
                         icon: 'success',
                         text: 'Alarma actualizada correctamente',
-                      });
+                        toast: true,
+                      })
                       setListAlarm((prev) =>
                         prev.map((d) =>
-                          d.id === row.original.id
-                            ? { ...d, status: !d.status }
-                            : d
+                          d.id === row.original.id ? { ...d, status: !d.status } : d
                         )
-                      );
+                      )
                     }
                   } catch (err) {
-                    console.error(err);
+                    console.error(err)
                     Swal.fire({
+                      position: 'top-end',
+                      showConfirmButton: false,
+                      timer: 1500,
                       icon: 'error',
                       text: 'No se pudo actualizar el estado de la alarma',
-                    });
+                      toast: true,
+                    })
                   }
                 }}
               >
@@ -111,7 +171,7 @@ const ConfigAlarms = () => {
             </Box>
           ),
         },
-      ];
+      ]      
 
       setColumnsTable(columns);
       setListAlarm(data);
