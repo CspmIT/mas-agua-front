@@ -54,10 +54,27 @@ export const useTooltipManager = ({ selectedId, elements, setElements }) => {
     );
   }, [selectedId, setElements]);
 
+  const handleBooleanColorChange = (colors) => {
+    setElements(prev =>
+      prev.map(el =>
+        String(el.id) === String(selectedId)
+          ? {
+              ...el,
+              dataInflux: {
+                ...el.dataInflux,
+                booleanColors: colors,
+              },
+            }
+          : el
+      )
+    );
+  };
+
   return {
     handleShowTooltip,
     handleHideTooltip,
     handleChangeTooltipPosition,
-    handleSetMaxValue
+    handleSetMaxValue,
+    handleBooleanColorChange
   };
 };

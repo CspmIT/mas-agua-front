@@ -21,9 +21,7 @@ const ConfigAlarms = () => {
       const { data } = await request(`${url}/getAlarms`, 'GET');
 
       const columns = [
-        { header: 'ID', accessorKey: 'id', size: 50 },
-        { header: 'Nombre', accessorKey: 'name' },
-      
+        { header: 'Nombre', accessorKey: 'name', size: 250 },
         {
           header: 'Condición',
           accessorKey: 'condition',

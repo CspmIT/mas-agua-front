@@ -32,7 +32,7 @@ function ViewDiagram() {
 	});
 
 	const renderTooltipLabel = (el) => {
-		if (!el.dataInflux.show) return null; 
+		if (!el.dataInflux.show) return null;
 
 		// Posición
 		const offset = 5;
@@ -198,6 +198,42 @@ function ViewDiagram() {
 		);
 	};
 
+	// Calcula el ajuste automático al contenedor
+	const autoFitDiagram = (elements) => {
+		if (!elements.length) return;
+
+		// Obtener límites mínimos y máximos del diagrama
+		const minX = Math.min(...elements.map(el => el.x));
+		const minY = Math.min(...elements.map(el => el.y));
+		const maxX = Math.max(...elements.map(el => (el.x + (el.width || 0))));
+		const maxY = Math.max(...elements.map(el => (el.y + (el.height || 0))));
+
+		const diagramWidth = maxX - minX;
+		const diagramHeight = maxY - minY;
+
+		// Agregar un pequeño padding visual
+		const padding = 100;
+
+		const availableWidth = dimensions.width - padding;
+		const availableHeight = dimensions.height - padding;
+
+		// Calcular escala mínima que entra en el contenedor
+		const scaleX = availableWidth / diagramWidth;
+		const scaleY = availableHeight / diagramHeight;
+		const newScale = Math.min(scaleX, scaleY);
+
+		// Centrar el diagrama
+		const offsetX = (availableWidth - diagramWidth * newScale) / 2;
+		const offsetY = (availableHeight - diagramHeight * newScale) / 2;
+
+		setScale(newScale);
+		setPosition({
+			x: offsetX - minX * newScale + padding / 2,
+			y: offsetY - minY * newScale + padding / 2,
+		});
+	};
+
+
 	useEffect(() => {
 		if (id) {
 			setIsLoading(true);
@@ -208,11 +244,12 @@ function ViewDiagram() {
 				setTool: () => { },
 			}).then((updatedElements) => {
 				setElements(updatedElements);
+				autoFitDiagram(updatedElements);
 			}).finally(() => {
 				setIsLoading(false);
 			});
 		}
-	}, [id]);
+	}, [id, dimensions]);
 
 	useEffect(() => {
 		let frameId;
@@ -332,11 +369,11 @@ function ViewDiagram() {
 					</div>
 
 					{/* Card principal */}
-					<CardCustom className="w-full h-auto flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
+					<CardCustom className="w-full h- flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
 						<div className="flex-1 w-full rounded-br-lg relative text-end">
 
 							{/* Botones de zoom */}
-							<div className="absolute left-2 flex flex-col gap-2 z-10">
+							<div className="absolute mt-5 ms-3 flex flex-col gap-2 z-10">
 								<IconButton onClick={zoomIn} title="Acercar" className="!bg-blue-400">
 									<LuZoomIn />
 								</IconButton>
@@ -346,7 +383,7 @@ function ViewDiagram() {
 							</div>
 
 							{/* Botón de volver */}
-							<div className="absolute right-2 z-10">
+							{/* <div className="absolute z-10">
 								<IconButton
 									title="Volver"
 									onClick={() => navigate('/config/diagram')}
@@ -354,7 +391,7 @@ function ViewDiagram() {
 								>
 									<LuArrowLeft />
 								</IconButton>
-							</div>
+							</div> */}
 
 							{/* Canvas de Konva */}
 							<Stage

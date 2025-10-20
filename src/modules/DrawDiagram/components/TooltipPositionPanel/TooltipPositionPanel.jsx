@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const TooltipPositionPanel = ({
   visible,
@@ -6,7 +6,8 @@ const TooltipPositionPanel = ({
   onChangePosition,
   onHideTooltip,
   onShowTooltip,
-  onSetMaxValue
+  onSetMaxValue,
+  onSetBooleanColors
 }) => {
   if (
     !visible ||
@@ -20,6 +21,26 @@ const TooltipPositionPanel = ({
   const [calculatePercentage, setCalculatePercentage] = useState(
     selectedElement.dataInflux.calculatePercentage || false
   );
+
+  // 🎯 Detectar si es una variable booleana
+  const unit = selectedElement.dataInflux.unit?.toLowerCase() || '';
+  const isBooleanUnit = ['booleano', 'binario', 'bool'].includes(unit);
+
+  // 🎨 Estado para los colores booleanos
+  const [booleanColors, setBooleanColors] = useState(
+    selectedElement.dataInflux.boolean_colors || {
+      false: 'default',
+      true: 'success',
+    }
+  );
+
+  useEffect(() => {
+    // Asegurar que si seleccionan otra variable se actualiza el estado
+    setBooleanColors(selectedElement.dataInflux.boolean_colors || {
+      false: 'default',
+      true: 'success',
+    });
+  }, [selectedElement]);
 
   const handleMaxValueChange = (e) => {
     const value = parseFloat(e.target.value);
@@ -36,6 +57,15 @@ const TooltipPositionPanel = ({
       onSetMaxValue(newValue ? parseFloat(localMaxValue) || 0 : null, newValue);
       return newValue;
     });
+  };
+
+  const handleBooleanColorChange = (key, value) => {
+    const updatedColors = { ...boolean_colors, [key]: value };
+    setBooleanColors(updatedColors);
+    if (onSetBooleanColors) {
+     
+      onSetBooleanColors(updatedColors);
+    }
   };
 
   return (
@@ -130,6 +160,43 @@ const TooltipPositionPanel = ({
           />
         </div>
       )}
+
+      {/* 🌈 Personalización para booleanos */}
+      {isBooleanUnit && (
+        <div className="mt-4 border-t pt-3">
+          <h5 className="text-sm font-semibold mb-2">Colores por estado</h5>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium">Valor 0 / false</span>
+              <select
+                value={booleanColors.false}
+                onChange={(e) => handleBooleanColorChange('false', e.target.value)}
+                className="border rounded px-2 py-1 text-sm bg-gray-100"
+              >
+                <option value="error">Rojo</option>
+                <option value="success">Verde</option>
+                <option value="default">Gris</option>
+              </select>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium">Valor 1 / true</span>
+              <select
+                value={booleanColors.true}
+                onChange={(e) => handleBooleanColorChange('true', e.target.value)}
+                className="border rounded px-2 py-1 text-sm bg-gray-100"
+              >
+                <option value="error">Rojo</option>
+                <option value="success">Verde</option>
+                <option value="default">Gris</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      
     </div>
   );
 };

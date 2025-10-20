@@ -112,7 +112,7 @@ const DrawDiagram = () => {
     setLineStyle
   });
 
-  const { handleShowTooltip, handleHideTooltip, handleChangeTooltipPosition, handleSetMaxValue } = useTooltipManager({ selectedId, elements, setElements });
+  const { handleShowTooltip, handleHideTooltip, handleChangeTooltipPosition, handleSetMaxValue, handleBooleanColorChange } = useTooltipManager({ selectedId, elements, setElements });
 
   const { saveText } = useTextTools({ elements, setElements, textStyle, setTextInput, setTextPosition, setEditingTextId, setNewElementsIds });
 
@@ -493,6 +493,7 @@ const DrawDiagram = () => {
                   onHideTooltip={handleHideTooltip}
                   onShowTooltip={handleShowTooltip}
                   onSetMaxValue={handleSetMaxValue}
+                  onSetBooleanColors={handleBooleanColorChange}
                 />
                 {/* Canvas */}
                 <DiagramCanvas

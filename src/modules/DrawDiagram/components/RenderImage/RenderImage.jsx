@@ -9,15 +9,31 @@ const RenderImage = ({ el }) => {
 
   const getImageSrc = () => {
     if (!config) return el.src;
-
+  
     const val = el.dataInflux?.value;
-
+    const userColors = el.dataInflux?.boolean_colors; // configuración elegida por el usuario
+  
+    // Si es una imagen booleana
     if (config.animation === 'boolean' && config.optionsImage) {
-      if (val === 1 || val === true) return config.optionsImage.success;
-      if (val === 0 || val === false) return config.optionsImage.error;
+      const isTrue = val === 1 || val === true;
+      const isFalse = val === 0 || val === false;
+  
+      if (userColors) {
+        // Elegimos la key de imagen en base a lo que configuró el usuario
+        if (isTrue && userColors.true) {
+          return config.optionsImage[userColors.true];
+        }
+        if (isFalse && userColors.false) {
+          return config.optionsImage[userColors.false];
+        }
+      }
+  
+      // Si no hay personalización → usamos la lógica por defecto
+      if (isTrue) return config.optionsImage.success;
+      if (isFalse) return config.optionsImage.error;
       return config.optionsImage.default;
     }
-
+  
     if (config.srcView) return config.srcView;
     return el.src;
   };
