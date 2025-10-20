@@ -29,7 +29,6 @@ const ConfigAlarms = () => {
           accessorKey: 'condition',
           Cell: ({ row }) => {
             const alarm = row.original
-            // 🧠 Si es simple
             if (alarm.type === 'single') {
               return (
                 <span className="text-sm">

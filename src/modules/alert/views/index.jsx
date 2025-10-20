@@ -26,7 +26,7 @@ const Alert = () => {
             const { data } = await request(`${url}/listAlerts`, 'GET')
             const columns = [
                 {
-                    header: 'Fecha', accessorKey: 'triggeredAt', size: 100, 
+                    header: 'Fecha', accessorKey: 'triggeredAt', size: 100,
                     cell: info => <span className="whitespace-nowrap">{info.getValue()}</span>
                 },
                 { header: 'Mensaje', accessorKey: 'message' },
@@ -35,7 +35,7 @@ const Alert = () => {
                     accessorKey: 'actions',
                     size: 50,
                     Cell: ({ row }) => (
-                        !row.original.viewed && (  
+                        !row.original.viewed && (
                             <Box>
                                 <Button
                                     variant="contained"
@@ -82,6 +82,30 @@ const Alert = () => {
         }
     }
 
+    const markAllAsRead = async () => {
+        const url = backend[import.meta.env.VITE_APP_NAME]
+        try {
+            await request(`${url}/alerts/allviewed`, 'PUT')
+            fetchUnreadCount()
+            fetchLogs_Alarms()
+            Swal.fire({
+                title: 'Listo',
+                text: 'Todas las alertas fueron marcadas como leídas.',
+                icon: 'success',
+                showConfirmButton: false,
+                timer: 1500,
+            })
+        } catch (error) {
+            console.error(error)
+            Swal.fire({
+                title: 'Error',
+                text: 'No se pudieron marcar todas las alertas como leídas.',
+                icon: 'error',
+            })
+        }
+    }
+
+
     useEffect(() => {
         fetchLogs_Alarms();
     }, [])
@@ -94,9 +118,19 @@ const Alert = () => {
                 <CardCustom className="w-full bg-white dark:bg-gray-900 shadow-lg rounded-2xl p-6 flex flex-col gap-6 transition-all">
                     {/* Header */}
                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-300 dark:border-gray-700 pb-3">
-                        <FormLabel className='w-full text-center !text-3xl'>
+                        <FormLabel className='w-full text-center !text-3xl ms-24'>
                             Registro de Alarmas
                         </FormLabel>
+                        <Button
+                            title='Marcar todas como leídas'
+                            variant="contained"
+                            color="primary"
+                            size="small"
+                            onClick={markAllAsRead}
+                            disabled={!listLogs_Alarms.some(a => !a.viewed)}
+                        >
+                            <FaEye className='text-lg my-1' />
+                        </Button>
                     </div>
 
                     {/* Tabla */}
