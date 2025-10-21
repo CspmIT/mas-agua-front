@@ -22,11 +22,11 @@ const TooltipPositionPanel = ({
     selectedElement.dataInflux.calculatePercentage || false
   );
 
-  // 🎯 Detectar si es una variable booleana
+  // Detectar si es una variable booleana
   const unit = selectedElement.dataInflux.unit?.toLowerCase() || '';
   const isBooleanUnit = ['booleano', 'binario', 'bool'].includes(unit);
 
-  // 🎨 Estado para los colores booleanos
+  // Estado para los colores booleanos
   const [booleanColors, setBooleanColors] = useState(
     selectedElement.dataInflux.boolean_colors || {
       false: 'default',
@@ -60,7 +60,7 @@ const TooltipPositionPanel = ({
   };
 
   const handleBooleanColorChange = (key, value) => {
-    const updatedColors = { ...boolean_colors, [key]: value };
+    const updatedColors = { ...booleanColors, [key]: value };
     setBooleanColors(updatedColors);
     if (onSetBooleanColors) {
      
@@ -161,35 +161,35 @@ const TooltipPositionPanel = ({
         </div>
       )}
 
-      {/* 🌈 Personalización para booleanos */}
+      {/* Personalización para variables booleanas */}
       {isBooleanUnit && (
         <div className="mt-4 border-t pt-3">
           <h5 className="text-sm font-semibold mb-2">Colores por estado</h5>
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">Valor 0 / false</span>
+              <span className="text-xs font-medium">False: </span>
               <select
                 value={booleanColors.false}
                 onChange={(e) => handleBooleanColorChange('false', e.target.value)}
                 className="border rounded px-2 py-1 text-sm bg-gray-100"
               >
-                <option value="error">Rojo</option>
-                <option value="success">Verde</option>
-                <option value="default">Gris</option>
+                <option value="error">En falla (rojo)</option>
+                <option value="success">Encendido (verde)</option>
+                <option value="default">Apagado (gris)</option>
               </select>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">Valor 1 / true</span>
+              <span className="text-xs font-medium">True: </span>
               <select
                 value={booleanColors.true}
                 onChange={(e) => handleBooleanColorChange('true', e.target.value)}
                 className="border rounded px-2 py-1 text-sm bg-gray-100"
               >
-                <option value="error">Rojo</option>
-                <option value="success">Verde</option>
-                <option value="default">Gris</option>
+                <option value="error">En falla (rojo)</option>
+                <option value="success">Encendido (verde)</option>
+                <option value="default">Apagado (gris)</option>
               </select>
             </div>
           </div>

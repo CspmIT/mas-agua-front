@@ -259,7 +259,7 @@ export const saveDiagramKonva = async ({
 								show: el.dataInflux.show,
         						position: el.dataInflux.position,
 								max_value: el.dataInflux.max_value_var,
-								booleanColors: el.dataInflux.booleanColors
+								boolean_colors: el.dataInflux.boolean_colors
 							}
 						} : {}
 					});

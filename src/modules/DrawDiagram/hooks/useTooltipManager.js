@@ -62,7 +62,7 @@ export const useTooltipManager = ({ selectedId, elements, setElements }) => {
               ...el,
               dataInflux: {
                 ...el.dataInflux,
-                booleanColors: colors,
+                boolean_colors: colors,
               },
             }
           : el
