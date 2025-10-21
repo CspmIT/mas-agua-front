@@ -425,6 +425,15 @@ export const ListImg = () => [
     },
     {
         id: 29,
+        name: 'Maquina osmosis pequeña',
+        src: `${urlBase}/Máquina_osmosis_pequeña.png`,
+        srcView: `${urlBaseView}/Máquina_osmosis_pequeña.png`,
+        variables: {
+            variable1: { id_variable: 0, show: false, require: false },
+        },
+    },
+    {
+        id: 30,
         name: 'Img sin fondo',
         src: `${urlBase}/img_sinfondo.PNG`,
         srcView: `${urlBaseView}/img_sinfondo.PNG`,

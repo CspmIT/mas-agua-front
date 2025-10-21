@@ -372,18 +372,20 @@ function ViewDiagram() {
 					<CardCustom className="w-full h- flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
 						<div className="flex-1 w-full rounded-br-lg relative text-end">
 
-							{/* Botones de zoom */}
-							<div className="absolute mt-5 ms-3 flex flex-col gap-2 z-10">
-								<IconButton onClick={zoomIn} title="Acercar" className="!bg-blue-400">
-									<LuZoomIn />
-								</IconButton>
-								<IconButton onClick={zoomOut} title="Alejar" className="!bg-blue-400">
-									<LuZoomOut />
-								</IconButton>
-							</div>
+							{/* Barra de botones flotante */}
+							<div className="absolute top-2 left-0 right-0 flex justify-between items-start px-4 z-10">
 
-							{/* Botón de volver */}
-							{/* <div className="absolute z-10">
+								{/* Botones de zoom (izquierda) */}
+								<div className="flex flex-col gap-2">
+									<IconButton onClick={zoomIn} title="Acercar" className="!bg-blue-400">
+										<LuZoomIn />
+									</IconButton>
+									<IconButton onClick={zoomOut} title="Alejar" className="!bg-blue-400">
+										<LuZoomOut />
+									</IconButton>
+								</div>
+
+								{/* Botón de volver (derecha) */}
 								<IconButton
 									title="Volver"
 									onClick={() => navigate('/config/diagram')}
@@ -391,7 +393,7 @@ function ViewDiagram() {
 								>
 									<LuArrowLeft />
 								</IconButton>
-							</div> */}
+							</div>
 
 							{/* Canvas de Konva */}
 							<Stage
