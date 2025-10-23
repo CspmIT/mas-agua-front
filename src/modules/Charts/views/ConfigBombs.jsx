@@ -128,7 +128,7 @@ export default function PumpControl({
 
     return (
         <>
-            <Card className={`${edit ? 'max-w-2xl' : 'w-full'} mx-auto h-fit`}>
+            <Card className={`${edit ? 'max-w-2xl' : 'w-full'} mx-auto h-fit !shadow-none`}>
                 {edit && (
                     <Button
                         onClick={() => navigate(-1)} // Volver atrás
