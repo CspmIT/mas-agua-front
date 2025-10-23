@@ -8,6 +8,8 @@ import Swal from 'sweetalert2'
 import { storage } from '../../../storage/storage'
 import { getData, removeData } from '../../../storage/cookies-store'
 import LoaderComponent from '../../../components/Loader'
+
+
 const MainContent = () => {
 	const { user, setInfoNav } = useContext(MainContext)
 	const location = useLocation()
@@ -36,7 +38,7 @@ const MainContent = () => {
 	}, [location])
 	return (
 		<>
-			<div className='pt-16 !min-h-screen absolute w-full bg-gray-200 dark:bg-gray-700 '>
+			<div className={`pt-16 !min-h-screen absolute w-full bg-gray-200 dark:bg-gray-700`}>
 				<NavBarCustom setLoading={setLoading} />
 				{!loading ? (
 					<LoaderComponent />

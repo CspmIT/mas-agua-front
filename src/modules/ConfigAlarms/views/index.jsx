@@ -199,7 +199,10 @@ const ConfigAlarms = () => {
             <Button
               variant="contained"
               color="primary"
-              onClick={() => setModalAlarms(true)}
+              onClick={() => {
+                setSelectedAlarm(null)
+                setModalAlarms(true)
+              }}
             >
               Crear alarma
             </Button>
@@ -217,7 +220,10 @@ const ConfigAlarms = () => {
         )}
         <ModalAlarms
           openModal={modalAlarms}
-          setOpenModal={setModalAlarms}
+          setOpenModal={(value) => {
+            if (!value) setSelectedAlarm(null) 
+            setModalAlarms(value)
+          }}
           onSuccess={fetchAlarms}
           alarmData={selectedAlarm}
         />
