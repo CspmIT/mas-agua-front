@@ -9,6 +9,7 @@ import { backend } from '../../../utils/routes/app.routes';
 import RenderImage from '../components/RenderImage/RenderImage';
 import LoaderComponent from '../../../components/Loader'
 import { LuZoomOut, LuZoomIn, LuArrowLeft } from "react-icons/lu";
+import { storage } from '../../../storage/storage';
 
 function ViewDiagram() {
 	const { id } = useParams();
@@ -30,6 +31,7 @@ function ViewDiagram() {
 		width: window.innerWidth - 10,
 		height: window.innerHeight - 10,
 	});
+	const usuario = storage.get('usuario');
 
 	const renderTooltipLabel = (el) => {
 		if (!el.dataInflux.show) return null;
@@ -83,7 +85,7 @@ function ViewDiagram() {
 			if (!isNaN(rawValue)) {
 				text = `${Number(rawValue).toFixed(2)} ${unit}`;
 			} else {
-				text = `${rawValue} ${unit}`;
+				text = `${rawValue}`;
 			}
 		} else {
 			text = 'No hay datos';
@@ -212,7 +214,7 @@ function ViewDiagram() {
 		const diagramHeight = maxY - minY;
 
 		// Agregar un pequeño padding visual
-		const padding = 100;
+		const padding = 0;
 
 		const availableWidth = dimensions.width - padding;
 		const availableHeight = dimensions.height - padding;
@@ -369,8 +371,8 @@ function ViewDiagram() {
 					</div>
 
 					{/* Card principal */}
-					<CardCustom className="w-full h- flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
-						<div className="flex-1 w-full rounded-br-lg relative text-end">
+					<CardCustom className="w-full max-h-[725px] flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
+						<div className="flex-1 w-full max-h-full rounded-br-lg relative text-end">
 
 							{/* Barra de botones flotante */}
 							<div className="absolute top-2 left-0 right-0 flex justify-between items-start px-4 z-10">
@@ -386,13 +388,15 @@ function ViewDiagram() {
 								</div>
 
 								{/* Botón de volver (derecha) */}
-								<IconButton
-									title="Volver"
-									onClick={() => navigate('/config/diagram')}
-									className="!bg-blue-400"
-								>
-									<LuArrowLeft />
-								</IconButton>
+								{usuario.profile === 4 && (
+									<IconButton
+										title="Volver"
+										onClick={() => navigate('/config/diagram')}
+										className="!bg-blue-400"
+									>
+										<LuArrowLeft />
+									</IconButton>
+								)}
 							</div>
 
 							{/* Canvas de Konva */}

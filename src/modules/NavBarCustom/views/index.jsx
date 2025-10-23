@@ -167,7 +167,7 @@ function NavBarCustom({ setLoading }) {
 						Reconecta
 					</Typography> */}
 					<div className='absolute right-5 flex flex-row items-center gap-2'>
-						<p className={`text-black text-base ml-3 select-none ${isMobile ? 'hidden' : ''}`}>
+						<p className={`bg-blue-600 rounded-md shadow-sm px-3 py-1 text-white  ml-3 select-none ${isMobile ? 'hidden' : ''}`}>
 							{nameCoop}
 						</p>
 						<BottonApps />

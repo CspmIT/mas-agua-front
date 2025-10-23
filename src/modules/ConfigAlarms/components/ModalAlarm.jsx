@@ -80,7 +80,6 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
     }
 
     const handleClose = () => {
-        setOpenModal(false)
         setForm({
             name: '',
             id_influxvars: '',
@@ -94,6 +93,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
             secondaryCondition: '',
             secondaryValue: '',
         })
+        setOpenModal(false)
     }
 
     const handleSubmit = async (e) => {

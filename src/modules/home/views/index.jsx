@@ -113,17 +113,18 @@ const Home = () => {
     }, [])
 
     return (
-        <Grid container spacing={3}>
+        <Grid container spacing={2}>
             {charts.map((chart, index) => {
                 const ChartComponentDb = chartComponents[chart.component]
                 return (
-                    <Grid item xs={12} sm={4} lg={3} key={index}>
+                    <Grid item xs={12} sm={6} lg={4} key={index}>
                         <CardCustom
-                            className={`flex flex-col items-center rounded-xl ${
-                                ChartComponentDb === PumpControl
-                                    ? 'h-fit'
+                            className={`flex flex-col items-center rounded-xl 
+                                ${ChartComponentDb === PumpControl
+                                    ? 'h-80 p-2'
                                     : 'h-80'
-                            }`}
+                                }`
+                            }
                         >
                             <Typography
                                 variant="h5"
