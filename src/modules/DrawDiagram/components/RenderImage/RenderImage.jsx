@@ -29,7 +29,7 @@ const RenderImage = ({ el }) => {
         }
       }
   
-      if (unit == "text") {
+      if (['text'].includes(unit)) {
         if (val === 'Bomba apagada') return config.optionsImage.default;
         if (val === 'Bomba encendida') return config.optionsImage.success;
         return config.optionsImage.error;

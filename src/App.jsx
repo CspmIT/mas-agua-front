@@ -1,12 +1,12 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import MainContent from './modules/core/views'
 import { ThemeProvider, createTheme } from '@mui/material'
 import { useContext, useEffect, useState } from 'react'
 import { MainContext } from './context/MainContext'
+import { storage } from '../src/storage/storage'
 
 import LoginApp from './modules/LoginApp/view'
 import ListClients from './modules/LoginApp/view/ListClient'
-// import DashBoard from './modules/dashBoard/views'
 import TabDinamic from './modules/tabs/views'
 import Notification from './modules/Notification'
 import Home from './modules/home/views'
@@ -35,15 +35,20 @@ import ConfigPie from './modules/Charts/views/ConfigPie'
 import Alert from './modules/alert/views'
 import ConfigAlarms from './modules/ConfigAlarms/views/index'
 
+import ExternalUser from './modules/ExternalUsers/views/index'
+
 
 function App() {
 	const { darkMode } = useContext(MainContext)
+	const authUser = storage.get('usuario')
+	const isExternalUser = authUser && authUser.profile === 5
+
 	const loginRoutes = [
 		{ path: '/login', element: <LoginApp /> },
 		{ path: '/ListClients', element: <ListClients /> },
 		{ path: '/ListClients/:action', element: <ListClients /> },
 		{ path: '/LoginCooptech/:token', element: <LoginCooptech /> },
-		{ path: '/*', element: <NotFound/> },
+		{ path: '/*', element: <NotFound /> },
 	]
 	const userRoutes = [
 		{ path: '/', element: <Home /> },
@@ -61,24 +66,30 @@ function App() {
 		{ path: '/viewDiagram/:id', element: <ViewDiagram /> },
 		{ path: '/AddMenu', element: <AddMenu /> },
 		{ path: '/config/graphic', element: <SelectType /> },
-		{ path: '/config/pumps', element: <PumpControl/> },
-        { path: '/config/graphic/boolean', element: <ConfigBooleanChart/>},
-        { path: '/config/graphic/boolean/:id', element: <ConfigBooleanChart/>},
-        { path: '/config/graphic/pie', element: <ConfigPie/>},
-        { path: '/config/graphic/pie/:id', element: <ConfigPie/>},
+		{ path: '/config/pumps', element: <PumpControl /> },
+		{ path: '/config/graphic/boolean', element: <ConfigBooleanChart /> },
+		{ path: '/config/graphic/boolean/:id', element: <ConfigBooleanChart /> },
+		{ path: '/config/graphic/pie', element: <ConfigPie /> },
+		{ path: '/config/graphic/pie/:id', element: <ConfigPie /> },
 		{ path: '/config/graphic/:id', element: <ConfigGraphic /> },
 		{ path: '/config/graphic/:id/:idChart', element: <ConfigGraphic /> },
 		{ path: '/config/allGraphic', element: <ChartsTable /> },
 		{ path: '/map', element: <MapView /> },
 		{ path: '/maps', element: <Maps /> },
-		{ path: '/map/create', element: <MapView create={true}/> },
-		{ path: '/map/edit', element: <MapView create={true} search={true}/> },
-		{ path: '/config/vars', element: <Vars/> },
-		{ path: '/config/plc', element: <ProfilePLC/> },
-		{ path: '/alert', element: <Alert/> },
-		{ path: '/config/alarm', element: <ConfigAlarms/> },
-		
+		{ path: '/map/create', element: <MapView create={true} /> },
+		{ path: '/map/edit', element: <MapView create={true} search={true} /> },
+		{ path: '/config/vars', element: <Vars /> },
+		{ path: '/config/plc', element: <ProfilePLC /> },
+		{ path: '/alert', element: <Alert /> },
+		{ path: '/config/alarm', element: <ConfigAlarms /> },
+
 	]
+
+	const externalRoutes = [
+		{ path: '/', element: <ExternalUser /> }
+
+	]
+
 	//Incorporo el theme de mui
 	const lightTheme = createTheme({
 		palette: {
@@ -105,9 +116,11 @@ function App() {
 					))}
 
 					<Route element={<MainContent />}>
-						{userRoutes.map((route) => (
+						{(isExternalUser ? externalRoutes : userRoutes).map((route) => (
 							<Route key={route.path} path={route.path} element={route.element} />
 						))}
+
+						{isExternalUser && <Route path="*" element={<Navigate to="/" />} />}
 					</Route>
 				</Routes>
 			</ThemeProvider>
