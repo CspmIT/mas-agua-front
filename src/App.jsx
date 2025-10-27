@@ -82,7 +82,7 @@ function App() {
 		{ path: '/config/plc', element: <ProfilePLC /> },
 		{ path: '/alert', element: <Alert /> },
 		{ path: '/config/alarm', element: <ConfigAlarms /> },
-
+		{ path: '/external', element: <ExternalUser /> },
 	]
 
 	const externalRoutes = [

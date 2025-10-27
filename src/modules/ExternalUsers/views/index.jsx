@@ -6,6 +6,7 @@ import { FormLabel } from '@mui/material'
 import TabsInvoice from '../components/TabsInvoice'
 import Home from '../../home/views'
 import ChartsDashboard from '../../dashBoard/views/ChartsDashboard'
+import ChartInvoice from '../components/ChartInvoice'
 
 const ExternalUsers = () => {
   const [loading, setLoading] = useState(true)
@@ -33,12 +34,13 @@ const ExternalUsers = () => {
           </div>
 
 
-          {/* Tablas */}
+          {/* Tablas y graficos de facturacion */}
           <TabsInvoice />
+          <ChartInvoice />
 
           {/* Gráficos */}
           <div className="flex flex-col">
-            <FormLabel className='w-full text-center !text-xl font-bold mb-4 !py-3 border-y border-gray-300 dark:border-gray-700 '>
+            <FormLabel className='w-full text-center !text-xl !text-black font-bold mb-4 !py-3 border-y border-gray-300 dark:border-gray-700 '>
             Buscar registros de ingreso
             </FormLabel>
             <CardCustom className="w-full !bg-gray-200 dark:bg-gray-800 shadow-md rounded-2xl p-4 flex flex-col gap-4 transition-all">
