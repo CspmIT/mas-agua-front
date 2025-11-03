@@ -17,68 +17,20 @@ export const ChartComponentDbWrapper = ({
     // Función para obtener los datos de gráficos y actualizarlos
     const fetchChartData = async (influxVar) => {
         try {
+            const { data } = await request(
+                `${backend['Mas Agua']}/dataInflux`,
+                'POST',
+                influxVar
+            )
+
+            // El backend ahora devuelve directamente el valor final o los datos
             if (influxVar?.calc) {
-                const results = await Promise.all(
-                    Object.entries(influxVar.varsInflux).map(
-                        async ([varName, varConfig]) => {
-                            const sendData = { [varName]: varConfig }
-                            const { data } = await request(
-                                `${backend['Mas Agua']}/dataInflux`,
-                                'POST',
-                                sendData
-                            )
-                            const field = varConfig.calc_field
-                            return { varName, value: data?.[field]?.value }
-                        }
-                    )
-                )
-
-                // Crear un diccionario { varName: value }
-                const valuesMap = results.reduce((acc, { varName, value }) => {
-                    acc[varName] = value
-                    return acc
-                }, {})
-
-                // Reemplazar en la ecuación
-                let evaluableExpression = influxVar.equation
-                    .map((part) => {
-                        const match = part.match(/^{{(.+?)}}$/)
-                        return match ? valuesMap[match[1]] ?? 0 : part
-                    })
-                    .join(' ')
-                // Fusionar números separados por espacio sin operador
-                evaluableExpression = evaluableExpression.replace(
-                    /(\d)\s+(\d)/g,
-                    '$1$2'
-                )
-
-                try {
-                    const parser = new Parser()
-                    const value = parser.evaluate(evaluableExpression)
-
-                    return {
-                        value,
-                    }
-                } catch (err) {
-                    console.error('Expresion invalida')
-                    return {
-                        value: undefined,
-                    }
-                }
+                // Si es calculada, el backend devuelve { value: ... }
+                return { value: data?.value ?? null }
             } else {
-                const { data } = await request(
-                    `${backend['Mas Agua']}/dataInflux`,
-                    'POST',
-                    influxVar.varsInflux
-                )
-                // console.log(influxVar.varsInflux)
-
-                const accessKey = Object.values(
-                    initialData.value.varsInflux
-                ).shift()
-                return {
-                    value: data?.[accessKey.calc_field]?.value,
-                }
+                // Si no es calculada, el backend devuelve el objeto influx formateado
+                const field = Object.values(influxVar.varsInflux)[0].calc_field
+                return { value: data?.[field]?.value ?? null }
             }
         } catch (error) {
             console.error(error)
@@ -91,10 +43,12 @@ export const ChartComponentDbWrapper = ({
             items.map(async (item) => {
                 try {
                     const influxVar = item.value
+                    const payload = influxVar.varsInflux ? influxVar : { varsInflux: influxVar }
+
                     const { data } = await request(
                         `${backend['Mas Agua']}/dataInflux`,
                         'POST',
-                        influxVar // Ajusta el payload según lo que la API necesite
+                        payload
                     )
                     const accessKey = Object.values(item.value).shift()
                     return {

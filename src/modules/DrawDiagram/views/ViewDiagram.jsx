@@ -277,10 +277,10 @@ function ViewDiagram() {
 	useEffect(() => {
 		const interval = setInterval(async () => {
 			const influxPayload = elements
-				.filter(el => el.dataInflux?.varsInflux)
+				.filter(el => el.dataInflux)
 				.map(el => ({
 					id: el.dataInflux.id,
-					varsInflux: el.dataInflux.varsInflux
+					dataInflux: el.dataInflux
 				}));
 
 			if (influxPayload.length) {

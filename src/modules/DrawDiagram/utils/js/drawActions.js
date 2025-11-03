@@ -1,6 +1,7 @@
 import Swal from 'sweetalert2'
-import { request,  } from '../../../../utils/js/request'
+import { request, } from '../../../../utils/js/request'
 import { backend } from '../../../../utils/routes/app.routes'
+import { data } from 'autoprefixer';
 
 
 export const uploadCanvaDb = async (id, {
@@ -38,16 +39,16 @@ export const uploadCanvaDb = async (id, {
 
 			let dataInflux = null;
 			if (line.variable?.varsInflux) {
-				const vars = Object.values(line.variable.varsInflux)[0];
+				
 				dataInflux = {
 					id: line.id_influxvars,
 					name: line.variable.name,
 					unit: line.variable.unit,
-					varsInflux: vars,
+					varsInflux: line.variable.varsInflux,
 					position: line.variable.position || 'Centro',
-    				show: line.variable.show_var || true
+					show: line.variable.show_var || true
 				};
-				influxVarsToRequest.push({ id: line.id_influxvars, varsInflux: vars });
+				influxVarsToRequest.push({ dataInflux: dataInflux });
 			}
 
 			elements.push({
@@ -60,7 +61,7 @@ export const uploadCanvaDb = async (id, {
 				strokeWidth: line.strokeWidth || 2,
 				draggable: true,
 				invertAnimation: line.invertAnimation,
-				dataInflux, 
+				dataInflux,
 			});
 		}
 
@@ -70,16 +71,16 @@ export const uploadCanvaDb = async (id, {
 
 			let dataInflux = null;
 			if (poly.variable?.varsInflux) {
-				const vars = Object.values(poly.variable.varsInflux)[0];
+				
 				dataInflux = {
 					id: poly.id_influxvars,
 					name: poly.variable.name,
 					unit: poly.variable.unit,
-					varsInflux: vars,
+					varsInflux: poly.variable.varsInflux,
 					position: poly.variable.position || 'Centro',
-    				show: poly.variable.show_var || true
+					show: poly.variable.show_var || true
 				};
-				influxVarsToRequest.push({ id: poly.id_influxvars, varsInflux: vars });
+				influxVarsToRequest.push({ dataInflux: dataInflux });
 			}
 
 			elements.push({
@@ -92,7 +93,7 @@ export const uploadCanvaDb = async (id, {
 				strokeWidth: poly.strokeWidth || 2,
 				draggable: true,
 				invertAnimation: poly.invertAnimation,
-				dataInflux, 
+				dataInflux,
 			});
 		}
 
@@ -100,16 +101,15 @@ export const uploadCanvaDb = async (id, {
 		for (const text of objectDiagram?.texts || []) {
 			let dataInflux = null;
 			if (text.variable?.varsInflux) {
-				const vars = Object.values(text.variable.varsInflux)[0];
 				dataInflux = {
 					id: text.id_influxvars,
 					name: text.variable.name,
 					unit: text.variable.unit,
-					varsInflux: vars,
+					varsInflux: text.variable.varsInflux,
 					position: text.variable.position || 'Centro',
-    				show: text.variable.show_var || true
+					show: text.variable.show_var || true
 				};
-				influxVarsToRequest.push({ id: text.id, varsInflux: vars });
+				influxVarsToRequest.push({ dataInflux: dataInflux });
 			}
 
 			elements.push({
@@ -129,28 +129,26 @@ export const uploadCanvaDb = async (id, {
 		for (const image of objectDiagram?.images || []) {
 			let dataInflux = null;
 			const variable = image.variables?.[0];
-		
+			console.log(variable)
 			if (variable?.variable?.varsInflux) {
-			const vars = Object.values(variable.variable.varsInflux)[0];
-		
-			dataInflux = {
-				id: variable.id_influxvars,  
-				id_variable: variable.id_influxvars,
-				name: variable.variable.name || variable.name_var,
-				unit: variable.variable.unit,
-				type: variable.variable.type,
-				calc: variable.variable.calc,
-				varsInflux: vars,
-				equation: variable.variable.equation,
-				status: variable.variable.status,
-				show: variable.show_var,
-				position: variable.position_var,
-				max_value_var: variable.max_value_var,
-				calculatePercentage: variable.max_value_var ? true : false,
-				boolean_colors: variable.boolean_colors || {}
-			  };
-		
-			influxVarsToRequest.push({ id: variable.id_influxvars, varsInflux: vars }); 
+				dataInflux = {
+					id: variable.id_influxvars,
+					id_variable: variable.id_influxvars,
+					name: variable.variable.name || variable.name_var,
+					unit: variable.variable.unit,
+					type: variable.variable.type,
+					calc: variable.variable.calc,
+					varsInflux: variable.variable.varsInflux,
+					equation: variable.variable.equation,
+					status: variable.variable.status,
+					show: variable.show_var,
+					position: variable.position_var,
+					max_value_var: variable.max_value_var,
+					calculatePercentage: variable.max_value_var ? true : false,
+					boolean_colors: variable.boolean_colors || {}
+				};
+
+				influxVarsToRequest.push({ dataInflux: dataInflux });
 			}
 
 			elements.push({
@@ -167,52 +165,51 @@ export const uploadCanvaDb = async (id, {
 			});
 		}
 
-		
-    // === VALORES INFLUX ===
-    let finalElements = elements;
 
-    if (influxVarsToRequest.length > 0) {
-      const response = await request(
-        `${backend['Mas Agua']}/multipleDataInflux`,
-        'POST',
-        influxVarsToRequest
-      );
+		// === VALORES INFLUX ===
+		let finalElements = elements;
 
-      const valuesResponse = response.data;
+		if (influxVarsToRequest.length > 0) {
+			const response = await request(
+				`${backend['Mas Agua']}/multipleDataInflux`,
+				'POST',
+				influxVarsToRequest
+			);
+			const valuesResponse = response.data;
 
-      finalElements = elements.map((el) => {
-        if (el.dataInflux && valuesResponse?.[el.dataInflux.id] !== undefined) {
-          return {
-            ...el,
-            dataInflux: {
-              ...el.dataInflux,
-              value: valuesResponse[el.dataInflux.id],
-            },
-          };
-        }
-        return el;
-      });
-    }
+			finalElements = elements.map((el) => {
+				if (el.dataInflux && valuesResponse?.[el.dataInflux.id] !== undefined) {
+					return {
+						...el,
+						dataInflux: {
+							...el.dataInflux,
+							value: valuesResponse[el.dataInflux.id],
+						},
+					};
+				}
+				return el;
+			});
+		}
 
-    // CÍRCULOS PARA EDICIÓN
-    const circles = finalElements
-      .filter((el) => el.type === 'line')
-      .flatMap((el) => {
-        const [x1, y1, x2, y2] = el.points;
-        return [
-          { id: `${el.id}-start`, x: x1, y: y1, lineId: el.id, fill: 'blue', visible: false },
-          { id: `${el.id}-end`, x: x2, y: y2, lineId: el.id, fill: 'red', visible: false },
-        ];
-      });
+		// CÍRCULOS PARA EDICIÓN
+		const circles = finalElements
+			.filter((el) => el.type === 'line')
+			.flatMap((el) => {
+				const [x1, y1, x2, y2] = el.points;
+				return [
+					{ id: `${el.id}-start`, x: x1, y: y1, lineId: el.id, fill: 'blue', visible: false },
+					{ id: `${el.id}-end`, x: x2, y: y2, lineId: el.id, fill: 'red', visible: false },
+				];
+			});
 
-    setCircles(circles);
-    setTool(null);
+		setCircles(circles);
+		setTool(null);
 
-    return finalElements; 
-  } catch (err) {
-    console.error('Error en uploadCanvaDb:', err);
-    return [];
-  }
+		return finalElements;
+	} catch (err) {
+		console.error('Error en uploadCanvaDb:', err);
+		return [];
+	}
 };
 
 
@@ -237,7 +234,7 @@ export const saveDiagramKonva = async ({
 		const getNumericId = (compositeId) => {
 			const match = compositeId?.toString().match(/-(\d+)$/);
 			return match ? parseInt(match[1], 10) : null;
-		  };
+		};
 
 		elements.forEach((el) => {
 			console.log(el);
@@ -257,7 +254,7 @@ export const saveDiagramKonva = async ({
 							[el.dataInflux.name]: {
 								id_variable: el.dataInflux.id || null,
 								show: el.dataInflux.show,
-        						position: el.dataInflux.position,
+								position: el.dataInflux.position,
 								max_value: el.dataInflux.max_value_var,
 								boolean_colors: el.dataInflux.boolean_colors
 							}
@@ -296,7 +293,7 @@ export const saveDiagramKonva = async ({
 							[el.dataInflux.name]: {
 								id_variable: el.dataInflux.id || null,
 								show: el.dataInflux.show,
-        						position: el.dataInflux.position,
+								position: el.dataInflux.position,
 								max_value_var: el.dataInflux.maxValue
 							}
 						} : {}
