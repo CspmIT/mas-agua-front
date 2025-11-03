@@ -38,10 +38,11 @@ const ChartInvoice = () => {
 
   if (!data) return null
 
-  const seriesData = data.map(item => ({
+  const seriesData = data.map((item, i) => ({
     name: item[0],
     value: Number(item[1]),
-  }))
+    color: i === data.length - 1 ? '#65a30d' : undefined,
+  }))  
 
   return (
     <>

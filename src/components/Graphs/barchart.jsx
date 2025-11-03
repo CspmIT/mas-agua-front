@@ -48,6 +48,7 @@ function GrafBarra({ ...props }) {
 					return {
 						name: item.name,
 						y: item.value,
+						color: item.color,
 						drilldown: item.name,
 					}
 				}),
