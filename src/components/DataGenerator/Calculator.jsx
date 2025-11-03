@@ -51,10 +51,20 @@ const Calculadora = ({ display, setDisplay, showNumbers }) => {
 	}
 
 	const handleClick = (value) => {
-		const newValue = [...newDisplay, value]
-		setNewDisplay(newValue)
-		setDisplay(newValue)
-	}
+		const lastItem = newDisplay[newDisplay.length - 1]
+	  
+		if (!isNaN(Number(value)) && !isNaN(Number(lastItem))) {
+		  const updated = [...newDisplay]
+		  updated[updated.length - 1] = `${lastItem}${value}`
+		  setNewDisplay(updated)
+		  setDisplay(updated)
+		} else {
+		  const newValue = [...newDisplay, value]
+		  setNewDisplay(newValue)
+		  setDisplay(newValue)
+		}
+	  }
+	  
 
 	const handleKeyDown = (e) => {
 		const validKeys = '0123456789/*-+()'.split('')
