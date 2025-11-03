@@ -104,7 +104,7 @@ const Vars = () => {
                 mb={3}
                 gap={3}
             >
-                <Typography variant="h3" align="center" flexGrow={1}>
+                <Typography variant="h3" align="center" flexGrow={1} className="!ms-24">
                     Variables
                 </Typography>
                 <Button

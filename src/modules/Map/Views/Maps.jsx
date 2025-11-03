@@ -64,7 +64,7 @@ const Maps = () => {
                 alignItems={'center'}
                 mb={3}
             >
-                <Typography variant="h3" align="center" flexGrow={1}>
+                <Typography variant="h3" align="center" flexGrow={1} className="!ms-24">
                     Mapas
                 </Typography>
                 <Button

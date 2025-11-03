@@ -149,8 +149,8 @@ const ChartsTable = () => {
                     alignItems={'center'}
                     mb={3}
                 >
-                    <Typography variant="h3" align="center" flexGrow={1}>
-                        Graficos
+                    <Typography variant="h3" align="center" flexGrow={1} className="!ms-24">
+                        Gráficos
                     </Typography>
                     <Button
                         variant="contained"

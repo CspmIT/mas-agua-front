@@ -255,12 +255,12 @@ const ProfilePLC = () => {
                     mb={3}
                     gap={3}
                 >
-                    <Typography variant="h3" align="center" flexGrow={1}>
+                    <Typography variant="h3" align="center" flexGrow={1} className="!ms-24">
                         Perfil PLC
                     </Typography>
                     <Button
                         variant="contained"
-                        color="secondary"
+                        color="primary"
                         onClick={() => {
                             setModalData(false)
                             setModalPLC(true)

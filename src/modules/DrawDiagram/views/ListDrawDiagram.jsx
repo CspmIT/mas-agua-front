@@ -134,7 +134,7 @@ const ListDrawDiagram = () => {
 		<Container>
 			<div className="flex flex-col gap-3">
 				<Box display="flex" justifyContent={'space-between'} alignItems={'center'} mb={3}>
-					<Typography variant="h3" align="center" flexGrow={1}>
+					<Typography variant="h3" align="center" flexGrow={1} className="!ms-24">
 						Diagramas
 					</Typography>
 					<Button
