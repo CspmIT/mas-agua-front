@@ -136,17 +136,18 @@ function NavBarCustom({ setLoading }) {
 		const user = storage.get('usuario')
 		const coop = storage.get('usuarioCooptech')
 	
-		if (!coop) return
+		if (!coop) return // si no existe, no seguimos
 	
-		const cliente =
-			user?.cliente?.name || // si usuario trae el cliente
-			coop?.cliente?.find?.((item) => item.selected) || // si coop trae lista de clientes
-			coop?.cliente // si coop trae un solo cliente
+		const clienteName =
+			user?.cliente?.[0]?.name ||	 // 
+			coop?.cliente?.find?.((item) => item.selected) || 
+			coop?.cliente?.[0]?.name || 
+			''
 	
-		if (cliente?.name) setNameCoop(cliente.name)
-	
+		if (clienteName) setNameCoop(clienteName)	
 		getPermissions()
 	}, [])
+	
 
 	return (
 		<>
