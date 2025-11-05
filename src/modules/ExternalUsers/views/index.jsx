@@ -10,7 +10,7 @@ import ChartInvoice from '../components/ChartInvoice'
 
 const ExternalUsers = () => {
   const [loading, setLoading] = useState(true)
-  const userCooptech = storage.get('usuarioCooptech')
+  const user = storage.get('usuario')
 
 
   useEffect(() => {
@@ -26,7 +26,7 @@ const ExternalUsers = () => {
           {/* Header */}
           <div className="flex flex-col">
             <FormLabel className='w-full text-center !text-3xl font-bold mb-4 !pb-3 border-b border-gray-300 dark:border-gray-700 '>
-              Gráficas de consumo - {userCooptech.cliente.name}
+              Gráficas de consumo{user?.name ? ` - ${user.name}` : ''}
             </FormLabel>
             <CardCustom className="w-full !bg-gray-200 dark:bg-gray-800 shadow-md rounded-2xl p-4 flex flex-col gap-4 transition-all">
             <Home />
