@@ -122,6 +122,8 @@ const Vars = () => {
                 <TableCustom
                     data={vars.length > 0 ? vars : []}
                     columns={columns}
+                    pagination={true}
+                    pageSize={10}
                 />
             ) : (
                 <>Cargando...</>

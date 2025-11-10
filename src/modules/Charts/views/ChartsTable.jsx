@@ -164,7 +164,12 @@ const ChartsTable = () => {
                 </Box>
             </div>
             {!loader ? (
-                <TableCustom columns={columnsTable} data={charts.length > 0 ? charts : []} />
+                <TableCustom 
+                columns={columnsTable} 
+                data={charts.length > 0 ? charts : []}
+                pagination={true}
+                pageSize={10}
+                />
             ) : (
                 <p>Cargando datos...</p>
             )}

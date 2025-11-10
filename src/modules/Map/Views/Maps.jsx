@@ -78,7 +78,12 @@ const Maps = () => {
                 </Button>
             </Box>
             {!loader ? (
-                <TableCustom columns={columnsTable} data={maps.length > 0 ? maps : []} />
+                <TableCustom 
+                columns={columnsTable} 
+                data={maps.length > 0 ? maps : []} 
+                pagination={true}
+                pageSize={10}
+            />
             ) : (
                 <>Cargando</>
             )}
