@@ -4,6 +4,7 @@ import PumpControl from '../../Charts/views/ConfigBombs'
 import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
 import { Parser } from 'expr-eval'
+import logo from '../../../../public/assets/img/Logo/MasAgua_hexagonal.png'
 
 export const ChartComponentDbWrapper = ({
     chartId,
@@ -112,11 +113,24 @@ export const ChartComponentDbWrapper = ({
     // Si los datos aún no están listos, muestra un mensaje de carga
     if (loading) {
         return (
-            <Typography variant="h6" align="center">
-                Cargando datos...
-            </Typography>
+            <div className="flex flex-col items-center justify-center h-full w-full">
+                <img
+                    src={logo}
+                    alt="Logo"
+                    className="w-20 h-20 filter grayscale animate-pulse"
+                />
+                <Typography
+                    variant="subtitle1"
+                    align="center"
+                    className="mt-3 text-gray-500"
+                >
+                    Cargando datos...
+                </Typography>
+            </div>
         )
-    }
+    }    
+    
+       
 
     return <ChartComponent {...initialProps} {...chartData} />
 }
