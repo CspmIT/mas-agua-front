@@ -136,12 +136,12 @@ function NavBarCustom({ setLoading }) {
 		const user = storage.get('usuario')
 		const coop = storage.get('usuarioCooptech')
 	
-		if (!coop) return // si no existe, no seguimos
+		if (!coop) return 
 	
 		const clienteName =
 			user?.cliente?.[0]?.name ||	 // 
 			coop?.cliente?.find?.((item) => item.selected) || 
-			coop?.cliente?.[0]?.name || 
+			coop?.cliente?.name || 
 			''
 	
 		if (clienteName) setNameCoop(clienteName)	
@@ -170,9 +170,6 @@ function NavBarCustom({ setLoading }) {
 					</IconButton>
 
 					<img onClick={() => navigate('home')} className='max-h-36 cursor-pointer' src={Logo} />
-					{/* <Typography variant='h6' noWrap component='div'>
-						Reconecta
-					</Typography> */}
 					<div className='absolute right-5 flex flex-row items-center gap-2'>
 						<p className={`bg-blue-600 rounded-md shadow-sm px-3 py-1 text-white  ml-3 select-none ${isMobile ? 'hidden' : ''}`}>
 							{nameCoop}

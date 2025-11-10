@@ -273,6 +273,8 @@ const ProfilePLC = () => {
                     <TableCustom
                         data={plcProfile.length > 0 ? plcProfile : []}
                         columns={columns}
+                        pagination={true}
+                        pageSize={10}
                     />
                 ) : (
                     <>Cargando...</>
