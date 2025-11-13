@@ -44,6 +44,7 @@ export class LineChartRepository extends SeriesChart {
 
                 const influxVarName = influxVars.name
                 const vars = influxVars.varsInflux[influxVarName]
+                console.log(influxVars)
                 if (!vars) return []
 
                 const dateRange =
@@ -65,6 +66,8 @@ export class LineChartRepository extends SeriesChart {
                     typePeriod: vars.calc_type_period,
                     render: true,
                     type: 'history',
+                    calc: influxVars.calc,
+                    equation: influxVars.equation
                 }
             })
 
