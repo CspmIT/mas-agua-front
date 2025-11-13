@@ -4,7 +4,7 @@ import PumpControl from '../../Charts/views/ConfigBombs'
 import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
 import { Parser } from 'expr-eval'
-import logo from '../../../../public/assets/img/Logo/MasAgua_hexagonal.png'
+import logo from '../../../assets/img/Logo/MasAgua_hexagonal.png'
 
 export const ChartComponentDbWrapper = ({
     chartId,
