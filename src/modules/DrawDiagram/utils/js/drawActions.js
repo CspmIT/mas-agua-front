@@ -129,7 +129,6 @@ export const uploadCanvaDb = async (id, {
 		for (const image of objectDiagram?.images || []) {
 			let dataInflux = null;
 			const variable = image.variables?.[0];
-			console.log(variable)
 			if (variable?.variable?.varsInflux) {
 				dataInflux = {
 					id: variable.id_influxvars,
@@ -237,7 +236,6 @@ export const saveDiagramKonva = async ({
 		};
 
 		elements.forEach((el) => {
-			console.log(el);
 			switch (el.type) {
 				case 'image':
 					saveObjects.images.push({

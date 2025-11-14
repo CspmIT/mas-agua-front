@@ -9,11 +9,21 @@ const RenderImage = ({ el }) => {
 
   const getImageSrc = () => {
     if (!config) return el.src;
-    
     const val = el.dataInflux?.value;
     const unit = el.dataInflux?.unit;
-    const userColors = el.dataInflux?.boolean_colors; // configuración elegida por el usuario
+    const userColors = el.dataInflux?.boolean_colors;
   
+    if (unit === 'text' && typeof val === 'string' && val.toLowerCase().includes('bomba')) {
+
+      const normalized = val.trim().toLowerCase();
+    
+      if (normalized.includes('apagada')) return config.optionsImage.default;
+      if (normalized.includes('encendida')) return config.optionsImage.success;
+    
+      return config.optionsImage.error;
+    }
+    
+
     // Si es una imagen booleana
     if (config.animation === 'boolean' && config.optionsImage) {
       const isTrue = val === 1 || val === true;
@@ -29,12 +39,6 @@ const RenderImage = ({ el }) => {
         }
       }
   
-      if (['text'].includes(unit)) {
-        if (val === 'Bomba apagada') return config.optionsImage.default;
-        if (val === 'Bomba encendida') return config.optionsImage.success;
-        return config.optionsImage.error;
-      }
-
       // Si no hay personalización → usamos la lógica por defecto
       if (isTrue) return config.optionsImage.success;
       if (isFalse) return config.optionsImage.error;
