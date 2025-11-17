@@ -213,7 +213,7 @@ export default function PumpControl({
                             return (
                                 <Card
                                     key={pump.id}
-                                    className="!relative !bg-gray-100 w-full max-w-sm"
+                                    className="!relative !bg-gray-100 w-full max-w-sm max-h-44"
                                 >
                                     {edit && (
                                         <Button
@@ -228,8 +228,8 @@ export default function PumpControl({
                                         </Button>
                                     )}
 
-                                    <CardContent className="p-4">
-                                        <h4 className="text-lg text-center font-medium mb-1">
+                                    <CardContent className="p-1">
+                                        <h4 className="text-lg text-center font-small">
                                             {pump.name}
                                         </h4>
                                         <p className="text-xl text-center font-bold text-blue-500">
