@@ -116,22 +116,26 @@ const Home = () => {
         <Grid container spacing={2}>
             {charts.map((chart, index) => {
                 const ChartComponentDb = chartComponents[chart.component]
+
+                const isPump = chart.component === 'PumpControl'
+
                 return (
-                    <Grid item xs={12} sm={6} lg={4} key={index}>
+                    <Grid
+                        item
+                        xs={12}
+                        sm={isPump ? 12 : 4}
+                        lg={isPump ? 4 : 2}
+                        key={index}
+                    >
                         <CardCustom
                             className={`flex flex-col items-center rounded-xl 
-                                ${ChartComponentDb === PumpControl
-                                    ? 'h-80 p-2'
-                                    : 'h-80'
-                                }`
-                            }
+                        ${isPump ? 'h-72' : 'h-72'}
+                    `}
                         >
-                            <Typography
-                                variant="h5"
-                                className="text-center pt-3"
-                            >
+                            <Typography variant="h5" className="text-center pt-3">
                                 {chart?.props?.title}
                             </Typography>
+
                             <ChartComponentDbWrapper
                                 chartId={chart.id}
                                 ChartComponent={ChartComponentDb}

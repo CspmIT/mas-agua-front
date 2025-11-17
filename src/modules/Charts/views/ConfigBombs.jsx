@@ -201,12 +201,12 @@ export default function PumpControl({
                     ))}
 
                     <div
-                        className={`grid gap-4 ${
+                        className={`grid gap-2 h-auto ${
                             pumps.length === 1
                                 ? 'grid-cols-1 justify-items-center'
                                 : pumps.length === 2
                                 ? 'grid-cols-2'
-                                : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3'
+                                : 'grid-cols-3 sm:grid-cols-3 md:grid-cols-3 '
                         }`}
                     >
                         {pumps.map((pump) => {
@@ -229,13 +229,13 @@ export default function PumpControl({
                                     )}
 
                                     <CardContent className="p-4">
-                                        <h4 className="text-lg text-center font-medium mb-2">
+                                        <h4 className="text-lg text-center font-medium mb-1">
                                             {pump.name}
                                         </h4>
-                                        <p className="text-2xl text-center font-bold text-blue-500">
+                                        <p className="text-xl text-center font-bold text-blue-500">
                                             {pump.value
                                                 ? pump.value + ' ' + pump.unit
-                                                : 'Sin datos'}
+                                                : '-'}
                                         </p>
                                     </CardContent>
                                 </Card>

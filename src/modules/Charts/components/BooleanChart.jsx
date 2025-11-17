@@ -21,7 +21,7 @@ const BooleanChart = ({
                 itemStyle: {
                     color: value ? colorOn : colorOff,
                     shadowBlur: 20,
-                    shadowColor: '#000f00',
+                    shadowColor: '#444',
                     shadowOffsetX: 0,
                     shadowOffsetY: 0,
                 },
@@ -38,7 +38,7 @@ const BooleanChart = ({
                             x: api.getWidth() / 2,
                             y: api.getHeight() * 0.75,
                             textAlign: 'center',
-                            fontSize: 26,
+                            fontSize: 22,
                             fill: '#23262e',
                         },
                     }
