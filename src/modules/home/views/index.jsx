@@ -124,7 +124,7 @@ const Home = () => {
                         item
                         xs={12}
                         sm={isPump ? 12 : 4}
-                        lg={isPump ? 3 : 3}
+                        lg={isPump ? 4 : 2}
                         key={index}
                     >
                         <CardCustom
