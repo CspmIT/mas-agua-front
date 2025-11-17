@@ -138,14 +138,14 @@ export default function PumpControl({
                     </Button>
                 )}
 
-                <CardContent className="p-6">
+                <CardContent>
                     {edit && (
                         <TextField
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             label="Título"
                             fullWidth
-                            className="mb-4"
+                            className="!rounded-xl"
                         />
                     )}
 
@@ -177,7 +177,7 @@ export default function PumpControl({
                     {states.map((item) => (
                         <div
                             key={item.id}
-                            className="bg-gray-100 p-4 rounded-md relative flex gap-1 justify-center items-center mb-6"
+                            className="bg-gray-100 rounded-md relative flex justify-center items-center mb-2 p-1"
                         >
                             {edit && (
                                 <Button
@@ -201,7 +201,7 @@ export default function PumpControl({
                     ))}
 
                     <div
-                        className={`grid gap-2 h-auto ${
+                        className={`grid gap-2 ${
                             pumps.length === 1
                                 ? 'grid-cols-1 justify-items-center'
                                 : pumps.length === 2
@@ -213,7 +213,7 @@ export default function PumpControl({
                             return (
                                 <Card
                                     key={pump.id}
-                                    className="!relative !bg-gray-100 w-full max-w-sm max-h-44"
+                                    className="!relative !bg-gray-100 w-full max-w-sm max-h-36"
                                 >
                                     {edit && (
                                         <Button
@@ -228,11 +228,11 @@ export default function PumpControl({
                                         </Button>
                                     )}
 
-                                    <CardContent className="p-1">
-                                        <h4 className="text-lg text-center font-small">
+                                    <CardContent>
+                                        <h4 className="text-md text-center font-small">
                                             {pump.name}
                                         </h4>
-                                        <p className="text-xl text-center font-bold text-blue-500">
+                                        <p className="text-lg text-center font-bold text-blue-500 pt-2">
                                             {pump.value
                                                 ? pump.value + ' ' + pump.unit
                                                 : '-'}
@@ -243,7 +243,7 @@ export default function PumpControl({
                         })}
                     </div>
 
-                    <div className="flex justify-between items-center mt-4 text-gray-500">
+                    <div className="flex justify-between items-center mt-2 text-gray-500">
                         <div className="flex">
                             <BsClock className="h-5 w-5 mr-2" />
                             <span className="text-sm">
