@@ -27,50 +27,58 @@ const MapBase = ({
     draggable = false,
     withInfo = false, // Determina si se consulta InfluxDB
 }) => {
-    const fetchInfluxData = async (markers) => {
+    function extractInfluxVarsFromMarkers(markers) {
+        return markers.map((m) => ({
+            dataInflux: m.popupInfo.data   // el objeto entero
+        }))
+    }
+
+    const fetchMultipleInfluxValues = async () => {
+        if (!markers || markers.length === 0) return
+
+        const vars = extractInfluxVarsFromMarkers(markers)
+
         try {
-            const updateMarkers = await Promise.all(
-                markers.map(async (marker) => {
-                    const influxVar = marker.popupInfo.data.varsInflux
-                    const accessKey = Object.values(
-                        marker.popupInfo.data.varsInflux
-                    ).shift()
-                    const { data } = await request(
-                        `${backend[import.meta.env.VITE_APP_NAME]}/dataInflux`,
-                        'POST',
-                        influxVar
-                    )
-                    const value = data[accessKey.calc_field]?.value
-                        ? `${data[accessKey.calc_field].value} ${
-                              marker.popupInfo.data.unit
-                          }`
-                        : null
-                    return {
-                        ...marker,
-                        popupInfo: {
-                            ...marker.popupInfo,
-                            value: value,
-                        },
-                    }
-                })
+            const { data } = await request(
+                `${backend[import.meta.env.VITE_APP_NAME]}/multipleDataInflux`,
+                'POST',
+                vars
             )
-            setMarkers(updateMarkers)
+
+            // Actualizamos los markers con los valores nuevos
+            const updated = markers.map((marker) => {
+                const id = marker.popupInfo.data.id
+                const value = data[id] ?? 'Sin datos'
+
+                return {
+                    ...marker,
+                    popupInfo: {
+                        ...marker.popupInfo,
+                        value: `${value} ${marker.popupInfo.data.unit ?? ''}`
+                    }
+                }
+            })
+
+            setMarkers(updated)
+
         } catch (error) {
-            console.error(error)
-            return null
+            console.error("Error múltiples influx en mapa:", error)
         }
     }
 
     useEffect(() => {
-        if (withInfo && markers.length > 0) {
-            fetchInfluxData(markers)
+        if (!withInfo) return
+        if (!markers || markers.length === 0) return
 
-            const interval = setInterval(() => {
-                fetchInfluxData(markers)
-            }, 15000)
-            return () => clearInterval(interval)
-        }
-    }, [])
+        // Primera carga
+        fetchMultipleInfluxValues()
+
+        // Intervalo de actualización
+        const interval = setInterval(fetchMultipleInfluxValues, 15000)
+
+        return () => clearInterval(interval)
+    }, [markers])
+
 
     return (
         <div style={{ position: 'relative', width, height }}>
@@ -101,9 +109,8 @@ const MapBase = ({
                         }}
                     >
                         <Pin label={marker.name} color="#3498db" />
-                        {marker?.popupInfo &&
-                            withInfo &&
-                            marker.popupInfo.data && (
+                        {withInfo && marker.popupInfo && marker.popupInfo.data && (
+                            
                                 <Popup
                                     key={`popup-${index}`}
                                     anchor="top-left"
@@ -112,11 +119,11 @@ const MapBase = ({
                                     longitude={Number(marker.popupInfo.lng)}
                                     closeOnClick={false}
                                 >
+                                    <Typography variant="body3">
+                                        {marker.popupInfo.data.name ?? 'No hay datos'}
+                                    </Typography>
                                     <Typography variant="body2">
-                                        {typeof marker.popupInfo.value ===
-                                        'string'
-                                            ? marker.popupInfo.value
-                                            : 'No hay datos'}
+                                        {marker.popupInfo.value ?? 'No hay datos'}
                                     </Typography>
                                 </Popup>
                             )}
