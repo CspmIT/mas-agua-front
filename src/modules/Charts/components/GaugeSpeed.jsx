@@ -43,7 +43,7 @@ const GaugeSpeed = ({
                 axisLabel: {
                     distance: 25,
                     color: '#999',
-                    fontSize: 15,
+                    fontSize: 12,
                 },
                 anchor: {
                     show: true,
@@ -57,17 +57,17 @@ const GaugeSpeed = ({
                 title: {
                     offsetCenter: [0, '95%'],
                     show: true,
-                    fontSize: 24,
+                    fontSize: 22,
                 },
                 detail: {
                     valueAnimation: false,
-                    offsetCenter: [0, '65%'],
+                    offsetCenter: [0, '80%'],
                     formatter: function (value) {
                         return `{value|${value} ${unidad}}\n{sub|${description}}`
                     },
                     rich: {
                         value: {
-                            fontSize: 35,
+                            fontSize: 28,
                             fontWeight: 'bold',
                             color: '#333',
                         },

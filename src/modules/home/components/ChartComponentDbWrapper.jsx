@@ -1,9 +1,6 @@
 import { Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import PumpControl from '../../Charts/views/ConfigBombs'
-import { request } from '../../../utils/js/request'
-import { backend } from '../../../utils/routes/app.routes'
-import { Parser } from 'expr-eval'
 import logo from '../../../assets/img/Logo/MasAgua_hexagonal.png'
 
 export const ChartComponentDbWrapper = ({
@@ -11,106 +8,56 @@ export const ChartComponentDbWrapper = ({
     ChartComponent,
     initialProps,
     initialData,
+    inflValues,          
 }) => {
+
     const [chartData, setChartData] = useState(initialData)
-    const [loading, setLoading] = useState(true) // Estado para controlar la carga
+    const [loading, setLoading] = useState(true)
 
-    // Función para obtener los datos de gráficos y actualizarlos
-    const fetchChartData = async (influxVar) => {
-        try {
-            const { data } = await request(
-                `${backend['Mas Agua']}/dataInflux`,
-                'POST',
-                influxVar
-            )
-
-            // El backend ahora devuelve directamente el valor final o los datos
-            if (influxVar?.calc) {
-                // Si es calculada, el backend devuelve { value: ... }
-                return { value: data?.value ?? null }
-            } else {
-                // Si no es calculada, el backend devuelve el objeto influx formateado
-                const field = Object.values(influxVar.varsInflux)[0].calc_field
-                return { value: data?.[field]?.value ?? null }
-            }
-        } catch (error) {
-            console.error(error)
-            return null
-        }
+    // Extrae valor simple desde inflValues (gráficos normales)
+    const resolveSimpleValue = (influxVar) => {
+        if (!influxVar?.id) return null
+        return inflValues[influxVar.id] ?? null
     }
 
-    const fetchPumpOrStateValues = async (items) => {
-        const updatedItems = await Promise.all(
-            items.map(async (item) => {
-                try {
-                    const influxVar = item.value
-                    const payload = influxVar.varsInflux ? influxVar : { varsInflux: influxVar }
-
-                    const { data } = await request(
-                        `${backend['Mas Agua']}/dataInflux`,
-                        'POST',
-                        payload
-                    )
-                    const accessKey = Object.values(item.value).shift()
-                    return {
-                        ...item,
-                        value:
-                            data?.[accessKey.calc_field]?.value ?? 'Sin datos',
-                    }
-                } catch (error) {
-                    console.error(error)
-                    return { ...item, value: 'Error' } // Devuelve el item con un estado de error
-                }
-            })
-        )
-        return updatedItems
+    // PumpControl: resuelve múltiples valores
+    const resolvePumpOrState = (items) => {
+        return items.map((item) => {
+            const id = item.varId
+            return {
+                ...item,
+                value: inflValues[id] ?? 'Sin datos'
+            }
+        })
     }
 
     useEffect(() => {
-        const fetchData = async () => {
-            if (ChartComponent === PumpControl) {
-                // Si el componente es PumpControl, actualiza bombas y estados
-                const { initialPumps, initialStates } = initialData
+        if (!inflValues || Object.keys(inflValues).length === 0) return
 
-                // Actualiza valores de bombas (pumps)
-                const updatedPumps = await fetchPumpOrStateValues(initialPumps)
+        // PumpControl
+        if (ChartComponent === PumpControl) {
+            const updatedPumps = resolvePumpOrState(initialData.initialPumps)
+            const updatedStates = resolvePumpOrState(initialData.initialStates)
 
-                // Actualiza valores de estados
-                const updatedStates = await fetchPumpOrStateValues(
-                    initialStates
-                )
+            setChartData({
+                ...initialData,
+                initialPumps: updatedPumps,
+                initialStates: updatedStates,
+            })
 
-                // Actualiza el estado del chartData con los valores obtenidos
-                setChartData((prevData) => {
-                    return {
-                        ...prevData,
-                        initialPumps: updatedPumps,
-                        initialStates: updatedStates,
-                    }
-                })
-            }
+            setLoading(false)
+            return
+        }
 
-            if (initialData?.value) {
-                const data = await fetchChartData(initialData.value)
-
-                if (data) {
-                    setChartData((prevData) => ({
-                        ...prevData,
-                        value: data.value, // Actualizamos el valor correctamente
-                    }))
-                }
-            }
-
-            // Cuando los datos estén listos, setLoading a false
+        // Gráficos simples
+        if (initialData?.value) {
+            const value = resolveSimpleValue(initialData.value)
+            setChartData({ ...initialData, value })
             setLoading(false)
         }
 
-        fetchData()
-        const intervalId = setInterval(fetchData, 15000) // Refresca los datos cada 15 segundos
-        return () => clearInterval(intervalId)
-    }, [chartId, ChartComponent, initialData]) // Dependencias ajustadas para asegurar la actualización
+    }, [inflValues])
 
-    // Si los datos aún no están listos, muestra un mensaje de carga
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center h-full w-full">
@@ -128,9 +75,7 @@ export const ChartComponentDbWrapper = ({
                 </Typography>
             </div>
         )
-    }    
-    
-       
+    }
 
     return <ChartComponent {...initialProps} {...chartData} />
 }
