@@ -28,6 +28,7 @@ const MapBase = ({
     withInfo = false, // Determina si se consulta InfluxDB
 }) => {
     function extractInfluxVarsFromMarkers(markers) {
+        console.log(markers)
         return markers.map((m) => ({
             dataInflux: m.popupInfo.data   // el objeto entero
         }))
@@ -66,18 +67,33 @@ const MapBase = ({
         }
     }
 
+    const formatMarkerValue = (marker) => {
+        const rawValue = marker.popupInfo.value
+
+        if (rawValue == null) return "No hay datos"
+
+        // obtener calc_field
+        const influxConfig = Object.values(marker.popupInfo.data.varsInflux)[0]
+        const calcField = influxConfig.calc_field
+
+        // si el campo es status interpretamos 0/1
+        if (calcField === "status" || calcField === "estados_0" || calcField.includes("estado")) {
+            const numeric = Number(rawValue)
+            return numeric === 1 ? "Encendido" : "Apagado"
+        }
+
+        // para todo lo demás, devolver el valor normal
+        return rawValue
+    }
+
     useEffect(() => {
         if (!withInfo) return
-        if (!markers || markers.length === 0) return
 
-        // Primera carga
         fetchMultipleInfluxValues()
 
-        // Intervalo de actualización
         const interval = setInterval(fetchMultipleInfluxValues, 15000)
-
         return () => clearInterval(interval)
-    }, [markers])
+    }, [])
 
 
     return (
@@ -110,23 +126,23 @@ const MapBase = ({
                     >
                         <Pin label={marker.name} color="#3498db" />
                         {withInfo && marker.popupInfo && marker.popupInfo.data && (
-                            
-                                <Popup
-                                    key={`popup-${index}`}
-                                    anchor="top-left"
-                                    closeButton={false}
-                                    latitude={Number(marker.popupInfo.lat)}
-                                    longitude={Number(marker.popupInfo.lng)}
-                                    closeOnClick={false}
-                                >
-                                    <Typography variant="body3">
-                                        {marker.popupInfo.data.name ?? 'No hay datos'}
-                                    </Typography>
-                                    <Typography variant="body2">
-                                        {marker.popupInfo.value ?? 'No hay datos'}
-                                    </Typography>
-                                </Popup>
-                            )}
+
+                            <Popup
+                                key={`popup-${index}`}
+                                anchor="top-left"
+                                closeButton={false}
+                                latitude={Number(marker.popupInfo.lat)}
+                                longitude={Number(marker.popupInfo.lng)}
+                                closeOnClick={false}
+                            >
+                                <Typography variant="body3">
+                                    {marker.popupInfo.data.name ?? 'No hay datos'}
+                                </Typography>
+                                <Typography variant="body2">
+                                    {formatMarkerValue(marker)}
+                                </Typography>
+                            </Popup>
+                        )}
                     </Marker>
                 ))}
             </Map>
