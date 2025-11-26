@@ -371,7 +371,7 @@ function ViewDiagram() {
 					</div>
 
 					{/* Card principal */}
-					<CardCustom className="w-full max-h-[725px] flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
+					<CardCustom className="w-full max-h-auto flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
 						<div className="flex-1 w-full max-h-full rounded-br-lg relative text-end">
 
 							{/* Barra de botones flotante */}
