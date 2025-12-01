@@ -71,7 +71,17 @@ function ViewDiagram() {
 		const unit = el.dataInflux?.unit || '';
 		let text = '';
 
-		if (
+		if (el.dataInflux.binary_compressed && Array.isArray(rawValue)) {
+			const selectedBitId = el.dataInflux.id_bit;
+			const bitData = rawValue.find(b => b.id_bit === selectedBitId);
+
+			if (!bitData) {
+				text = el.dataInflux.name || 'Bit desconocido';
+			} else {
+				text = bitData.bit; // nombre del bit: "bomba oeste", "bomba sur", etc.
+			}
+		}
+		else if (
 			maxValue &&
 			!isNaN(maxValue) &&
 			Number(maxValue) !== 0 &&

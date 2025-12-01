@@ -169,7 +169,7 @@ function NavBarCustom({ setLoading }) {
 						<MenuIcon />
 					</IconButton>
 
-					<img onClick={() => navigate('home')} className='max-h-36 cursor-pointer' src={Logo} />
+					<img onClick={() => navigate('home')} className='max-h-10 cursor-pointer' src={Logo} />
 					<div className='absolute right-5 flex flex-row items-center gap-2'>
 						<p className={`bg-blue-600 rounded-md shadow-sm px-3 py-1 text-white  ml-3 select-none ${isMobile ? 'hidden' : ''}`}>
 							{nameCoop}

@@ -10,7 +10,7 @@ import { IoMdMove } from "react-icons/io";
 
 const TopNavbar = ({ 
     onClear, 
-    onSave, 
+    onSaveDiagram, 
     onUndo, 
     elements = [],
     selectedId,
@@ -47,7 +47,7 @@ const TopNavbar = ({
             <div className="flex items-center justify-between px-4 py-2">
                 <div className="flex items-center gap-2 ps-16">
                     <button
-                        onClick={onSave}
+                        onClick={onSaveDiagram}
                         className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-800 rounded text-sm text-white"
                     >
                         <FaSave className="text-lg" />

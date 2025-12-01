@@ -70,11 +70,30 @@ export const useTooltipManager = ({ selectedId, elements, setElements }) => {
     );
   };
 
+  const handleSetBinaryBit = useCallback(({ id_bit, name, bit, id_var }) => {
+    if (!selectedId) return;
+    setElements(prev =>
+      prev.map(el =>
+        String(el.id) === String(selectedId) && el.dataInflux
+          ? {
+              ...el,
+              dataInflux: {
+                ...el.dataInflux,
+                id_bit: id_bit, 
+              }
+            }
+          : el
+      )
+    );
+  }, [selectedId, setElements]);
+  
+
   return {
     handleShowTooltip,
     handleHideTooltip,
     handleChangeTooltipPosition,
     handleSetMaxValue,
-    handleBooleanColorChange
+    handleBooleanColorChange,
+    handleSetBinaryBit
   };
 };
