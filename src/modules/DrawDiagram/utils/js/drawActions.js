@@ -127,6 +127,7 @@ export const uploadCanvaDb = async (id, {
 
 		// === IMÁGENES ===
 		for (const image of objectDiagram?.images || []) {
+			console.log(image);
 			let dataInflux = null;
 			const variable = image.variables?.[0];
 			if (variable?.variable?.varsInflux) {
@@ -144,7 +145,9 @@ export const uploadCanvaDb = async (id, {
 					position: variable.position_var,
 					max_value_var: variable.max_value_var,
 					calculatePercentage: variable.max_value_var ? true : false,
-					boolean_colors: variable.boolean_colors || {}
+					boolean_colors: variable.boolean_colors || {},
+					binary_compressed: variable.variable.binary_compressed,
+					id_bit: variable.id_bit,
 				};
 
 				influxVarsToRequest.push({ dataInflux: dataInflux });
@@ -167,6 +170,7 @@ export const uploadCanvaDb = async (id, {
 
 		// === VALORES INFLUX ===
 		let finalElements = elements;
+		console.log(influxVarsToRequest);
 
 		if (influxVarsToRequest.length > 0) {
 			const response = await request(
@@ -238,6 +242,7 @@ export const saveDiagramKonva = async ({
 		elements.forEach((el) => {
 			switch (el.type) {
 				case 'image':
+					console.log(el);
 					saveObjects.images.push({
 						...(el.id ? { id: getNumericId(el.id) } : {}),
 						name: el.name || '',
@@ -254,7 +259,8 @@ export const saveDiagramKonva = async ({
 								show: el.dataInflux.show,
 								position: el.dataInflux.position,
 								max_value: el.dataInflux.max_value_var,
-								boolean_colors: el.dataInflux.boolean_colors
+								boolean_colors: el.dataInflux.boolean_colors,
+								id_bit: el.dataInflux.id_bit,
 							}
 						} : {}
 					});
@@ -356,7 +362,7 @@ export const saveDiagramKonva = async ({
 			backgroundImg: diagramMetadata.backgroundImg || '',
 			...(diagramMetadata.id && { id: diagramMetadata.id }),
 		};
-
+		
 		await request(`${backend[import.meta.env.VITE_APP_NAME]}/saveDiagram`, 'POST', saveObjects);
 
 		Swal.fire({

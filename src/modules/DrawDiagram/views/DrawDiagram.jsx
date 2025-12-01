@@ -112,7 +112,7 @@ const DrawDiagram = () => {
     setLineStyle
   });
 
-  const { handleShowTooltip, handleHideTooltip, handleChangeTooltipPosition, handleSetMaxValue, handleBooleanColorChange } = useTooltipManager({ selectedId, elements, setElements });
+  const { handleShowTooltip, handleHideTooltip, handleChangeTooltipPosition, handleSetMaxValue, handleBooleanColorChange, handleSetBinaryBit } = useTooltipManager({ selectedId, elements, setElements });
 
   const { saveText } = useTextTools({ elements, setElements, textStyle, setTextInput, setTextPosition, setEditingTextId, setNewElementsIds });
 
@@ -189,6 +189,7 @@ const DrawDiagram = () => {
   };
 
   const handleSaveDiagram = async (navigate) => {
+    console.log('Guardando diagrama...');
     const { value: nombre } = await Swal.fire({
       title: 'Guardar diagrama',
       input: 'text',
@@ -219,6 +220,7 @@ const DrawDiagram = () => {
       return element;
     });
 
+    ;
     const diagramToSave = {
       elements: elementsToSave,
       circles,
@@ -399,7 +401,7 @@ const DrawDiagram = () => {
             {/* Barra arriba */}
             <TopNavbar
               onClear={handleClearCanvas}
-              onSave={() => handleSaveDiagram(navigate)}
+              onSaveDiagram={() => handleSaveDiagram(navigate)}
               onUndo={handleUndo}
               elements={elements}
               selectedId={selectedId}
@@ -486,15 +488,17 @@ const DrawDiagram = () => {
                   </div>
                 )}
                 {/* Panel posicion de variables */}
+                {showTooltipPositionPanel && (
                 <TooltipPositionPanel
-                  visible={showTooltipPositionPanel}
                   selectedElement={elements.find(el => String(el.id) === String(selectedId))}
                   onChangePosition={handleChangeTooltipPosition}
                   onHideTooltip={handleHideTooltip}
                   onShowTooltip={handleShowTooltip}
                   onSetMaxValue={handleSetMaxValue}
                   onSetBooleanColors={handleBooleanColorChange}
+                  onSetBinaryBit={handleSetBinaryBit}
                 />
+                )}
                 {/* Canvas */}
                 <DiagramCanvas
                   elements={elements}

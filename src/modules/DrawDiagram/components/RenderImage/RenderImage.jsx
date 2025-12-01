@@ -22,8 +22,30 @@ const RenderImage = ({ el }) => {
     
       return config.optionsImage.error;
     }
-    
 
+    if (el.dataInflux?.binary_compressed && Array.isArray(val)) {
+      
+      const selectedBitId = el.dataInflux.id_bit;
+      const bitData = val.find(b => b.id_bit === selectedBitId);
+
+      if (!bitData)
+        return config.optionsImage?.default || el.src;
+
+      const bitVal = bitData.value; // true / false
+
+      if (userColors) {
+        if (bitVal === true && userColors.true)
+          return config.optionsImage[userColors.true];
+        if (bitVal === false && userColors.false)
+          return config.optionsImage[userColors.false];
+      }
+
+      // fallback clásico
+      return bitVal === true
+        ? config.optionsImage.success
+        : config.optionsImage.default;
+    }
+    
     // Si es una imagen booleana
     if (config.animation === 'boolean' && config.optionsImage) {
       const isTrue = val === 1 || val === true;

@@ -121,23 +121,25 @@ const Calculadora = ({ display, setDisplay, showNumbers }) => {
 		inputRef.current.focus()
 	}
 	useEffect(() => {
-		if (state.equation.length) {
-			setNewDisplay(state.equation)
+		const eq = state?.equation;
+		if (Array.isArray(eq) && eq.length > 0) {
+		  setDisplay(eq);
+		  setNewDisplay(eq);
 		}
-	}, [])
+	  }, [state.equation]);
 	useEffect(() => {
 		dispatch({ type: 'SET_EQUATION', payload: newDisplay })
 	}, [newDisplay])
 
 	return (
-		<Paper elevation={0} ref={calculatorRef} onClick={handleFocus}>
+		<Paper elevation={0} ref={calculatorRef} onClick={handleFocus} className='!bg-slate-50 p-3 rounded-md w-[50%]'>
 			<Typography variant='h6' className='!mb-2' align='center'>
 				Formula de la variable
 			</Typography>
 
 			<div className='flex justify-center w-full gap-3 max-md:flex-wrap'>
-				<div className='w-full flex justify-end'>
-					<div className='flex xl:w-1/2 2xl:w-1/3 w-full gap-1 mb-1 flex-wrap justify-center'>
+				<div className='w-full flex justify-center'>
+					<div className='flex gap-1 mb-1 flex-wrap justify-center'>
 						{buttons.map(({ value, icon }) => (
 							<Button
 								key={value}
@@ -169,7 +171,7 @@ const Calculadora = ({ display, setDisplay, showNumbers }) => {
 							))}
 						</div>
 					)}
-					<div className='w-2/3 max-lg:w-full flex h-full p-2 relative border-dashed border-[1px] border-gray-400'>
+					<div className='flex h-full p-2 relative border-dashed border-[1px] border-gray-400 bg-white rounded-md'>
 						<input ref={inputRef} className='absolute top-0 left-0 w-full h-full opacity-0 cursor-text' />
 						{newDisplay
 							? newDisplay.map((item, index) => {
