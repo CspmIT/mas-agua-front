@@ -127,7 +127,6 @@ export const uploadCanvaDb = async (id, {
 
 		// === IMÁGENES ===
 		for (const image of objectDiagram?.images || []) {
-			console.log(image);
 			let dataInflux = null;
 			const variable = image.variables?.[0];
 			if (variable?.variable?.varsInflux) {
@@ -148,6 +147,7 @@ export const uploadCanvaDb = async (id, {
 					boolean_colors: variable.boolean_colors || {},
 					binary_compressed: variable.variable.binary_compressed,
 					id_bit: variable.id_bit,
+					bit_name: variable.bit?.name || null,
 				};
 
 				influxVarsToRequest.push({ dataInflux: dataInflux });
@@ -170,7 +170,6 @@ export const uploadCanvaDb = async (id, {
 
 		// === VALORES INFLUX ===
 		let finalElements = elements;
-		console.log(influxVarsToRequest);
 
 		if (influxVarsToRequest.length > 0) {
 			const response = await request(
@@ -207,7 +206,7 @@ export const uploadCanvaDb = async (id, {
 
 		setCircles(circles);
 		setTool(null);
-
+		console.log(finalElements);
 		return finalElements;
 	} catch (err) {
 		console.error('Error en uploadCanvaDb:', err);

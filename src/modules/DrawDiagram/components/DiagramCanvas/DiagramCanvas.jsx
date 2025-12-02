@@ -73,7 +73,7 @@ const DiagramCanvas = ({
             const dx = pointer.x - dragStartPos.x;
             const dy = pointer.y - dragStartPos.y;
 
-            setDragStartPos(pointer); 
+            setDragStartPos(pointer);
             setStagePosition((prev) => ({
               x: prev.x + dx,
               y: prev.y + dy,
@@ -207,7 +207,7 @@ const DiagramCanvas = ({
                 const offset = 30;
                 let labelX = el.x + (el.width || 0) / 2;
                 let labelY = el.y;
-              
+
                 switch (el.dataInflux?.position) {
                   case 'Arriba':
                     labelY = el.y - offset;
@@ -225,7 +225,7 @@ const DiagramCanvas = ({
                   default:
                     break;
                 }
-              
+
                 return (
                   <Fragment key={el.id}>
                     <Group
@@ -267,7 +267,7 @@ const DiagramCanvas = ({
                         hitStrokeWidth={20}
                       />
                     </Group>
-              
+
                     {el.dataInflux && el.dataInflux.name && (
                       <Label x={labelX} y={labelY} opacity={el.dataInflux.show ? 1 : 0.5}>
                         <Tag
@@ -289,13 +289,13 @@ const DiagramCanvas = ({
                     )}
                   </Fragment>
                 );
-              }              
+              }
 
               if (el.type === 'image') {
                 const offset = 5;
                 let labelX = el.x + (el.width || 0) / 2;
                 let labelY = el.y + (el.height || 0) / 2;
-              
+
                 let pointerDir = 'down';
                 switch (el.dataInflux?.position) {
                   case 'Arriba':
@@ -319,7 +319,7 @@ const DiagramCanvas = ({
                     pointerDir = 'down';
                     break;
                 }
-              
+
                 return (
                   <Fragment key={el.id}>
                     <ImageElement
@@ -342,7 +342,7 @@ const DiagramCanvas = ({
                       }}
                       onTransformEnd={(e) => handleTransformEnd(el.id, e.target)}
                     />
-              
+
                     {el.dataInflux && el.dataInflux.name && (
                       <Label x={labelX} y={labelY} opacity={el.dataInflux.show ? 1 : 0.5}>
                         <Tag
@@ -354,7 +354,11 @@ const DiagramCanvas = ({
                           cornerRadius={5}
                         />
                         <Text
-                          text={el.dataInflux.name}
+                          text={
+                            el.dataInflux.bit_name
+                              ? `${el.dataInflux.name} - (${el.dataInflux.bit_name})`
+                              : el.dataInflux.name
+                          }
                           fontFamily="arial"
                           fontSize={14}
                           padding={8}
@@ -365,7 +369,7 @@ const DiagramCanvas = ({
                   </Fragment>
                 );
               }
-              
+
 
               if (el.type === 'polyline') {
                 return (
