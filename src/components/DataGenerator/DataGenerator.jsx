@@ -9,7 +9,8 @@ import { request } from '../../utils/js/request'
 import { backend } from '../../utils/routes/app.routes'
 import LoaderComponent from '../Loader'
 import { Close } from '@mui/icons-material'
-const DataGenerator = ({ handleClose, data = null }) => {
+
+const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 	const [requireCalc, setRequireCalc] = useState(false)
 	const [binaryCompressed, setBinaryCompressed] = useState(data?.binary_compressed || false);
 	const [bits, setBits] = useState(data?.binary_compressed ? data.bits ?? [] : []);
@@ -111,12 +112,15 @@ const DataGenerator = ({ handleClose, data = null }) => {
 				type: data.type_var,
 				calc: requireCalc,
 				varsInflux: dataConsult,
+				process: data.process,
 				equation: state?.equation || null,
 				binary_compressed: binaryCompressed,
 				bits: binaryCompressed ? bits.map(b => ({ id: b.id, name: b.name, bit: b.bit })) : [],
 			}
 
 			await request(`${backend[import.meta.env.VITE_APP_NAME]}/saveVariable`, 'POST', dataReturn)
+
+			if (onSaved) onSaved();
 
 			if (handleClose) {
 				handleClose()
@@ -140,6 +144,7 @@ const DataGenerator = ({ handleClose, data = null }) => {
 		setValue('id', data?.id || 0)
 		setValue('name_var', data?.name)
 		setValue('unit', data?.unit)
+		setValue('process', data?.process)
 		setValue('type_var', data?.type)
 		if (data?.calc) {
 			setDisplay(data?.equation)
@@ -193,6 +198,18 @@ const DataGenerator = ({ handleClose, data = null }) => {
 					})}
 					error={!!errors.name_var}
 					helperText={errors.name_var && errors.name_var.message}
+					size="small"
+				/>
+				<TextField
+					type='text'
+					className='w-1/4'
+					label='Proceso'
+					{...register('process', {
+						required: 'Este campo es requerido',
+					})}
+					error={!!errors.process}
+					helperText={errors.process && errors.process.message}
+					size="small"
 				/>
 				<TextField
 					type='text'
@@ -203,6 +220,7 @@ const DataGenerator = ({ handleClose, data = null }) => {
 					})}
 					error={!!errors.unit}
 					helperText={errors.unit && errors.unit.message}
+					size="small"
 				/>
 				<TextField
 					select
@@ -214,6 +232,7 @@ const DataGenerator = ({ handleClose, data = null }) => {
 					error={!!errors.type_var}
 					helperText={errors.type_var && errors.type_var.message}
 					defaultValue={data?.type || 'last'}
+					size="small"
 				>
 					<MenuItem value='last'>Instantánea</MenuItem>
 					<MenuItem value='history'>Histórico</MenuItem>
@@ -243,6 +262,7 @@ const DataGenerator = ({ handleClose, data = null }) => {
 						})}
 						error={!!errors.topic}
 						helperText={errors.topic && errors.topic.message}
+						size="small"
 					/>
 					<TextField
 						type='text'
@@ -253,6 +273,7 @@ const DataGenerator = ({ handleClose, data = null }) => {
 						})}
 						error={!!errors.field}
 						helperText={errors.field && errors.field.message}
+						size="small"
 					/>
 
 					<div className='flex w-full justify-center gap-3'>
@@ -269,6 +290,7 @@ const DataGenerator = ({ handleClose, data = null }) => {
 							})}
 							error={!!errors.time}
 							helperText={errors.time && errors.time.message}
+							size="small"
 						/>
 						<TextField
 							select
@@ -280,6 +302,7 @@ const DataGenerator = ({ handleClose, data = null }) => {
 							error={!!errors.unit_topic}
 							helperText={errors.unit_topic && errors.unit_topic.message}
 							defaultValue={data?.varsInflux?.[data.name]?.calc_unit || 'ms'}
+							size="small"
 						>
 							<MenuItem value='ms'>Milisegundos</MenuItem>
 							<MenuItem value='s'>Segundos</MenuItem>
@@ -303,6 +326,7 @@ const DataGenerator = ({ handleClose, data = null }) => {
 							})}
 							error={!!errors.period}
 							helperText={errors.period && errors.period.message}
+							size="small"
 						/>
 						<TextField
 							select
@@ -314,6 +338,7 @@ const DataGenerator = ({ handleClose, data = null }) => {
 							error={!!errors.unit_period}
 							helperText={errors.unit_period && errors.unit_period.message}
 							defaultValue={data?.varsInflux?.[data.name]?.calc_unit_period || 'ms'}
+							size="small"
 						>
 							<MenuItem value='ms'>Milisegundos</MenuItem>
 							<MenuItem value='s'>Segundos</MenuItem>
@@ -333,6 +358,7 @@ const DataGenerator = ({ handleClose, data = null }) => {
 							error={!!errors.type_period}
 							helperText={errors.type_period && errors.type_period.message}
 							defaultValue={data?.varsInflux?.[data.name]?.calc_type_period || 'last'}
+							size="small"
 						>
 							<MenuItem value='last'>Ultimo</MenuItem>
 							<MenuItem value='mean'>Promedio</MenuItem>

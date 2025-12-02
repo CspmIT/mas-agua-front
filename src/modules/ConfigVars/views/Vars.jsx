@@ -132,6 +132,7 @@ const Vars = () => {
                 openModal={modal}
                 setOpenModal={setModal}
                 data={detailVar}
+                onSaved={() => getVars()}
             />
         </Container>
     )

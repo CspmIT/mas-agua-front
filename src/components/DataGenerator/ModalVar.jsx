@@ -5,7 +5,7 @@ import DataGenerator from './DataGenerator'
 import VarsProvider from './ProviderVars'
 import { Close } from '@mui/icons-material'
 
-export default function ModalVar({ openModal, setOpenModal, data = null }) {
+export default function ModalVar({ openModal, setOpenModal, data = null, onSaved }) {
 	const [open, setOpen] = useState(openModal)
 	const handleClose = () => {
 		setOpen(false)
@@ -30,7 +30,7 @@ export default function ModalVar({ openModal, setOpenModal, data = null }) {
 								<Close color='error' />
 							</IconButton>
 							<VarsProvider>
-								<DataGenerator handleClose={handleClose} data={data} />
+								<DataGenerator handleClose={handleClose} data={data} onSaved={onSaved} />
 							</VarsProvider>
 						</Box>
 					</Modal>,
