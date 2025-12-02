@@ -54,6 +54,11 @@ const Vars = () => {
             accessorKey: 'calc',
             Cell: ({ row }) => (row.original.calc ? 'Si' : 'No'),
         },
+        { 
+            header: 'Proceso', 
+            accessorKey: 'process',
+            Cell: ({ row }) => (row.original.process ? row.original.process : '-'),
+        },
         {
             header: 'Opciones',
             accessorKey: 'options',
@@ -124,6 +129,8 @@ const Vars = () => {
                     columns={columns}
                     pagination={true}
                     pageSize={10}
+                    filter={true}
+                    topToolbar={true}
                 />
             ) : (
                 <>Cargando...</>
