@@ -15,6 +15,7 @@ import { backend } from '../../../utils/routes/app.routes'
 import { FiUpload } from 'react-icons/fi'
 import { FaPencilAlt, FaTrash } from 'react-icons/fa'
 import Swal from 'sweetalert2'
+import LoaderComponent from '../../../components/Loader'
 
 const ProfilePLC = () => {
     const [loading, setLoading] = useState(true)
@@ -158,12 +159,12 @@ const ProfilePLC = () => {
             accessorKey: 'actions',
             Cell: ({ row }) => {
                 const statusBtnVariant =
-                    row.original.status == 2 ? 'primary' : 'error'
+                    row.original.status == 2 ? 'success' : 'error'
                 return (
                     <div className="flex gap-2">
                         <Button
                             size="small"
-                            color="success"
+                            color="primary"
                             variant="contained"
                             disabled={row.original.status === 2}
                             onClick={() => {
@@ -277,7 +278,7 @@ const ProfilePLC = () => {
                         pageSize={10}
                     />
                 ) : (
-                    <>Cargando...</>
+                    <LoaderComponent />
                 )}
                 <ModalVarPLC
                     open={modalPLC}

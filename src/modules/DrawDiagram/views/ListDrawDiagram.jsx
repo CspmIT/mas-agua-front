@@ -44,7 +44,7 @@ const ListDrawDiagram = () => {
 					Cell: ({ row }) => (
 						<Box display="flex" gap={1}>
 							<Button
-								variant="outlined"
+								variant="contained"
 								color="primary"
 								size="small"
 								onClick={() => navigate(`/newDiagram/${row.original.id}`)}
@@ -52,7 +52,7 @@ const ListDrawDiagram = () => {
 								Editar
 							</Button>
 							<Button
-								variant="outlined"
+								variant="contained"
 								color="secondary"
 								size="small"
 								onClick={() => navigate(`/viewDiagram/${row.original.id}`)}

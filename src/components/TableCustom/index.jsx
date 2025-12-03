@@ -201,7 +201,7 @@ const TableCustom = ({ data, columns, ...prop }) => {
 		// clases para el header de la tabla (muiTableHeadRowProps, muiTableHeadCellProps, muiTableHeadProps)
 		muiTableHeadRowProps: {
 			sx: {
-				backgroundColor: 'transparent',
+				backgroundColor: 'white',
 				boxShadow: 'none',
 				border: 'none',
 			},
@@ -210,7 +210,7 @@ const TableCustom = ({ data, columns, ...prop }) => {
 		muiTableHeadCellProps: (cell) => {
 			return {
 				sx: {
-					backgroundColor: 'transparent',
+					backgroundColor: 'white',
 					...prop.header,
 				},
 			}
@@ -220,7 +220,9 @@ const TableCustom = ({ data, columns, ...prop }) => {
 
 		// clases para la linea de herramientas de arriba ()
 		muiTopToolbarProps: {
-			sx: {},
+			sx: {
+				backgroundColor: 'white',
+			},
 		},
 		// Se creo a mano las herramientas para poder escribir en español las opciones
 		renderTopToolbar: ({ table }) => (
@@ -229,7 +231,7 @@ const TableCustom = ({ data, columns, ...prop }) => {
 					display: 'flex',
 					justifyContent: 'flex-end',
 					alignItems: 'center',
-					backgroundColor: 'transparent',
+					backgroundColor: 'white',
 					...prop.toolbarClass,
 				}}
 			>
@@ -314,7 +316,7 @@ const TableCustom = ({ data, columns, ...prop }) => {
 
 		muiTablePaperProps: {
 			sx: {
-				backgroundColor: 'transparent',
+				backgroundColor: 'white',
 				...prop.card,
 			},
 		},
@@ -347,16 +349,16 @@ const TableCustom = ({ data, columns, ...prop }) => {
 		muiTableBodyProps: {
 			sx: () => ({
 				'& tr:nth-of-type(odd):not([data-selected="true"]):not([data-pinned="true"]) > td': {
-					backgroundColor: '#cdcdcd23',
+					backgroundColor: '#f3f4f6',
 				},
 				'& tr:nth-of-type(odd):not([data-selected="true"]):not([data-pinned="true"]):hover > td': {
-					backgroundColor: '#a9a8a88b',
+					backgroundColor: '#e2e8f0',
 				},
 				'& tr:nth-of-type(even):not([data-selected="true"]):not([data-pinned="true"]) > td': {
-					backgroundColor: '#68686822',
+					backgroundColor: '#e5e7eb',
 				},
 				'& tr:nth-of-type(even):not([data-selected="true"]):not([data-pinned="true"]):hover > td': {
-					backgroundColor: '#a9a8a88b',
+					backgroundColor: '#e2e8f0',
 				},
 			}),
 		},

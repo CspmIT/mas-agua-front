@@ -43,17 +43,17 @@ export const ColumnsUser = (editUser, swalNewPassword, profile, setListUsers) =>
 			return (
 				<Box display="flex" gap={1}>
 					<Button
-						variant="outlined"
-						color="warning"
 						size="small"
+						color="warning"
+						variant="contained"
 						onClick={() => swalNewPassword(row.original)}
 					>
 						Clave de operacion
 					</Button>
 					<Button
-						variant="outlined"
-						color="primary"
 						size="small"
+						color="primary"
+						variant="contained"
 						onClick={() => editUser(row.original)}
 					>
 						Editar

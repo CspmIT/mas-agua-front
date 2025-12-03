@@ -6,6 +6,7 @@ import TableCustom from '../../../components/TableCustom'
 import { Box, Button, Container, Typography } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
+import LoaderComponent from '../../../components/Loader'
 
 const ChartsTable = () => {
     const navigate = useNavigate()
@@ -42,7 +43,7 @@ const ChartsTable = () => {
                             disabled={
                                 row.original.type === 'PumpControl'
                             }
-                            variant="outlined"
+                            variant="contained"
                             color="primary"
                             size="small"
                             onClick={() => {
@@ -171,7 +172,7 @@ const ChartsTable = () => {
                 pageSize={10}
                 />
             ) : (
-                <p>Cargando datos...</p>
+                <LoaderComponent />
             )}
         </Container>
     )

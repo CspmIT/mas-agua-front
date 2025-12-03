@@ -102,7 +102,7 @@ const ConfigAlarms = () => {
           Cell: ({ row }) => (
             <Box display="flex" gap={1}>
               <Button
-                variant="outlined"
+                variant="contained"
                 color="primary"
                 size="small"
                 onClick={() => {

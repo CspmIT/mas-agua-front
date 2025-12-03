@@ -21,9 +21,9 @@ export const ColumnsProfile = (editProfile, setListProfile) => [
 			return (
 				<Box display="flex" gap={1}>
 					<Button
-						variant="outlined"
-						color="primary"
 						size="small"
+						color="primary"
+						variant="contained"
 						onClick={() => editProfile(row.original)}
 					>
 						Editar

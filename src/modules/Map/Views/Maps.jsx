@@ -4,6 +4,7 @@ import TableCustom from '../../../components/TableCustom'
 import { backend } from '../../../utils/routes/app.routes'
 import { request } from '../../../utils/js/request'
 import { useNavigate } from 'react-router-dom'
+import LoaderComponent from '../../../components/Loader'
 
 const Maps = () => {
     const [maps, setMaps] = useState([])
@@ -39,7 +40,7 @@ const Maps = () => {
                 accessorKey: 'actions',
                 Cell: ({ row }) => (
                     <Button
-                        variant="outlined"
+                        variant="contained"
                         color="primary"
                         size="small"
                         onClick={() => {
@@ -85,7 +86,7 @@ const Maps = () => {
                 pageSize={10}
             />
             ) : (
-                <>Cargando</>
+                <LoaderComponent />
             )}
         </Container>
     )
