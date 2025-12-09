@@ -70,7 +70,7 @@ function TabDinamic({ ...props }) {
 				})}
 			</Tabs>
 			<div
-				className={`bg-white dark:!bg-zinc-500 w-full h-full flex-col justify-center items-center border-2 border-t-0 !p-4 rounded-b-2xl border-zinc-200 dark:!border-gray-700`}
+				className={`bg-white dark:!bg-zinc-500 w-full h-full flex-col justify-center items-center border-2 border-t-0 !p-4 rounded-b-2xl rounded-se-2xl border-zinc-200 dark:!border-gray-700`}
 			>
 				{tabs.map((item, index) => {
 					return (
