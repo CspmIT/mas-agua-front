@@ -175,7 +175,6 @@ const Home = () => {
         }
     }
 
-
     useEffect(() => {
         getCharts()
         return () => clearInterval(intervalRef.current)
@@ -185,7 +184,6 @@ const Home = () => {
         <Grid container spacing={1}>
             {charts.map((chart, index) => {
                 const ChartComponentDb = chartComponents[chart.component]
-
                 const isPump = chart.component === 'PumpControl'
 
                 return (
@@ -196,20 +194,8 @@ const Home = () => {
                         lg={isPump ? 4 : 2}
                         key={index}
                     >
-                        <CardCustom
-                            className={`
-                                flex flex-col rounded-xl 
-                                h-72         
-                                overflow-hidden
-                            `}
-                        >
-                            <div className="
-                                h-14                    
-                                flex 
-                                items-center 
-                                justify-center 
-                                text-center
-                            ">
+                        <CardCustom className={`flex flex-col rounded-xl h-72 overflow-hidden`}>
+                            <div className="h-14 flex items-center justify-center text-center">
                                 <h1 className="text-xl leading-tight line-clamp-2">
                                     {chart?.props?.title}
                                 </h1>
@@ -227,7 +213,6 @@ const Home = () => {
                         </CardCustom>
                     </Grid>
                 )
-                
             })}
         </Grid>
     )

@@ -84,7 +84,9 @@ const PermissionMenu = ({ data, id_user, profile }) => {
 			import.meta.env.VITE_WIFI == 'sin'
 				? { data: list_menu }
 				: await request(`${backend[`${import.meta.env.VITE_APP_NAME}`]}/getAllMenu`, 'GET')
-		setGroupedMenus(await groupedMenu(menus.data))
+
+		const menusByOrder = menus.data.sort((a, b) => a.order - b.order)
+		setGroupedMenus(await groupedMenu(menusByOrder))
 	}
 	const groupedMenu = async (data) => {
 		const result = data.reduce((acc, menu) => {
@@ -108,7 +110,8 @@ const PermissionMenu = ({ data, id_user, profile }) => {
 			}
 			return acc
 		}, {})
-		return result
+		const resultByOrder = Object.values(result).sort((a, b) => a.order - b.order)
+		return resultByOrder
 	}
 
 	const desestructurarMenus = (menus) => {

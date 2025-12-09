@@ -2,17 +2,13 @@ import { Button, Box } from '@mui/material';
 
 export const ColumnsProfile = (editProfile, setListProfile) => [
 	{
-		header: 'Perfil',
-		accessorKey: 'description',
+		header: 'ID',
+		accessorKey: 'id',
+		size: 50,
 	},
 	{
-		header: 'Estado',
-		accessorKey: 'status',
-		Cell: ({ row }) => (
-			<span className={`text-sm font-semibold ${row.original.status ? 'text-green-600' : 'text-red-600'}`}>
-				{row.original.status ? 'Habilitado' : 'Deshabilitado'}
-			</span>
-		),
+		header: 'Perfil',
+		accessorKey: 'description',
 	},
 	{
 		header: 'Acciones',

@@ -143,7 +143,7 @@ function ConfigMenu() {
 				<Box className="flex flex-col gap-5 w-full">
 					<Box>
 						<Typography variant="h4" className="text-center !mb-2">
-							Habilitaciones por Perfiles
+							Accesos por Perfiles
 						</Typography>
 						<TableCustom
 							columns={ColumnsProfile(editProfile, setListProfile)}
@@ -155,7 +155,7 @@ function ConfigMenu() {
 
 					<Box>
 						<Typography variant="h4" className="text-center !mb-2">
-							Habilitaciones por Usuarios
+							Administración de Usuarios
 						</Typography>
 						<TableCustom
 							columns={ColumnsUser(editUser, swalNewPassword, listProfile, setListUsers)}
