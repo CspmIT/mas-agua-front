@@ -20,7 +20,7 @@ export const ColumnsUser = (editUser, swalNewPassword, profile, setListUsers) =>
 		header: 'Perfil',
 		accessorKey: 'profile',
 		Cell: ({ row }) => (
-			<p className='m-0 p-0 ml-2 text-base'>
+			<p className='m-0 p-0 text-base'>
 				{
 					profile.find((item) => item.id === row.original?.profile)?.description || ''
 				}
@@ -30,6 +30,7 @@ export const ColumnsUser = (editUser, swalNewPassword, profile, setListUsers) =>
 	{
 		header: 'Estado',
 		accessorKey: 'status',
+		size: 100,
 		Cell: ({ row }) => (
 			<span className={`text-sm font-semibold ${row.original.status ? 'text-green-600' : 'text-red-600'}`}>
 				{row.original.status ? 'Habilitado' : 'Deshabilitado'}
@@ -39,17 +40,10 @@ export const ColumnsUser = (editUser, swalNewPassword, profile, setListUsers) =>
 	{
 		header: 'Acciones',
 		accessorKey: 'actions',
+		size: 300,
 		Cell: ({ row }) => {
 			return (
 				<Box display="flex" gap={1}>
-					<Button
-						size="small"
-						color="warning"
-						variant="contained"
-						onClick={() => swalNewPassword(row.original)}
-					>
-						Clave de operacion
-					</Button>
 					<Button
 						size="small"
 						color="primary"
@@ -57,6 +51,14 @@ export const ColumnsUser = (editUser, swalNewPassword, profile, setListUsers) =>
 						onClick={() => editUser(row.original)}
 					>
 						Editar
+					</Button>
+					<Button
+						size="small"
+						color="warning"
+						variant="outlined"
+						onClick={() => swalNewPassword(row.original)}
+					>
+						Clave de operación
 					</Button>
 				</Box>
 			);
