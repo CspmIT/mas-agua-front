@@ -21,8 +21,14 @@ function ListField({ onSelectVariable, onClose }) {
 	}, [openModal])
 
 	const filter = (text) => {
-		setListfilter(listVariable.filter((variable) => variable.name.includes(`${text}`)))
-	}
+		const lowered = text.toLowerCase();
+		setListfilter(
+		  listVariable.filter((variable) =>
+			variable.name.toLowerCase().includes(lowered)
+		  )
+		);
+	  };
+	  
 
 	return (
 		<div className={`w-full h-full pt-4 bg-white`}>

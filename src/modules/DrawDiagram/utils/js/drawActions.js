@@ -129,11 +129,12 @@ export const uploadCanvaDb = async (id, {
 		for (const image of objectDiagram?.images || []) {
 			let dataInflux = null;
 			const variable = image.variables?.[0];
+			console.log(image);
 			if (variable?.variable?.varsInflux) {
 				dataInflux = {
 					id: variable.id_influxvars,
 					id_variable: variable.id_influxvars,
-					name: variable.variable.name || variable.name_var,
+					name: Object.keys(variable.variable.varsInflux)[0],
 					unit: variable.variable.unit,
 					type: variable.variable.type,
 					calc: variable.variable.calc,

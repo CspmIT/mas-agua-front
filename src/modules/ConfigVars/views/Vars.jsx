@@ -174,7 +174,7 @@ const Vars = () => {
                     <CardCustom className={'p-2 my-5 rounded-md bg-grey-100'}>
                         <form onSubmit={handleSubmit(onSubmit)} className='flex flex-wrap relative w-full justify-center items-end mt-2'>
                         <div className='md:w-1/6 p-1 w-full'>
-                                <FormControl fullWidth size="small">
+                                <FormControl fullWidth size="small" className='shadow-sm'>
                                     <InputLabel id="unit_label">Unidad</InputLabel>
                                     <Controller
                                         name="unit"
@@ -194,7 +194,7 @@ const Vars = () => {
                                 </FormControl>
                             </div>
                             <div className='md:w-1/6 p-1 w-full'>
-                                <FormControl fullWidth size="small">
+                                <FormControl fullWidth size="small" className='shadow-sm'>
                                     <InputLabel id="calc_label">Cálculo</InputLabel>
                                     <Controller
                                         name="calc"
@@ -215,7 +215,7 @@ const Vars = () => {
                                 </FormControl>
                             </div>
                             <div className='md:w-1/4 p-1 w-full'>
-                                <FormControl fullWidth size="small">
+                                <FormControl fullWidth size="small" className='shadow-sm'>
                                     <InputLabel id="process_label">Proceso</InputLabel>
                                     <Controller
                                         name="process"
