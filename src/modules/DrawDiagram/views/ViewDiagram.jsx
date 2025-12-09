@@ -255,15 +255,15 @@ function ViewDiagram() {
           <LoaderComponent />
         </Box>
       ) : (
-        <>
+        <div className="h-[85vh] w-full flex flex-col items-center mb-10">
           <div className="w-full">
             <div className="absolute ms-2 px-3 z-30 bg-blue-600 text-white font-semibold rounded-t-md shadow-md">
               {diagramMetadata.title}
             </div>
           </div>
 
-          <CardCustom className="w-full max-h-auto flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
-            <div className="flex-1 w-full max-h-full rounded-br-lg relative text-end">
+          <CardCustom className="w-full h-full flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
+            <div className="flex-1 w-full h-full rounded-br-lg relative text-end">
               <div className="absolute top-2 left-0 right-0 flex justify-between items-start px-4 z-10">
                 <div className="flex flex-col gap-2">
                   <IconButton onClick={zoomIn} title="Acercar" className="!bg-blue-400"><LuZoomIn /></IconButton>
@@ -284,7 +284,7 @@ function ViewDiagram() {
               </Stage>
             </div>
           </CardCustom>
-        </>
+        </div>
       )}
     </>
   );
