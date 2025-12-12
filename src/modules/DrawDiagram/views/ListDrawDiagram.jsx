@@ -131,33 +131,48 @@ const ListDrawDiagram = () => {
 	}, []);
 
 	return (
-		<Container>
-			<div className="flex flex-col gap-3">
-				<Box display="flex" justifyContent={'space-between'} alignItems={'center'} mb={3}>
-					<Typography variant="h3" align="center" flexGrow={1} className="!ms-24">
-						Diagramas
-					</Typography>
+		<Container className="w-full">
+			{/* Header responsivo */}
+			<div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
+	
+				{/* Título */}
+				<Typography
+					className='w-full text-center md:!ms-40'
+					variant="h4"
+					align="center"
+				>
+					Diagramas
+				</Typography>
+	
+				{/* Botón */}
+				<div className='flex justify-center sm:justify-end'>
 					<Button
 						variant="contained"
 						color="primary"
 						onClick={() => navigate('/newDiagram')}
+						className="sm:mx-10 whitespace-nowrap"
 					>
-						Crear diagrama
+						Crear Diagrama
 					</Button>
-				</Box>
+				</div>
 			</div>
+	
+			{/* Tabla o Loader */}
 			{!loading ? (
-				<TableCustom 
-					columns={columnsTable} 
-					data={listDiagram.length ? listDiagram : []}
-					pagination={true}
-					pageSize={10}
+				<div className="w-full overflow-x-auto mb-5">
+					<TableCustom
+						columns={columnsTable}
+						data={listDiagram.length ? listDiagram : []}
+						pagination={true}
+						pageSize={10}
 					/>
+				</div>
 			) : (
 				<LoaderComponent />
 			)}
 		</Container>
-	);
+	)
+	
 };
 
 export default ListDrawDiagram;

@@ -349,13 +349,13 @@ const TableCustom = ({ data, columns, ...prop }) => {
 		muiTableBodyProps: {
 			sx: () => ({
 				'& tr:nth-of-type(odd):not([data-selected="true"]):not([data-pinned="true"]) > td': {
-					backgroundColor: '#f3f4f6',
+					backgroundColor: '#f9fafb',
 				},
 				'& tr:nth-of-type(odd):not([data-selected="true"]):not([data-pinned="true"]):hover > td': {
 					backgroundColor: '#e2e8f0',
 				},
 				'& tr:nth-of-type(even):not([data-selected="true"]):not([data-pinned="true"]) > td': {
-					backgroundColor: '#e5e7eb',
+					backgroundColor: '#f1f5f9',
 				},
 				'& tr:nth-of-type(even):not([data-selected="true"]):not([data-pinned="true"]):hover > td': {
 					backgroundColor: '#e2e8f0',

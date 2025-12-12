@@ -1,18 +1,6 @@
 import MenuIcon from '@mui/icons-material/Menu'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
-import {
-	ListItemText,
-	ListItemIcon,
-	ListItemButton,
-	ListItem,
-	IconButton,
-	Divider,
-	Typography,
-	List,
-	Toolbar,
-	useMediaQuery,
-	Badge,
-} from '@mui/material'
+import { ListItemText, ListItemIcon, ListItemButton, ListItem, IconButton, Divider, List, Toolbar, useMediaQuery, Badge } from '@mui/material'
 import DropdownImage from '../../core/components/DropdownImage'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import ButtonModeDark from '../../core/components/ButtonModeDark'
@@ -27,13 +15,10 @@ import { storage } from '../../../storage/storage'
 import { getPermissionDb } from '../utils/js'
 import { PiTabsFill } from 'react-icons/pi'
 import ListIcon from '../../../components/ListIcon'
-import { backend, front } from '../../../utils/routes/app.routes'
 import styles from '../utils/css/styles.module.css'
-import { io } from 'socket.io-client'
-import Cookies from 'js-cookie'
 import Logo from '/src/assets/img/Logo/LogoTextAgua.png'
 import { list_menu } from '../../ConfigMenu/components/PermissionMenu/components/data'
-import { request } from '../../../utils/js/request'
+
 function NavBarCustom({ setLoading }) {
 	const [open, setOpen] = useState(false)
 	const [nameCoop, setNameCoop] = useState('')
@@ -135,19 +120,19 @@ function NavBarCustom({ setLoading }) {
 	useEffect(() => {
 		const user = storage.get('usuario')
 		const coop = storage.get('usuarioCooptech')
-	
-		if (!coop) return 
-	
+
+		if (!coop) return
+
 		const clienteName =
 			user?.cliente?.[0]?.name ||	 // 
-			coop?.cliente?.find?.((item) => item.selected) || 
-			coop?.cliente?.name || 
+			coop?.cliente?.find?.((item) => item.selected) ||
+			coop?.cliente?.name ||
 			''
-	
-		if (clienteName) setNameCoop(clienteName)	
+
+		if (clienteName) setNameCoop(clienteName)
 		getPermissions()
 	}, [])
-	
+
 
 	return (
 		<>
@@ -175,7 +160,7 @@ function NavBarCustom({ setLoading }) {
 							{nameCoop}
 						</p>
 						<BottonApps />
-						<ButtonModeDark />
+						{/* <ButtonModeDark /> */}
 						<DropdownImage />
 					</div>
 				</Toolbar>
@@ -241,8 +226,6 @@ function NavBarCustom({ setLoading }) {
 										...(isMobile && {
 											flexGrow: 1,
 											flexBasis: 0,
-											// justifyContent: 'center',
-											// display: 'flex',
 										}),
 									}}
 								>

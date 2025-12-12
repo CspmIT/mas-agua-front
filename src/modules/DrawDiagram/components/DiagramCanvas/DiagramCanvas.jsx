@@ -52,7 +52,7 @@ const DiagramCanvas = ({
     <>
       <Stage
         width={window.innerWidth - 190}
-        height={window.innerHeight}
+        height={window.innerHeight - 125}
         ref={stageRef}
         scaleX={stageScale}
         scaleY={stageScale}

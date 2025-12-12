@@ -37,7 +37,7 @@ const ConfigAlarms = () => {
                 </span>
               )
             }
-      
+
             return (
               <div className="text-sm flex flex-col gap-1">
                 <span>
@@ -56,22 +56,21 @@ const ConfigAlarms = () => {
             )
           },
         },
-      
+
         {
           header: 'Tipo',
           accessorKey: 'type',
           size: 100,
           Cell: ({ row }) => (
             <span
-              className={`text-sm font-semibold ${
-                row.original.type === 'combined' ? 'text-blue-600' : 'text-gray-600'
-              }`}
+              className={`text-sm font-semibold ${row.original.type === 'combined' ? 'text-blue-600' : 'text-gray-600'
+                }`}
             >
               {row.original.type === 'combined' ? 'Combinada' : 'Simple'}
             </span>
           ),
         },
-      
+
         {
           header: 'Repetir cada',
           accessorKey: 'repeatInterval',
@@ -80,22 +79,21 @@ const ConfigAlarms = () => {
             <span className="text-sm">{row.original.repeatInterval} min.</span>
           ),
         },
-      
+
         {
           header: 'Estado',
           accessorKey: 'status',
           size: 50,
           Cell: ({ row }) => (
             <span
-              className={`text-sm font-semibold ${
-                row.original.status ? 'text-green-600' : 'text-red-600'
-              }`}
+              className={`text-sm font-semibold ${row.original.status ? 'text-green-600' : 'text-red-600'
+                }`}
             >
               {row.original.status ? 'Activo' : 'Inactivo'}
             </span>
           ),
         },
-      
+
         {
           header: 'Acciones',
           accessorKey: 'actions',
@@ -168,7 +166,7 @@ const ConfigAlarms = () => {
             </Box>
           ),
         },
-      ]      
+      ]
 
       setColumnsTable(columns);
       setListAlarm(data);
@@ -190,12 +188,12 @@ const ConfigAlarms = () => {
 
   return (
     <>
-      <Container>
-        <div className="flex flex-col gap-3">
-          <Box display="flex" justifyContent={'space-between'} alignItems={'center'} mb={3}>
-            <Typography variant="h3" align="center" flexGrow={1} className="!ms-24">
-              Alarmas
-            </Typography>
+      <Container className="w-full">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
+          <Typography className='w-full text-center md:!ms-40' variant="h4" align="center">
+            Alarmas
+          </Typography>
+          <div className='flex justify-center sm:justify-end'>
             <Button
               variant="contained"
               color="primary"
@@ -203,10 +201,11 @@ const ConfigAlarms = () => {
                 setSelectedAlarm(null)
                 setModalAlarms(true)
               }}
+              className="sm:mx-10 whitespace-nowrap"
             >
               Crear alarma
             </Button>
-          </Box>
+          </div>
         </div>
         {!loading ? (
           <TableCustom
@@ -221,7 +220,7 @@ const ConfigAlarms = () => {
         <ModalAlarms
           openModal={modalAlarms}
           setOpenModal={(value) => {
-            if (!value) setSelectedAlarm(null) 
+            if (!value) setSelectedAlarm(null)
             setModalAlarms(value)
           }}
           onSuccess={fetchAlarms}

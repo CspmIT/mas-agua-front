@@ -1,6 +1,7 @@
 import { Button, MenuItem, TextField } from '@mui/material'
 import { useState } from 'react'
 import Swal from 'sweetalert2'
+import CardCustom from '../../../components/CardCustom'
 
 const samplingOptions = {
     '<1d': ["1s", "5s", "10s", "1m", "5m", "15m", "30m", "1h", "3h", "6h", "12h", "1d"],
@@ -47,60 +48,64 @@ const FiltersChart = ({ id_chart, setFilters }) => {
     }
 
     return (
-        <div className="grid grid-cols-3 gap-3 items-center mt-3 w-4/5">
-            <h3 className="col-span-3 text-center">Zoom del gráfico</h3>
+        <>
+            <CardCustom className="w-4/6 bg-slate-100 p-4 rounded-md border-2 border-slate-200 shadow-md shadow-slate-100">
+                <div className="grid grid-cols-3 gap-3 items-center">
+                    <TextField
+                        label="Valores desde"
+                        select
+                        value={dateRange}
+                        onChange={(e) => {
+                            setDateRange(e.target.value);
+                            setSamplingPeriod(''); // Reset sampling when changing date range
+                        }}
+                        fullWidth
+                        className="!bg-white !border-white"
+                    >
+                        <MenuItem value={'-1d'}>Último día</MenuItem>
+                        <MenuItem value={'-7d'}>Últimos 7 días</MenuItem>
+                        <MenuItem value={'-30d'}>Últimos 30 días</MenuItem>
+                        <MenuItem value={'-3mo'}>Últimos 3 meses</MenuItem>
+                        <MenuItem value={'-6mo'}>Últimos 6 meses</MenuItem>
+                        <MenuItem value={'-1y'}>Último 1 año</MenuItem>
+                    </TextField>
 
-            <TextField
-                label="Valores desde"
-                select
-                value={dateRange}
-                onChange={(e) => {
-                    setDateRange(e.target.value);
-                    setSamplingPeriod(''); // Reset sampling when changing date range
-                }}
-                fullWidth
-            >
-                <MenuItem value={'-1d'}>Último día</MenuItem>
-                <MenuItem value={'-7d'}>Últimos 7 días</MenuItem>
-                <MenuItem value={'-30d'}>Últimos 30 días</MenuItem>
-                <MenuItem value={'-3mo'}>Últimos 3 meses</MenuItem>
-                <MenuItem value={'-6mo'}>Últimos 6 meses</MenuItem>
-                <MenuItem value={'-1y'}>Último 1 año</MenuItem>
-            </TextField>
+                    <TextField
+                        select
+                        value={samplingPeriod}
+                        onChange={(e) => setSamplingPeriod(e.target.value)}
+                        fullWidth
+                        className="!bg-white !border-white"
+                        label="Tiempo de muestreo"
+                        disabled={!dateRange}
+                    >
+                        {getSamplingOptions(dateRange).map((option) => (
+                            <MenuItem key={option} value={option}>{option}</MenuItem>
+                        ))}
+                    </TextField>
 
-            <TextField
-                select
-                value={samplingPeriod}
-                onChange={(e) => setSamplingPeriod(e.target.value)}
-                fullWidth
-                label="Tiempo de muestreo"
-                disabled={!dateRange}
-            >
-                {getSamplingOptions(dateRange).map((option) => (
-                    <MenuItem key={option} value={option}>{option}</MenuItem>
-                ))}
-            </TextField>
-
-            <div className="flex gap-3">
-                <Button
-                    size="small"
-                    variant="contained"
-                    color="primary"
-                    onClick={applyFilters}
-                    disabled={!dateRange || !samplingPeriod}
-                >
-                    Aplicar
-                </Button>
-                <Button
-                    size="small"
-                    variant="outlined"
-                    color="secondary"
-                    onClick={clearFilters}
-                >
-                    Limpiar
-                </Button>
-            </div>
-        </div>
+                    <div className="flex gap-3 items-center justify-center">
+                        <Button
+                            size="small"
+                            variant="contained"
+                            color="primary"
+                            onClick={applyFilters}
+                            disabled={!dateRange || !samplingPeriod}
+                        >
+                            Aplicar
+                        </Button>
+                        <Button
+                            size="small"
+                            variant="outlined"
+                            color="primary"
+                            onClick={clearFilters}
+                        >
+                            Limpiar
+                        </Button>
+                    </div>
+                </div>
+            </CardCustom>
+        </>
     )
 }
 

@@ -101,8 +101,7 @@ const ProfilePLC = () => {
         setActionLoading(true)
         try {
             const status = await request(
-                `${
-                    backend[import.meta.env.VITE_APP_NAME]
+                `${backend[import.meta.env.VITE_APP_NAME]
                 }/plc/deactivate/${id}`,
                 'GET'
             )
@@ -248,28 +247,26 @@ const ProfilePLC = () => {
                 <CircularProgress color="inherit" />
             </Backdrop>
 
-            <Container>
-                <Box
-                    display="flex"
-                    justifyContent={'space-between'}
-                    alignItems={'center'}
-                    mb={3}
-                    gap={3}
-                >
-                    <Typography variant="h3" align="center" flexGrow={1} className="!ms-24">
+            <Container className='w-full'>
+                <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
+                    <Typography className='w-full text-center md:!ms-40' variant="h4" align="center">
                         Perfil PLC
                     </Typography>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => {
-                            setModalData(false)
-                            setModalPLC(true)
-                        }}
-                    >
-                        Crear Perfil de PLC
-                    </Button>
-                </Box>
+                    <div className='flex justify-center sm:justify-end'>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            onClick={() => {
+                                setModalData(false)
+                                setModalPLC(true)
+                            }}
+                            className="sm:mx-10 whitespace-nowrap"
+                        >
+                            Crear Perfil de PLC
+                        </Button>
+                    </div>
+                </div>
+
                 {!loading ? (
                     <TableCustom
                         data={plcProfile.length > 0 ? plcProfile : []}
