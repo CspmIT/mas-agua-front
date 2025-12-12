@@ -19,7 +19,7 @@ const ChartsTable = () => {
         const { data } = await request(endpoint, 'GET')
         const columnsCel = [
             {
-                header: 'id',
+                header: 'ID',
                 accessorKey: 'id',
             },
             {
@@ -48,7 +48,7 @@ const ChartsTable = () => {
                             size="small"
                             onClick={() => {
                                 const type = row.original.type
-                                if(type === 'BooleanChart') {
+                                if (type === 'BooleanChart') {
                                     navigate(`/config/graphic/boolean/${row.original.id}`)
                                     return
                                 }
@@ -75,18 +75,16 @@ const ChartsTable = () => {
                                 e.preventDefault()
                                 const question = await Swal.fire({
                                     icon: 'question',
-                                    html: `Esta seguro que desea ${
-                                        row.original.status
+                                    html: `Esta seguro que desea ${row.original.status
                                             ? 'desactivar'
                                             : 'activar'
-                                    } este grafico?`,
+                                        } este grafico?`,
                                     showCancelButton: true,
                                     cancelButtonText: 'Cancelar',
-                                    confirmButtonText: `${
-                                        row.original.status
+                                    confirmButtonText: `${row.original.status
                                             ? 'Desactivar'
                                             : 'Activar'
-                                    }`,
+                                        }`,
                                 })
                                 if (!question.isConfirmed) {
                                     return false
@@ -111,9 +109,9 @@ const ChartsTable = () => {
                                             prevCharts.map((chart) =>
                                                 chart.id === row.original.id
                                                     ? {
-                                                          ...chart,
-                                                          status: !chart.status,
-                                                      }
+                                                        ...chart,
+                                                        status: !chart.status,
+                                                    }
                                                     : chart
                                             )
                                         )
@@ -142,34 +140,32 @@ const ChartsTable = () => {
     }, [])
 
     return (
-        <Container>
-            <div className="flex flex-col gap-3">
-                <Box
-                    display="flex"
-                    justifyContent={'space-between'}
-                    alignItems={'center'}
-                    mb={3}
-                >
-                    <Typography variant="h3" align="center" flexGrow={1} className="!ms-24">
-                        Gráficos
-                    </Typography>
+        <Container className="w-full">
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
+
+                <Typography className='w-full text-center md:!ms-40' variant="h4" align="center">
+                    Gráficos
+                </Typography>
+                <div className='flex justify-center sm:justify-end'>
                     <Button
                         variant="contained"
                         color="primary"
                         onClick={() => {
                             navigate('/config/graphic')
                         }}
+                        className="sm:mx-10 whitespace-nowrap"
                     >
                         Crear grafico
                     </Button>
-                </Box>
+                </div>
+
             </div>
             {!loader ? (
-                <TableCustom 
-                columns={columnsTable} 
-                data={charts.length > 0 ? charts : []}
-                pagination={true}
-                pageSize={10}
+                <TableCustom
+                    columns={columnsTable}
+                    data={charts.length > 0 ? charts : []}
+                    pagination={true}
+                    pageSize={10}
                 />
             ) : (
                 <LoaderComponent />

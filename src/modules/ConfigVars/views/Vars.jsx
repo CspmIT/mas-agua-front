@@ -53,7 +53,7 @@ const Vars = () => {
     }
     const [columns, setColumns] = useState([
         { header: 'ID', accessorKey: 'id', size: 50 },
-        { header: 'Nombre', accessorKey: 'name', size: 350},
+        { header: 'Nombre', accessorKey: 'name', size: 350 },
         { header: 'Unidad', accessorKey: 'unit' },
         {
             header: 'Cálculo',
@@ -66,7 +66,7 @@ const Vars = () => {
             Cell: ({ row }) => (row.original.process ? row.original.process : '-'),
         },
         {
-            header: 'Opciones',
+            header: 'Acciones',
             accessorKey: 'options',
             Cell: ({ row }) => {
                 return (
@@ -119,12 +119,12 @@ const Vars = () => {
     // FUNCION PARA SETEAR FILTROS
     const onSubmit = ({ process, calc, unit }) => {
         let filtered = [...varsOriginal];
-    
+
         // Filtro por process
         if (process) {
             filtered = filtered.filter(v => v.process === process);
         }
-    
+
         // Filtro por calc (convertimos string → boolean)
         if (calc === "true") {
             filtered = filtered.filter(v => v.calc === true);
@@ -136,10 +136,10 @@ const Vars = () => {
         if (unit) {
             filtered = filtered.filter(v => v.unit === unit);
         }
-    
+
         setVars(filtered);
     };
-    
+
 
 
     useEffect(() => {
@@ -147,33 +147,31 @@ const Vars = () => {
     }, [])
 
     return (
-        <Container>
-            <Box
-                display="flex"
-                justifyContent={'space-between'}
-                alignItems={'center'}
-                mb={3}
-                gap={3}
-            >
-                <Typography variant="h3" align="center" flexGrow={1} className="!ms-44">
+        <Container className='w-full'>
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
+                <Typography className='w-full text-center md:!ms-40' variant="h4" align="center">
                     Variables
                 </Typography>
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={() => {
-                        setDetailVar(null)
-                        setModal(true)
-                    }}
-                >
-                    Crear Variable
-                </Button>
-            </Box>
+                <div className='flex justify-center sm:justify-end'>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={() => {
+                            setDetailVar(null)
+                            setModal(true)
+                        }}
+                        className="sm:mx-10 whitespace-nowrap"
+                    >
+                        Crear Variable
+                    </Button>
+                </div>
+            </div>
+
             {!loading ? (
                 <>
                     <CardCustom className={'p-2 my-5 rounded-md bg-grey-100'}>
                         <form onSubmit={handleSubmit(onSubmit)} className='flex flex-wrap relative w-full justify-center items-end mt-2'>
-                        <div className='md:w-1/6 p-1 w-full'>
+                            <div className='md:w-1/6 p-1 w-full'>
                                 <FormControl fullWidth size="small" className='shadow-sm'>
                                     <InputLabel id="unit_label">Unidad</InputLabel>
                                     <Controller
@@ -201,15 +199,15 @@ const Vars = () => {
                                         control={control}
                                         render={({ field }) => (
                                             <Select
-                                            labelId="calc_label"
-                                            label="Cálculo"
-                                            {...field}
-                                        >
-                                            <MenuItem value="">Todas</MenuItem>
-                                            <MenuItem value="true">Sí</MenuItem>
-                                            <MenuItem value="false">No</MenuItem>
-                                        </Select>
-                                        
+                                                labelId="calc_label"
+                                                label="Cálculo"
+                                                {...field}
+                                            >
+                                                <MenuItem value="">Todas</MenuItem>
+                                                <MenuItem value="true">Sí</MenuItem>
+                                                <MenuItem value="false">No</MenuItem>
+                                            </Select>
+
                                         )}
                                     />
                                 </FormControl>
@@ -256,7 +254,7 @@ const Vars = () => {
                     />
                 </>
             ) : (
-               <LoaderComponent />
+                <LoaderComponent />
             )}
             <ModalVar
                 openModal={modal}

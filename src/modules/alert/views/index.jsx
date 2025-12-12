@@ -111,39 +111,44 @@ const Alert = () => {
     }, [])
 
     return (
-        <div className="flex flex-col w-full h-full gap-6">
+        <div className="flex flex-col w-full h-full gap-6 px-2 sm:px-4 md:px-6">
             {loading ? (
                 <LoaderComponent />
             ) : (
-                <CardCustom className="w-full bg-white dark:bg-gray-900 shadow-lg rounded-2xl p-6 flex flex-col gap-6 transition-all">
-                    {/* Header */}
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center border-b border-gray-300 dark:border-gray-700 pb-3">
-                        <FormLabel className='w-full text-center !text-3xl ms-24'>
-                            Registro de Alarmas
+                <CardCustom className="w-full bg-white dark:bg-gray-900 shadow-lg rounded-2xl p-4 sm:p-6 flex flex-col gap-6 transition-all">
+
+                    {/* Header responsivo */}
+                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-b border-gray-300 dark:border-gray-700 pb-3">
+                        <FormLabel className='w-full text-center !text-3xl md:ms-32'> 
+                            Registro de Alarmas 
                         </FormLabel>
-                        <Button
-                            title='Marcar todas como leídas'
-                            variant="contained"
-                            color="primary"
-                            size="small"
-                            onClick={markAllAsRead}
-                            disabled={!listLogs_Alarms.some(a => !a.viewed)}
-                        >
-                            <FaEye className='text-lg my-1' />
-                        </Button>
+
+                        <div className="flex justify-center sm:justify-end">
+                            <Button
+                                title='Marcar todas como leídas'
+                                variant="contained"
+                                color="primary"
+                                size="small"
+                                onClick={markAllAsRead}
+                                disabled={!listLogs_Alarms.some(a => !a.viewed)}
+                                className="sm:mx-10"
+                            >
+                                <FaEye className='text-lg my-1' />
+                            </Button>
+                        </div>
                     </div>
 
-                    {/* Tabla */}
-                    <div className="flex-1 overflow-hidden rounded-lg shadow-md">
+                    {/* Tabla responsiva */}
+                    <div className="flex-1 overflow-x-auto rounded-lg shadow-md">
                         <TableCustom
                             columns={columnsTable}
                             data={listLogs_Alarms.length ? listLogs_Alarms : []}
                             pagination={true}
                             pageSize={10}
-                            density='compact'
+                            density="compact"
                             header={{
                                 background: 'rgb(190 190 190)',
-                                fontSize: '16px',
+                                fontSize: '14px',
                                 fontWeight: 'bold',
                             }}
                             toolbarClass={{ background: 'rgb(190 190 190)' }}

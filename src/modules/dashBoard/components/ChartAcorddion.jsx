@@ -14,6 +14,7 @@ import { LineChartRepository } from '../../../class/LineChart'
 import LoaderComponent from '../../../components/Loader'
 import { ChartFactory } from './ChartFactory'
 import { chartQueryBuilderMap } from '../factories/chartQueryBuilderMap'
+import CardCustom from '../../../components/CardCustom'
 
 const ChartAccordion = ({ chart }) => {
     const [loader, setLoader] = useState(true)
@@ -64,19 +65,29 @@ const ChartAccordion = ({ chart }) => {
 
     return (
         <Accordion
-            className="w-full"
-            key={chart.id}
-            expanded={expanded} // Controlar si el acordeón está abierto o cerrado
-            onChange={handleAccordionChange} // Controlar el cambio de estado
+        key={chart.id}
+        expanded={expanded} // Controlar si el acordeón está abierto o cerrado
+        onChange={handleAccordionChange} // Controlar el cambio de estado
+        sx={{
+            border: "none",
+            "&:before": {
+                display: "none",
+            },
+            gap: 2
+        }}
+        className="w-full !rounded-xl mb-2 !shadow-md"
         >
             <AccordionSummary
-                expandIcon={<ArrowDownward />}
+                expandIcon={<ArrowDownward className='text-blue-500'/>}
                 aria-controls={`panel-${chart.id}-content`}
                 id={`panel-${chart.id}-header`}
+                className='!border-transparent !rounded-2xl'
             >
-                <Typography variant="h5">{chart.name}</Typography>
+                <CardCustom className="w-fit bg-slate-100 rounded-2xl border-2 border-blue-400 py-1 px-4">
+                    <Typography variant="h6" className='text-blue-600'>{chart.name}</Typography>
+                </CardCustom>
             </AccordionSummary>
-            <AccordionDetails className="flex flex-col items-center justify-center gap-5 h-fit">
+            <AccordionDetails className="flex flex-col items-center justify-center gap-5 h-fit !rounded-2xl !border-transparent">
                 {chart.type === 'LineChart' && (
                     <FiltersChart id_chart={chart.id} setFilters={setFilters} />
                 )}
