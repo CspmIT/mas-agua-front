@@ -194,7 +194,7 @@ const Home = () => {
                         lg={isPump ? 4 : 2}
                         key={index}
                     >
-                        <CardCustom className={`flex flex-col rounded-xl h-72 overflow-hidden`}>
+                        <CardCustom className={`flex flex-col rounded-xl h-[40dvh] overflow-hidden`}>
                             <div className="h-14 flex items-center justify-center text-center">
                                 <h1 className="text-xl leading-tight line-clamp-2">
                                     {chart?.props?.title}

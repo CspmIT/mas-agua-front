@@ -17,15 +17,15 @@ const Maps = () => {
         setMaps(mapBack.data)
         setColumnsTable([
             {
-                header: 'id',
+                header: 'ID',
                 accessorKey: 'id',
             },
             {
-                header: 'latitud',
+                header: 'Latitud',
                 accessorKey: 'latitude',
             },
             {
-                header: 'longitud',
+                header: 'Longitud',
                 accessorKey: 'longitude',
             },
             {
@@ -36,7 +36,7 @@ const Maps = () => {
                     return (date.toLocaleString("es-AR", {timeZone: "America/Argentina/Cordoba"}))}
             },
             {
-                header: 'Botones',
+                header: 'Acciones',
                 accessorKey: 'actions',
                 Cell: ({ row }) => (
                     <Button
@@ -58,26 +58,26 @@ const Maps = () => {
         getMaps()
     }, [])
     return (
-        <Container>
-            <Box
-                display="flex"
-                justifyContent={'space-between'}
-                alignItems={'center'}
-                mb={3}
-            >
-                <Typography variant="h3" align="center" flexGrow={1} className="!ms-24">
+        <Container className='w-full'>
+           <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
+                <Typography className='w-full text-center md:!ms-24' variant="h4" align="center">
                     Mapas
                 </Typography>
+
+                <div className='flex justify-center sm:justify-end'>
                 <Button
                     variant="contained"
                     color="primary"
                     onClick={() => {
                         navigate('/map/create')
                     }}
+                    className="sm:mx-10 whitespace-nowrap"
                 >
                     Crear mapa
                 </Button>
-            </Box>
+                </div>
+           </div>
+            
             {!loader ? (
                 <TableCustom 
                 columns={columnsTable} 

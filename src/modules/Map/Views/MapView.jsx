@@ -1,4 +1,4 @@
-import { Button, TextField, Typography } from '@mui/material'
+import { Button, TextField, Typography, FormLabel} from '@mui/material'
 import MapBase from '../Components/MapBase'
 import SelectVars from '../../Charts/components/SelectVars'
 import { useForm } from 'react-hook-form'
@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react'
 import { backend } from '../../../utils/routes/app.routes'
 import { request } from '../../../utils/js/request'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import CardCustom from '../../../components/CardCustom'
+import LoaderComponent from '../../../components/Loader'
 
 const MapView = ({ create = false, search = false }) => {
     const {
@@ -180,81 +182,95 @@ const MapView = ({ create = false, search = false }) => {
     }, [])
 
     return (
-        <div className="w-full h-[85vh] flex flex-col gap-3">
-            <Typography variant="h4" align="center">
+        <div className="w-full h-[88vh] flex flex-col gap-1">
+            {/* <Typography variant="h4" align="center">
                 Presion de red
-            </Typography>
+            </Typography> */}
 
             {create && (
-                <div className="flex gap-3 max-sm:flex-col justify-center items-center">
-                    <TextField
-                        className="w-1/5 max-sm:w-full"
-                        {...register('markerName', {
-                            required: 'Debe dar un nombre al marcador',
-                            validate: (value) =>
-                                !markers.some(
-                                    (marker) => marker.name === value
-                                ) || 'El marcador ya existe',
-                        })}
-                        label={'Nombre'}
-                        error={errors?.markerName}
-                        helperText={errors?.markerName?.message}
-                    />
-                    <TextField
-                        className="w-1/5 max-sm:w-full"
-                        {...register('markerLat', {
-                            required: 'Debe asignar una latitud',
-                        })}
-                        label={'Latitud'}
-                        error={errors?.markerLat}
-                        helperText={errors?.markerLat?.message}
-                    />
-                    <TextField
-                        className="w-1/5 max-sm:w-full"
-                        {...register('markerLng', {
-                            required: 'Debe asignar una longitud',
-                        })}
-                        label={'Longitud'}
-                        error={errors?.markerLng}
-                        helperText={errors?.markerLng?.message}
-                    />
-                    <SelectVars
-                        className="!w-1/5 !max-sm:w-full"
-                        setValue={setValue}
-                        label={'Seleccione una variable'}
-                    />
-                    <Button
-                        onClick={saveMarker}
-                        className="w-[10%]"
-                        variant="contained"
-                    >
-                        Agregar
-                    </Button>
+                <>
+                <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pb-3"> 
+
+                    <FormLabel className='w-full text-center !text-3xl md:ms-32'> 
+                        Nuevo Mapa
+                    </FormLabel>
                     <Button
                         onClick={handleSubmit}
-                        className="w-[10%]"
+                        className="!mr-3"
                         color="success"
                         variant="contained"
-                    >
-                        {create && search ? 'Editar mapa' : 'Guardar mapa'}
+                        >
+                        {create && search ? 'Editar' : 'Guardar'}
                     </Button>
-                </div>
-            )}
+                        </div>
+                    <CardCustom className="p-3 rounded-xl flex-1 max-h-fit">
+                        <div className="flex gap-3 max-sm:flex-col justify-center items-center">
+                            <TextField
 
-            {loading && !create ? (
-                <Typography align="center">Cargando mapa...</Typography>
-            ) : (
-                <MapBase
-                    height={'100%'}
-                    markers={markers}
-                    setMarkers={setMarkers}
-                    viewState={viewState}
-                    setViewState={setViewState}
-                    controlPanel={create}
-                    draggable={create}
-                    withInfo={!create}
-                />
+                                className="w-1/4 max-sm:w-full"
+                                {...register('markerName', {
+                                    required: 'Debe dar un nombre al marcador',
+                                    validate: (value) =>
+                                        !markers.some(
+                                            (marker) => marker.name === value
+                                        ) || 'El marcador ya existe',
+                                })}
+                                label={'Nombre del marcador'}
+                                error={errors?.markerName}
+                                helperText={errors?.markerName?.message}
+                            />
+                            <TextField
+                                className="w-1/4 max-sm:w-full"
+                                {...register('markerLat', {
+                                    required: 'Debe asignar una latitud',
+                                })}
+                                label={'Latitud'}
+                                error={errors?.markerLat}
+                                helperText={errors?.markerLat?.message}
+                            />
+                            <TextField
+                                className="w-1/4 max-sm:w-full"
+                                {...register('markerLng', {
+                                    required: 'Debe asignar una longitud',
+                                })}
+                                label={'Longitud'}
+                                error={errors?.markerLng}
+                                helperText={errors?.markerLng?.message}
+                            />
+                            <SelectVars
+                                className="!w-1/4 !max-sm:w-full"
+                                setValue={setValue}
+                                label={'Seleccione una variable'}
+                            />
+                            <Button
+                                size="small"
+                                onClick={saveMarker}
+                                className="w-[10%] max-sm:w-full"
+                                variant="contained"
+                            >
+                                Agregar Marcador
+                            </Button>
+                        </div>
+                    </CardCustom>
+                </>
             )}
+            <CardCustom className="p-3 rounded-xl h-auto w-auto flex-1 ">
+                {loading && !create ? (
+                    <LoaderComponent />
+                ) : (
+                    <MapBase
+                        height={'100%'}
+                        markers={markers}
+                        setMarkers={setMarkers}
+                        viewState={viewState}
+                        setViewState={setViewState}
+                        controlPanel={create}
+                        draggable={create}
+                        withInfo={!create}
+                    />
+
+                )}
+            </CardCustom>
         </div>
     )
 }

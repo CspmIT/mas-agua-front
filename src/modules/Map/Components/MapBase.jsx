@@ -146,7 +146,7 @@ const MapBase = ({
                     </Marker>
                 ))}
             </Map>
-            {controlPanel && (
+            {controlPanel && (           
                 <ControlPanel markers={markers} setMarkers={setMarkers} />
             )}
         </div>

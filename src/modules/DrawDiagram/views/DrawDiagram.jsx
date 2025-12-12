@@ -413,7 +413,7 @@ const DrawDiagram = () => {
               setIsPanning={setIsPanning}
             />
             {/* Contenedor horizontal de sidebar + canvas */}
-            <div className="flex w-full min-h-screen">
+            <div className="flex w-full max-h-[85vh]">
               <Sidebar
                 tool={tool}
                 setTool={setTool}
