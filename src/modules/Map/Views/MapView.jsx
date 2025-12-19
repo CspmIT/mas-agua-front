@@ -1,4 +1,4 @@
-import { Button, TextField, Typography, FormLabel} from '@mui/material'
+import { Button, TextField, Typography, FormLabel } from '@mui/material'
 import MapBase from '../Components/MapBase'
 import SelectVars from '../../Charts/components/SelectVars'
 import { useForm } from 'react-hook-form'
@@ -21,7 +21,7 @@ const MapView = ({ create = false, search = false }) => {
 
     const navigate = useNavigate()
     const [searchParam] = useSearchParams()
-
+    const [nameMap, setNameMap] = useState('')
     const [markers, setMarkers] = useState([])
     const [loading, setLoading] = useState(true)
     const [viewState, setViewState] = useState({
@@ -84,11 +84,27 @@ const MapView = ({ create = false, search = false }) => {
         return result
     }
 
+    const askMapName = async (initialName = '') => {
+        const { value } = await Swal.fire({
+            title: 'Guardar',
+            input: 'text',
+            inputLabel: 'Nombre del mapa',
+            inputValue: initialName,
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
+            cancelButtonText: 'Cancelar',
+            inputValidator: (value) => {
+                if (!value.trim()) {
+                    return 'Debes ingresar un nombre';
+                }
+            }
+        });
+    
+        return value || null;
+    };
+       
+
     const handleSubmit = async () => {
-        const map = {
-            viewState,
-            markers,
-        }
         if (!markers || markers.length === 0) {
             await Swal.fire({
                 icon: 'error',
@@ -97,6 +113,17 @@ const MapView = ({ create = false, search = false }) => {
             })
             return false
         }
+        
+        const mapName = await askMapName(search ? nameMap : '');
+        if (!mapName) return;
+
+        const map = {
+            name: mapName,
+            viewState,
+            markers,
+        }
+
+
         try {
             let result = false
             if (create && search) {
@@ -113,7 +140,7 @@ const MapView = ({ create = false, search = false }) => {
                     icon: 'success',
                     html: '<h3>El mapa se guardo con exito</h3>',
                 })
-                navigate('/')
+                navigate('/maps')
             }
         } catch (error) {
             console.error(error.message)
@@ -138,13 +165,15 @@ const MapView = ({ create = false, search = false }) => {
         try {
             const url = `${backend[import.meta.env.VITE_APP_NAME]}/map?id=${id}`
             const { data } = await request(url, 'GET')
+
+            setNameMap(data[0].name)
             const viewStateObject = {
-                longitude: data[0].longitude,
-                latitude: data[0].latitude,
-                zoom: data[0].zoom,
-                bearing: data[0].bearing,
-                pitch: data[0].pitch,
-            }
+                longitude: Number(data[0].longitude),
+                latitude: Number(data[0].latitude),
+                zoom: Number(data[0].zoom),
+                bearing: Number(data[0].bearing),
+                pitch: Number(data[0].pitch),
+              }
             setViewState(viewStateObject)
             const markers = data[0].MarkersMaps.map((markerMap) => {
                 const marker = generateMarker(
@@ -189,20 +218,20 @@ const MapView = ({ create = false, search = false }) => {
 
             {create && (
                 <>
-                <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pb-3"> 
+                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pb-3">
 
-                    <FormLabel className='w-full text-center !text-3xl md:ms-32'> 
-                        Nuevo Mapa
-                    </FormLabel>
-                    <Button
-                        onClick={handleSubmit}
-                        className="!mr-3"
-                        color="success"
-                        variant="contained"
+                        <FormLabel className='w-full text-center !text-3xl md:ms-32'>
+                            {create && search ? 'Editar Mapa' : 'Crear Mapa'}
+                        </FormLabel>
+                        <Button
+                            onClick={handleSubmit}
+                            className="!mr-3"
+                            color="success"
+                            variant="contained"
                         >
-                        {create && search ? 'Editar' : 'Guardar'}
-                    </Button>
-                        </div>
+                            Guardar
+                        </Button>
+                    </div>
                     <CardCustom className="p-3 rounded-xl flex-1 max-h-fit">
                         <div className="flex gap-3 max-sm:flex-col justify-center items-center">
                             <TextField
@@ -254,21 +283,39 @@ const MapView = ({ create = false, search = false }) => {
                     </CardCustom>
                 </>
             )}
-            <CardCustom className="p-3 rounded-xl h-auto w-auto flex-1 ">
+
+            {create && !search ? (
+                <div className="w-full">
+                    <div className="absolute mt-1 px-5 z-30 bg-blue-600 text-white font-semibold rounded-t-md shadow-md">
+                        Nuevo Mapa
+                    </div>
+                </div>
+            ) : (
+                <>
+                    <div className="w-full">
+                        <div className="absolute mt-1 px-5 z-30 bg-blue-600 text-white font-semibold rounded-t-md shadow-md">
+                            {nameMap}
+                        </div>
+                    </div>
+                </>
+            )}
+
+            <CardCustom className="p-3 rounded-xl rounded-tl-none h-auto w-auto flex-1 mt-6 pt-2">
                 {loading && !create ? (
                     <LoaderComponent />
                 ) : (
-                    <MapBase
-                        height={'100%'}
-                        markers={markers}
-                        setMarkers={setMarkers}
-                        viewState={viewState}
-                        setViewState={setViewState}
-                        controlPanel={create}
-                        draggable={create}
-                        withInfo={!create}
-                    />
-
+                    <>
+                        <MapBase
+                            height={'100%'}
+                            markers={markers}
+                            setMarkers={setMarkers}
+                            viewState={viewState}
+                            setViewState={setViewState}
+                            controlPanel={create}
+                            draggable={create}
+                            withInfo={!create}
+                        />
+                    </>
                 )}
             </CardCustom>
         </div>

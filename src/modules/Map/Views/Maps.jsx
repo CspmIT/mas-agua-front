@@ -21,6 +21,10 @@ const Maps = () => {
                 accessorKey: 'id',
             },
             {
+                header: 'Nombre',
+                accessorKey: 'name'
+            },
+            {
                 header: 'Latitud',
                 accessorKey: 'latitude',
             },
