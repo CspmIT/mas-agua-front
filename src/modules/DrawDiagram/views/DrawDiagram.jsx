@@ -189,7 +189,6 @@ const DrawDiagram = () => {
   };
 
   const handleSaveDiagram = async (navigate) => {
-    console.log('Guardando diagrama...');
     const { value: nombre } = await Swal.fire({
       title: 'Guardar diagrama',
       input: 'text',
