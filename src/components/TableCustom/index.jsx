@@ -333,19 +333,20 @@ const TableCustom = ({ data, columns, ...prop }) => {
 
 		// ------------------------------------
 		// clases para el body de la tabla(muiTableBodyCellProps, muiTableBodyProps, muiTableBodyRowProps)
-		muiTableBodyRowProps: ({ row }) => ({
-			sx: {
-				...prop.body,
-				backgroundColor: prop.ChangeColorRow ? prop.ChangeColorRow(row) && 'yellow' : undefined,
-			},
-		}),
 		muiTableBodyCellProps: ({ row }) => ({
 			sx: {
-				color: prop.ChangeColorRow ? prop.ChangeColorRow(row) && 'black' : undefined,
-
+				backgroundColor:
+					prop.ChangeColorRow && prop.ChangeColorRow(row)
+						? 'yellow !important'
+						: undefined,
+				color:
+					prop.ChangeColorRow && prop.ChangeColorRow(row)
+						? 'black'
+						: undefined,
 				...prop.bodyContent,
 			},
 		}),
+		
 		muiTableBodyProps: {
 			sx: () => ({
 				'& tr:nth-of-type(odd):not([data-selected="true"]):not([data-pinned="true"]) > td': {
