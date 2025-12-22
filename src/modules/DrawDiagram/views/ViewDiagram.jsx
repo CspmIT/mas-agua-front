@@ -257,7 +257,7 @@ function ViewDiagram() {
       ) : (
         <div className="h-[85vh] w-full flex flex-col items-center mb-10">
           <div className="w-full">
-            <div className="absolute ms-2 px-3 z-30 bg-blue-600 text-white font-semibold rounded-t-md shadow-md">
+            <div className="absolute ms-2 px-3 z-30 bg-[#2c6aa0] text-white font-semibold rounded-t-md shadow-md">
               {diagramMetadata.title}
             </div>
           </div>
@@ -266,12 +266,12 @@ function ViewDiagram() {
             <div className="flex-1 w-full h-full rounded-br-lg relative text-end">
               <div className="absolute top-2 left-0 right-0 flex justify-between items-start px-4 z-10">
                 <div className="flex flex-col gap-2">
-                  <IconButton onClick={zoomIn} title="Acercar" className="!bg-blue-400"><LuZoomIn /></IconButton>
-                  <IconButton onClick={zoomOut} title="Alejar" className="!bg-blue-400"><LuZoomOut /></IconButton>
+                  <IconButton onClick={zoomIn} title="Acercar" className="!bg-blue-600 !text-white !shadow-lg"><LuZoomIn /></IconButton>
+                  <IconButton onClick={zoomOut} title="Alejar" className="!bg-blue-600 !text-white !shadow-lg"><LuZoomOut /></IconButton>
                 </div>
 
                 {usuario.profile === 4 && (
-                  <IconButton title="Volver" onClick={() => navigate('/config/diagram')} className="!bg-blue-400">
+                  <IconButton title="Volver" onClick={() => navigate('/config/diagram')} className="!bg-blue-600 !text-white !shadow-sm">
                     <LuArrowLeft />
                   </IconButton>
                 )}

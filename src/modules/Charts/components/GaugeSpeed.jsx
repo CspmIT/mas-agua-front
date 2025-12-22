@@ -9,6 +9,7 @@ const GaugeSpeed = ({
     description2 = '',
 }) => {
     const options = {
+        backgroundColor: 'transparent',
         series: [
             {
                 type: 'gauge',
@@ -18,80 +19,119 @@ const GaugeSpeed = ({
                 radius: '95%',
                 min: 0,
                 max: maxValue,
+
+                // 🟦 Progreso con volumen
                 progress: {
                     show: true,
-                    width: 18,
+                    width: 22,
+                    roundCap: true,
                     itemStyle: {
-                        color: color,
+                        color: {
+                            type: 'linear',
+                            x: 0,
+                            y: 0,
+                            x2: 1,
+                            y2: 1,
+                            colorStops: [
+                                { offset: 0, color: '#c7d2fe' },
+                                { offset: 0.5, color: color },
+                                { offset: 1, color: '#312e81' },
+                            ],
+                        },
+                        shadowBlur: 8,
+                        shadowOffsetY: 3,
+                        shadowColor: 'rgba(0,0,0,0.4)',
                     },
                 },
+
+                // 🛞 Anillo trasero
                 axisLine: {
                     lineStyle: {
-                        width: 18,
+                        width: 22,
+                        color: [[1, '#1f2937']],
+                        // shadowBlur: 15,
+                        // shadowColor: 'rgba(0,0,0,0.5)',
                     },
                 },
-                axisTick: {
-                    show: false,
-                },
+
+                axisTick: { show: false },
+
                 splitLine: {
                     length: 10,
                     lineStyle: {
                         width: 2,
-                        color: '#999',
+                        color: '#9ca3af',
                     },
                 },
+
                 axisLabel: {
                     distance: 25,
-                    color: '#999',
-                    fontSize: 12,
+                    color: '#9ca3af',
+                    fontSize: 10,
+                    fontWeight: 450,
                 },
+
+                // ⚙️ Buje central
                 anchor: {
                     show: true,
                     showAbove: true,
-                    size: 25,
+                    size: 26,
                     itemStyle: {
-                        borderWidth: 10,
+                        color: '#111827',
+                        borderWidth: 8,
                         borderColor: color,
+                        // shadowBlur: 10,
+                        // shadowColor: 'rgba(0,0,0,0.6)',
                     },
                 },
-                title: {
-                    offsetCenter: [0, '95%'],
-                    show: true,
-                    fontSize: 22,
-                },
-                detail: {
-                    valueAnimation: false,
-                    offsetCenter: [0, '80%'],
-                    formatter: function (value) {
-                        return `{value|${value} ${unidad}}\n{sub|${description}}`
-                    },
-                    rich: {
-                        value: {
-                            fontSize: 28,
-                            fontWeight: 'bold',
-                            color: '#333',
-                        },
-                        sub: {
-                            fontSize: 26,
-                            color: '#666',
-                        },
-                    },
-                },
+
+                // 🎯 Aguja mecánica
                 pointer: {
                     show: true,
+                    length: '65%',
+                    width: 6,
                     itemStyle: {
                         color: color,
+                        // shadowBlur: 10,
+                        // shadowColor: 'rgba(0,0,0,0.6)',
                     },
                 },
+
+                // 🔤 Texto inferior
+                title: {
+                    offsetCenter: [0, '95%'],
+                    fontSize: 16,
+                    color: '#374151',
+                },
+
+                detail: {
+                    valueAnimation: false,
+                    offsetCenter: [0, '78%'],
+                    formatter: (val) =>
+                        `{value|${Number(val).toFixed(2)} ${unidad}}\n{sub|${description}}`,
+                    rich: {
+                        value: {
+                            fontSize: 26,
+                            fontWeight: 'bold',
+                            color: '#111827',
+                        },
+                        sub: {
+                            fontSize: 22,
+                            color: '#4b5563',
+                        },
+                    },
+                },
+
                 data: [
                     {
-                        value: value,
+                        value,
                         name: description2,
                     },
                 ],
             },
         ],
     }
+
     return <EChart config={options} />
 }
 

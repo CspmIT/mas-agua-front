@@ -14,43 +14,91 @@ const LiquidFillPorcentaje = ({ value = 0, maxValue = 1, color, shape, porcentag
     const backgroundColor = color ?? '#363f9c'; // Color de fondo por defecto
     const labelColor = isLightColor(backgroundColor) ? '#000000' : '#FFFFFF';
     const percentage = (value / maxValue);
+    const textColor =  percentage > 0.6 ? '#ffffff' : '#0f2a44';
+
     // Opciones para configurar los datos
     const options = {
+        backgroundColor: 'transparent',
         series: [
-            {
-                type: 'liquidFill',
-                data: [percentage],
-                radius: '80%',
-                label: {
-                    formatter: (params) => {
-                        if (porcentage) {
-                            return `${parseFloat((params.value * 100)).toFixed(2)} %`
-                        }
-                        return `${parseFloat(value).toFixed(2)} ${unidad} ${other ? `\n ${other}` : ''}`
-                    },
-                    fontSize: 26,
-                    color: '#000',
-                    insideColor: labelColor,
-                },
-                itemStyle: {
-                    color: color,
-                    shadowColor: 'rgba(0, 0, 0, 0.3)',
-                },
-                outline: {
-                    show: border,
-                    borderDistance: 8,
-                    itemStyle: {
-                        color: 'none',
-                        borderColor: color ?? '#294D99',
-                        borderWidth: 8,
-                    },
-                },
-                shape: shape ?? 'circle',
-                animationEasing: 'cubicOut',
-                silent: true,
+          {
+            type: 'liquidFill',
+            data: [
+              percentage,
+              percentage * 0.98,
+              percentage * 0.96,
+            ],
+            radius: '82%',
+      
+            // 🌊 Agua con volumen
+            itemStyle: {
+              color: {
+                type: 'linear',
+                x: 0,
+                y: 0,
+                x2: 0,
+                y2: 1,
+                colorStops: [
+                  { offset: 0, color: '#a5f3fc' },
+                  { offset: 0.5, color: color ?? '#38bdf8' },
+                  { offset: 1, color: '#0c4a6e' },
+                ],
+              },
+              shadowBlur: 30,
+              shadowOffsetY: 10,
+              shadowColor: 'rgba(0, 0, 0, 0.3)',
             },
+      
+            // 🧊 Ondas más suaves
+            amplitude: 8,
+            waveLength: '80%',
+            period: 4000,
+      
+            // 🔤 Texto flotante
+            label: {
+              show: true,
+              formatter: (params) => {
+                if (porcentage) {
+                  return `${(params.value * 100).toFixed(2)} %`
+                }
+                return `${parseFloat(value).toFixed(2)} ${unidad}${other ? `\n${other}` : ''}`
+              },
+              fontSize: 26,
+              fontWeight: 'bold',
+              color: textColor,
+              textShadowColor: 'rgba(0,0,0,0.3)',
+              textShadowBlur: 8,
+            },
+      
+            // 🛢️ Tanque / borde
+            outline: {
+              show: border,
+              borderDistance: 10,
+              itemStyle: {
+                borderWidth: 10,
+                borderColor: {
+                  type: 'linear',
+                  x: 0,
+                  y: 0,
+                  x2: 1,
+                  y2: 1,
+                  colorStops: [
+                    { offset: 0, color: '#93c5fd' },
+                    { offset: 1, color: '#1e3a8a' },
+                  ],
+                },
+                shadowBlur: 15,
+                shadowColor: 'rgba(0,0,0,0.4)',
+              },
+            },
+      
+            shape: shape ?? 'circle',
+            animationEasing: 'cubicOut',
+            animationDuration: 2000,
+            silent: true,
+          },
         ],
-    }
+      }
+      
 
     return <EChart config={options} />
 }
