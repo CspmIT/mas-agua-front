@@ -104,7 +104,7 @@ function BottonApps() {
 
 	return (
 		<IconButton color='inherit' onClick={handleRedirect}>
-			<AppsIcon sx={{ color: 'black' }} />
+			<AppsIcon sx={{ color: 'white' }} />
 		</IconButton>
 	)
 }

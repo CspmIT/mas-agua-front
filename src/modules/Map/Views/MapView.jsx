@@ -286,15 +286,15 @@ const MapView = ({ create = false, search = false }) => {
 
             {create && !search ? (
                 <div className="w-full">
-                    <div className="absolute mt-1 px-5 z-30 bg-blue-600 text-white font-semibold rounded-t-md shadow-md">
+                    <div className="absolute mt-1 px-5 z-30 bg-[#2c6aa0] text-white font-semibold rounded-t-md shadow-md">
                         Nuevo Mapa
                     </div>
                 </div>
             ) : (
                 <>
                     <div className="w-full">
-                        <div className="absolute mt-1 px-5 z-30 bg-blue-600 text-white font-semibold rounded-t-md shadow-md">
-                            {nameMap}
+                        <div className="absolute mt-1 px-5 z-30 bg-[#2c6aa0] text-white font-semibold rounded-t-md shadow-md">
+                            {nameMap ? nameMap : 'Mapa sin nombre'}
                         </div>
                     </div>
                 </>

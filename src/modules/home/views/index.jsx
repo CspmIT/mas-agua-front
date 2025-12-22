@@ -201,7 +201,7 @@ const Home = () => {
                                 </h1>
                             </div>
                 
-                            <div className="flex-1 flex items-center justify-center p-1">
+                            <div className="flex-1 flex items-center justify-center m-2 ">
                                 <ChartComponentDbWrapper
                                     chartId={chart.id}
                                     ChartComponent={ChartComponentDb}

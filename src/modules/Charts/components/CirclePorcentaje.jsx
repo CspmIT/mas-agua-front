@@ -1,68 +1,74 @@
 import EChart from './EChart'
 
-const CirclePorcentaje = ({ value= 0, maxValue=100, color= '#00FF00' }) => {
+const CirclePorcentaje = ({ value = 0, maxValue = 100, color = '#00FF00' }) => {
     const percentage = ((value / maxValue) * 100).toFixed(2)
 
     const options = {
-
+        backgroundColor: 'transparent',
         series: [
             {
                 type: 'gauge',
                 startAngle: 90,
                 endAngle: -270,
-                pointer: {
-                    show: false,
-                },
+                radius: '90%',
+
+                pointer: { show: false },
+
+                // 🟦 Progreso con volumen
                 progress: {
                     show: true,
-                    overlap: false,
                     roundCap: true,
-                    clip: false,
+                    width: 24,
                     itemStyle: {
-                        borderWidth: 1,
-                        borderColor: color,
-                        color: color,
+                        color: {
+                            type: 'linear',
+                            x: 0,
+                            y: 0,
+                            x2: 1,
+                            y2: 1,
+                            colorStops: [
+                                { offset: 0, color: '#bbf7d0' },
+                                { offset: 0.5, color },
+                                { offset: 1, color: '#064e3b' },
+                            ],
+                        },
+                        // shadowBlur: 20,
+                        // shadowOffsetY: 6,
+                        // shadowColor: 'rgba(0,0,0,0.45)',
                     },
                 },
+
+                // 🛞 Anillo de fondo
                 axisLine: {
                     lineStyle: {
-                        width: 25,
+                        width: 24,
+                        color: [[1, '#1f2937']],
+                        shadowBlur: 12,
+                        shadowColor: 'rgba(0,0,0,0.4)',
                     },
                 },
-                splitLine: {
-                    show: false,
-                },
-                axisTick: {
-                    show: false,
-                },
-                axisLabel: {
-                    show: false,
-                },
-                data: [
-                    {
-                        value: percentage,
-                        title: {
-                            offsetCenter: ['0%', '-30%'],
-                        },
-                        detail: {
-                            valueAnimation: false,
-                            offsetCenter: ['0%', '0%'],
-                        },
-                    },
-                ],
-                title: {
-                    fontSize: 22,
-                },
+
+                splitLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: { show: false },
+
+                data: [{ value: percentage }],
+
+                // 🔤 Texto central
                 detail: {
-                    width: 50,
-                    height: 14,
-                    fontSize: 24,
-                    color: color,
+                    offsetCenter: [0, '0%'],   // centro exacto
+                    fontSize: 26,
+                    fontWeight: 700,
+                    lineHeight: 32,
+                    color: '#0f2a44',
                     formatter: '{value} %',
-                },
+                    textShadowColor: 'rgba(0,0,0,0.25)',
+                    textShadowBlur: 4,
+                }
             },
         ],
     }
+
 
     return <EChart config={options} />
 }

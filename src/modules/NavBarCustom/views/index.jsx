@@ -16,7 +16,7 @@ import { getPermissionDb } from '../utils/js'
 import { PiTabsFill } from 'react-icons/pi'
 import ListIcon from '../../../components/ListIcon'
 import styles from '../utils/css/styles.module.css'
-import Logo from '/src/assets/img/Logo/LogoTextAgua.png'
+import Logo from '/src/assets/img/Logo/LogoTextAgua2.png'
 import { list_menu } from '../../ConfigMenu/components/PermissionMenu/components/data'
 
 function NavBarCustom({ setLoading }) {
