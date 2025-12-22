@@ -159,6 +159,8 @@ const ChartsTable = () => {
                     </Button>
                 </div>
 
+                
+
             </div>
             {!loader ? (
                 <TableCustom
@@ -166,6 +168,7 @@ const ChartsTable = () => {
                     data={charts.length > 0 ? charts : []}
                     pagination={true}
                     pageSize={10}
+                    topToolbar={true}
                 />
             ) : (
                 <LoaderComponent />

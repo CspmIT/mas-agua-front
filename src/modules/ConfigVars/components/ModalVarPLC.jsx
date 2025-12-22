@@ -249,12 +249,13 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                             className="p-5 flex flex-col h-full gap-3 justify-start items-center min-w-[90vw] max-w-[94vw]"
                             onSubmit={handleSubmit(onSubmit)}
                         >
-                            <Typography variant="h4">
+                            <Typography variant="h5">
                                 Configuracion de PLC
                             </Typography>
                             <div className="flex w-full gap-3 justify-center">
                                 <TextField
                                     InputLabelProps={{ shrink: true }}
+                                    size='small'
                                     className="w-3/4"
                                     type="text"
                                     label="Topico"
@@ -264,6 +265,7 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                                 />
                                 <TextField
                                     InputLabelProps={{ shrink: true }}
+                                    size='small'
                                     className="w-1/4"
                                     type="text"
                                     label="Influx"
@@ -287,12 +289,13 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                                     </MenuItem>
                                 </TextField>
                             </div>
-                            <Typography variant="h5">
+                            <Typography variant="h6">
                                 Opciones del PLC
                             </Typography>
                             <div className="flex w-full gap-3">
                                 <TextField
                                     InputLabelProps={{ shrink: true }}
+                                    size='small'
                                     className="w-1/2"
                                     type="text"
                                     label="Modelo del PLC"
@@ -313,6 +316,7 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                                 {/* LOGO_7, LOGO_8, S7_1200 */}
                                 <TextField
                                     InputLabelProps={{ shrink: true }}
+                                    size='small'
                                     className="w-1/2"
                                     type="text"
                                     label="IP del PLC"
@@ -322,6 +326,7 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                                 />
                                 <TextField
                                     InputLabelProps={{ shrink: true }}
+                                    size='small'
                                     className="w-1/2"
                                     type="text"
                                     label="Nombre del servicio"
@@ -333,6 +338,7 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                             <div className="flex w-full gap-3">
                                 <TextField
                                     InputLabelProps={{ shrink: true }}
+                                    size='small'
                                     className="w-1/2"
                                     type="number"
                                     label="RACK"
@@ -342,6 +348,7 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                                 />
                                 <TextField
                                     InputLabelProps={{ shrink: true }}
+                                    size='small'
                                     className="w-1/2"
                                     type="number"
                                     label="SLOT"
@@ -350,12 +357,13 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                                     {...register('slot')}
                                 />
                             </div>
-                            <Typography variant="h5">
+                            <Typography variant="h6">
                                 Puntos de las variables
                             </Typography>
                             <div className="flex w-full gap-3 justify-center items-center">
                                 <TextField
                                     InputLabelProps={{ shrink: true }}
+                                    size='small'
                                     className="w-1/4"
                                     type="number"
                                     label="Inicio"
@@ -368,6 +376,7 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
 
                                 <TextField
                                     InputLabelProps={{ shrink: true }}
+                                    size='small'
                                     className="w-1/4"
                                     type="number"
                                     label="Fin"
@@ -443,6 +452,7 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                                                             InputLabelProps={{
                                                                 shrink: true,
                                                             }}
+                                                            size='small'
                                                             className="w-1/4"
                                                             select
                                                             label="Byte"
@@ -480,6 +490,7 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                                                             InputLabelProps={{
                                                                 shrink: true,
                                                             }}
+                                                            size='small'
                                                             className="w-1/4"
                                                             select
                                                             label="Bit"
@@ -514,6 +525,7 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                                                             InputLabelProps={{
                                                                 shrink: true,
                                                             }}
+                                                            size='small'
                                                             className="w-1/4"
                                                             select
                                                             label="Tipo"
@@ -562,6 +574,7 @@ const ModalVarPLC = ({ open, setOpen, plcProfile = false, list = false }) => {
                                                             InputLabelProps={{
                                                                 shrink: true,
                                                             }}
+                                                            size='small'
                                                             className="w-1/4"
                                                             label="Field"
                                                             value={
