@@ -42,7 +42,7 @@ const CirclePorcentaje = ({ value = 0, maxValue = 100, color = '#00FF00' }) => {
                 axisLine: {
                     lineStyle: {
                         width: 24,
-                        color: [[1, '#1f2937']],
+                        color: [[1, '#657EB333']],
                         shadowBlur: 12,
                         shadowColor: 'rgba(0,0,0,0.4)',
                     },

@@ -9,6 +9,7 @@ import TextEditor from '../components/TextEditor/TextEditor';
 import Sidebar from '../components/Sidebar/Sidebar';
 import DiagramCanvas from '../components/DiagramCanvas/DiagramCanvas';
 import TopNavbar from '../components/TopNavbar/TopNavbar';
+import CardCustom from '../../../components/CardCustom';
 import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box } from '@mui/material';
@@ -396,7 +397,7 @@ const DrawDiagram = () => {
         </Box>
       ) : (
         <>
-          <div className="w-full">
+          <div className="w-full rounded-xl shadow-md border-2 border-gray-400">
             {/* Barra arriba */}
             <TopNavbar
               onClear={handleClearCanvas}
