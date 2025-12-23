@@ -134,6 +134,7 @@ const MapBase = ({
                                 latitude={Number(marker.popupInfo.lat)}
                                 longitude={Number(marker.popupInfo.lng)}
                                 closeOnClick={false}
+                                className='!rounded-xl !shadow-md'
                             >
                                 <Typography variant="body3">
                                     {marker.popupInfo.data.name ?? 'No hay datos'}

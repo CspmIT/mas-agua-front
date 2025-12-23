@@ -48,7 +48,7 @@ const GaugeSpeed = ({
                 axisLine: {
                     lineStyle: {
                         width: 22,
-                        color: [[1, '#1f2937']],
+                        color: [[1, '#657EB333']],
                         // shadowBlur: 15,
                         // shadowColor: 'rgba(0,0,0,0.5)',
                     },
