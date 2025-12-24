@@ -4,11 +4,11 @@ import { backend } from '../../../utils/routes/app.routes'
 import TableCustom from '../../../components/TableCustom'
 import Swal from 'sweetalert2'
 import LoaderComponent from '../../../components/Loader'
-import { Box, Button, FormLabel } from '@mui/material'
+import { Box, Button, FormLabel, IconButton, Tooltip } from '@mui/material'
 import CardCustom from '../../../components/CardCustom'
 import { FaEye } from 'react-icons/fa'
 import { MainContext } from '../../../context/MainContext'
-
+import AlarmRow from '../components/AlarmRow'
 
 const Alert = () => {
     const [listLogs_Alarms, setListLogs_Alarms] = useState([])
@@ -26,27 +26,13 @@ const Alert = () => {
             const { data } = await request(`${url}/listAlerts`, 'GET')
             const columns = [
                 {
-                    header: 'Fecha', accessorKey: 'triggeredAt', size: 100,
-                    cell: info => <span className="whitespace-nowrap">{info.getValue()}</span>
-                },
-                { header: 'Mensaje', accessorKey: 'message' },
-                {
-                    header: '',
-                    accessorKey: 'actions',
-                    size: 50,
+                    header: 'Alarma',
+                    accessorKey: 'message',
                     Cell: ({ row }) => (
-                        !row.original.viewed && (
-                            <Box>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    size="small"
-                                    onClick={() => markAsRead(row.original.id)}
-                                >
-                                    <FaEye className='text-lg' />
-                                </Button>
-                            </Box>
-                        )
+                        <AlarmRow
+                            row={row}
+                            onMarkAsRead={markAsRead}
+                        />
                     ),
                 },
             ]
@@ -111,7 +97,7 @@ const Alert = () => {
     }, [])
 
     return (
-        <div className="flex flex-col w-full h-full gap-6 px-2 sm:px-4 md:px-6">
+        <div className="w-full">
             {loading ? (
                 <LoaderComponent />
             ) : (
@@ -119,22 +105,24 @@ const Alert = () => {
 
                     {/* Header responsivo */}
                     <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-b border-gray-300 dark:border-gray-700 pb-3">
-                        <FormLabel className='w-full text-center !text-3xl md:ms-32'> 
-                            Registro de Alarmas 
+                        <FormLabel className='w-full text-center !text-3xl md:ms-24'>
+                            Registro de Alarmas
                         </FormLabel>
 
-                        <div className="flex justify-center sm:justify-end">
-                            <Button
-                                title='Marcar todas como leídas'
-                                variant="contained"
-                                color="primary"
-                                size="small"
-                                onClick={markAllAsRead}
-                                disabled={!listLogs_Alarms.some(a => !a.viewed)}
-                                className="sm:mx-10"
-                            >
-                                <FaEye className='text-lg my-1' />
-                            </Button>
+                        <div className="flex justify-center sm:justify-end bg-primary rounded-full">
+                            <Tooltip title='Marcar todas como leídas'>
+                                <IconButton
+                                    size="small"
+                                    onClick={markAllAsRead}
+                                    disabled={!listLogs_Alarms.some(a => !a.viewed)}
+                                    sx={{
+                                        m: 0.6,
+                                        color: 'white',
+                                    }}
+                                >
+                                    <FaEye />
+                                </IconButton>
+                            </Tooltip>
                         </div>
                     </div>
 
