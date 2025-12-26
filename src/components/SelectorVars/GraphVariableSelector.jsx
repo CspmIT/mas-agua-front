@@ -30,14 +30,14 @@ const GraphVariableSelector = ({
     const [customName, setCustomName] = useState('')
     const [customColor, setCustomColor] = useState('#000000')
     const [lineStyle, setLineStyle] = useState('line')
-    const [xAxisConfig, setXAxisConfig] = useState( dataChart ?
-        dataChart.getConfig() : {
-            dateTimeType: 'date',
-            dateRange: '',
-            timeRange: '',
-            samplingPeriod: '',
-        }
-    )
+    const [xAxisConfig, setXAxisConfig] = useState({
+        dateTimeType: 'relative',
+        dateRange: '',
+        dateFrom: '',
+        dateTo: '',
+        samplingPeriod: '',
+    })
+
     const [yAxisData, setYAxisData] = useState([])
 
     useEffect(() => {
@@ -133,106 +133,77 @@ const GraphVariableSelector = ({
                 </Button>
                 <Card className="flex-grow">
                     <CardContent className="flex flex-col gap-3">
-                        <Typography
-                            variant="h6"
-                            align="center"
-                            component="div"
-                            className="mb-2"
-                        >
+                        <Typography variant="h6" align="center">
                             Configuración del Eje X
                         </Typography>
-                        <FormControl component="fieldset">
-                            <FormLabel component="legend">
-                                Tipo de Rango
-                            </FormLabel>
-                            <RadioGroup
-                                row
-                                value={xAxisConfig.dateTimeType}
-                                onChange={(e) => {
-                                    setXAxisConfig({
-                                        ...xAxisConfig,
-                                        dateTimeType: e.target.value,
-                                    })
-                                }}
-                            >
-                                <FormControlLabel
-                                    value="date"
-                                    control={<Radio />}
-                                    label="Fecha"
-                                />
-                                <FormControlLabel
-                                    value="time"
-                                    control={<Radio />}
-                                    label="Horas"
-                                />
-                            </RadioGroup>
-                        </FormControl>
-                        {xAxisConfig.dateTimeType === 'date' ? (
-                            <TextField
-                                label="Valores desde"
-                                select
-                                value={xAxisConfig.dateRange}
-                                onChange={(e) =>
-                                    setXAxisConfig({
-                                        ...xAxisConfig,
-                                        dateRange: e.target.value,
-                                    })
-                                }
-                                fullWidth
-                                className="mb-3"
-                            >
-                                <MenuItem value={'-2d'}>
-                                    Últimos 2 días
-                                </MenuItem>
-                                <MenuItem value={'-7d'}>
-                                    Últimos 7 días
-                                </MenuItem>
-                                <MenuItem value={'-30d'}>
-                                    Últimos 30 días
-                                </MenuItem>
-                                <MenuItem value={'-3mo'}>
-                                    Últimos 3 meses
-                                </MenuItem>
-                                <MenuItem value={'-6mo'}>
-                                    Últimos 6 meses
-                                </MenuItem>
-                                <MenuItem value={'-1y'}>Último 1 año</MenuItem>
-                                <MenuItem value={'-2y'}>
-                                    Últimos 2 años
-                                </MenuItem>
-                            </TextField>
-                        ) : (
-                            <TextField
-                                select
-                                value={xAxisConfig.timeRange}
-                                onChange={(e) =>
-                                    setXAxisConfig({
-                                        ...xAxisConfig,
-                                        timeRange: e.target.value,
-                                    })
-                                }
-                                fullWidth
-                                label={'Horas del rango'}
-                            >
-                                {[...Array(25)].map((_, i) => (
-                                    <MenuItem
-                                        key={i + 1}
-                                        value={`-${i + 1}h`}
-                                    >{`${i + 1} horas`}</MenuItem>
-                                ))}
-                            </TextField>
-                        )}
-                        <TextField
-                            select
-                            value={xAxisConfig.samplingPeriod}
+
+                        <RadioGroup
+                            row
+                            value={xAxisConfig.dateTimeType}
                             onChange={(e) =>
                                 setXAxisConfig({
                                     ...xAxisConfig,
-                                    samplingPeriod: e.target.value,
+                                    dateTimeType: e.target.value,
+                                    dateRange: '',
+                                    dateFrom: '',
+                                    dateTo: '',
                                 })
                             }
+                        >
+                            <FormControlLabel value="relative" control={<Radio />} label="Relativo" />
+                            <FormControlLabel value="absolute" control={<Radio />} label="Personalizado" />
+                        </RadioGroup>
+
+                        {xAxisConfig.dateTimeType === 'relative' ? (
+                            <TextField
+                                select
+                                label="Valores desde"
+                                value={xAxisConfig.dateRange}
+                                onChange={(e) =>
+                                    setXAxisConfig({ ...xAxisConfig, dateRange: e.target.value })
+                                }
+                                fullWidth
+                            >
+                                <MenuItem value="-1d">Último día</MenuItem>
+                                <MenuItem value="-7d">Últimos 7 días</MenuItem>
+                                <MenuItem value="-30d">Últimos 30 días</MenuItem>
+                                <MenuItem value="-3mo">Últimos 3 meses</MenuItem>
+                                <MenuItem value="-6mo">Últimos 6 meses</MenuItem>
+                                <MenuItem value="-1y">Último año</MenuItem>
+                            </TextField>
+                        ) : (
+                            <>
+                                <TextField
+                                    type="datetime-local"
+                                    label="Fecha desde"
+                                    value={xAxisConfig.dateFrom}
+                                    onChange={(e) =>
+                                        setXAxisConfig({ ...xAxisConfig, dateFrom: e.target.value })
+                                    }
+                                    InputLabelProps={{ shrink: true }}
+                                    fullWidth
+                                />
+                                <TextField
+                                    type="datetime-local"
+                                    label="Fecha hasta"
+                                    value={xAxisConfig.dateTo}
+                                    onChange={(e) =>
+                                        setXAxisConfig({ ...xAxisConfig, dateTo: e.target.value })
+                                    }
+                                    InputLabelProps={{ shrink: true }}
+                                    fullWidth
+                                />
+                            </>
+                        )}
+
+                        <TextField
+                            select
+                            label="Tiempo de muestreo"
+                            value={xAxisConfig.samplingPeriod}
+                            onChange={(e) =>
+                                setXAxisConfig({ ...xAxisConfig, samplingPeriod: e.target.value })
+                            }
                             fullWidth
-                            label={'Tiempo de muestreo'}
                         >
                             <MenuItem value="1s">1 segundo</MenuItem>
                             <MenuItem value="5s">5 segundos</MenuItem>
@@ -245,12 +216,11 @@ const GraphVariableSelector = ({
                             <MenuItem value="3h">3 horas</MenuItem>
                             <MenuItem value="6h">6 horas</MenuItem>
                             <MenuItem value="12h">12 horas</MenuItem>
-                            <MenuItem value="1d">1 dia</MenuItem>
-                            <MenuItem value="15d">15 dias</MenuItem>
-                            <MenuItem value="1mo">1 mes</MenuItem>
+                            <MenuItem value="1d">1 día</MenuItem>
                         </TextField>
                     </CardContent>
                 </Card>
+
                 <Card className="flex-grow">
                     <CardContent>
                         <Typography

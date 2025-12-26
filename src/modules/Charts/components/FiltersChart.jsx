@@ -11,7 +11,9 @@ const samplingOptions = {
     '>6mo': ["12h", "1d", "15d", "1mo"]
 };
 
-const getSamplingOptions = (dateRange) => {
+const getSamplingOptions = (dateRange, mode) => {
+    console.log('Determining sampling options for dateRange:', dateRange, 'and mode:', mode);
+    if (mode === 'absolute') return samplingOptions['<1d'];
     if (dateRange === "-1d") return samplingOptions['<1d'];
     if (["-7d"].includes(dateRange)) return samplingOptions['1d-7d'];
     if (["-30d"].includes(dateRange)) return samplingOptions['8d-1mo'];
@@ -20,69 +22,129 @@ const getSamplingOptions = (dateRange) => {
 };
 
 const FiltersChart = ({ id_chart, setFilters }) => {
+    const [mode, setMode] = useState('relative')
     const [dateRange, setDateRange] = useState('')
+    const [dateFrom, setDateFrom] = useState('')
+    const [dateTo, setDateTo] = useState('')
     const [samplingPeriod, setSamplingPeriod] = useState('')
 
     const applyFilters = () => {
-        if (!dateRange || !samplingPeriod) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Atención!',
-                html: "Debe seleccionar valor desde y tiempo de muestreo"
-            })
+        if (!samplingPeriod) {
+            Swal.fire('Error', 'Seleccione tiempo de muestreo', 'error')
             return
         }
-        setFilters((prevFilters) => ({
-            ...prevFilters,
-            [id_chart]: { dateRange, samplingPeriod },
+
+        if (mode === 'relative' && !dateRange) {
+            Swal.fire('Error', 'Seleccione un rango relativo', 'error')
+            return
+        }
+
+        if (mode === 'absolute' && (!dateFrom || !dateTo)) {
+            Swal.fire('Error', 'Seleccione fecha desde y hasta', 'error')
+            return
+        }
+
+        if (mode === 'absolute' && dateFrom >= dateTo) {
+            Swal.fire('Error', 'La fecha desde debe ser menor a la fecha hasta', 'error')
+            return
+        }
+
+        setFilters(prev => ({
+            ...prev,
+            [id_chart]: {
+                type: mode,
+                dateRange,
+                dateFrom,
+                dateTo,
+                samplingPeriod,
+            },
         }))
     }
 
     const clearFilters = () => {
+        setMode('relative')
         setDateRange('')
+        setDateFrom('')
+        setDateTo('')
         setSamplingPeriod('')
-        setFilters((prevFilters) => ({
-            ...prevFilters,
-            [id_chart]: { dateRange: '', samplingPeriod: '' },
+
+        setFilters(prev => ({
+            ...prev,
+            [id_chart]: {},
         }))
     }
 
     return (
         <>
-            <CardCustom className="w-4/6 bg-slate-100 p-4 rounded-md border-2 border-slate-200 shadow-md shadow-slate-100">
-                <div className="grid grid-cols-3 gap-3 items-center">
+            <CardCustom className="w-5/6 bg-slate-100 p-4 rounded-md border-2 border-slate-200 shadow-md shadow-slate-100 items-center">
+                <div className={`grid ${mode === 'relative' ? 'grid-cols-4' : 'grid-cols-5'} gap-3 items-center`}>
                     <TextField
-                        label="Valores desde"
                         select
-                        value={dateRange}
+                        label="Tipo de rango"
+                        value={mode}
                         onChange={(e) => {
-                            setDateRange(e.target.value);
-                            setSamplingPeriod(''); // Reset sampling when changing date range
+                            setMode(e.target.value)
+                            setDateRange('')
+                            setDateFrom('')
+                            setDateTo('')
                         }}
                         fullWidth
-                        className="!bg-white !border-white"
                     >
-                        <MenuItem value={'-1d'}>Último día</MenuItem>
-                        <MenuItem value={'-7d'}>Últimos 7 días</MenuItem>
-                        <MenuItem value={'-30d'}>Últimos 30 días</MenuItem>
-                        <MenuItem value={'-3mo'}>Últimos 3 meses</MenuItem>
-                        <MenuItem value={'-6mo'}>Últimos 6 meses</MenuItem>
-                        <MenuItem value={'-1y'}>Último 1 año</MenuItem>
+                        <MenuItem value="relative">Relativo</MenuItem>
+                        <MenuItem value="absolute">Personalizado</MenuItem>
                     </TextField>
+
+                    {mode === 'relative' ? (
+                        <TextField
+                            select
+                            label="Valores desde"
+                            value={dateRange}
+                            onChange={(e) => {
+                                setDateRange(e.target.value)
+                                setSamplingPeriod('')
+                            }}
+                            fullWidth
+                        >
+                            <MenuItem value="-1d">Último día</MenuItem>
+                            <MenuItem value="-7d">Últimos 7 días</MenuItem>
+                            <MenuItem value="-30d">Últimos 30 días</MenuItem>
+                            <MenuItem value="-3mo">Últimos 3 meses</MenuItem>
+                            <MenuItem value="-6mo">Últimos 6 meses</MenuItem>
+                            <MenuItem value="-1y">Último año</MenuItem>
+                        </TextField>
+                    ) : (
+                        <>
+                            <TextField
+                                type="datetime-local"
+                                label="Fecha desde"
+                                value={dateFrom}
+                                onChange={(e) => setDateFrom(e.target.value)}
+                                InputLabelProps={{ shrink: true }}
+                                fullWidth
+                            />
+                            <TextField
+                                type="datetime-local"
+                                label="Fecha hasta"
+                                value={dateTo}
+                                onChange={(e) => setDateTo(e.target.value)}
+                                InputLabelProps={{ shrink: true }}
+                                fullWidth
+                            />
+                        </>
+                    )}
 
                     <TextField
                         select
+                        label="Tiempo de muestreo"
                         value={samplingPeriod}
                         onChange={(e) => setSamplingPeriod(e.target.value)}
                         fullWidth
-                        className="!bg-white !border-white"
-                        label="Tiempo de muestreo"
-                        disabled={!dateRange}
                     >
-                        {getSamplingOptions(dateRange).map((option) => (
-                            <MenuItem key={option} value={option}>{option}</MenuItem>
+                        {getSamplingOptions(dateRange, mode).map(opt => (
+                            <MenuItem key={opt} value={opt}>{opt}</MenuItem>
                         ))}
                     </TextField>
+
 
                     <div className="flex gap-3 items-center justify-center">
                         <Button
@@ -90,7 +152,7 @@ const FiltersChart = ({ id_chart, setFilters }) => {
                             variant="contained"
                             color="primary"
                             onClick={applyFilters}
-                            disabled={!dateRange || !samplingPeriod}
+                            // disabled={!dateRange || !samplingPeriod}
                         >
                             Aplicar
                         </Button>

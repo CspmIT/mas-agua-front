@@ -33,47 +33,60 @@ export class LineChartRepository extends SeriesChart {
     }
 
     generateQuery(filters = {}) {
+        console.log('Generating query with filters:', filters)
         try {
-            if (!this.series || this.series.length === 0) return ''
-
-            const config = this.getConfig()
-
-            const queries = this.series.flatMap((serie) => {
-                const influxVars = serie.InfluxVars
-                if (!influxVars || !influxVars.varsInflux) return []
-
-                const influxVarName = influxVars.name
-                const vars = influxVars.varsInflux[influxVarName]
-                console.log(influxVars)
-                if (!vars) return []
-
-                const dateRange =
-                    config.dateTimeType === 'date'
-                        ? filters[this.chart.id]?.dateRange || config.dateRange
-                        : filters[this.chart.id]?.dateRange || config.timeRange
-
-                const samplingPeriod =
-                    filters[this.chart.id]?.samplingPeriod ||
-                    config.samplingPeriod
-
-                return {
-                    varId: serie.source_id, // parece que acá debería ser el source_id
-                    field: vars.calc_field,
-                    topic: vars.calc_topic,
-                    name: serie.name,
-                    dateRange: dateRange || '-7d',
-                    samplingPeriod: samplingPeriod || '1h',
-                    typePeriod: vars.calc_type_period,
-                    render: true,
-                    type: 'history',
-                    calc: influxVars.calc,
-                    equation: influxVars.equation
-                }
-            })
-
-            return queries
+          if (!this.series || this.series.length === 0) return []
+      
+          const config = this.getConfig()
+          const filter = filters[this.chart.id] || {}
+      
+          return this.series.flatMap((serie) => {
+            const influxVars = serie.InfluxVars
+            if (!influxVars || !influxVars.varsInflux) return []
+      
+            const influxVarName = influxVars.name
+            const vars = influxVars.varsInflux[influxVarName]
+            if (!vars) return []
+      
+            const samplingPeriod =
+              filter.samplingPeriod || config.samplingPeriod || '1h'
+      
+            // 🧠 DECISIÓN DE RANGO (ACÁ ESTABA EL ERROR)
+            let timeConfig = {}
+      
+            if (filter.type === 'absolute') {
+              timeConfig = {
+                typePeriod: 'between',
+                dateFrom: filter.dateFrom,
+                dateTo: filter.dateTo,
+              }
+            } else {
+              timeConfig = {
+                typePeriod: 'last',
+                dateRange:
+                  filter.dateRange || config.dateRange || '-7d',
+              }
+            }
+      
+            return {
+              varId: serie.source_id, // ✔ correcto
+              field: vars.calc_field,
+              topic: vars.calc_topic,
+              name: serie.name,
+      
+              samplingPeriod,
+      
+              ...timeConfig, // 👈 acá está la magia bien hecha
+      
+              render: true,
+              type: 'history',
+              calc: influxVars.calc,
+              equation: influxVars.equation,
+            }
+          })
         } catch (error) {
-            throw Error(error)
+          throw Error(error)
         }
-    }
+      }
+      
 }
