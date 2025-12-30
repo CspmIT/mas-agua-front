@@ -185,7 +185,7 @@ const ConfigGraphic = () => {
 
     return (
         <VarsProvider>
-            <div className="w-full bg-white p-5 rounded-lg shadow-md h-fit">
+            <div className="w-full bg-white p-3 rounded-lg shadow-md h-fit">
                 <HeaderForms idChart={idChart} chartName={idChart ? chart : false}/>
 
                 <form

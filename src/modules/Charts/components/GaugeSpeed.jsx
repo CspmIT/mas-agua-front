@@ -99,19 +99,19 @@ const GaugeSpeed = ({
 
                 // 🔤 Texto inferior
                 title: {
-                    offsetCenter: [0, '95%'],
+                    offsetCenter: [0, '75%'],
                     fontSize: 16,
                     color: '#374151',
                 },
 
                 detail: {
                     valueAnimation: false,
-                    offsetCenter: [0, '78%'],
+                    offsetCenter: [0, '93%'],
                     formatter: (val) =>
                         `{value|${Number(val).toFixed(2)} ${unidad}}\n{sub|${description}}`,
                     rich: {
                         value: {
-                            fontSize: 26,
+                            fontSize: 24,
                             fontWeight: 'bold',
                             color: '#111827',
                         },
