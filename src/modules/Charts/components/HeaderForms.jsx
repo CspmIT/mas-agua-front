@@ -11,7 +11,7 @@ const HeaderForms = ({idChart, chart}) => {
                     sx={{
                         color: 'black',
                         marginRight: 2,
-                        padding: '8px',
+                        padding: '4px',
                     }}
                     aria-label="volver atrás"
                     onClick={() => {
@@ -23,9 +23,9 @@ const HeaderForms = ({idChart, chart}) => {
                     <ArrowBack sx={{ fontSize: '1.5rem' }} />
                 </IconButton>
             </div>
-            <Typography className="text-center !mb-5" variant="h3">
+            <Typography className="text-center !mb-5" variant="h4">
                 {idChart
-                    ? `Edición del gráfico "${chart?.name || ''}"`
+                    ? `Edición del gráfico ${chart?.name || ''}`
                     : 'Configuración de gráfico'}
             </Typography>
         </>
