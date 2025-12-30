@@ -33,17 +33,18 @@ export class LineChartRepository extends SeriesChart {
     }
 
     generateQuery(filters = {}) {
-        console.log('Generating query with filters:', filters)
         try {
+          
           if (!this.series || this.series.length === 0) return []
-      
+          
           const config = this.getConfig()
           const filter = filters[this.chart.id] || {}
       
           return this.series.flatMap((serie) => {
             const influxVars = serie.InfluxVars
+            console.log(influxVars)
             if (!influxVars || !influxVars.varsInflux) return []
-      
+            
             const influxVarName = influxVars.name
             const vars = influxVars.varsInflux[influxVarName]
             if (!vars) return []
@@ -51,7 +52,7 @@ export class LineChartRepository extends SeriesChart {
             const samplingPeriod =
               filter.samplingPeriod || config.samplingPeriod || '1h'
       
-            // 🧠 DECISIÓN DE RANGO (ACÁ ESTABA EL ERROR)
+            // 🧠 DECISIÓN DE RANGO
             let timeConfig = {}
       
             if (filter.type === 'absolute') {
@@ -73,13 +74,13 @@ export class LineChartRepository extends SeriesChart {
               field: vars.calc_field,
               topic: vars.calc_topic,
               name: serie.name,
+              type: influxVars.type,
       
               samplingPeriod,
       
               ...timeConfig, // 👈 acá está la magia bien hecha
       
               render: true,
-              type: 'history',
               calc: influxVars.calc,
               equation: influxVars.equation,
             }

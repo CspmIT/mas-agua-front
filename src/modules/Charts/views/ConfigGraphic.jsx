@@ -34,16 +34,16 @@ const ConfigGraphic = () => {
     }
 
     function isValidXConfig(xAxisConfig) {
-        if (xAxisConfig.dateTimeType === 'date') {
+        if (xAxisConfig.dateTimeType === 'relative') {
             return (
                 xAxisConfig.dateRange !== '' &&
                 xAxisConfig.samplingPeriod !== ''
             )
         }
-        if (xAxisConfig.dateTimeType === 'time') {
+        if (xAxisConfig.dateTimeType === 'absolute') {
             return (
-                xAxisConfig.timeRange !== '' &&
-                xAxisConfig.samplingPeriod !== ''
+                xAxisConfig.dateFrom !== '' &&
+                xAxisConfig.dateTo !== ''
             )
         }
         return false
@@ -51,7 +51,7 @@ const ConfigGraphic = () => {
 
     const saveLineChart = async (data) => {
         const { title, type, xAxisConfig, yData } = data
-
+        console.log(data)
         if (!title.trim()) {
             Swal.fire({
                 icon: 'error',

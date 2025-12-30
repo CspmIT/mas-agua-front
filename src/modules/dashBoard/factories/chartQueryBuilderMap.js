@@ -17,7 +17,6 @@ export const chartQueryBuilderMap = {
         )
 
         const query = lineChart.generateQuery(filters)
-        console.log('Generated Query:', query)
         const { data } = await request(
             `${backend['Mas Agua']}/seriesDataInflux`,
             'POST',
