@@ -12,7 +12,7 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
     const [customColor, setCustomColorProp] = useState('#f0f0f0')
     const [lineStyle, setLineStyleProp] = useState('line')
     const [title, setTitle] = useState('')
-    const [order, setOrder] = useState(undefined)
+    const [order, setOrder] = useState('')
     const [lineChart, setLineChart] = useState(false)
     const ChartComponent = lazy(() => import(`../components/${chartType}.jsx`))
 
@@ -84,7 +84,7 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
                     smooth: lineStyle === 'smooth',
                     color: customColor,
                 })
-                setOrder(chart.order)
+                setOrder(chart.order !== undefined ? String(chart.order) : '')
                 setTitle(chart.title)
                 setData({ xType, xSeries, yType, ySeries })
                 setLineChart(chartLine)
@@ -174,7 +174,7 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
                 <TextField
                     className="w-full"
                     placeholder="Posicion en el dashboard de graficos"
-                    defaultValue={order}
+                    value={order}
                     onChange={(e) => {
                         setOrder(e.target.value)
                     }}
