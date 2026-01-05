@@ -128,7 +128,7 @@ export default function PumpControl({
 
     return (
         <>
-            <Card className={`${edit ? 'max-w-2xl' : 'w-full'} mx-auto h-fit !shadow-none`}>
+            <Card className={`${edit ? 'max-w-2xl' : 'w-full'} h-full !shadow-none`}>
                 {edit && (
                     <Button
                         onClick={() => navigate(-1)} // Volver atrás
@@ -177,7 +177,7 @@ export default function PumpControl({
                     {states.map((item) => (
                         <div
                             key={item.id}
-                            className="bg-gray-100 rounded-md relative flex justify-center items-center mb-2 p-1"
+                            className="!bg-gray-100 border-2 border-gray-200 rounded-md relative flex justify-center items-center mb-2"
                         >
                             {edit && (
                                 <Button
@@ -190,7 +190,7 @@ export default function PumpControl({
                                 </Button>
                             )}
 
-                            <Typography variant="h6">{item.name}: </Typography>
+                            <Typography variant="h6" mx={1}>{item.name}: </Typography>
                             <Typography
                                 variant="h6"
                                 className={`font-bold ${item.color}`}
@@ -213,7 +213,7 @@ export default function PumpControl({
                             return (
                                 <Card
                                     key={pump.id}
-                                    className="!relative !bg-gray-100 w-full max-w-sm max-h-36"
+                                    className="!relative !bg-gray-100 border-2 border-gray-200 w-full max-w-sm max-h-36"
                                 >
                                     {edit && (
                                         <Button
@@ -232,7 +232,7 @@ export default function PumpControl({
                                         <h4 className="text-md text-center font-small">
                                             {pump.name}
                                         </h4>
-                                        <p className="text-lg text-center font-bold text-blue-500 pt-2">
+                                        <p className="text-xl text-center font-bold text-blue-600 pt-2">
                                             {pump.value
                                                 ? pump.value + ' ' + pump.unit
                                                 : '-'}

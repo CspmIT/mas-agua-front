@@ -5,18 +5,16 @@ const LineChart = memo(({ xType, xSeries, yType, ySeries }) => {
     const memoizedXSeries = useMemo(() => [...xSeries], [xSeries])
 
     const memoizedYSeries = useMemo(() => {
-        const showArea = ySeries.length === 1
-    
         return ySeries.map(series => ({
-            ...series,
-            data: [...series.data],
-            ...(showArea && {
-                areaStyle: {
-                    opacity: 0.1
-                }
-            })
+          ...series,
+          data: [...series.data],
+          ...(series.areaStyle && {
+            areaStyle: {
+              opacity: 0.15
+            }
+          })
         }))
-    }, [ySeries])    
+      }, [ySeries])         
     
     const maxLabels = 24
     const interval = Math.ceil(memoizedXSeries.length / maxLabels)

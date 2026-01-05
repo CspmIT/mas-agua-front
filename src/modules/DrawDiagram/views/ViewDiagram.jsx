@@ -262,7 +262,7 @@ function ViewDiagram() {
             </div>
           </div>
 
-          <CardCustom className="w-full h-full flex flex-col items-center justify-center !bg-gray-300 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
+          <CardCustom className="w-full h-full flex flex-col items-center justify-center !bg-gray-300/50 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
             <div className="flex-1 w-full h-full rounded-br-lg relative text-end">
               <div className="absolute top-2 left-0 right-0 flex justify-between items-start px-4 z-10">
                 <div className="flex flex-col gap-2">

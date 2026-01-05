@@ -11,6 +11,7 @@ export class LineChartRepository extends SeriesChart {
                 idVar: serie.InfluxVars,
                 smooth: serie.line === 'smooth',
                 color: serie.color,
+                areaStyle: serie.areaStyle || null,
             }))
         } catch (error) {
             throw Error(error)
@@ -42,7 +43,6 @@ export class LineChartRepository extends SeriesChart {
       
           return this.series.flatMap((serie) => {
             const influxVars = serie.InfluxVars
-            console.log(influxVars)
             if (!influxVars || !influxVars.varsInflux) return []
             
             const influxVarName = influxVars.name
@@ -52,7 +52,6 @@ export class LineChartRepository extends SeriesChart {
             const samplingPeriod =
               filter.samplingPeriod || config.samplingPeriod || '1h'
       
-            // 🧠 DECISIÓN DE RANGO
             let timeConfig = {}
       
             if (filter.type === 'absolute') {
@@ -70,7 +69,7 @@ export class LineChartRepository extends SeriesChart {
             }
       
             return {
-              varId: serie.source_id, // ✔ correcto
+              varId: serie.source_id, 
               field: vars.calc_field,
               topic: vars.calc_topic,
               name: serie.name,
@@ -78,7 +77,7 @@ export class LineChartRepository extends SeriesChart {
       
               samplingPeriod,
       
-              ...timeConfig, // 👈 acá está la magia bien hecha
+              ...timeConfig,
       
               render: true,
               calc: influxVars.calc,

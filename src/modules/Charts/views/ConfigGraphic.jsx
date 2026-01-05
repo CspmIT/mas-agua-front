@@ -51,7 +51,6 @@ const ConfigGraphic = () => {
 
     const saveLineChart = async (data) => {
         const { title, type, xAxisConfig, yData } = data
-        console.log(data)
         if (!title.trim()) {
             Swal.fire({
                 icon: 'error',

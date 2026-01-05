@@ -12,7 +12,6 @@ const samplingOptions = {
 };
 
 const getSamplingOptions = (dateRange, mode) => {
-    console.log('Determining sampling options for dateRange:', dateRange, 'and mode:', mode);
     if (mode === 'absolute') return samplingOptions['<1d'];
     if (dateRange === "-1d") return samplingOptions['<1d'];
     if (["-7d"].includes(dateRange)) return samplingOptions['1d-7d'];

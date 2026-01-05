@@ -18,7 +18,7 @@ const BooleanChart = ({
             {
                 type: 'scatter',
                 symbol: 'circle',
-                symbolSize: 90,
+                symbolSize: 110,
                 data: [[0.5, 0.55]],
                 itemStyle: {
                     color: value
@@ -54,7 +54,7 @@ const BooleanChart = ({
             {
                 type: 'scatter',
                 symbol: 'circle',
-                symbolSize: 110,
+                symbolSize: 130,
                 data: [[0.5, 0.55]],
                 itemStyle: {
                     color: 'transparent',

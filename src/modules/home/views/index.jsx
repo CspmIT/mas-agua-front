@@ -150,7 +150,7 @@ const Home = () => {
 
             // Configurar interval
             if (intervalRef.current) clearInterval(intervalRef.current)
-            intervalRef.current = setInterval(() => fetchMultipleData(allVars), 15000)
+            intervalRef.current = setInterval(() => fetchMultipleData(allVars), 30000)
 
         } catch (error) {
             Swal.fire({
@@ -195,13 +195,13 @@ const Home = () => {
                         key={index}
                     >
                         <CardCustom className={`flex flex-col rounded-xl h-[40dvh] overflow-hidden`}>
-                            <div className="h-14 flex items-center justify-center text-center">
+                            <div className="h-[8dvh] flex items-center justify-center text-center mt-1">
                                 <h1 className="text-xl leading-tight line-clamp-2">
                                     {chart?.props?.title}
                                 </h1>
                             </div>
                 
-                            <div className="flex-1 flex items-center justify-center m-2 ">
+                            <div className="flex-1 flex items-center justify-center mx-1">
                                 <ChartComponentDbWrapper
                                     chartId={chart.id}
                                     ChartComponent={ChartComponentDb}

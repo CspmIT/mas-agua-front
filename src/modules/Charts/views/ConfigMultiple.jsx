@@ -12,7 +12,8 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
     const [customColor, setCustomColorProp] = useState('#f0f0f0')
     const [lineStyle, setLineStyleProp] = useState('line')
     const [title, setTitle] = useState('')
-    const [order, setOrder] = useState(undefined)
+    const [areaStyle, setAreaStyleProp] = useState(false)
+    const [order, setOrder] = useState('')
     const [lineChart, setLineChart] = useState(false)
     const ChartComponent = lazy(() => import(`../components/${chartType}.jsx`))
 
@@ -31,7 +32,8 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
                     ...updatedYSeries[styleIndex],
                     type: lineStyle === 'smooth' ? 'line' : lineStyle,
                     smooth: lineStyle === 'smooth',
-                    color: customColor
+                    color: customColor,
+                    areaStyle: areaStyle ? {} : undefined
                 };
 
                 setData(prevData => ({
@@ -40,14 +42,14 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
                 }));
             }
         }
-    }, [customColor, lineStyle]);
+    }, [customColor, lineStyle, areaStyle]);
 
     // Efecto para actualizar estilo y color cuando cambien
     useEffect(() => {
         if (!loader && data.ySeries) {
             updateStyleAndColor();
         }
-    }, [customColor, lineStyle, updateStyleAndColor, loader]);
+    }, [customColor, lineStyle, areaStyle, updateStyleAndColor, loader]);
 
     // Cargar datos iniciales con chartData
     useEffect(() => {
@@ -83,8 +85,9 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
                     data: [15, 25, 20, 4, 5, 30, 37, 45], // Ventas de Producto A
                     smooth: lineStyle === 'smooth',
                     color: customColor,
+                    areaStyle: areaStyle || false,
                 })
-                setOrder(chart.order)
+                setOrder(chart.order !== undefined ? String(chart.order) : '')
                 setTitle(chart.title)
                 setData({ xType, xSeries, yType, ySeries })
                 setLineChart(chartLine)
@@ -121,6 +124,7 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
                             data: [15, 25, 20, 4, 5, 30, 37, 45], // Ventas de Producto A
                             smooth: lineStyle === 'smooth',
                             color: customColor,
+                            areaStyle: areaStyle || false,
                         },
                         {
                             name: 'Product B', // Nombre del producto
@@ -170,11 +174,12 @@ const ConfigMultiple = ({ id, setValue, chartData = false }) => {
                     setCustomColorProp={setCustomColorProp}
                     setLineStyleProp={setLineStyleProp}
                     dataChart={lineChart}
+                    setAreaStyleProp={setAreaStyleProp}
                 />
                 <TextField
                     className="w-full"
                     placeholder="Posicion en el dashboard de graficos"
-                    defaultValue={order}
+                    value={order}
                     onChange={(e) => {
                         setOrder(e.target.value)
                     }}

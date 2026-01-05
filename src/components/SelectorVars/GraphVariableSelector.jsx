@@ -16,6 +16,7 @@ import {
     RadioGroup,
     FormControlLabel,
     Radio,
+    Checkbox,
 } from '@mui/material'
 import DeleteIcon from '@mui/icons-material/Delete'
 import SelectVars from '../../modules/Charts/components/SelectVars'
@@ -24,12 +25,14 @@ const GraphVariableSelector = ({
     setValue,
     setCustomColorProp,
     setLineStyleProp,
+    setAreaStyleProp,
     dataChart = false,
 }) => {
     const [valueState, setValueState] = useState(null)
     const [customName, setCustomName] = useState('')
     const [customColor, setCustomColor] = useState('#000000')
     const [lineStyle, setLineStyle] = useState('line')
+    const [useAreaStyle, setUseAreaStyle] = useState(false)
     const [xAxisConfig, setXAxisConfig] = useState({
         dateTimeType: 'relative',
         dateRange: '',
@@ -50,6 +53,7 @@ const GraphVariableSelector = ({
                 source_id: serie.idVar.id,
                 smooth: serie.smooth,
                 color: serie.color,
+                areaStyle: serie.areaStyle
             }))
             setYAxisData(yData)
         }
@@ -69,6 +73,7 @@ const GraphVariableSelector = ({
                 line: lineStyle,
                 smooth: lineStyle === 'smooth',
                 color: customColor,
+                areaStyle: useAreaStyle
             }
             setYAxisData([...yAxisData, newVariable])
             setValueState(null)
@@ -122,6 +127,20 @@ const GraphVariableSelector = ({
                     <MenuItem value="bar">Barra</MenuItem>
                     <MenuItem value="scatter">Punto único</MenuItem>
                 </Select>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={useAreaStyle}
+                            onChange={(e) => {
+                                const checked = e.target.checked
+                                setUseAreaStyle(checked)
+                                setAreaStyleProp(checked) // ← CLAVE
+                            }}
+                        />
+                    }
+                    label="Mostrar área bajo la curva"
+                />
+
                 <Button
                     variant="contained"
                     color="primary"
