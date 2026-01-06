@@ -3,12 +3,11 @@ import EChart from './EChart'
 
 const BooleanChart = ({
     value,
-    labelOn = 'Encendido',
-    labelOff = 'Apagado',
+    textOn = 'Encendido',
+    textOff = 'Apagado',
     colorOn = '#00ff00',
     colorOff = '#444',
 }) => {
-
     const option = {
         xAxis: { show: false, min: 0, max: 1 },
         yAxis: { show: false, min: 0, max: 1 },
@@ -77,8 +76,8 @@ const BooleanChart = ({
                                 value === undefined
                                     ? 'Sin datos'
                                     : value
-                                        ? labelOn
-                                        : labelOff,
+                                        ? textOn
+                                        : textOff,
                             x: api.getWidth() / 2,
                             y: api.getHeight() * 0.82,
                             textAlign: 'center',
