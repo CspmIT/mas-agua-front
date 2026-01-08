@@ -106,7 +106,7 @@ const GaugeSpeed = ({
 
                 detail: {
                     valueAnimation: false,
-                    offsetCenter: [0, '93%'],
+                    offsetCenter: [0, '85%'],
                     formatter: (val) =>
                         `{value|${Number(val).toFixed(2)} ${unidad}}\n{sub|${description}}`,
                     rich: {
