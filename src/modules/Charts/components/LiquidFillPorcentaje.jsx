@@ -84,7 +84,17 @@ const LiquidFillPorcentaje = ({
 
   if (!hasMultiple) {
 
-    const percentage = Math.max(0, Math.min(1, value / maxValue))
+    const hasValue = isValidNumber(value)
+    const hasMax = isValidNumber(maxValue)
+
+    const safeValue = hasValue ? Number(value) : null
+    const safeMax = hasMax ? Number(maxValue) : 1
+
+    const percentage =
+      hasValue && hasMax
+        ? Math.max(0, Math.min(1, safeValue / safeMax))
+        : 0
+
     const cfg = SHAPE_CONFIG[shape] ?? SHAPE_CONFIG.circle
 
     const textColor =
@@ -137,11 +147,15 @@ const LiquidFillPorcentaje = ({
             show: true,
 
             formatter: (params) => {
+              if (!hasValue) {
+                return 'Sin datos'
+              }
+  
               if (porcentage) {
                 return `${(params.value * 100).toFixed(1)} %`
               }
-
-              return `${parseFloat(value).toFixed(2)} ${unidad}${other ? `\n${other}` : ''}`
+  
+              return `${safeValue.toFixed(2)} ${unidad}${other ? `\n${other}` : ''}`
             },
 
             fontSize: cfg.fontSize,
