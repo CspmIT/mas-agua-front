@@ -1,7 +1,22 @@
 import EChart from './EChart'
 
+const isValidNumber = (v) =>
+    v !== null &&
+    v !== undefined &&
+    v !== '' &&
+    !isNaN(Number(v))
+
 const CirclePorcentaje = ({ value = 0, maxValue = 100, color = '#00FF00' }) => {
-    const percentage = ((value / maxValue) * 100).toFixed(2)
+    const hasValue = isValidNumber(value)
+    const hasMax = isValidNumber(maxValue)
+
+    const safeValue = hasValue ? Number(value) : 0
+    const safeMax = hasMax ? Number(maxValue) : 1
+
+    const percentage =
+        hasValue && hasMax
+            ? Number(((safeValue / safeMax) * 100).toFixed(2))
+            : 0
 
     const options = {
         backgroundColor: 'transparent',
@@ -20,21 +35,20 @@ const CirclePorcentaje = ({ value = 0, maxValue = 100, color = '#00FF00' }) => {
                     roundCap: true,
                     width: 24,
                     itemStyle: {
-                        color: {
-                            type: 'linear',
-                            x: 0,
-                            y: 0,
-                            x2: 1,
-                            y2: 1,
-                            colorStops: [
-                                { offset: 0, color: '#bbf7d0' },
-                                { offset: 0.5, color },
-                                { offset: 1, color: '#064e3b' },
-                            ],
-                        },
-                        // shadowBlur: 20,
-                        // shadowOffsetY: 6,
-                        // shadowColor: 'rgba(0,0,0,0.45)',
+                        color: hasValue
+                            ? {
+                                type: 'linear',
+                                x: 0,
+                                y: 0,
+                                x2: 1,
+                                y2: 1,
+                                colorStops: [
+                                    { offset: 0, color: '#bbf7d0' },
+                                    { offset: 0.5, color },
+                                    { offset: 1, color: '#064e3b' },
+                                ],
+                            }
+                            : '#cbd5e1', // gris cuando no hay datos
                     },
                 },
 
@@ -56,15 +70,18 @@ const CirclePorcentaje = ({ value = 0, maxValue = 100, color = '#00FF00' }) => {
 
                 // 🔤 Texto central
                 detail: {
-                    offsetCenter: [0, '0%'],   // centro exacto
+                    offsetCenter: [0, '0%'],
                     fontSize: 26,
                     fontWeight: 700,
                     lineHeight: 32,
                     color: '#0f2a44',
-                    formatter: '{value} %',
+                    formatter: () =>
+                        hasValue
+                            ? `${percentage} %`
+                            : 'Sin datos',
                     textShadowColor: 'rgba(0,0,0,0.25)',
                     textShadowBlur: 4,
-                }
+                },
             },
         ],
     }
