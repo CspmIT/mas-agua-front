@@ -71,7 +71,7 @@ const CirclePorcentaje = ({ value = 0, maxValue = 100, color = '#00FF00' }) => {
                 // 🔤 Texto central
                 detail: {
                     offsetCenter: [0, '0%'],
-                    fontSize: 26,
+                    fontSize: 24,
                     fontWeight: 700,
                     lineHeight: 32,
                     color: '#0f2a44',
