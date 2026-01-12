@@ -304,7 +304,7 @@ const LiquidFillPorcentaje = ({
             },
 
             sec: {
-              fontSize: 22,
+              fontSize: 20,
               fontWeight: 'bold',
               color: textColor,
             },

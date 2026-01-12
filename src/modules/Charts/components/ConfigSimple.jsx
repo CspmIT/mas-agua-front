@@ -23,10 +23,16 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
     const [bottom1Enabled, setBottom1Enabled] = useState(
         !!chartData?.ChartData?.find((d) => d.key === 'bottom1')
     )
-
     const [bottom1Label, setBottom1Label] = useState(
         chartData?.ChartData?.find(d => d.key === 'bottom1')?.label || ''
-    )    
+    )
+    
+    const [bottom2Enabled, setBottom2Enabled] = useState(
+        !!chartData?.ChartData?.find((d) => d.key === 'bottom2')
+    )
+    const [bottom2Label, setBottom2Label] = useState(
+        chartData?.ChartData?.find(d => d.key === 'bottom2')?.label || ''
+    )
  
 
     const [config, setConfig] = useState(() =>
@@ -134,6 +140,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             error={errors.title}
                             helperText={errors.title && errors.title.message}
                             onChange={(e) => setTitle(e.target.value)}
+                            size="small"
                         />
                         {configs[id].format && (
                             <TextField
@@ -145,6 +152,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 })}
                                 onChange={handleChange}
                                 value={config.shape}
+                                size="small"
                             >
                                 <MenuItem value={'circle'}>Círculo</MenuItem>
                                 <MenuItem value={'rect'}>Rectángulo</MenuItem>
@@ -173,6 +181,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 }
                                 value={String(config.porcentage)} // Convertir el valor a string para asegurar compatibilidad
                                 select
+                                size="small"
                             >
                                 <MenuItem value="true">Porcentaje</MenuItem>
                                 <MenuItem value="false">Valor</MenuItem>
@@ -187,6 +196,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 {...register('border')}
                                 onChange={handleChange}
                                 value={String(config.border)} // Convertir el valor a string para asegurar compatibilidad
+                                size="small"
                             >
                                 <MenuItem value="true">Sí</MenuItem>
                                 <MenuItem value="false">No</MenuItem>
@@ -264,7 +274,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                             }
                                         />
                                     }
-                                    label="Mostrar valor inferior"
+                                    label="Mostrar valor inferior 1"
                                 />
 
                                 {bottom1Enabled && (
@@ -275,6 +285,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                             value={bottom1Label}
                                             onChange={(e) => setBottom1Label(e.target.value)}
                                             fullWidth
+                                            size="small"
                                         />
                                     </div>
                                     <div className='!bg-white'>
@@ -298,6 +309,57 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                     </>
                                 )}
                                 </CardContent>
+
+                                <CardContent className=" bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
+                                {/* BOTTOM 2 */}
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={bottom2Enabled}
+                                            onChange={(e) =>
+                                                setBottom2Enabled(
+                                                    e.target.checked
+                                                )
+                                            }
+                                        />
+                                    }
+                                    label="Mostrar valor inferior 2"
+                                />
+
+                                {bottom2Enabled && (
+                                    <>
+                                    <div className='!bg-white mb-2'>
+                                        <TextField
+                                            label="Texto del valor inferior"
+                                            value={bottom2Label}
+                                            onChange={(e) => setBottom2Label(e.target.value)}
+                                            fullWidth
+                                            size="small"
+                                        />
+                                    </div>
+                                    <div className='!bg-white'>
+                                    <SelectVars
+                                        label="Variable inferior"
+                                        initialVar={
+                                            chartData?.ChartData?.find(
+                                                (d) => d.key === 'bottom2'
+                                            )?.InfluxVars
+                                        }
+                                        onSelect={(v) =>
+                                            upsertChartData({
+                                                key: 'bottom2',
+                                                label: bottom2Label,
+                                                idVar: v.id,
+                                            })
+                                        }
+                                        setValue={setValue}
+                                    />
+                                    </div>
+                                    </>
+                                )}
+                                </CardContent>
+
+                                
                             </>
                         )}
 
@@ -332,6 +394,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             onChange={handleChange}
                             error={!!errors.maxValue}
                             helperText={errors.maxValue?.message}
+                            size="small"
                         />
                         {!config.porcentage && configs[id].typeUnity && (
                             <TextField
@@ -346,6 +409,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 helperText={
                                     errors.unidad && errors.unidad.message
                                 }
+                                size="small"
                             />
                         )}
 
@@ -356,6 +420,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 label="Descripcion"
                                 {...register('description')}
                                 onChange={handleChange}
+                                size="small"
                             />
                         )}
                         {configs[id].description2 && (
@@ -365,6 +430,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 label="Descripcion 2"
                                 {...register('description2')}
                                 onChange={handleChange}
+                                size="small"
                             />
                         )}
                         <TextField
@@ -378,6 +444,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             error={errors.color}
                             onChange={handleChange}
                             helperText={errors.color && errors.color.message}
+                            size="small"
                         />
                         <TextField
                             defaultValue={config.order}
@@ -386,6 +453,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             label="Orden del grafico en el dashboard"
                             {...register('order')}
                             onChange={handleChange}
+                            size="small"
                         />
                     </div>
                 </CardContent>

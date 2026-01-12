@@ -132,13 +132,13 @@ const Calculadora = ({ display, setDisplay, showNumbers }) => {
 	}, [newDisplay])
 
 	return (
-		<Paper elevation={0} ref={calculatorRef} onClick={handleFocus} className='!bg-slate-50 p-3 rounded-md w-[50%]'>
+		<Paper elevation={0} ref={calculatorRef} onClick={handleFocus} className='!bg-slate-50 border-2 border-slate-100 p-3 !rounded-lg shadow-md w-[85%]'>
 			<Typography variant='h6' className='!mb-2' align='center'>
-				Formula de la variable
+				Calculadora de variables
 			</Typography>
 
 			<div className='flex justify-center w-full gap-3 max-md:flex-wrap'>
-				<div className='w-full flex justify-center'>
+				<div className='w-1/3 flex justify-center'>
 					<div className='flex gap-1 mb-1 flex-wrap justify-center'>
 						{buttons.map(({ value, icon }) => (
 							<Button
@@ -156,7 +156,7 @@ const Calculadora = ({ display, setDisplay, showNumbers }) => {
 					</div>
 				</div>
 
-				<div className='w-full flex flex-col gap-3'>
+				<div className='w-2/3 flex flex-col gap-3'>
 					{state.calcVars.length >= 1 && (
 						<div className='flex gap-1 w-full flex-wrap'>
 							{state.calcVars.map((variable, index) => (
@@ -198,18 +198,9 @@ const Calculadora = ({ display, setDisplay, showNumbers }) => {
 					</div>
 				</div>
 			</div>
-			<Modal className='flex justify-center items-center ' open={modalInfo} onClose={() => setModalInfo(false)}>
-				<Card className='relative p-5 w-3/4'>
-					<IconButton className='!absolute top-2 right-2' onClick={() => setModalInfo(false)}>
-						<Close />
-					</IconButton>
-
-					<Typography variant='h5' className='text-center !mb-3'>
-						Detalle Variable de calculo
-					</Typography>
-					<CalculatorVars data={dataVariable} />
-				</Card>
-			</Modal>
+			
+			<CalculatorVars data={dataVariable} />
+			
 		</Paper>
 	)
 }
