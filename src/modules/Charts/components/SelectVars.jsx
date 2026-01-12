@@ -28,6 +28,7 @@ const SelectVars = ({
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [modalData, setModalData] = useState(null)
     const [options, setOptions] = useState([])
+
     const fetchVars = async () => {
         const vars = await getVarsInflux()
         setOptions(vars)
@@ -102,7 +103,8 @@ const SelectVars = ({
                 sx={{
                     justifyContent: 'space-between',
                     textAlign: 'left',
-                    padding: '16.5px 14px',
+                    color: 'black',
+
                 }}
             >
                 {selectedOption ? selectedOption.name : label}
@@ -114,11 +116,11 @@ const SelectVars = ({
                 onClose={handleClose}
                 anchorOrigin={{
                     vertical: 'bottom',
-                    horizontal: 'left',
+                    horizontal: 'center',
                 }}
                 transformOrigin={{
                     vertical: 'top',
-                    horizontal: 'left',
+                    horizontal: 'center',
                 }}
             >
                 <Box sx={{ p: 2, width: '100%' }}>
@@ -137,7 +139,7 @@ const SelectVars = ({
                             ),
                         }}
                     />
-                    <List sx={{ overflow: 'auto', mt: 2 }}>
+                    <List sx={{ overflow: 'auto', mt: 1 }}>
                         {filteredOptions.map((option) => (
                             <ListItem
                                 button
@@ -164,7 +166,7 @@ const SelectVars = ({
             </Popover>
 
             {selectedOption && (
-                <Box sx={{ mt: 2, alignItems: 'center' }}>
+                <Box sx={{ alignItems: 'center' }}>
                     <IconButton onClick={handleViewClick} size="small">
                         <Visibility />
                     </IconButton>

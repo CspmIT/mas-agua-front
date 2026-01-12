@@ -58,6 +58,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 	const [state, dispatch] = useVars()
 	const isValidFormula = display.length
 	const onSubmit = async (data) => {
+
 		try {
 			if (requireCalc) {
 				if (state.calcVars.length === 0) {
@@ -181,8 +182,9 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 			setData()
 		}
 	}, [data])
+
 	return (
-		<div className='p-5 flex flex-col h-full gap-2 justify-start items-center min-w-[90vw] max-w-[94vw]'>
+		<div className='p-5 flex flex-col h-full gap-2 justify-start items-center min-w-[90vw] max-w-[94vw] overflow-y-auto'>
 			<Typography variant='h5' className='text-center'>
 				Configuracion de variables
 			</Typography>
@@ -435,7 +437,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 
 
 			<div
-				className={`flex flex-col gap-4 items-center justify-center transition-all duration-500 ease-in-out overflow-hidden ${requireCalc ? 'max-h-[80vh] opacity-100' : 'max-h-0 opacity-0'
+				className={`flex flex-col gap-4 items-center justify-center transition-all duration-500 ease-in-out overflow-hidden ${requireCalc ? 'max-h-[90vh] opacity-100' : 'max-h-0 opacity-0'
 					}`}
 			>
 				{requireCalc ? (
