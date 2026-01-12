@@ -140,6 +140,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             error={errors.title}
                             helperText={errors.title && errors.title.message}
                             onChange={(e) => setTitle(e.target.value)}
+                            size="small"
                         />
                         {configs[id].format && (
                             <TextField
@@ -151,6 +152,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 })}
                                 onChange={handleChange}
                                 value={config.shape}
+                                size="small"
                             >
                                 <MenuItem value={'circle'}>Círculo</MenuItem>
                                 <MenuItem value={'rect'}>Rectángulo</MenuItem>
@@ -179,6 +181,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 }
                                 value={String(config.porcentage)} // Convertir el valor a string para asegurar compatibilidad
                                 select
+                                size="small"
                             >
                                 <MenuItem value="true">Porcentaje</MenuItem>
                                 <MenuItem value="false">Valor</MenuItem>
@@ -193,6 +196,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 {...register('border')}
                                 onChange={handleChange}
                                 value={String(config.border)} // Convertir el valor a string para asegurar compatibilidad
+                                size="small"
                             >
                                 <MenuItem value="true">Sí</MenuItem>
                                 <MenuItem value="false">No</MenuItem>
@@ -281,6 +285,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                             value={bottom1Label}
                                             onChange={(e) => setBottom1Label(e.target.value)}
                                             fullWidth
+                                            size="small"
                                         />
                                     </div>
                                     <div className='!bg-white'>
@@ -329,6 +334,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                             value={bottom2Label}
                                             onChange={(e) => setBottom2Label(e.target.value)}
                                             fullWidth
+                                            size="small"
                                         />
                                     </div>
                                     <div className='!bg-white'>
@@ -388,6 +394,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             onChange={handleChange}
                             error={!!errors.maxValue}
                             helperText={errors.maxValue?.message}
+                            size="small"
                         />
                         {!config.porcentage && configs[id].typeUnity && (
                             <TextField
@@ -402,6 +409,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 helperText={
                                     errors.unidad && errors.unidad.message
                                 }
+                                size="small"
                             />
                         )}
 
@@ -412,6 +420,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 label="Descripcion"
                                 {...register('description')}
                                 onChange={handleChange}
+                                size="small"
                             />
                         )}
                         {configs[id].description2 && (
@@ -421,6 +430,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 label="Descripcion 2"
                                 {...register('description2')}
                                 onChange={handleChange}
+                                size="small"
                             />
                         )}
                         <TextField
@@ -434,6 +444,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             error={errors.color}
                             onChange={handleChange}
                             helperText={errors.color && errors.color.message}
+                            size="small"
                         />
                         <TextField
                             defaultValue={config.order}
@@ -442,6 +453,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             label="Orden del grafico en el dashboard"
                             {...register('order')}
                             onChange={handleChange}
+                            size="small"
                         />
                     </div>
                 </CardContent>
