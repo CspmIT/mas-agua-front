@@ -10,6 +10,8 @@ import {
 } from '@mui/material'
 import { configs } from '../configs/configs'
 import SelectVars from './SelectVars'
+import LiquidFillBottomInfo from '../../home/components/LiquidFillBottomInfo'
+import CardCustom from '../../../components/CardCustom/index'
 
 
 const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) => {
@@ -120,8 +122,8 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
 
     const ChartComponent = lazy(() => import(`../components/${chartType}.jsx`))
     return (
-        <div className="flex max-sm:flex-col w-full gap-3">
-            <Card className="mb-4 max-sm:w-full w-1/2">
+        <div className="flex max-sm:flex-col w-[97%] gap-3">
+            <Card className="max-sm:w-full w-2/3">
                 <CardContent>
                     <Typography
                         variant="h6"
@@ -129,13 +131,13 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                         align="center"
                         className="mb-2"
                     >
-                        Seleccione los valores para el grafico
+                        Seleccione los valores para el gráfico
                     </Typography>
                     <div className="flex flex-col gap-3 mb-3">
                         <TextField
                             type="text"
                             className="w-full"
-                            label="Titulo del grafico"
+                            label="Titulo del gráfico"
                             {...register('title', {
                                 required: 'Este campo es requerido',
                             })}
@@ -144,66 +146,90 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             onChange={(e) => setTitle(e.target.value)}
                             size="small"
                         />
-                        {configs[id].format && (
-                            <TextField
-                                select
-                                className="w-full"
-                                label="Tipo de grafico"
-                                {...register('shape', {
-                                    required: 'Este campo es requerido',
-                                })}
-                                onChange={handleChange}
-                                value={config.shape}
-                                size="small"
-                            >
-                                <MenuItem value={'circle'}>Círculo</MenuItem>
-                                <MenuItem value={'rect'}>Rectángulo</MenuItem>
-                                <MenuItem value={'roundRect'}>
-                                    Rectángulo redondeado
-                                </MenuItem>
-                                <MenuItem value={'triangle'}>
-                                    Triangulo
-                                </MenuItem>
-                                <MenuItem value={'diamond'}>Diamante</MenuItem>
-                                <MenuItem value={'arrow'}>Flecha</MenuItem>
-                                <MenuItem value={'pin'}>Gota</MenuItem>
-                            </TextField>
-                        )}
 
-                        {configs[id].typeValue && (
-                            <TextField
-                                className="w-full"
-                                label="Tipo de valor"
-                                {...register('porcentage')}
-                                onChange={handleChange}
-                                error={errors.porcentage}
-                                helperText={
-                                    errors.porcentage &&
-                                    errors.porcentage.message
-                                }
-                                value={String(config.porcentage)} // Convertir el valor a string para asegurar compatibilidad
-                                select
-                                size="small"
-                            >
-                                <MenuItem value="true">Porcentaje</MenuItem>
-                                <MenuItem value="false">Valor</MenuItem>
-                            </TextField>
-                        )}
+                        <div className='flex gap-4 max-sm:flex-col'>
+                            
+                            <div className='w-1/2 max-sm:w-full'>
+                                {configs[id].typeValue && (
+                                    <TextField
+                                        className="w-full !mb-2"
+                                        label="Tipo de valor"
+                                        {...register('porcentage')}
+                                        onChange={handleChange}
+                                        error={errors.porcentage}
+                                        helperText={
+                                            errors.porcentage &&
+                                            errors.porcentage.message
+                                        }
+                                        value={String(config.porcentage)} // Convertir el valor a string para asegurar compatibilidad
+                                        select
+                                        size="small"
+                                    >
+                                        <MenuItem value="true">Porcentaje</MenuItem>
+                                        <MenuItem value="false">Valor</MenuItem>
+                                    </TextField>
+                                )}
 
-                        {configs[id].typeBorder && (
-                            <TextField
-                                select
-                                className="w-full"
-                                label="Borde"
-                                {...register('border')}
-                                onChange={handleChange}
-                                value={String(config.border)} // Convertir el valor a string para asegurar compatibilidad
-                                size="small"
-                            >
-                                <MenuItem value="true">Sí</MenuItem>
-                                <MenuItem value="false">No</MenuItem>
-                            </TextField>
-                        )}
+                                {!config.porcentage && configs[id].typeUnity && (
+                                    <TextField
+                                        type="text"
+                                        className="w-full"
+                                        label="Unidad del gráfico"
+                                        {...register('unidad', {
+                                            required: 'Este campo es requerido',
+                                        })}
+                                        onChange={handleChange}
+                                        error={errors.unidad}
+                                        helperText={
+                                            errors.unidad && errors.unidad.message
+                                        }
+                                        size="small"
+                                    />
+                                )}
+                            </div>
+                            <div className='w-1/2 max-sm:w-full '>
+                                {configs[id].format && (
+                                    <TextField
+                                        select
+                                        className="w-full !mb-2"
+                                        label="Tipo de gráfico"
+                                        {...register('shape', {
+                                            required: 'Este campo es requerido',
+                                        })}
+                                        onChange={handleChange}
+                                        value={config.shape}
+                                        size="small"
+                                    >
+                                        <MenuItem value={'circle'}>Círculo</MenuItem>
+                                        <MenuItem value={'rect'}>Rectángulo</MenuItem>
+                                        <MenuItem value={'roundRect'}>
+                                            Rectángulo redondeado
+                                        </MenuItem>
+                                        <MenuItem value={'triangle'}>
+                                            Triangulo
+                                        </MenuItem>
+                                        <MenuItem value={'diamond'}>Diamante</MenuItem>
+                                        <MenuItem value={'arrow'}>Flecha</MenuItem>
+                                        <MenuItem value={'pin'}>Gota</MenuItem>
+                                    </TextField>
+                                )}
+
+                                {configs[id].typeBorder && (
+                                    <TextField
+                                        select
+                                        className="w-full"
+                                        label="Borde"
+                                        {...register('border')}
+                                        onChange={handleChange}
+                                        value={String(config.border)} // Convertir el valor a string para asegurar compatibilidad
+                                        size="small"
+                                    >
+                                        <MenuItem value="true">Sí</MenuItem>
+                                        <MenuItem value="false">No</MenuItem>
+                                    </TextField>
+                                )}
+                            </div>
+                        </div>
 
                         {isLiquid && (
                             <>
@@ -226,7 +252,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 />
 
                                 {/* VARIABLE SECUNDARIA */}
-                                <CardContent className=" bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
+                                <CardCustom className="p-2 !bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
                                     <FormControlLabel
                                         control={
                                             <Checkbox
@@ -261,9 +287,9 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                             />
                                         </div>
                                     )}
-                                </CardContent>
+                                </CardCustom>
 
-                                <CardContent className=" bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
+                                <CardCustom className="p-2 !bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
                                     {/* BOTTOM 1 */}
                                     <FormControlLabel
                                         control={
@@ -310,9 +336,9 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                             </div>
                                         </>
                                     )}
-                                </CardContent>
+                                </CardCustom>
 
-                                <CardContent className=" bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
+                                <CardCustom className="p-2 !bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
                                     {/* BOTTOM 2 */}
                                     <FormControlLabel
                                         control={
@@ -359,7 +385,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                             </div>
                                         </>
                                     )}
-                                </CardContent>
+                                </CardCustom>
 
 
                             </>
@@ -377,7 +403,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                         <TextField
                             type="number"
                             className="w-full"
-                            label="Valor maximo del grafico"
+                            label="Valor maximo del gráfico"
                             inputProps={{
                                 pattern: '^[0-9]+$',
                             }}
@@ -398,28 +424,13 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             helperText={errors.maxValue?.message}
                             size="small"
                         />
-                        {!config.porcentage && configs[id].typeUnity && (
-                            <TextField
-                                type="text"
-                                className="w-full"
-                                label="Unidad del grafico"
-                                {...register('unidad', {
-                                    required: 'Este campo es requerido',
-                                })}
-                                onChange={handleChange}
-                                error={errors.unidad}
-                                helperText={
-                                    errors.unidad && errors.unidad.message
-                                }
-                                size="small"
-                            />
-                        )}
+
 
                         {configs[id].description && (
                             <TextField
                                 type="text"
                                 className="w-full"
-                                label="Descripcion"
+                                label="Descripción"
                                 {...register('description')}
                                 onChange={handleChange}
                                 size="small"
@@ -429,7 +440,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             <TextField
                                 type="text"
                                 className="w-full"
-                                label="Descripcion 2"
+                                label="Descripción 2"
                                 {...register('description2')}
                                 onChange={handleChange}
                                 size="small"
@@ -439,7 +450,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             defaultValue={config.color}
                             type="color"
                             className="w-full"
-                            label="Color del grafico"
+                            label="Color del gráfico"
                             {...register('color', {
                                 required: 'Este campo es requerido',
                             })}
@@ -452,7 +463,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             defaultValue={config.order}
                             type="text"
                             className="w-full"
-                            label="Orden del grafico en el dashboard"
+                            label="Orden del gráfico en el dashboard"
                             {...register('order')}
                             onChange={handleChange}
                             size="small"
@@ -460,18 +471,36 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                     </div>
                 </CardContent>
             </Card>
-            <Card className={`w-1/2 max-sm:w-full p-3 mb-4 `}>
-                <Typography
-                    variant="h6"
-                    component="div"
-                    align="center"
-                    className="mb-2"
-                >
-                    {title}
-                </Typography>
-                <Suspense fallback={<div>Cargando...</div>}>
-                    <ChartComponent {...config} />
-                </Suspense>
+            <Card className={`w-1/3 max-sm:w-full p-3 flex-col`}>
+                <div className='h-[42dvh] 2xl:h-[35dvh]'>
+                    <Typography
+                        variant="h6"
+                        component="div"
+                        align="center"
+                        className="mb-2"
+                    >
+                        {title}
+                    </Typography>
+                    <Suspense fallback={<div>Cargando...</div>}>
+
+                        <ChartComponent {...config} />
+                        {isLiquid && (
+                            <LiquidFillBottomInfo
+                                bottom1={{
+                                    label: bottom1Label,
+                                    value: 0,
+                                    unit: 'm',
+                                }}
+                                bottom2={{
+                                    label: bottom2Label,
+                                    value: 0,
+                                    unit: '%',
+                                }}
+                            />
+                        )}
+
+                    </Suspense>
+                </div>
             </Card>
         </div>
     )
