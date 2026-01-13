@@ -1,118 +1,120 @@
-import React, { lazy, Suspense, useState, useEffect, memo } from 'react'
+import React, { lazy, Suspense, useState, useEffect } from 'react'
 import {
     Card,
     CardContent,
     MenuItem,
     TextField,
     Typography,
+    Checkbox,
+    FormControlLabel,
 } from '@mui/material'
 import { configs } from '../configs/configs'
 import SelectVars from './SelectVars'
-import { Checkbox, FormControlLabel } from '@mui/material'
-import CardCustom from '../../../components/CardCustom'
 
 
 const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) => {
     const [chartType, setChartType] = useState(configs[id].typeGraph)
     const isLiquid = configs[id].typeGraph === 'LiquidFillPorcentaje'
 
-    const [secondaryEnabled, setSecondaryEnabled] = useState(
-        !!chartData?.ChartData?.find((d) => d.key === 'secondary')
-    )
+    const [secondaryEnabled, setSecondaryEnabled] = useState(false)
+    const [bottom1Enabled, setBottom1Enabled] = useState(false)
+    const [bottom2Enabled, setBottom2Enabled] = useState(false)
 
-    const [bottom1Enabled, setBottom1Enabled] = useState(
-        !!chartData?.ChartData?.find((d) => d.key === 'bottom1')
-    )
-    const [bottom1Label, setBottom1Label] = useState(
-        chartData?.ChartData?.find(d => d.key === 'bottom1')?.label || ''
-    )
-    
-    const [bottom2Enabled, setBottom2Enabled] = useState(
-        !!chartData?.ChartData?.find((d) => d.key === 'bottom2')
-    )
-    const [bottom2Label, setBottom2Label] = useState(
-        chartData?.ChartData?.find(d => d.key === 'bottom2')?.label || ''
-    )
- 
+    const [bottom1Label, setBottom1Label] = useState('')
+    const [bottom2Label, setBottom2Label] = useState('')
 
-    const [config, setConfig] = useState(() =>
+    const [config, setConfig] = useState(
         chartData
             ? chartData.ChartConfig.reduce(
                 (acc, item) => ({
                     ...acc,
                     [item.key]:
-                        item.type === 'boolean'
-                            ? item.value === '1'
-                            : item.value,
+                        item.type === 'boolean' ? item.value === '1' : item.value,
                 }),
                 {}
             )
             : configs[id].preConfig
     )
+
     const [title, setTitle] = useState(
-        chartData?.ChartConfig.find((c) => c.key === 'title')?.value || ''
+        chartData?.ChartConfig.find(c => c.key === 'title')?.value || ''
     )
-    const [influxVar, setInfluxVar] = useState(null)
 
     useEffect(() => {
-        if (chartData) {
-            console.log('Cargando datos existentes en el formulario:', chartData)
-            setValue('order', chartData.order)
-            // Inicializar valores del formulario con los datos existentes
-            chartData.ChartConfig.forEach(({ key, value, type }) => {
-                setValue(key, type === 'boolean' ? value === '1' : value)
-            })
-            if (isLiquid) {
-                const formatted = chartData.ChartData.map((d) => ({
-                    key: d.key,
-                    label: d.label,
-                    InfluxVars: d.InfluxVars,
-                }))
-                setValue('chartData', formatted)
-            }
-            chartData.ChartData.forEach(({ key, value, InfluxVars }) => {
-                if (InfluxVars) {
-                    setInfluxVar(InfluxVars)
-                }
-                setValue(key, value)
-            })
-        } else {
-            // Valores por defecto
-            setValue('porcentage', config.porcentage)
-            setValue('border', config.border)
-            
-        }
-    }, [])
+        console.log(chartData)
+        if (!chartData) return
 
-    const upsertChartData = (entry) => {
+        setValue('description', chartData.description)
+        setValue('description2', chartData.description2)
+        setValue('color', chartData.color)
+        setValue('order', chartData.order)
+
+        chartData.ChartConfig.forEach(({ key, value, type }) => {
+            setValue(key, type === 'boolean' ? value === '1' : value)
+        })
+
+        const formattedChartData = chartData.ChartData.map(d => ({
+            key: d.key,
+            label: d.label,
+            idVar: d.InfluxVars?.id,
+        }))
+
+        setValue('chartData', formattedChartData)
+
+        setSecondaryEnabled(!!formattedChartData.find(d => d.key === 'secondary'))
+        setBottom1Enabled(!!formattedChartData.find(d => d.key === 'bottom1'))
+        setBottom2Enabled(!!formattedChartData.find(d => d.key === 'bottom2'))
+
+        setBottom1Label(
+            formattedChartData.find(d => d.key === 'bottom1')?.label || ''
+        )
+        setBottom2Label(
+            formattedChartData.find(d => d.key === 'bottom2')?.label || ''
+        )
+
+        const maxValue = chartData.ChartData.find(d => d.key === 'maxValue')?.value
+        const unidad = chartData.ChartData.find(d => d.key === 'unidad')?.value
+
+        if (maxValue !== undefined) {
+            setValue('maxValue', maxValue)
+        }
+
+        if (unidad !== undefined) {
+            setValue('unidad', unidad)
+        }
+    }, [chartData])
+
+
+    const upsertChartData = entry => {
         const prev = getValues('chartData') || []
-        const filtered = prev.filter((e) => e.key !== entry.key)
+        const filtered = prev.filter(e => e.key !== entry.key)
         setValue('chartData', [...filtered, entry])
     }
 
-    const handleChange = (e) => {
+    useEffect(() => {
+        if (!bottom1Enabled) return
+        const current = (getValues('chartData') || []).find(e => e.key === 'bottom1')
+        if (current) {
+            upsertChartData({ ...current, label: bottom1Label })
+        }
+    }, [bottom1Label])
+
+    useEffect(() => {
+        if (!bottom2Enabled) return
+        const current = (getValues('chartData') || []).find(e => e.key === 'bottom2')
+        if (current) {
+            upsertChartData({ ...current, label: bottom2Label })
+        }
+    }, [bottom2Label])
+
+    const handleChange = e => {
         const { name, value } = e.target
-        let newValue = value
-
-        if (name === 'color' && !/^#[0-9A-F]{6}$/i.test(value)) {
-            newValue = '#000000' // Valor por defecto si el formato es incorrecto
-        }
-
-        if (name === 'maxValue') {
-            const mitad = value / 2 || 0
-            newValue = value || 1
-            setConfig((prevConfig) => ({
-                ...prevConfig,
-                ['value']: mitad,
-            }))
-        }
-
-        setConfig((prevConfig) => ({
-            ...prevConfig,
+        setConfig(prev => ({
+            ...prev,
             [name]:
                 name === 'porcentage' || name === 'border'
                     ? value === 'true'
-                    : newValue,
+                    : value,
         }))
     }
 
@@ -225,141 +227,141 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
 
                                 {/* VARIABLE SECUNDARIA */}
                                 <CardContent className=" bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={secondaryEnabled}
-                                            onChange={(e) =>
-                                                setSecondaryEnabled(
-                                                    e.target.checked
-                                                )
-                                            }
-                                        />
-                                    }
-                                    label="Mostrar variable secundaria"
-                                />
-
-                                {secondaryEnabled && (
-                                    <div className='!bg-white'>
-                                    <SelectVars
-                                        label="Variable secundaria"
-                                        initialVar={
-                                            chartData?.ChartData?.find(
-                                                (d) => d.key === 'secondary'
-                                            )?.InfluxVars
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={secondaryEnabled}
+                                                onChange={(e) =>
+                                                    setSecondaryEnabled(
+                                                        e.target.checked
+                                                    )
+                                                }
+                                            />
                                         }
-                                        onSelect={(v) =>
-                                            upsertChartData({
-                                                key: 'secondary',
-                                                label: 'secondary',
-                                                idVar: v.id,
-                                            })
-                                        }
-                                        setValue={setValue}
+                                        label="Mostrar variable secundaria"
                                     />
-                                    </div>
-                                )}
+
+                                    {secondaryEnabled && (
+                                        <div className='!bg-white'>
+                                            <SelectVars
+                                                label="Variable secundaria"
+                                                initialVar={
+                                                    chartData?.ChartData?.find(
+                                                        (d) => d.key === 'secondary'
+                                                    )?.InfluxVars
+                                                }
+                                                onSelect={(v) =>
+                                                    upsertChartData({
+                                                        key: 'secondary',
+                                                        label: 'secondary',
+                                                        idVar: v.id,
+                                                    })
+                                                }
+                                                setValue={setValue}
+                                            />
+                                        </div>
+                                    )}
                                 </CardContent>
 
                                 <CardContent className=" bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
-                                {/* BOTTOM 1 */}
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={bottom1Enabled}
-                                            onChange={(e) =>
-                                                setBottom1Enabled(
-                                                    e.target.checked
-                                                )
-                                            }
-                                        />
-                                    }
-                                    label="Mostrar valor inferior 1"
-                                />
-
-                                {bottom1Enabled && (
-                                    <>
-                                    <div className='!bg-white mb-2'>
-                                        <TextField
-                                            label="Texto del valor inferior"
-                                            value={bottom1Label}
-                                            onChange={(e) => setBottom1Label(e.target.value)}
-                                            fullWidth
-                                            size="small"
-                                        />
-                                    </div>
-                                    <div className='!bg-white'>
-                                    <SelectVars
-                                        label="Variable inferior"
-                                        initialVar={
-                                            chartData?.ChartData?.find(
-                                                (d) => d.key === 'bottom1'
-                                            )?.InfluxVars
+                                    {/* BOTTOM 1 */}
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={bottom1Enabled}
+                                                onChange={(e) =>
+                                                    setBottom1Enabled(
+                                                        e.target.checked
+                                                    )
+                                                }
+                                            />
                                         }
-                                        onSelect={(v) =>
-                                            upsertChartData({
-                                                key: 'bottom1',
-                                                label: bottom1Label,
-                                                idVar: v.id,
-                                            })
-                                        }
-                                        setValue={setValue}
+                                        label="Mostrar valor inferior 1"
                                     />
-                                    </div>
-                                    </>
-                                )}
+
+                                    {bottom1Enabled && (
+                                        <>
+                                            <div className='!bg-white mb-2'>
+                                                <TextField
+                                                    label="Texto a mostrar"
+                                                    value={bottom1Label}
+                                                    onChange={(e) => setBottom1Label(e.target.value)}
+                                                    fullWidth
+                                                    size="small"
+                                                />
+                                            </div>
+                                            <div className='!bg-white'>
+                                                <SelectVars
+                                                    label="Variable inferior"
+                                                    initialVar={
+                                                        chartData?.ChartData?.find(
+                                                            (d) => d.key === 'bottom1'
+                                                        )?.InfluxVars
+                                                    }
+                                                    onSelect={(v) =>
+                                                        upsertChartData({
+                                                            key: 'bottom1',
+                                                            label: bottom1Label,
+                                                            idVar: v.id,
+                                                        })
+                                                    }
+                                                    setValue={setValue}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                 </CardContent>
 
                                 <CardContent className=" bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
-                                {/* BOTTOM 2 */}
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={bottom2Enabled}
-                                            onChange={(e) =>
-                                                setBottom2Enabled(
-                                                    e.target.checked
-                                                )
-                                            }
-                                        />
-                                    }
-                                    label="Mostrar valor inferior 2"
-                                />
-
-                                {bottom2Enabled && (
-                                    <>
-                                    <div className='!bg-white mb-2'>
-                                        <TextField
-                                            label="Texto del valor inferior"
-                                            value={bottom2Label}
-                                            onChange={(e) => setBottom2Label(e.target.value)}
-                                            fullWidth
-                                            size="small"
-                                        />
-                                    </div>
-                                    <div className='!bg-white'>
-                                    <SelectVars
-                                        label="Variable inferior"
-                                        initialVar={
-                                            chartData?.ChartData?.find(
-                                                (d) => d.key === 'bottom2'
-                                            )?.InfluxVars
+                                    {/* BOTTOM 2 */}
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={bottom2Enabled}
+                                                onChange={(e) =>
+                                                    setBottom2Enabled(
+                                                        e.target.checked
+                                                    )
+                                                }
+                                            />
                                         }
-                                        onSelect={(v) =>
-                                            upsertChartData({
-                                                key: 'bottom2',
-                                                label: bottom2Label,
-                                                idVar: v.id,
-                                            })
-                                        }
-                                        setValue={setValue}
+                                        label="Mostrar valor inferior 2"
                                     />
-                                    </div>
-                                    </>
-                                )}
+
+                                    {bottom2Enabled && (
+                                        <>
+                                            <div className='!bg-white mb-2'>
+                                                <TextField
+                                                    label="Texto a mostrar"
+                                                    value={bottom2Label}
+                                                    onChange={(e) => setBottom2Label(e.target.value)}
+                                                    fullWidth
+                                                    size="small"
+                                                />
+                                            </div>
+                                            <div className='!bg-white'>
+                                                <SelectVars
+                                                    label="Variable inferior"
+                                                    initialVar={
+                                                        chartData?.ChartData?.find(
+                                                            (d) => d.key === 'bottom2'
+                                                        )?.InfluxVars
+                                                    }
+                                                    onSelect={(v) =>
+                                                        upsertChartData({
+                                                            key: 'bottom2',
+                                                            label: bottom2Label,
+                                                            idVar: v.id,
+                                                        })
+                                                    }
+                                                    setValue={setValue}
+                                                />
+                                            </div>
+                                        </>
+                                    )}
                                 </CardContent>
 
-                                
+
                             </>
                         )}
 
