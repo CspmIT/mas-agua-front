@@ -36,9 +36,12 @@ import Alert from './modules/alert/views'
 import ConfigAlarms from './modules/ConfigAlarms/views/index'
 
 import ExternalUser from './modules/ExternalUsers/views/index'
+import { isTauri } from '@tauri-apps/api/core'
+import { useUpdater } from './hooks/useUpdater'
 
 
 function App() {
+	const { checkForUpdates } = useUpdater()
 	const { darkMode } = useContext(MainContext)
 	const authUser = storage.get('usuario')
 	const isExternalUser = authUser && authUser.profile === 5
@@ -106,6 +109,12 @@ function App() {
 	useEffect(() => {
 		setTheme(!darkMode ? lightTheme : darkTheme)
 	}, [darkMode])
+
+	useEffect(() => {
+		if (isTauri()) {
+			checkForUpdates()
+		}
+	}, [])
 
 	return (
 		<BrowserRouter>
