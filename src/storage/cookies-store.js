@@ -1,17 +1,27 @@
 import Cookies from 'js-cookie'
-import { Store } from 'tauri-plugin-store-api'
+//import { Store } from 'tauri-plugin-store-api'
+import { load } from '@tauri-apps/plugin-store'
 
+let storeInstance = null
 // Función para detectar si estamos en un entorno Tauri
 function isTauri() {
-	return typeof window.__TAURI__ !== 'undefined'
+	return window.isTauri
+	//return typeof window.__TAURI__ !== 'undefined'
 }
 
 // Crear una instancia de Store para Tauri
-const store = isTauri() ? new Store('.storage/user-data.dat') : null
+async function getStore() {
+	if (!isTauri()) return null
+	if (!storeInstance) {
+		storeInstance = await load('store.json', { autoSave: false })
+	}
+	return storeInstance
+}
 // Guardar datos condicionalmente
 export async function saveData(key, value, cookieOptions = {}) {
 	try {
 		if (isTauri()) {
+			const store = await getStore()
 			await store.set(key, value)
 			await store.save()
 		} else {
@@ -26,6 +36,7 @@ export async function saveData(key, value, cookieOptions = {}) {
 export async function getData(key) {
 	try {
 		if (isTauri()) {
+			const store = await getStore()
 			return await store.get(key)
 		} else {
 			return Cookies.get(key)
@@ -39,6 +50,7 @@ export async function getData(key) {
 export async function removeData(key) {
 	try {
 		if (isTauri()) {
+			const store = await getStore()
 			await store.delete(key)
 			await store.save()
 		} else {
