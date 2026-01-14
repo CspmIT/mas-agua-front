@@ -15,30 +15,40 @@ import { Add, Close } from '@mui/icons-material'
 import SelectorVars from '../../modules/Charts/components/SelectVars'
 
 const normalizeCalcData = (data) => {
-    console.log(data)
-    // Caso 1: ya viene plano
-    if (data?.calc_topic) {
-        return data
-    }
+    if (!data) return []
 
-    // Caso 2: viene de varsInflux
-    if (data?.varsInflux) {
-        const key = Object.keys(data.varsInflux)[0]
-        const influx = data.varsInflux[key]
+    // 🧱 Variable cruda
+    if (!data.calc) {
+        const cfg = data.varsInflux?.[data.name]
+        if (!cfg) return []
 
-        return {
+        return [{
             calc_name_var: data.name,
-            calc_topic: influx.calc_topic,
-            calc_field: influx.calc_field,
-            calc_time: influx.calc_time,
-            calc_unit_topic: influx.calc_unit || influx.calc_unit_topic,
-            calc_period: influx.calc_period,
-            calc_unit_period: influx.calc_unit_period,
-            calc_type_period: influx.calc_type_period,
-        }
-    }
+            ...cfg,
+        }]
 
-    return null
+    }
+    // 🔁 Variable calculada → expandir
+    const expanded = Object.keys(data.varsInflux || {})
+
+    Swal.fire({
+        icon: 'info',
+        title: 'Esta variable ya es calculada',
+        html: `
+      <p><strong>${data.name}</strong> se descompuso para obtener valores correctamente</p>
+    `,
+        timer: 5000,
+        showConfirmButton: false,
+        position: 'top-right',
+        toast: true,
+    })
+
+    return Object.entries(data.varsInflux || {}).map(
+        ([name, cfg]) => ({
+            calc_name_var: name,
+            ...cfg,
+        })
+    )
 }
 
 
@@ -62,11 +72,11 @@ const CalculatorVars = ({ data, detail }) => {
     const handleSelectExistingVar = (variable) => {
         const normalized = normalizeCalcData(variable)
         if (!normalized) return
-    
+
         const exists = state.calcVars.some(
             v => v.calc_name_var === normalized.calc_name_var
         )
-    
+
         if (exists) {
             Swal.fire({
                 icon: 'warning',
@@ -75,7 +85,9 @@ const CalculatorVars = ({ data, detail }) => {
             })
             return
         }
-        dispatch({ type: 'ADD_CALC_VAR', payload: normalized })
+        normalized.forEach(v => {
+            dispatch({ type: 'ADD_CALC_VAR', payload: v })
+        })
         setOpenSelector(false)
     }
 
@@ -93,13 +105,13 @@ const CalculatorVars = ({ data, detail }) => {
         ])
         return validation
     }
-    
+
     useEffect(() => {
         if (!data) return
-    
+
         const normalized = normalizeCalcData(data)
         if (!normalized) return
-    
+
         setValue('calc_name_var', normalized.calc_name_var)
         setValue('calc_topic', normalized.calc_topic)
         setValue('calc_field', normalized.calc_field)
@@ -111,7 +123,7 @@ const CalculatorVars = ({ data, detail }) => {
         setCalcUnitPeriod(normalized.calc_unit_period)
         setValue('calc_type_period', normalized.calc_type_period)
     }, [data])
-    
+
 
     const isValidName = (value) =>
         state.calcVars.some((variable) => variable.calc_name_var === value)
@@ -172,7 +184,7 @@ const CalculatorVars = ({ data, detail }) => {
             setOpenModal(true)
         }
     }, [data])
-    
+
 
     return (
         <>
