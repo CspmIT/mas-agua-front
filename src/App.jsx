@@ -34,11 +34,15 @@ import ChartsDashboard from './modules/dashBoard/views/ChartsDashboard'
 import ConfigPie from './modules/Charts/views/ConfigPie'
 import Alert from './modules/alert/views'
 import ConfigAlarms from './modules/ConfigAlarms/views/index'
+import PumpsTable from './modules/PumpsTable/views/index'
 
 import ExternalUser from './modules/ExternalUsers/views/index'
+import { isTauri } from '@tauri-apps/api/core'
+import { useUpdater } from './hooks/useUpdater'
 
 
 function App() {
+	const { checkForUpdates } = useUpdater()
 	const { darkMode } = useContext(MainContext)
 	const authUser = storage.get('usuario')
 	const isExternalUser = authUser && authUser.profile === 5
@@ -83,6 +87,7 @@ function App() {
 		{ path: '/alert', element: <Alert /> },
 		{ path: '/config/alarm', element: <ConfigAlarms /> },
 		{ path: '/external', element: <ExternalUser /> },
+		{ path: '/list/pumps', element: <PumpsTable/>}
 	]
 
 	const externalRoutes = [
@@ -106,6 +111,12 @@ function App() {
 	useEffect(() => {
 		setTheme(!darkMode ? lightTheme : darkTheme)
 	}, [darkMode])
+
+	useEffect(() => {
+		if (isTauri()) {
+			checkForUpdates()
+		}
+	}, [])
 
 	return (
 		<BrowserRouter>

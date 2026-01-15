@@ -1,75 +1,44 @@
 {
+	"productName": "Mas Agua",
+	"version": "1.0.0",
+	"identifier": "com.masagua.desktop",
 	"build": {
 		"beforeDevCommand": "npm run dev",
 		"beforeBuildCommand": "npm run build",
-		"devPath": "http://localhost:1420",
-		"distDir": "../dist",
-		"withGlobalTauri": true
+		"devUrl": "http://localhost:1420",
+		"frontendDist": "../dist"
 	},
-	"package": {
-		"productName": "Mas Agua",
-		"version": "1.0.0"
+	"bundle": {
+		"active": true,
+		"targets": ["msi", "deb", "rpm", "appimage", "dmg"],
+		"icon": ["icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png", "icons/icon.icns", "icons/icon.ico"],
+		"createUpdaterArtifacts": true
 	},
-	"tauri": {
-		"allowlist": {
-			"dialog": {
-				"all": true
-			},
-			"shell": {
-				"all": false,
-				"open": true
-			},
-			"http": {
-				"all": true
-			},
-			"fs": {
-				"copyFile": true,
-				"readDir": true,
-				"readFile": true,
-				"writeFile": true
-			},
-			"notification": {
-				"all": true
-			},
-			"app": {
-				"all": true,
-				"hide": true,
-				"show": true
-			}
-		},
+	"app": {
 		"windows": [
 			{
 				"title": "Mas Agua",
 				"width": 1024,
-				"height": 768,
-				"minWidth": 1024,
-				"minHeight": 600,
-				"resizable": true,
-				"decorations": true
+				"height": 768
 			}
 		],
 		"security": {
-			"csp": "default-src blob: data: filesystem: ws: http: https: 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; object-src 'none';"
-		},
-		"bundle": {
-			"active": true,
-			"targets": ["deb", "updater", "msi", "app", "dmg"],
-			"identifier": "com.cooptech.masAgua",
-			"icon": [
-				"icons/MasAgua.png",
-                "icons/MasAgua_16x16.png",
-                "icons/MasAgua_32x32.png",
-                "icons/MasAgua_128x128.png",
-                "icons/MasAgua_256x256.png",
-                "icons/MasAgua_512x512.png",
-				"icons/MasAgua.ico"
+			"capabilities": [
+				{
+					"identifier": "store-access",
+					"windows": ["main"],
+					"platforms": ["linux", "macOS", "windows"],
+					"permissions": ["store:default", "process:default", "updater:default", "core:app:allow-version"]
+				}
 			]
 		}
 	},
 	"plugins": {
-		"store": {
-			"version": "2",
-			"dir": ".storage"
+		"updater": {
+			"active": true,
+			"endpoints": ["https://github.com/CspmIT/mas-agua-front/releases/latest/download/latest.json"],
+			"dialog": true,
+			"pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENFOUE0OEYyMDA5NDkyNEQKUldSTmtwUUE4a2lhenBraVNOd2cwOU1ZbkxWdVJTU0lEbUZiTkp0VTFRenhtdndVZ1VwUlQ4OG0K"
 		}
 	}
 }

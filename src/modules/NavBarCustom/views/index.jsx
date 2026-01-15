@@ -18,6 +18,8 @@ import ListIcon from '../../../components/ListIcon'
 import styles from '../utils/css/styles.module.css'
 import Logo from '/src/assets/img/Logo/LogoTextAgua2.png'
 import { list_menu } from '../../ConfigMenu/components/PermissionMenu/components/data'
+import { isTauri } from '@tauri-apps/api/core'
+import ButtonDownloads from '../../core/components/ButtonDownloads'
 
 function NavBarCustom({ setLoading }) {
 	const [open, setOpen] = useState(false)
@@ -159,6 +161,9 @@ function NavBarCustom({ setLoading }) {
 						<p className={`bg-blue-600 rounded-md shadow-sm px-3 py-1 text-white  ml-3 select-none ${isMobile ? 'hidden' : ''}`}>
 							{nameCoop}
 						</p>
+						{!isTauri() && (
+							<ButtonDownloads />
+						)}
 						<BottonApps />
 						{/* <ButtonModeDark /> */}
 						<DropdownImage />
