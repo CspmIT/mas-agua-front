@@ -157,8 +157,8 @@ function NavBarCustom({ setLoading }) {
 					</IconButton>
 
 					<img onClick={() => navigate('home')} className='max-h-10 cursor-pointer' src={Logo} />
-					<div className='absolute right-5 flex flex-row items-center gap-2'>
-						<p className={`bg-blue-600 rounded-md shadow-sm px-3 py-1 text-white  ml-3 select-none ${isMobile ? 'hidden' : ''}`}>
+					<div className='absolute right-5 flex flex-row items-center'>
+						<p className={`bg-blue-600 rounded-md shadow-sm px-3 py-1 mr-2 text-white select-none ${isMobile ? 'hidden' : ''}`}>
 							{nameCoop}
 						</p>
 						{!isTauri() && (

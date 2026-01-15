@@ -7,8 +7,8 @@ const ButtonDownloads = () => {
     const [openModal, setOpenModal] = useState(false)
     return (
         <>
-            <IconButton variant='contained' size='medium' title='Descargar versión de escritorio' onClick={() => setOpenModal(true)}>
-                <MdInstallDesktop />
+            <IconButton variant='contained' size='medium' title='Descargar versión de escritorio' onClick={() => setOpenModal(true)} color='inherit'>
+                <MdInstallDesktop  />
             </IconButton>
             <DesktopDownloadModal
                 open={openModal}
