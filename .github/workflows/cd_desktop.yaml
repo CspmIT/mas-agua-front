@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'Optimizacin de gráficos y diagrama'
+                  releaseBody: 'Optimización de gráficos y diagrama'
                   prerelease: false
