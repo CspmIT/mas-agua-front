@@ -1,6 +1,6 @@
 {
 	"productName": "Mas Agua",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"identifier": "com.masagua.desktop",
 	"build": {
 		"beforeDevCommand": "npm run dev",
@@ -19,7 +19,9 @@
 			{
 				"title": "Mas Agua",
 				"width": 1024,
-				"height": 768
+				"height": 768,
+				"resizable": true,
+				"maximized": true
 			}
 		],
 		"security": {

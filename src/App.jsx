@@ -34,6 +34,7 @@ import ChartsDashboard from './modules/dashBoard/views/ChartsDashboard'
 import ConfigPie from './modules/Charts/views/ConfigPie'
 import Alert from './modules/alert/views'
 import ConfigAlarms from './modules/ConfigAlarms/views/index'
+import PumpsTable from './modules/PumpsTable/views/index'
 
 import ExternalUser from './modules/ExternalUsers/views/index'
 import { isTauri } from '@tauri-apps/api/core'
@@ -86,6 +87,7 @@ function App() {
 		{ path: '/alert', element: <Alert /> },
 		{ path: '/config/alarm', element: <ConfigAlarms /> },
 		{ path: '/external', element: <ExternalUser /> },
+		{ path: '/list/pumps', element: <PumpsTable/>}
 	]
 
 	const externalRoutes = [
