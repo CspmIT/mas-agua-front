@@ -49,7 +49,7 @@ function ViewDiagram() {
   useEffect(() => {
     let frameId;
     const animate = () => {
-      setDashOffset(prev => prev + 1);
+      setDashOffset(prev => prev + 0.25);
       frameId = requestAnimationFrame(animate);
     };
     frameId = requestAnimationFrame(animate);

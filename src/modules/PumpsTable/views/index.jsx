@@ -4,63 +4,27 @@ import { backend } from '../../../utils/routes/app.routes'
 import TableCustom from '../../../components/TableCustom'
 import Swal from 'sweetalert2'
 import LoaderComponent from '../../../components/Loader'
-import { Box, Button, FormLabel, getFormControlLabelUtilityClasses } from '@mui/material'
+import { Box, Button, Chip, FormLabel, getFormControlLabelUtilityClasses } from '@mui/material'
 import CardCustom from '../../../components/CardCustom'
 import { useState } from 'react'
+import InfoCard from '../components/InfoCard'
 
 const PumpsTable = () => {
   const [listpumps, setListPumps] = useState([])
+  const [infoSuccion, setInfoSuccion] = useState([])
   const [columnsTable, setColumnsTable] = useState([])
   const [loading, setLoading] = useState(true)
 
-  const readBombStatus = async (url, bombId) => {
-    try {
-      const { data } = await request(
-        `${url}/bombs_PLC/read`,
-        'POST',
-        { bombId }
-      )
-  
-      /**
-       * Asumo que el PLC responde algo tipo:
-       * { plcResponse: { estado: 1, modo: 'AUTO' } }
-       */
-      return {
-        status: data?.plcResponse?.estado ?? null,
-        actual_mode: data?.plcResponse?.modo ?? 'Sin datos',
-      }
-  
-    } catch (error) {
-      console.error(`Error leyendo bomba ${bombId}`, error)
-      return {
-        status: null,
-        actual_mode: 'Sin datos',
-      }
-    }
-  }
-  
-
   const fetchPumps = async () => {
     const url = backend[import.meta.env.VITE_APP_NAME]
-  
+
     try {
       setLoading(true)
-  
-      // 1️⃣ Traer bombas
+
       const { data } = await request(`${url}/bombs_PLC`, 'GET')
-  
-      // 2️⃣ Leer estado real en PLC (en paralelo)
-      const pumpsWithStatus = await Promise.all(
-        data.map(async (bomb) => {
-          const plcData = await readBombStatus(url, bomb.id)
-          return {
-            ...bomb,
-            ...plcData,
-          }
-        })
-      )
-  
-      // 3️⃣ Columnas
+      setInfoSuccion(data.info_succion)
+      setListPumps(data.bombs)
+
       const columns = [
         {
           header: 'Bomba',
@@ -71,50 +35,107 @@ const PumpsTable = () => {
           accessorKey: 'status',
           Cell: ({ row }) => {
             const status = row.original.status
-  
-            if (status === null || status === undefined) {
-              return (
-                <span style={{ fontWeight: 'bold', color: '#eab308' }}>
-                  Sin datos
-                </span>
-              )
+
+            let label = 'Sin datos'
+            let color = 'warning'
+
+            if (status === true) {
+              label = 'En Marcha'
+              color = 'success'
+            } else if (status === false) {
+              label = 'Apagada'
+              color = 'default'
             }
-  
+
             return (
-              <span
-                style={{
-                  fontWeight: 'bold',
-                  color: status ? 'green' : 'grey',
-                }}
-              >
-                {status ? 'En Marcha' : 'Apagada'}
-              </span>
+              <Chip
+                label={label}
+                color={color}
+                variant="filled"
+                sx={{ fontWeight: 'bold' }}
+
+              />
             )
           },
         },
         {
           header: 'Modo Actual',
           accessorKey: 'actual_mode',
+          Cell: ({ row }) => {
+            const mode = row.original.actual_mode
+
+            let color = 'default'
+            let label = mode || 'Sin datos'
+
+            switch (mode) {
+              case 'Automático':
+                color = 'warning'
+                break
+              case 'Encendido forzado':
+                color = 'success'
+                break
+              case 'Apagado forzado':
+                color = 'error'
+                break
+              default:
+                color = 'primary'
+                label = 'Sin datos'
+                break
+            }
+
+            return (
+              <Chip
+                label={label}
+                color={color}
+                variant="filled"
+                sx={{ fontWeight: 'bold' }}
+              />
+            )
+          },
         },
         {
           header: 'Acciones',
           accessorKey: 'actions',
-          Cell: ({ row }) => (
-            <Box display="flex" gap={1}>
-              <Button variant="contained" size="small">
-                Automatico
-              </Button>
-              <Button variant="contained" color="secondary" size="small">
-                Prender
-              </Button>
-            </Box>
-          ),
-        },
+          Cell: ({ row }) => {
+            const actualMode = row.original.actual_mode
+            const isAutomatic = actualMode === 'Automático'
+
+            return (
+              <Box display="flex" gap={1}>
+                <Button
+                  variant="contained"
+                  color="warning"
+                  size="small"
+                  disabled={isAutomatic}
+                >
+                  AUTO
+                </Button>
+
+                <Button
+                  variant="contained"
+                  color="success"
+                  size="small"
+                  disabled={!isAutomatic}
+                >
+                  ON
+                </Button>
+
+                <Button
+                  variant="contained"
+                  color="error"
+                  size="small"
+                  disabled={!isAutomatic}
+                >
+                  OFF
+                </Button>
+              </Box>
+            )
+          },
+        }
       ]
-  
-      setListPumps(pumpsWithStatus)
+
       setColumnsTable(columns)
-  
+
     } catch (error) {
       console.error(error)
       Swal.fire({
@@ -125,44 +146,33 @@ const PumpsTable = () => {
       setLoading(false)
     }
   }
-  
 
-  const fetchData_Bombs = async () => {
+  //FUNCION PARA CONSULTAR ESTADO DE LA BOMBA
+  const refreshBombStatus = async () => {
     const url = backend[import.meta.env.VITE_APP_NAME]
+
     try {
       const { data } = await request(`${url}/data_bombeo`, 'GET')
-
-      const bombeoStatus = data.reduce((acc, item) => {
-        const key = Object.keys(item)[0]
-        acc[key] = item[key]
-        return acc
-      }, {})
 
       setListPumps(prev =>
         prev.map(bomb => ({
           ...bomb,
-          status: bombeoStatus[bomb.name] !== undefined
-            ? bombeoStatus[bomb.name] === '1'
-            : null
+          status: data.bombas[bomb.name] ?? null,
+          actual_mode: data.modos[bomb.name] ?? null
         }))
       )
-
+      setInfoSuccion(data.info_succion)
     } catch (error) {
       console.error(error)
-      Swal.fire({
-        icon: 'error',
-        text: 'No se pudo obtener el estado de las bombas',
-      })
     }
   }
 
 
   useEffect(() => {
     fetchPumps();
-    fetchData_Bombs();
 
     const interval = setInterval(() => {
-      fetchData_Bombs()
+      refreshBombStatus()
     }, 30000)
 
     return () => clearInterval(interval)
@@ -173,7 +183,7 @@ const PumpsTable = () => {
       {loading ? (
         <LoaderComponent />
       ) : (
-        <CardCustom className="w-full bg-white dark:bg-gray-900 shadow-lg rounded-2xl p-4 sm:p-6 flex flex-col gap-6 transition-all">
+        <CardCustom className="w-full bg-white dark:bg-gray-900 shadow-lg rounded-2xl p-4 sm:p-6 flex flex-col gap-4 transition-all">
 
           {/* Header responsivo */}
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-b border-gray-300 dark:border-gray-700 pb-3">
@@ -182,23 +192,51 @@ const PumpsTable = () => {
             </FormLabel>
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <InfoCard
+              label="Estado"
+              value={infoSuccion.var_2}
+              color="green"
+            />
+            <InfoCard
+              label="Destino"
+              value={infoSuccion.Destino}
+              color="blue"
+            />
+            <InfoCard
+              label="Configuración"
+              value={infoSuccion.Configuracion}
+              color="indigo"
+            />
+            <InfoCard
+              label="Activaciones manuales"
+              value={infoSuccion.AcM || '-'}
+              color="orange"
+            />
+            <InfoCard
+              label="Fuera de servicio"
+              value={infoSuccion.FuS || '-'}
+              color="red"
+            />
+          </div>
+
           {/* Tabla responsiva */}
           <div className="flex-1 overflow-x-auto rounded-lg shadow-md">
             <TableCustom
               columns={columnsTable}
               data={listpumps.length ? listpumps : []}
               pagination={true}
-              pageSize={10}
+              pageSize={30}
               density="compact"
               header={{
                 background: 'rgb(190 190 190)',
                 fontSize: '14px',
                 fontWeight: 'bold',
+                paddingTop: 1,
               }}
               toolbarClass={{ background: 'rgb(190 190 190)' }}
               body={{ backgroundColor: 'rgba(209, 213, 219, 0.31)' }}
               footer={{ background: 'rgb(190 190 190)' }}
-              topToolbar
             />
           </div>
         </CardCustom>

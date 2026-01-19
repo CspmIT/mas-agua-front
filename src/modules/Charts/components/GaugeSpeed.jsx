@@ -53,9 +53,9 @@ const GaugeSpeed = ({
                   ],
                 }
               : '#cbd5e1', // gris offline
-            shadowBlur: 8,
-            shadowOffsetY: 3,
-            shadowColor: 'rgba(0,0,0,0.4)',
+            // shadowBlur: 8,
+            // shadowOffsetY: 3,
+            // shadowColor: 'rgba(0,0,0,0.4)',
           },
         },
 
@@ -98,11 +98,10 @@ const GaugeSpeed = ({
 
         // 🎯 Aguja
         pointer: {
-          show: hasValue, // 👈 sin dato, sin aguja
           length: '65%',
           width: 6,
           itemStyle: {
-            color: color,
+            color: hasValue ? color : '#9ca3af',
           },
         },
 

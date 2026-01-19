@@ -1,29 +1,60 @@
-import { useEffect, useRef } from 'react';
-import * as echarts from 'echarts';
+import { useEffect, useRef } from 'react'
+import * as echarts from 'echarts'
 
 const EChart = ({ config }) => {
-    const chartRef = useRef(null);
-    const chartInstance = useRef(null);
+  const containerRef = useRef(null)
+  const chartRef = useRef(null)
 
-    useEffect(() => {
-        if (!chartInstance.current) {
-            chartInstance.current = echarts.init(chartRef.current);
-        }
+  // Inicializar UNA sola vez
+  useEffect(() => {
+    if (!containerRef.current) return
 
-        chartInstance.current.setOption(config, { notMerge: true }); // ⚡ Evita reiniciar el gráfico
+    chartRef.current = echarts.init(containerRef.current, null, {
+      renderer: 'canvas',
+    })
 
-        const resizeObserver = new ResizeObserver(() => {
-            chartInstance.current.resize();
-        });
+    return () => {
+      if (chartRef.current) {
+        chartRef.current.dispose()
+        chartRef.current = null
+      }
+    }
+  }, [])
 
-        resizeObserver.observe(chartRef.current);
+  // Actualizar opciones SIN recrear el chart
+  useEffect(() => {
+    if (!chartRef.current || !config) return
 
-        return () => {
-            resizeObserver.disconnect();
-        };
-    }, [config]);
+    chartRef.current.setOption(config, {
+      notMerge: false,
+      lazyUpdate: true,
+    })
+  }, [config])
 
-    return <div ref={chartRef} style={{ height: '100%', width: '100%' }}></div>;
-};
+  // Resize optimizado (sin loop)
+  useEffect(() => {
+    if (!chartRef.current) return
 
-export default EChart;
+    const handleResize = () => {
+      chartRef.current?.resize()
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
+
+  return (
+    <div
+      ref={containerRef}
+      style={{
+        width: '100%',
+        height: '100%',
+      }}
+    />
+  )
+}
+
+export default EChart

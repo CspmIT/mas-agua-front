@@ -82,7 +82,7 @@ const RenderImage = ({ el }) => {
     if (!config || config.animation !== 'wave') return;
 
     const animate = () => {
-      offsetRef.current += 0.1;
+      offsetRef.current += 0.025;
 
       wavePointsRef.current = generateWavePoints(el, config, offsetRef.current);
 

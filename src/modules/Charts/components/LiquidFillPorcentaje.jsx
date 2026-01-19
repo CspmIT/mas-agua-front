@@ -104,6 +104,12 @@ const LiquidFillPorcentaje = ({
         ? '#ffffff'
         : '#0f2a44'
 
+    const hasData =
+      hasValue &&
+      hasMax &&
+      safeMax > 0 &&
+      percentage > 0
+
     const options = {
       backgroundColor: 'transparent',
 
@@ -116,13 +122,11 @@ const LiquidFillPorcentaje = ({
           // ─── TUS OLITAS CON IDENTIDAD ───
           data: [
             percentage,
-            percentage * 0.98,
-            percentage * 0.96,
           ],
 
           amplitude: cfg.amplitude,
           waveLength: cfg.waveLength,
-          period: 4000,
+          period: hasData ? 4000 : 0,
 
           itemStyle: {
             color: {
@@ -140,9 +144,9 @@ const LiquidFillPorcentaje = ({
               ],
             },
 
-            shadowBlur: 30,
-            shadowOffsetY: 10,
-            shadowColor: 'rgba(0,0,0,0.3)',
+            // shadowBlur: 30,
+            // shadowOffsetY: 10,
+            // shadowColor: 'rgba(0,0,0,0.3)',
           },
 
           label: {
@@ -152,11 +156,11 @@ const LiquidFillPorcentaje = ({
               if (!hasValue) {
                 return 'Sin datos'
               }
-  
+
               if (porcentage) {
                 return `${(params.value * 100).toFixed(1)} %`
               }
-  
+
               return `${safeValue.toFixed(2)} ${unidad}${other ? `\n${other}` : ''}`
             },
 
@@ -191,13 +195,13 @@ const LiquidFillPorcentaje = ({
                 ],
               },
 
-              shadowBlur: 12,
-              shadowColor: 'rgba(0,0,0,0.4)',
+              // shadowBlur: 12,
+              // shadowColor: 'rgba(0,0,0,0.4)',
             },
           },
 
           animationEasing: 'cubicOut',
-          animationDuration: 1800,
+          animationDuration: hasData ? 1800 : 0,
           silent: true,
         },
       ],
@@ -215,14 +219,15 @@ const LiquidFillPorcentaje = ({
     multipleValues?.value
 
   const hasMainValue = isValidNumber(rawMain)
-  const main = hasMainValue ? Number(rawMain) : null
 
+  const main = hasMainValue ? Number(rawMain) : null
 
   const max = parseFloat(
     multipleValues?.maxValue ??
     multipleValues?.maxValue?.value ??
     1
   )
+
 
   const secondaryObj = multipleValues?.secondary
 
@@ -248,6 +253,12 @@ const LiquidFillPorcentaje = ({
       ? '#ffffff'
       : '#0f2a44'
 
+  const hasData =
+    hasMainValue &&
+    isValidNumber(max) &&
+    max > 0 &&
+    percentage > 0
+
   const options = {
     backgroundColor: 'transparent',
 
@@ -259,13 +270,11 @@ const LiquidFillPorcentaje = ({
 
         data: [
           percentage,
-          percentage * 0.98,
-          percentage * 0.96,
         ],
 
         amplitude: cfg.amplitude,
         waveLength: cfg.waveLength,
-        period: 4000,
+        period: hasData ? 4000 : 0,
 
         itemStyle: {
           color: {
@@ -282,9 +291,9 @@ const LiquidFillPorcentaje = ({
             ],
           },
 
-          shadowBlur: 30,
-          shadowOffsetY: 10,
-          shadowColor: 'rgba(0,0,0,0.3)',
+          // shadowBlur: 30,
+          // shadowOffsetY: 10,
+          // shadowColor: 'rgba(0,0,0,0.3)',
         },
 
         label: {
@@ -359,14 +368,14 @@ const LiquidFillPorcentaje = ({
               ],
             },
 
-            shadowBlur: 5,
-            shadowColor: 'rgba(0,0,0,0.4)',
+            // shadowBlur: 5,
+            // shadowColor: 'rgba(0,0,0,0.4)',
           },
         },
 
         silent: true,
         animationEasing: 'cubicOut',
-        animationDuration: 1800,
+        animationDuration: hasData ? 1800 : 0,
       },
     ],
   }

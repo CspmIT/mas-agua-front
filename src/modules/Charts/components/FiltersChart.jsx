@@ -104,7 +104,7 @@ const FiltersChart = ({ id_chart, setFilters }) => {
                             }}
                             fullWidth
                         >
-                            <MenuItem value="-1d">Último día</MenuItem>
+                            <MenuItem value="-1d">Últimas 24hs</MenuItem>
                             <MenuItem value="-7d">Últimos 7 días</MenuItem>
                             <MenuItem value="-30d">Últimos 30 días</MenuItem>
                             <MenuItem value="-3mo">Últimos 3 meses</MenuItem>
