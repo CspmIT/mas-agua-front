@@ -192,6 +192,17 @@ const PumpsTable = () => {
   const sendBombAction = async ({ bombId, actionId }) => {
     const url = backend[import.meta.env.VITE_APP_NAME]
 
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: '¿Desea cambiar el modo actual de la bomba?',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, enviar',
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true,
+    })
+  
+    if (!result.isConfirmed) return
+
     try {
       await request(`${url}/bombs_PLC/execute`, 'POST', {
         bombId,
@@ -200,7 +211,9 @@ const PumpsTable = () => {
       
       Swal.fire({
         icon: 'success',
-        text: 'Acción enviada',
+        title: 'Acción enviada',
+        text: 'En breve verás el cambio reflejado',
+        
         timer: 1500,
         showConfirmButton: false,
       })
