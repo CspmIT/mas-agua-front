@@ -14,6 +14,9 @@ const PumpsTable = () => {
   const [infoSuccion, setInfoSuccion] = useState([])
   const [columnsTable, setColumnsTable] = useState([])
   const [loading, setLoading] = useState(true)
+  
+  const getActionIdByName = (actions, name) =>
+    actions?.find(a => a.name === name)?.id
 
   const fetchPumps = async () => {
     const url = backend[import.meta.env.VITE_APP_NAME]
@@ -97,8 +100,23 @@ const PumpsTable = () => {
           header: 'Acciones',
           accessorKey: 'actions',
           Cell: ({ row }) => {
-            const actualMode = row.original.actual_mode
-            const isAutomatic = actualMode === 'Automático'
+            const { id: bombId, actual_mode, actions } = row.original
+            const isWithoutData = actual_mode === 'Sin datos'
+            const isAutomatic = actual_mode === 'Automático'
+
+            const handleAction = (actionName) => {
+              const actionId = getActionIdByName(actions, actionName)
+
+              if (!actionId) {
+                Swal.fire({
+                  icon: 'warning',
+                  text: `Acción ${actionName} no disponible`,
+                })
+                return
+              }
+
+              sendBombAction({ bombId, actionId })
+            }
 
             return (
               <Box display="flex" gap={1}>
@@ -106,7 +124,8 @@ const PumpsTable = () => {
                   variant="contained"
                   color="warning"
                   size="small"
-                  disabled={isAutomatic}
+                  disabled={isWithoutData || isAutomatic}
+                  onClick={() => handleAction('AUTO')}
                 >
                   AUTO
                 </Button>
@@ -115,7 +134,8 @@ const PumpsTable = () => {
                   variant="contained"
                   color="success"
                   size="small"
-                  disabled={!isAutomatic}
+                  disabled={isWithoutData || !isAutomatic}
+                  onClick={() => handleAction('ON')}
                 >
                   ON
                 </Button>
@@ -124,7 +144,8 @@ const PumpsTable = () => {
                   variant="contained"
                   color="error"
                   size="small"
-                  disabled={!isAutomatic}
+                  disabled={isWithoutData || !isAutomatic}
+                  onClick={() => handleAction('OFF')}
                 >
                   OFF
                 </Button>
@@ -167,6 +188,32 @@ const PumpsTable = () => {
     }
   }
 
+  //FUNCION PARA ENVIAR ACCION A LA BOMBA
+  const sendBombAction = async ({ bombId, actionId }) => {
+    const url = backend[import.meta.env.VITE_APP_NAME]
+
+    try {
+      await request(`${url}/bombs_PLC/execute`, 'POST', {
+        bombId,
+        actionId,
+      })
+      
+      Swal.fire({
+        icon: 'success',
+        text: 'Acción enviada',
+        timer: 1500,
+        showConfirmButton: false,
+      })
+
+      refreshBombStatus()
+    } catch (error) {
+      console.error(error)
+      Swal.fire({
+        icon: 'error',
+        text: 'No se pudo enviar la acción',
+      })
+    }
+  }
 
   useEffect(() => {
     fetchPumps();

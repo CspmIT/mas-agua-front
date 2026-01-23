@@ -249,7 +249,7 @@ const LiquidFillPorcentaje = ({
       : 0
 
   const textColor =
-    percentage > 0.6
+    percentage > 0.4
       ? '#ffffff'
       : '#0f2a44'
 
