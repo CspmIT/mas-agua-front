@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'Optimización de gráficos y diagrama'
+                  releaseBody: 'Modulo de bombeo de succión agregado y correcciones visuales.'
                   prerelease: false
