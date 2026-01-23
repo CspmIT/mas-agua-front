@@ -109,7 +109,6 @@ function NavBarCustom({ setLoading }) {
 		}, [])
 		result.sort((a, b) => a.order - b.order)
 		setMenuSideBar(result.filter((item) => Object.values(item).length))
-		console.log(menuSideBar);
 	}
 
 	const getPermissions = async () => {

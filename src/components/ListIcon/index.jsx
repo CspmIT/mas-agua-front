@@ -8,8 +8,9 @@ import {
     FaProjectDiagram,
     FaChartBar,
     FaMicrochip,
-    FaBell,
+    FaBell, 
 } from 'react-icons/fa'
+import { FaTable } from "react-icons/fa6";
 import { HiVariable } from 'react-icons/hi2'
 import { MdContentPaste, MdNotificationsActive, MdSchema } from 'react-icons/md'
 import { RiAlertFill, RiDashboardFill } from 'react-icons/ri'
@@ -93,6 +94,11 @@ const ListIcon = () => [
         title: 'Alarma', 
         name: 'FaBell', 
         icon: <FaBell className=' text-3xl' /> 
+    },
+    { 
+        title: 'Bombeo de succión', 
+        name: 'FaTable', 
+        icon: <FaTable className=' text-3xl' /> 
     }
 ]
 

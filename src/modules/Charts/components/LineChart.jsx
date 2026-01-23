@@ -42,7 +42,7 @@ const LineChart = memo(({ xType, xSeries, yType, ySeries }) => {
             splitNumber: 5,
             axisLabel: {
                 interval: interval,
-                rotate: 65,
+                rotate: 30,
                 showMinLabel: false 
             }
         },
