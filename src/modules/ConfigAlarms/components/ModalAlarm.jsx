@@ -33,6 +33,9 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
         secondaryVariableId: '',
         secondaryCondition: '',
         secondaryValue: '',
+        hasTimeRange: false,
+        startime: '',
+        endtime: '',
     })
 
     useEffect(() => {
@@ -49,6 +52,9 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                 secondaryVariableId: alarmData.secondaryVariableId || '',
                 secondaryCondition: alarmData.secondaryCondition || '',
                 secondaryValue: alarmData.secondaryValue || '',
+                hasTimeRange: !!(alarmData.startime && alarmData.endtime),
+                startime: alarmData.startime || '',
+                endtime: alarmData.endtime || '',
             })
         } else {
             setForm({
@@ -63,6 +69,9 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                 secondaryVariableId: '',
                 secondaryCondition: '',
                 secondaryValue: '',
+                hasTimeRange: false,
+                startime: '',
+                endtime: '',
             })
         }
     }, [alarmData, openModal])
@@ -92,6 +101,8 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
             secondaryVariableId: '',
             secondaryCondition: '',
             secondaryValue: '',
+            startime: '',
+            endtime: '',
         })
         setOpenModal(false)
     }
@@ -112,6 +123,13 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                 delete payload.secondaryCondition
                 delete payload.secondaryValue
                 delete payload.logicOperator
+            }
+
+            // Si no tiene rango horario, limpiamos los campos de tiempo
+            if (!form.hasTimeRange) {
+                delete payload.startime
+                delete payload.endtime
+                delete payload.hasTimeRange
             }
 
             if (alarmData?.id) {
@@ -164,13 +182,14 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                         label="Alarma combinada"
                     />
 
-                    <div className="flex flex-wrap w-full gap-3 justify-center my-4">
+                    <div className="flex flex-wrap w-full gap-3 justify-center mb-4">
                         <TextField
                             label="Nombre"
                             className="w-64"
                             value={form.name}
                             onChange={(e) => handleChange('name', e.target.value)}
                             required
+                            size='small'
                         />
 
                         <TextField
@@ -180,6 +199,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                             value={form.id_influxvars}
                             onChange={(e) => handleChange('id_influxvars', e.target.value)}
                             required
+                            size='small'
                         >
                             <MenuItem value="">Selecciona una variable</MenuItem>
                             {variables.map((v) => (
@@ -194,6 +214,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                             value={form.condition}
                             onChange={(e) => handleChange('condition', e.target.value)}
                             required
+                            size='small'
                         >
                             <MenuItem value=">">Mayor que</MenuItem>
                             <MenuItem value="<">Menor que</MenuItem>
@@ -210,6 +231,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                             value={form.value}
                             onChange={(e) => handleChange('value', e.target.value)}
                             required
+                            size='small'
                         />
 
                         {form.condition === 'entre' && (
@@ -220,18 +242,10 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                                 value={form.value2}
                                 onChange={(e) => handleChange('value2', e.target.value)}
                                 required
+                                size='small'
                             />
                         )}
 
-                        <TextField
-                            type="number"
-                            className="w-64"
-                            label="Intervalo de repetición (minutos)"
-                            value={form.repeatInterval || ''}
-                            onChange={(e) => handleChange('repeatInterval', e.target.value)}
-                            required
-                            inputProps={{ min: 0 }}
-                        />
 
                         {form.type === 'combined' && (
                             <>
@@ -241,6 +255,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                                     select
                                     value={form.logicOperator}
                                     onChange={(e) => handleChange('logicOperator', e.target.value)}
+                                    size='small'
                                 >
                                     <MenuItem value="AND">AND (y)</MenuItem>
                                     <MenuItem value="OR">OR (o)</MenuItem>
@@ -253,6 +268,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                                     value={form.secondaryVariableId}
                                     onChange={(e) => handleChange('secondaryVariableId', e.target.value)}
                                     required
+                                    size='small'
                                 >
                                     <MenuItem value="">Selecciona una variable</MenuItem>
                                     {variables.map((v) => (
@@ -267,6 +283,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                                     value={form.secondaryCondition}
                                     onChange={(e) => handleChange('secondaryCondition', e.target.value)}
                                     required
+                                    size='small'
                                 >
                                     <MenuItem value=">">Mayor que</MenuItem>
                                     <MenuItem value="<">Menor que</MenuItem>
@@ -282,6 +299,62 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                                     value={form.secondaryValue}
                                     onChange={(e) => handleChange('secondaryValue', e.target.value)}
                                     required
+                                    size='small'
+                                />
+                            </>
+                        )}
+
+                        <TextField
+                            type="number"
+                            className="w-64"
+                            label="Intervalo de repetición (minutos)"
+                            value={form.repeatInterval || ''}
+                            onChange={(e) => handleChange('repeatInterval', e.target.value)}
+                            required
+                            inputProps={{ min: 0 }}
+                            size='small'
+                        />
+
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={form.hasTimeRange}
+                                    onChange={(e) => {
+                                        const checked = e.target.checked
+                                        setForm(prev => ({
+                                            ...prev,
+                                            hasTimeRange: checked,
+                                            startime: checked ? (prev.startime || '00:00') : '',
+                                            endtime: checked ? (prev.endtime || '23:59') : '',
+                                        }))
+                                    }}
+                                    
+                                />
+                            }
+                            label="Restringir alarma a un rango horario"
+                            className='w-full justify-center text-center'
+                        />
+
+                        {form.hasTimeRange && (
+                            <>
+                                <TextField
+                                    type="time"
+                                    className="w-40"
+                                    label="Hora de inicio"
+                                    value={form.startime}
+                                    onChange={(e) => handleChange('startime', e.target.value)}
+                                    required
+                                    size="small"
+                                />
+
+                                <TextField
+                                    type="time"
+                                    className="w-40"
+                                    label="Hora de fin"
+                                    value={form.endtime}
+                                    onChange={(e) => handleChange('endtime', e.target.value)}
+                                    required
+                                    size="small"
                                 />
                             </>
                         )}

@@ -76,7 +76,7 @@ const FiltersChart = ({ id_chart, setFilters }) => {
     return (
         <>
             <CardCustom className="w-5/6 bg-slate-100 p-4 rounded-md border-2 border-slate-200 shadow-md shadow-slate-100 items-center">
-                <div className={`grid ${mode === 'relative' ? 'grid-cols-4' : 'grid-cols-5'} gap-3 items-center`}>
+                <div className={`grid sm:grid-cols-1 ${mode === 'relative' ? 'md:grid-cols-4' : 'md:grid-cols-5'} gap-3 items-center`}>
                     <TextField
                         select
                         label="Tipo de rango"
@@ -88,6 +88,7 @@ const FiltersChart = ({ id_chart, setFilters }) => {
                             setDateTo('')
                         }}
                         fullWidth
+                        size='small'
                     >
                         <MenuItem value="relative">Relativo</MenuItem>
                         <MenuItem value="absolute">Personalizado</MenuItem>
@@ -103,6 +104,7 @@ const FiltersChart = ({ id_chart, setFilters }) => {
                                 setSamplingPeriod('')
                             }}
                             fullWidth
+                            size='small'
                         >
                             <MenuItem value="-1d">Últimas 24hs</MenuItem>
                             <MenuItem value="-7d">Últimos 7 días</MenuItem>
@@ -120,6 +122,7 @@ const FiltersChart = ({ id_chart, setFilters }) => {
                                 onChange={(e) => setDateFrom(e.target.value)}
                                 InputLabelProps={{ shrink: true }}
                                 fullWidth
+                                size='small'
                             />
                             <TextField
                                 type="datetime-local"
@@ -128,6 +131,7 @@ const FiltersChart = ({ id_chart, setFilters }) => {
                                 onChange={(e) => setDateTo(e.target.value)}
                                 InputLabelProps={{ shrink: true }}
                                 fullWidth
+                                size='small'
                             />
                         </>
                     )}
@@ -138,6 +142,7 @@ const FiltersChart = ({ id_chart, setFilters }) => {
                         value={samplingPeriod}
                         onChange={(e) => setSamplingPeriod(e.target.value)}
                         fullWidth
+                        size='small'
                     >
                         {getSamplingOptions(dateRange, mode).map(opt => (
                             <MenuItem key={opt} value={opt}>{opt}</MenuItem>

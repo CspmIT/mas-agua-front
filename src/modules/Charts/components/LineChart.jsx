@@ -2,6 +2,11 @@ import { memo, useMemo } from 'react'
 import EChart from './EChart'
 
 const LineChart = memo(({ xType, xSeries, yType, ySeries }) => {
+    const isMobile = useMemo(
+        () => window.matchMedia('(max-width: 768px)').matches,
+        []
+      )
+
     const memoizedXSeries = useMemo(() => [...xSeries], [xSeries])
 
     const memoizedYSeries = useMemo(() => {
@@ -41,8 +46,9 @@ const LineChart = memo(({ xType, xSeries, yType, ySeries }) => {
             data: memoizedXSeries,
             splitNumber: 5,
             axisLabel: {
+                show: !isMobile, 
                 interval: interval,
-                rotate: 30,
+                rotate: 25,
                 showMinLabel: false 
             }
         },

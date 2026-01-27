@@ -70,6 +70,14 @@ const chartTypes = [
         description: 'Led de encendido o apagado con colores y palabras personalizables',
         boolean: true
     },
+    ,
+    {
+        id: 10,
+        title: 'Múltiple Boolean chart',
+        image: '/assets/img/charts/MultipleBooleanChart.png?height=300&width=300',
+        description: 'Múltiple LEDs de encendido o apagado con colores y palabras personalizables',
+        multipleBoolean: true
+    },
 ]
 
 function SelectType() {
@@ -81,6 +89,10 @@ function SelectType() {
         }
         if(chart?.boolean){
             navigate('/config/graphic/boolean')
+            return 
+        }
+        if(chart?.multipleBoolean){
+            navigate('/config/graphic/multipleBoolean')
             return 
         }
         if(chart?.pie){
