@@ -35,6 +35,7 @@ import ConfigPie from './modules/Charts/views/ConfigPie'
 import Alert from './modules/alert/views'
 import ConfigAlarms from './modules/ConfigAlarms/views/index'
 import PumpsTable from './modules/PumpsTable/views/index'
+import ConfigMultipleBooleanChart from './modules/Charts/views/ConfigMultipleBooleanChart'
 
 import ExternalUser from './modules/ExternalUsers/views/index'
 import { isTauri } from '@tauri-apps/api/core'
@@ -78,6 +79,8 @@ function App() {
 		{ path: '/config/graphic/:id', element: <ConfigGraphic /> },
 		{ path: '/config/graphic/:id/:idChart', element: <ConfigGraphic /> },
 		{ path: '/config/allGraphic', element: <ChartsTable /> },
+		{ path: '/config/graphic/multipleBoolean', element: <ConfigMultipleBooleanChart /> },
+		{ path: '/config/graphic/multipleBoolean/:id', element: <ConfigMultipleBooleanChart /> },
 		{ path: '/map', element: <MapView /> },
 		{ path: '/maps', element: <Maps /> },
 		{ path: '/map/create', element: <MapView create={true} /> },

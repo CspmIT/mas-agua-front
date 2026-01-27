@@ -70,16 +70,26 @@ const ConfigAlarms = () => {
             </span>
           ),
         },
-
         {
-          header: 'Repetir cada',
+          header: 'Repetir / Horario',
           accessorKey: 'repeatInterval',
-          size: 80,
-          Cell: ({ row }) => (
-            <span className="text-sm">{row.original.repeatInterval} min.</span>
-          ),
+          size: 160,
+          Cell: ({ row }) => {
+            const { repeatInterval, hasTimeRange, startime, endtime } = row.original
+        
+            return (
+              <div className="flex flex-col text-sm">
+                <span>{repeatInterval} min.</span>
+        
+                {hasTimeRange && (
+                  <span>
+                    Entre las {startime} y {endtime}
+                  </span>
+                )}
+              </div>
+            )
+          },
         },
-
         {
           header: 'Estado',
           accessorKey: 'status',

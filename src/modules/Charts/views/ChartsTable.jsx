@@ -52,6 +52,10 @@ const ChartsTable = () => {
                                     navigate(`/config/graphic/boolean/${row.original.id}`)
                                     return
                                 }
+                                if (type === 'MultipleBooleanChart') {
+                                    navigate(`/config/graphic/multipleBoolean/${row.original.id}`)
+                                    return
+                                }
                                 if (type === 'PumpControl') {
                                     navigate('/config/pumps')
                                     return

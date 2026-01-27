@@ -4,6 +4,7 @@ import PumpControl from '../../Charts/views/ConfigBombs'
 import LiquidFillBottomInfo from './LiquidFillBottomInfo'
 import logo from '../../../assets/img/Logo/MasAgua_hexagonal.png'
 import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
+import MultipleBooleanChart from '../../Charts/components/MultipleBooleanChart'
 
 export const ChartComponentDbWrapper = ({
     chartId,
@@ -49,11 +50,23 @@ export const ChartComponentDbWrapper = ({
             result[k] = {
                 ...infl,
                 value: inflValues[infl.id] ?? 0,
-                
+
             }
         })
 
         return result
+    }
+
+    const resolveMultipleBooleanItems = (items) => {
+        return items.map((item) => {
+            const infl = item.influxVar
+            const value = infl?.id ? inflValues[infl.id] ?? 'Sin datos' : 'Sin datos'
+
+            return {
+                ...item,
+                value,
+            }
+        })
     }
 
     useEffect(() => {
@@ -83,7 +96,17 @@ export const ChartComponentDbWrapper = ({
             return
         }
 
-        // 3) Simples clásicos
+        // 3) MultipleBooleanChart
+        if (ChartComponent === MultipleBooleanChart) {
+            const resolvedItems = resolveMultipleBooleanItems(initialData.items)
+            setChartData({
+                items: resolvedItems,
+            })
+            setLoading(false)
+            return
+        }
+
+        // 4) Simples clásicos
         if (initialData?.value?.id) {
             const value = resolveSimpleValue(initialData.value)
             setChartData({ ...initialData, value })
@@ -112,22 +135,22 @@ export const ChartComponentDbWrapper = ({
         )
     }
 
-    if (!isLiquidPorcentaje){
+    if (!isLiquidPorcentaje) {
         return <ChartComponent {...initialProps} {...chartData} />
-    }else {
+    } else {
         const bottom1 = LiquidButtomData?.bottom1
         const bottom2 = LiquidButtomData?.bottom2
-      
+
         return (
-          <div className="flex flex-col h-full w-full">
-            <div className="flex-1 flex items-center justify-center">
-              <ChartComponent {...initialProps} {...chartData} />
+            <div className="flex flex-col h-full w-full">
+                <div className="flex-1 flex items-center justify-center">
+                    <ChartComponent {...initialProps} {...chartData} />
+                </div>
+                <div className='w-full px-2 flex items-center justify-center'>
+                    <LiquidFillBottomInfo bottom1={bottom1} bottom2={bottom2} />
+                </div>
             </div>
-            <div className='w-full px-2 flex items-center justify-center'>
-                <LiquidFillBottomInfo bottom1={bottom1} bottom2={bottom2} />
-            </div>
-          </div>
         )
     }
-    
+
 }
