@@ -28,7 +28,7 @@ const LedIndicator = ({
             : textOff
 
     return (
-        <div className="flex flex-col gap-1 mx-2 my-1 px-3 py-2 bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex flex-col ms-2 me-2 my-1 px-2 py-2 bg-white rounded-xl border border-slate-200 shadow-sm">
             <span className="text-md font-medium text-slate-700">
                 {label}
             </span>
@@ -36,8 +36,8 @@ const LedIndicator = ({
             <div className="flex items-center gap-3">
                 <span
                     style={{
-                        width: 18,
-                        height: 18,
+                        width: 20,
+                        height: 20,
                         borderRadius: '50%',
                         backgroundColor: color,
 
@@ -64,7 +64,7 @@ const LedIndicator = ({
 
                 <div className="flex flex-col leading-tight">
                     <span
-                        className="text-lg font-semibold"
+                        className="text-lg font-bold"
                         style={{
                             color: !hasValue
                                 ? '#6b7280'
@@ -113,14 +113,15 @@ const MultipleBooleanChart = ({
                 height: '100%',
                 width: '100%',
             }}
+            className="flex flex-col"
         >
             {title && (
-                <div className="p-3 bg-slate-100/75 border-b-2 border-b-[#e5e7eb]">
+                <div className="p-3 bg-slate-100/75 border-b-2 border-b-[#e5e7eb] shrink-0">
                     <h1 className='text-xl leading-tight line-clamp-2'>{title}</h1>
                 </div>
             )}
 
-            <div className="pt-1 grid sm:grid-cols-1 md:grid-cols-2">
+            <div className="pt-1 grid grid-cols-2 h-[80%] justify-center align-middle overflow-auto">
                 {items.map(item => (
                     <LedIndicator
                         key={item.key}

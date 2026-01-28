@@ -146,7 +146,7 @@ export const ChartComponentDbWrapper = ({
                 <div className="flex-1 flex items-center justify-center">
                     <ChartComponent {...initialProps} {...chartData} />
                 </div>
-                <div className='w-full px-2 flex items-center justify-center'>
+                <div className='w-full px-1 flex items-center justify-center'>
                     <LiquidFillBottomInfo bottom1={bottom1} bottom2={bottom2} />
                 </div>
             </div>

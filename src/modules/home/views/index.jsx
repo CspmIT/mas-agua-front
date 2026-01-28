@@ -252,7 +252,7 @@ const Home = () => {
                     <Grid
                         item
                         xs={12}
-                        sm={isPump || isMultipleBoolean ? 12 : 4}
+                        sm={isPump || isMultipleBoolean ? 8 : 4}
                         lg={isPump || isMultipleBoolean ? 4 : 2}
                         key={index}
                     >
