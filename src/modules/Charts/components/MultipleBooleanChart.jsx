@@ -28,7 +28,7 @@ const LedIndicator = ({
             : textOff
 
     return (
-        <div className="flex flex-col ms-2 me-2 my-1 px-2 py-2 bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div className="flex flex-col px-2 py-2 bg-white rounded-xl border border-slate-200 shadow-sm ">
             <span className="text-md font-medium text-slate-700">
                 {label}
             </span>
@@ -121,7 +121,7 @@ const MultipleBooleanChart = ({
                 </div>
             )}
 
-            <div className="pt-1 grid grid-cols-2 h-[80%] justify-center align-middle overflow-auto">
+            <div className="pt-1 grid grid-cols-2 h-[80%] m-2 gap-2 justify-center align-middle overflow-auto">
                 {items.map(item => (
                     <LedIndicator
                         key={item.key}
