@@ -5,22 +5,22 @@ const LineChart = memo(({ xType, xSeries, yType, ySeries }) => {
     const isMobile = useMemo(
         () => window.matchMedia('(max-width: 768px)').matches,
         []
-      )
+    )
 
     const memoizedXSeries = useMemo(() => [...xSeries], [xSeries])
 
     const memoizedYSeries = useMemo(() => {
         return ySeries.map(series => ({
-          ...series,
-          data: [...series.data],
-          ...(series.areaStyle && {
-            areaStyle: {
-              opacity: 0.15
-            }
-          })
+            ...series,
+            data: [...series.data],
+            ...(series.areaStyle && {
+                areaStyle: {
+                    opacity: 0.15
+                }
+            })
         }))
-      }, [ySeries])         
-    
+    }, [ySeries])
+
     const maxLabels = 24
     const interval = Math.ceil(memoizedXSeries.length / maxLabels)
     const options = useMemo(() => ({
@@ -46,10 +46,13 @@ const LineChart = memo(({ xType, xSeries, yType, ySeries }) => {
             data: memoizedXSeries,
             splitNumber: 5,
             axisLabel: {
-                show: !isMobile, 
+                show: !isMobile,
                 interval: interval,
                 rotate: 25,
-                showMinLabel: false 
+                showMinLabel: false
+            },
+            axisTick: {
+                show: !isMobile,
             }
         },
         yAxis: {

@@ -4,7 +4,7 @@ import LoaderComponent from '../../../components/Loader'
 
 const chartComponentMap = {
     LineChart: ({ chartData }) => (
-        <div className="h-80 w-full">
+        <div className="h-[50dvh] 2xl:h-[55dvh] w-full">
             <LineChart
                 xType="category"
                 yType="value"
