@@ -17,38 +17,57 @@ export const chartQueryBuilderMap = {
         )
 
         const query = lineChart.generateQuery(filters)
+
         const { data } = await request(
             `${backend['Mas Agua']}/seriesDataInflux`,
             'POST',
             query
         )
 
-        const referenceSeries = Object.keys(data).find(
-            (key) => data[key].length > 0
-        )
+        // 1) Buscar la variable con más registros -> de ahí sale el eje X
+        const referenceKey = Object.keys(data).reduce((bestKey, currentKey) => {
+            const bestLen = data[bestKey]?.length || 0
+            const currentLen = data[currentKey]?.length || 0
+            return currentLen > bestLen ? currentKey : bestKey
+        }, Object.keys(data)[0])
 
-        const xSeries = referenceSeries
-            ? data[referenceSeries].map((item) => item.time)
+        const xSeries = referenceKey
+            ? data[referenceKey].map((p) => p.time)
             : []
 
-        const ySeries = lineChart.getYSeries().map((series) => ({
-            ...series,
-            data:
-                data[series.idVar.id]?.map((point) => {
-                    const value = point.value
-                    if (typeof value === 'boolean') {
-                        return value ? 1 : 0
-                    }
-                    if (
-                        value !== null &&
-                        value !== undefined &&
-                        !isNaN(value)
-                    ) {
-                        return parseFloat(value).toFixed(3)
-                    }
-                    return '-'
-                }) || [],
-        }))
+        // 2) Crear un mapa por variable: time -> value
+        const timeValueMaps = {}
+        for (const varId of Object.keys(data)) {
+            const map = new Map()
+            for (const point of data[varId] || []) {
+                map.set(point.time, point.value)
+            }
+            timeValueMaps[varId] = map
+        }
+
+        // 3) Armar ySeries alineado al xSeries y completar con null si falta
+        const ySeries = lineChart.getYSeries().map((series) => {
+            const varId = String(series.idVar.id)
+            const map = timeValueMaps[varId] || new Map()
+
+            const alignedData = xSeries.map((time) => {
+                const value = map.get(time)
+
+                if (typeof value === 'boolean') return value ? 1 : 0
+
+                if (value !== null && value !== undefined && !isNaN(value)) {
+                    return Number(parseFloat(value).toFixed(3))
+                }
+
+                // clave: si no hay dato para ese time => null
+                return null
+            })
+
+            return {
+                ...series,
+                data: alignedData,
+            }
+        })
 
         return { xSeries, ySeries }
     },
