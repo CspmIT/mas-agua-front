@@ -2,6 +2,7 @@ import { memo, useMemo } from 'react'
 import EChart from './EChart'
 
 const LineChart = memo(({ xType, xSeries, yType, ySeries }) => {
+
     const isMobile = useMemo(
         () => window.matchMedia('(max-width: 768px)').matches,
         []
@@ -26,6 +27,32 @@ const LineChart = memo(({ xType, xSeries, yType, ySeries }) => {
     const options = useMemo(() => ({
         tooltip: {
             trigger: 'axis',
+            formatter: (params) => {
+                if (!params?.length) return ''
+
+                // título (time)
+                const title = params[0]?.axisValueLabel ?? params[0]?.axisValue ?? ''
+                let html = `<div style="font-weight:600;margin-bottom:4px;">${title}</div>`
+
+                params.forEach((p) => {
+                    const rawValue = p.data
+
+                    const valueText =
+                        rawValue === null || rawValue === undefined || rawValue === '-' || Number.isNaN(rawValue)
+                            ? 'Sin datos'
+                            : rawValue
+
+                    html += `
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};"></span>
+                    <span>${p.seriesName}:</span>
+                    <b>${valueText}</b>
+                  </div>
+                `
+                })
+
+                return html
+            },
         },
         legend: {
             data: memoizedYSeries.map(serie => serie.name),
@@ -58,7 +85,15 @@ const LineChart = memo(({ xType, xSeries, yType, ySeries }) => {
         yAxis: {
             type: yType,
         },
-        series: memoizedYSeries
+        series: memoizedYSeries.map((s) => ({
+            ...s,
+            type: 'line',
+            connectNulls: true,
+            showSymbol: true,
+            showAllSymbol: true,
+            symbolSize: 2,
+            sampling: 'none',
+        }))
     }), [xType, memoizedXSeries, yType, memoizedYSeries])
 
     return <EChart config={options} />
