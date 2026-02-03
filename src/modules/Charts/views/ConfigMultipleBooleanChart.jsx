@@ -316,11 +316,8 @@ const ConfigMultipleBooleanChart = () => {
                                             />
                                         </div>
                                     </div>
-
-
-
-
                                 </div>
+                                
                                 <div className='!bg-white'>
                                     <SelectVars
                                         setValueState={v => setLedVar(index, v)}
