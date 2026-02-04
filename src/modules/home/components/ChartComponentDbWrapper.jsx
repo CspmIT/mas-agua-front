@@ -5,6 +5,7 @@ import LiquidFillBottomInfo from './LiquidFillBottomInfo'
 import logo from '../../../assets/img/Logo/MasAgua_hexagonal.png'
 import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
 import MultipleBooleanChart from '../../Charts/components/MultipleBooleanChart'
+import { Chart } from 'highcharts'
 
 export const ChartComponentDbWrapper = ({
     chartId,
@@ -61,7 +62,6 @@ export const ChartComponentDbWrapper = ({
         return items.map((item) => {
             const infl = item.influxVar
             const value = infl?.id ? inflValues[infl.id] ?? 'Sin datos' : 'Sin datos'
-
             return {
                 ...item,
                 value,
@@ -88,7 +88,7 @@ export const ChartComponentDbWrapper = ({
             return
         }
         // 2) LIQUID — adapter por slots
-        if (initialData?.secondary || initialData?.bottom1) {
+        if (initialData?.secondary || initialData?.bottom1 || initialData?.bottom2 || initialData?.maxValue) {
             const multipleValues = resolveLiquidProps(initialData)
             setChartData({ ...initialData, multipleValues })
             setLiquidButtomData(multipleValues)
