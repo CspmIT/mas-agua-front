@@ -1,11 +1,10 @@
 import { useEffect, useRef } from 'react'
 import * as echarts from 'echarts'
 
-const EChart = ({ config }) => {
+const EChart = ({ config, onZoomRange, onRestore }) => {
   const containerRef = useRef(null)
   const chartRef = useRef(null)
 
-  // Inicializar UNA sola vez
   useEffect(() => {
     if (!containerRef.current) return
 
@@ -21,7 +20,6 @@ const EChart = ({ config }) => {
     }
   }, [])
 
-  // Actualizar opciones SIN recrear el chart
   useEffect(() => {
     if (!chartRef.current || !config) return
 
@@ -31,7 +29,51 @@ const EChart = ({ config }) => {
     })
   }, [config])
 
-  // Resize optimizado (sin loop)
+  // zoom listener
+  useEffect(() => {
+    if (!chartRef.current) return
+    if (!onZoomRange) return
+
+    const chart = chartRef.current
+
+    const handler = (event) => {
+      const batch = event?.batch?.[0]
+      if (!batch) return
+
+      const startValue = batch.startValue
+      const endValue = batch.endValue
+
+      if (!Number.isFinite(startValue) || !Number.isFinite(endValue)) return
+      if (endValue <= startValue) return
+
+      onZoomRange({ startMs: startValue, endMs: endValue })
+    }
+
+    chart.on('dataZoom', handler)
+
+    return () => {
+      chart.off('dataZoom', handler)
+    }
+  }, [onZoomRange])
+
+  // ✅ restore listener (toolbox restore)
+  useEffect(() => {
+    if (!chartRef.current) return
+    if (!onRestore) return
+
+    const chart = chartRef.current
+
+    const handler = () => {
+      onRestore()
+    }
+
+    chart.on('restore', handler)
+
+    return () => {
+      chart.off('restore', handler)
+    }
+  }, [onRestore])
+
   useEffect(() => {
     if (!chartRef.current) return
 
@@ -45,7 +87,7 @@ const EChart = ({ config }) => {
       window.removeEventListener('resize', handleResize)
     }
   }, [])
-
+  
   return (
     <div
       ref={containerRef}

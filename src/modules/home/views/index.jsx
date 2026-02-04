@@ -87,10 +87,13 @@ const Home = () => {
                 `${backend['Mas Agua']}/indicatorCharts`,
                 'GET'
             )
-
-            const formatConfig = data.map((chart) => {
+           
+            const formatConfig = data
+            .filter(chart => chart.type !== 'BoardChart')
+            .map((chart) => {
+                
                 const { type } = chart
-
+                
                 const propsReduce = chart.ChartConfig.reduce((acc, config) => {
                     const { key, value, type } = config
 
@@ -141,17 +144,14 @@ const Home = () => {
 
                 if (type === 'MultipleBooleanChart') {
 
-                    // 1️⃣ Agrupar config por LED
                     const ledsConfig = {}
                 
                     chart.ChartConfig.forEach(({ key, value }) => {
-                        // key ejemplo: led_x.textOn
                         const [ledKey, prop] = key.split('.')
                         if (!ledsConfig[ledKey]) ledsConfig[ledKey] = { key: ledKey }
                         ledsConfig[ledKey][prop] = value
                     })
                 
-                    // 2️⃣ Armar items combinando config + data
                     const items = Object.values(ledsConfig).map((led) => {
                         const influx = chart.ChartData.find(d => d.key === led.key)
                 
