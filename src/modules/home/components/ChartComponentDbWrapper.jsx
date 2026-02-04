@@ -14,6 +14,7 @@ export const ChartComponentDbWrapper = ({
     initialData,
     inflValues,
 }) => {
+    
     const [chartData, setChartData] = useState(initialData)
     const [LiquidButtomData, setLiquidButtomData] = useState({})
     const [loading, setLoading] = useState(true)
@@ -54,7 +55,6 @@ export const ChartComponentDbWrapper = ({
 
             }
         })
-
         return result
     }
 
@@ -88,7 +88,7 @@ export const ChartComponentDbWrapper = ({
             return
         }
         // 2) LIQUID — adapter por slots
-        if (initialData?.secondary || initialData?.bottom1 || initialData?.bottom2 || initialData?.maxValue) {
+        if (isLiquidPorcentaje) {
             const multipleValues = resolveLiquidProps(initialData)
             setChartData({ ...initialData, multipleValues })
             setLiquidButtomData(multipleValues)
