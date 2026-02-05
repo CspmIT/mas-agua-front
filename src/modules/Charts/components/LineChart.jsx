@@ -159,11 +159,9 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
         formatter: tooltipFormatter,
       },
 
-      // ✅ Legend mobile friendly
       legend: isMobile
         ? {
             type: 'scroll',
-            orient: 'vertical',
             bottom: 50,
             top: 'auto',
             itemWidth: 14,
