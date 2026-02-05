@@ -159,23 +159,44 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
         formatter: tooltipFormatter,
       },
 
-      legend: {
-        data: memoizedYSeries.map((s) => s.name),
-      },
+      // ✅ Legend mobile friendly
+      legend: isMobile
+        ? {
+            type: 'scroll',
+            orient: 'vertical',
+            bottom: 50,
+            top: 'auto',
+            itemWidth: 14,
+            itemHeight: 10,
+            itemGap: 10,
+            textStyle: {
+              fontSize: 11,
+            },
+            data: memoizedYSeries.map((s) => s.name),
+          }
+        : {
+            type: 'scroll',
+            orient: 'horizontal',
+            top: 0,
+            left: 'center',
+            itemGap: 14,
+            data: memoizedYSeries.map((s) => s.name),
+          },
 
       grid: {
         left: '3%',
         right: '4%',
-        top: '8%',
-        bottom: isMobile ? '10%' : '6%',
+        top: isMobile ? '8%' : '10%',
+        bottom: isMobile ? 90 : 20, // 👈 deja espacio para la leyenda mobile
         containLabel: true,
       },
 
       toolbox: {
+        right: 10,
+        top: 5,
         feature: {
-          dataZoom: { 
-            yAxisIndex: 'none',
-           },
+          // Si querés ocultar el icono de zoom reset:
+          dataZoom: { yAxisIndex: 'none' },
 
           dataView: {
             readOnly: true,
@@ -185,23 +206,24 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
           },
 
           restore: {
-            title: 'Restablecer'
+            title: 'Restablecer',
           },
+
           saveAsImage: {
-            name: "Gráfico +Agua",
-            title: 'Guardar imagen'
-          }
+            name: 'Gráfico +Agua',
+            title: 'Guardar imagen',
+          },
         },
       },
 
       xAxis: {
         type: 'time',
-        splitNumber: isMobile ? 4 : 10,
-        offset: 5,
+        splitNumber: isMobile ? 6 : 12,
         axisLabel: {
-          show: !isMobile,
-          rotate: 20,
+          show: true,
+          rotate: isMobile ? 35 : 20,
           formatter: axisLabelFormatter,
+          hideOverlap: true,
         },
       },
 
@@ -222,14 +244,12 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
           minValueSpan: 2 * 60 * 1000,
           start: 0,
           end: 100,
-          moveHandleSize: 12
         },
-
         {
           type: 'slider',
           xAxisIndex: 0,
           height: 28,
-          bottom: 0,
+          bottom: isMobile ? 5 : 0,
           filterMode: 'none',
           minValueSpan: 2 * 60 * 1000,
           showDetail: true,
