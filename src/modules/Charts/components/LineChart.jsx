@@ -117,7 +117,6 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
 
   const memoizedXSeries = useMemo(() => [...(xSeries || [])], [xSeries])
 
-  // ySeries => formato [timeMs, value]
   const memoizedYSeries = useMemo(() => {
     return (ySeries || []).map((series) => {
       const data = (series.data || []).map((v, i) => {
@@ -185,15 +184,15 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
         left: '3%',
         right: '4%',
         top: isMobile ? '8%' : '10%',
-        bottom: isMobile ? 90 : 20, // 👈 deja espacio para la leyenda mobile
+        bottom: isMobile ? 90 : 20, 
         containLabel: true,
       },
 
       toolbox: {
         right: 10,
-        top: 5,
+        left: isMobile ? 'center' : null,
+        itemSize: isMobile ? 18 : null,
         feature: {
-          // Si querés ocultar el icono de zoom reset:
           dataZoom: { yAxisIndex: 'none' },
 
           dataView: {
