@@ -191,7 +191,7 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
       toolbox: {
         right: 10,
         left: isMobile ? 'center' : null,
-        itemSize: isMobile ? 18 : null,
+        itemSize: isMobile ? 18 : 14,
         feature: {
           dataZoom: { yAxisIndex: 'none' },
 
