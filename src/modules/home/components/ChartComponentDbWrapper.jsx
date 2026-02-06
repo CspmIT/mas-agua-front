@@ -5,6 +5,7 @@ import LiquidFillBottomInfo from './LiquidFillBottomInfo'
 import logo from '../../../assets/img/Logo/MasAgua_hexagonal.png'
 import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
 import MultipleBooleanChart from '../../Charts/components/MultipleBooleanChart'
+import { Chart } from 'highcharts'
 
 export const ChartComponentDbWrapper = ({
     chartId,
@@ -13,6 +14,7 @@ export const ChartComponentDbWrapper = ({
     initialData,
     inflValues,
 }) => {
+    
     const [chartData, setChartData] = useState(initialData)
     const [LiquidButtomData, setLiquidButtomData] = useState({})
     const [loading, setLoading] = useState(true)
@@ -53,7 +55,6 @@ export const ChartComponentDbWrapper = ({
 
             }
         })
-
         return result
     }
 
@@ -61,7 +62,6 @@ export const ChartComponentDbWrapper = ({
         return items.map((item) => {
             const infl = item.influxVar
             const value = infl?.id ? inflValues[infl.id] ?? 'Sin datos' : 'Sin datos'
-
             return {
                 ...item,
                 value,
@@ -88,7 +88,7 @@ export const ChartComponentDbWrapper = ({
             return
         }
         // 2) LIQUID — adapter por slots
-        if (initialData?.secondary || initialData?.bottom1) {
+        if (isLiquidPorcentaje) {
             const multipleValues = resolveLiquidProps(initialData)
             setChartData({ ...initialData, multipleValues })
             setLiquidButtomData(multipleValues)
@@ -146,7 +146,7 @@ export const ChartComponentDbWrapper = ({
                 <div className="flex-1 flex items-center justify-center">
                     <ChartComponent {...initialProps} {...chartData} />
                 </div>
-                <div className='w-full px-2 flex items-center justify-center'>
+                <div className='w-full px-1 flex items-center justify-center'>
                     <LiquidFillBottomInfo bottom1={bottom1} bottom2={bottom2} />
                 </div>
             </div>

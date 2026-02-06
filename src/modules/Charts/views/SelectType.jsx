@@ -70,13 +70,19 @@ const chartTypes = [
         description: 'Led de encendido o apagado con colores y palabras personalizables',
         boolean: true
     },
-    ,
     {
         id: 10,
         title: 'Múltiple Boolean chart',
         image: '/assets/img/charts/MultipleBooleanChart.png?height=300&width=300',
         description: 'Múltiple LEDs de encendido o apagado con colores y palabras personalizables',
         multipleBoolean: true
+    },
+    {
+        id: 11,
+        title: 'Board chart',
+        image: '/assets/img/charts/boardchart.png?height=300&width=300',
+        description: 'Tablero para visualizacion de gráficos, estados de bombas y estado de sala.',
+        board: true
     },
 ]
 
@@ -99,15 +105,21 @@ function SelectType() {
             navigate('/config/graphic/pie')
             return
         }
+        if(chart?.board){
+            navigate('/config/graphic/board')
+            return
+        }
         navigate(`/config/graphic/${chart.id}`)
     }
     return (
         <Box className="p-6 min-[90vh]">
-            <div className="flex justify-between items-center">
-                <Typography variant="h4" className="text-gray-800">
+            <div className="grid grid-cols-3 justify-between items-center">
+                <div />
+                <Typography variant="h4" className="text-gray-800 justify-self-center">
                     Seleccione el tipo de grafico
                 </Typography>
                 <IconButton
+                    className='justify-self-end'
                     sx={{
                         color: 'black',
                         marginRight: 2,

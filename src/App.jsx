@@ -40,6 +40,8 @@ import ConfigMultipleBooleanChart from './modules/Charts/views/ConfigMultipleBoo
 import ExternalUser from './modules/ExternalUsers/views/index'
 import { isTauri } from '@tauri-apps/api/core'
 import { useUpdater } from './hooks/useUpdater'
+import ConfigBoardChart from './modules/Charts/views/ConfigBoardChart'
+import Boards from './modules/Boards/views'
 
 
 function App() {
@@ -81,6 +83,8 @@ function App() {
 		{ path: '/config/allGraphic', element: <ChartsTable /> },
 		{ path: '/config/graphic/multipleBoolean', element: <ConfigMultipleBooleanChart /> },
 		{ path: '/config/graphic/multipleBoolean/:id', element: <ConfigMultipleBooleanChart /> },
+		{ path: '/config/graphic/board', element: <ConfigBoardChart /> },
+		{ path: '/config/graphic/board/:id', element: <ConfigBoardChart /> },
 		{ path: '/map', element: <MapView /> },
 		{ path: '/maps', element: <Maps /> },
 		{ path: '/map/create', element: <MapView create={true} /> },
@@ -90,7 +94,8 @@ function App() {
 		{ path: '/alert', element: <Alert /> },
 		{ path: '/config/alarm', element: <ConfigAlarms /> },
 		{ path: '/external', element: <ExternalUser /> },
-		{ path: '/list/pumps', element: <PumpsTable/>}
+		{ path: '/list/pumps', element: <PumpsTable/>},
+		{ path: '/boards', element: <Boards />},
 	]
 
 	const externalRoutes = [

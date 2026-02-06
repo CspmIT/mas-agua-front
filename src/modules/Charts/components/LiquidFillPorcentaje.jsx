@@ -119,7 +119,6 @@ const LiquidFillPorcentaje = ({
           shape,
           radius: cfg.radius,
 
-          // ─── TUS OLITAS CON IDENTIDAD ───
           data: [
             percentage,
           ],
@@ -136,7 +135,6 @@ const LiquidFillPorcentaje = ({
               x2: 0,
               y2: 1,
 
-              // ─── TU DEGRADE SAGRADO ───
               colorStops: [
                 { offset: 0, color: '#a5f3fc' },
                 { offset: 0.5, color },
@@ -167,7 +165,6 @@ const LiquidFillPorcentaje = ({
             fontSize: cfg.fontSize,
             fontWeight: 'bold',
 
-            // ─── TU CONTRASTE INTELIGENTE ───
             color: textColor,
 
             lineHeight: cfg.fontSize + 6,
@@ -175,7 +172,6 @@ const LiquidFillPorcentaje = ({
             textShadowBlur: 6,
           },
 
-          // ─── TU OUTLINE CON GRADIENTE ───
           outline: {
             show: border,
             borderDistance: cfg.outlineDistance,
@@ -211,7 +207,7 @@ const LiquidFillPorcentaje = ({
   }
 
   // ─────────────────────────────────────────────
-  // 2) MODO MÚLTIPLE – MISMA ESTÉTICA, OTROS TEXTOS
+  // 2) MODO MÚLTIPLE
   // ─────────────────────────────────────────────
 
   const rawMain =
@@ -361,7 +357,6 @@ const LiquidFillPorcentaje = ({
               x2: 1,
               y2: 1,
 
-              // ─── TU MISMO GRADIENTE DE OUTLINE ───
               colorStops: [
                 { offset: 0, color: '#93c5fd' },
                 { offset: 1, color: '#1e3a8a' },

@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'Agrego rango de horas para alarmas y card MultipleBooleanChart'
+                  releaseBody: 'Modulo de Tableros y cambios en gráficos lineales.'
                   prerelease: false

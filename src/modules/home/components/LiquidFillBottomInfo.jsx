@@ -22,17 +22,15 @@ const LiquidFillBottomInfo = ({ bottom1, bottom2 }) => {
         return (
             <>
                 <Typography variant="subtitle1" className="text-center">
-                    {label && <span className="font-medium">{label} </span>}
-                    
+                    {label && <span className="font-medium">{label} </span>}    
                     <span className="font-bold text-lg">{value} {unit}</span>
                 </Typography>
-                
             </>
         )
     }
 
     return (
-        <div className="flex flex-col items-center py-1 mb-2 rounded-xl bg-slate-50/30 border-2 border-blue-200 w-full">
+        <div className="flex flex-col items-center mb-1 rounded-xl bg-slate-50/30 border-2 border-blue-200 w-full">
             {renderItem(bottom1)}
             {renderItem(bottom2)}
         </div>
