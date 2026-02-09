@@ -25,12 +25,11 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 	}
 
 	return (
-		<div className='w-full'>
+		<div className='!w-full'>
 			<ListItemButton
 				onClick={(evento) => handleOpen(evento)}
-				className='!w-full !px-5'
+				className='!w-full'
 				sx={{
-					minHeight: isMobile ? 60 : 48,
 					justifyContent: isMobile ? 'center' : 'flex-start',
 				}}
 			>
@@ -42,6 +41,7 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 					}`}
 					sx={{
 						...(isMobile && {
+							margin: -2,
 							minWidth: 'auto !important',
 						}),
 					}}
@@ -92,10 +92,10 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 				<Popper
 					id={item.name}
 					key={item.name}
-					className='p-2 bg-[#ffffff] z-40 rounded-md shadow-md flex flex-col justify-start'
-					placement='left-start'
+					className='p-2 bg-[#ffffff] z-50 rounded-md shadow-md flex flex-col justify-start'
+					placement={isMobile ? 'top-end' : 'left-start'}
 					open={openSub}
-					anchorEl={anchorEl} // Solo abrir si `anchorEl` es válido
+					anchorEl={anchorEl} 
 					sx={{
 						...(isMobile && {
 							transform: 'translate3d(-50px, -76px, 0px) !important',

@@ -178,13 +178,13 @@ function NavBarCustom({ setLoading }) {
 						position: 'fixed',
 						bottom: 0,
 						width: '100%',
-						height: '10vh',
+						height: '9vh',
 						zIndex: 1200,
 						'& .MuiDrawer-paper': {
 							position: 'absolute',
 							bottom: 0,
 							width: '100%',
-							height: '10vh',
+							height: '9vh',
 							display: 'flex',
 							flexDirection: 'row',
 							justifyContent: 'space-around',
@@ -208,6 +208,7 @@ function NavBarCustom({ setLoading }) {
 								flexDirection: 'row',
 								justifyContent: 'center',
 								width: '100%',
+								height: '100%',
 								padding: 0,
 							}),
 						}}
@@ -230,6 +231,7 @@ function NavBarCustom({ setLoading }) {
 										...(isMobile && {
 											flexGrow: 1,
 											flexBasis: 0,
+											maxWidth: 60
 										}),
 									}}
 								>
@@ -248,7 +250,7 @@ function NavBarCustom({ setLoading }) {
 													minHeight: 48,
 													justifyContent: !isMobile && open ? 'initial' : 'center',
 													padding: !isMobile ? '1.25rem' : '0.2rem',
-													py: 1.8,
+													py: 1.8
 												}}
 												className={`!w-full ${item.link === '/Alert' && newEvent ? styles.backgroundAlert : ''
 													}`}

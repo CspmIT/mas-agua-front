@@ -28,7 +28,6 @@ const MapBase = ({
     withInfo = false, // Determina si se consulta InfluxDB
 }) => {
     function extractInfluxVarsFromMarkers(markers) {
-        console.log(markers)
         return markers.map((m) => ({
             dataInflux: m.popupInfo.data   // el objeto entero
         }))
