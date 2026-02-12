@@ -87,7 +87,7 @@ export const ChartComponentDbWrapper = ({
             setLoading(false)
             return
         }
-        // 2) LIQUID — adapter por slots
+        // 2) LiquidPorcentaje — adapter por slots
         if (isLiquidPorcentaje) {
             const multipleValues = resolveLiquidProps(initialData)
             setChartData({ ...initialData, multipleValues })

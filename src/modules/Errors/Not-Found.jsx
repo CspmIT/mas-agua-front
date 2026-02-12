@@ -35,7 +35,7 @@ export default function NotFound() {
       </div>
 
       <div className="mt-8">
-        <img src="../../../src/assets/img/Logo_Cooptech.png" alt="COOPTECH Logo" width={160} height={80} />
+        <img src="/assets/img/logoCooptech.png" alt="COOPTECH Logo" width={160} height={80} />
       </div>
     </div>
   )
