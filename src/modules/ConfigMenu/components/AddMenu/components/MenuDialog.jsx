@@ -54,20 +54,36 @@ export default function MenuDialog({
   const type = isSubmenu ? 'submenu' : 'menu';
 
   useEffect(() => {
+    resetForm()
+  
     if (mode === 'edit' && menu) {
       setForm(menu)
       loadPermissions(menu.id)
+      return
     }
-
+  
     if (mode === 'create' && parentMenu) {
-      setForm((f) => ({
-        ...f,
+      setForm({
+        ...initialFormState,
         group_menu: parentMenu.group_menu,
         level: parentMenu.level + 1,
         sub_menu: parentMenu.id,
-      }))
+        status: 1,
+      })
+      return
     }
-  }, [menu, parentMenu, mode])
+  
+    if (mode === 'create' && !parentMenu) {
+      setForm({
+        ...initialFormState,
+        level: 1,
+        sub_menu: null,
+        group_menu: null,
+        status: 1,
+      })
+    }
+  
+  }, [open, mode, menu, parentMenu])
 
   const loadPermissions = async (id_menu) => {
     try {
@@ -166,7 +182,6 @@ export default function MenuDialog({
       <DialogContent dividers>
         <Grid container spacing={2}>
 
-          {/* 🔥 FORMULARIO PRINCIPAL */}
           <Grid item xs={12}>
             <FormMenu value={form} onChange={setForm} />
           </Grid>
