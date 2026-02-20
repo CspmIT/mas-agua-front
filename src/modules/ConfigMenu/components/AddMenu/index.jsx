@@ -3,7 +3,11 @@ import {
 	Table, TableBody, TableCell, TableContainer,
 	TableHead, TableRow, Paper, IconButton,
 	Tooltip, Button, Typography, Container,
-	Chip, Stack
+	Chip, Stack,
+	FormControl,
+	InputLabel,
+	Select,
+	MenuItem
 } from '@mui/material'
 import { Add, Delete, Edit, Security } from '@mui/icons-material'
 import CardCustom from '../../../../components/CardCustom'
@@ -25,6 +29,9 @@ function AddMenu() {
 	const [selectedMenu, setSelectedMenu] = useState(null)
 	const [parentMenu, setParentMenu] = useState(null)
 
+	// 🔹 filtro por permisos
+	const [permissionFilter, setPermissionFilter] = useState('all')
+
 	const iconMap = useMemo(() => {
 		return ListIcon().reduce((acc, i) => {
 			acc[i.name] = i.icon
@@ -35,6 +42,7 @@ function AddMenu() {
 	const renderIcon = (name) =>
 		iconMap[name] || <span style={{ opacity: 0.3 }}>—</span>
 
+	// ---------------- LOAD DATA ----------------
 	const loadData = async () => {
 		try {
 			setLoadingApp(true)
@@ -55,6 +63,7 @@ function AddMenu() {
 
 			const map = {}
 
+			// ⚠️ secuencial (sin paralelo)
 			for (let i = 0; i < ordered.length; i++) {
 				const m = ordered[i]
 				try {
@@ -152,11 +161,11 @@ function AddMenu() {
 		const { value: roles } = await Swal.fire({
 			title: `Permisos: ${menu.name}`,
 			html: profiles.map(p => `
-				<label style="display:flex;gap:10px;margin:6px 0;">
-					<input type="checkbox" value="${p.id}" ${activeProfiles.includes(p.id) ? 'checked' : ''}/>
-					${p.description}
-				</label>
-			`).join(''),
+        <label style="display:flex;gap:10px;margin:6px 0;">
+          <input type="checkbox" value="${p.id}" ${activeProfiles.includes(p.id) ? 'checked' : ''}/>
+          ${p.description}
+        </label>
+      `).join(''),
 			preConfirm: () => {
 				const inputs = Swal.getPopup().querySelectorAll('input[type="checkbox"]')
 				selected = [...inputs].filter(i => i.checked).map(i => +i.value)
@@ -192,6 +201,34 @@ function AddMenu() {
 		return roots
 	}
 
+	// ---------------- FILTER TREE ----------------
+	const filterTreeByPermission = (tree, permissionsMap, filter) => {
+		if (filter === 'all') return tree
+
+		const profileId = filter === 'none' ? null : Number(filter)
+
+		const filterNode = (node) => {
+			const perms = permissionsMap[node.id] || []
+
+			const selfMatch =
+				filter === 'none'
+					? perms.length === 0
+					: perms.includes(profileId)
+
+			const filteredChildren = node.children
+				?.map(filterNode)
+				.filter(Boolean)
+
+			if (selfMatch || (filteredChildren && filteredChildren.length)) {
+				return { ...node, children: filteredChildren || [] }
+			}
+
+			return null
+		}
+
+		return tree.map(filterNode).filter(Boolean)
+	}
+
 	const renderPermissions = (menuId) => {
 		const ids = permissionsMap[menuId] || []
 		if (!ids.length) return <Chip size="small" label="Sin permisos" variant="outlined" />
@@ -216,13 +253,52 @@ function AddMenu() {
 		)
 	}
 
+	const tree = buildMenuTree(menus)
+	const filteredTree = filterTreeByPermission(tree, permissionsMap, permissionFilter)
+
 	return (
 		<Container className='w-full'>
 			{/* HEADER */}
 			<div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
 				<Typography className="w-full text-center md:!ms-40" variant="h4">Menús</Typography>
-				<Button variant="contained" className="sm:mx-10 whitespace-nowrap !px-5" onClick={openCreateMenu}>Nuevo Menú</Button>
+				<Button variant="contained" className="sm:mx-10 whitespace-nowrap !px-5" onClick={openCreateMenu}>
+					Nuevo Menú
+				</Button>
 			</div>
+
+			{/* FILTER */}
+			<CardCustom className={'p-2 mb-2 rounded-md bg-grey-100'}>
+				<form
+					className='flex flex-wrap relative w-full justify-center items-end'
+					onSubmit={(e) => {
+						e.preventDefault()
+					}}
+				>
+
+					{/* FILTRO PERMISOS */}
+					<div className='md:w-1/4 p-1 w-full'>
+						<FormControl fullWidth size="small" className='shadow-sm'>
+							<InputLabel id="permission_filter_label">Permisos</InputLabel>
+
+							<Select
+								labelId="permission_filter_label"
+								label="Permisos"
+								value={permissionFilter}
+								onChange={(e) => setPermissionFilter(e.target.value)}
+							>
+								<MenuItem value="all">Todos los menús</MenuItem>
+								<MenuItem value="none">Sin permisos asignados</MenuItem>
+
+								{profiles.map((p) => (
+									<MenuItem key={p.id} value={String(p.id)}>
+										{p.description}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+					</div>
+				</form>
+			</CardCustom>
 
 			<CardCustom className='w-full p-3 rounded-xl'>
 				<TableContainer component={Paper}>
@@ -238,7 +314,7 @@ function AddMenu() {
 						</TableHead>
 
 						<TableBody>
-							{buildMenuTree(menus).map(menu => (
+							{filteredTree.map(menu => (
 								<Fragment key={menu.id}>
 									<TableRow>
 										<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }} align='center'>
@@ -248,8 +324,12 @@ function AddMenu() {
 										<TableCell>
 											<strong>{menu.name}</strong>
 											<Tooltip title='Agregar Submenú' placement='right' arrow>
-												<IconButton size='small' className='!bg-primary rounded-xl !m-2' onClick={() => openCreateSubMenu(menu)}>
-													<Add fontSize='small' className='text-white'/>
+												<IconButton
+													size='small'
+													className='!bg-primary rounded-xl !m-2'
+													onClick={() => openCreateSubMenu(menu)}
+												>
+													<Add fontSize='small' className='text-white' />
 												</IconButton>
 											</Tooltip>
 										</TableCell>
@@ -258,7 +338,9 @@ function AddMenu() {
 											{menu.link}
 										</TableCell>
 
-										<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{renderPermissions(menu.id)}</TableCell>
+										<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+											{renderPermissions(menu.id)}
+										</TableCell>
 
 										<TableCell align='right'>
 											<IconButton onClick={() => openEditMenu(menu)} color='warning'><Edit /></IconButton>
