@@ -23,13 +23,10 @@ function AddMenu() {
 	const [profiles, setProfiles] = useState([])
 	const [permissionsMap, setPermissionsMap] = useState({})
 	const [loadingApp, setLoadingApp] = useState(true)
-
 	const [openDialog, setOpenDialog] = useState(false)
 	const [dialogMode, setDialogMode] = useState('create')
 	const [selectedMenu, setSelectedMenu] = useState(null)
 	const [parentMenu, setParentMenu] = useState(null)
-
-	// 🔹 filtro por permisos
 	const [permissionFilter, setPermissionFilter] = useState('all')
 
 	const iconMap = useMemo(() => {
@@ -63,7 +60,6 @@ function AddMenu() {
 
 			const map = {}
 
-			// ⚠️ secuencial (sin paralelo)
 			for (let i = 0; i < ordered.length; i++) {
 				const m = ordered[i]
 				try {
