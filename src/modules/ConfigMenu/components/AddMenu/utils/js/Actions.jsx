@@ -5,6 +5,7 @@ import withReactContent from 'sweetalert2-react-content'
 import { createRef } from 'react'
 import FormMenu from '../../components/FormMenu'
 const MySwal = withReactContent(Swal)
+
 export const createNewMenu = async (menu, sub) => {
 	const setIconSelect = (infoForm) => {
 		selectedIcon.current = infoForm // Guardar el ícono seleccionado
@@ -54,6 +55,7 @@ export const createNewMenu = async (menu, sub) => {
 		}
 	}
 }
+
 export const editMenu = async (menu) => {
 	try {
 		if (!menu) {
@@ -88,6 +90,7 @@ export const editMenu = async (menu) => {
 			},
 		})
 		if (formValues) {
+			console.log(formValues)
 			const result = await request(`${backend[import.meta.env.VITE_APP_NAME]}/saveMenu`, 'POST', formValues)
 			if (result) {
 				return formValues
