@@ -106,7 +106,7 @@ function AddMenu() {
 
 	const openEditSubMenu = (menu) => {
 		setDialogMode('edit')
-		setSelectedMenu(null)
+		setSelectedMenu(menu)
 		setParentMenu(menu)
 		setOpenDialog(true)
 	}
