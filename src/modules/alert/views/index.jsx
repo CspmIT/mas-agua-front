@@ -101,7 +101,7 @@ const Alert = () => {
             {loading ? (
                 <LoaderComponent />
             ) : (
-                <CardCustom className="w-full bg-white dark:bg-gray-900 shadow-lg rounded-2xl p-4 sm:p-6 flex flex-col gap-6 transition-all">
+                <CardCustom className="w-full bg-white dark:bg-gray-900 shadow-lg rounded-2xl p-2 sm:p-6 flex flex-col gap-6 transition-all">
 
                     {/* Header responsivo */}
                     <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-b border-gray-300 dark:border-gray-700 pb-3">
@@ -109,21 +109,26 @@ const Alert = () => {
                             Registro de Alarmas
                         </FormLabel>
 
-                        <div className="flex justify-center sm:justify-end bg-primary rounded-full">
-                            <Tooltip title='Marcar todas como leídas'>
-                                <IconButton
-                                    size="small"
-                                    onClick={markAllAsRead}
-                                    disabled={!listLogs_Alarms.some(a => !a.viewed)}
-                                    sx={{
-                                        m: 0.6,
-                                        color: 'white',
-                                    }}
-                                >
-                                    <FaEye />
-                                </IconButton>
-                            </Tooltip>
-                        </div>
+                        {listLogs_Alarms.some(a => !a.viewed) && (
+                            <div className="flex justify-center sm:justify-end px-1 sm:px-2">
+                                <Tooltip title='Marcar todas como leídas'>
+                                    <IconButton
+                                        size="small"
+                                        onClick={markAllAsRead}
+                                        sx={{
+                                            color: 'white',
+                                            backgroundColor: '#2c6aa0',
+                                            padding: {
+                                                xs: '8px',
+                                                sm: '8px',
+                                            },
+                                        }}
+                                    >
+                                        <FaEye />
+                                    </IconButton>
+                                </Tooltip>
+                            </div>
+                        )}
                     </div>
 
                     {/* Tabla responsiva */}
@@ -133,7 +138,6 @@ const Alert = () => {
                             data={listLogs_Alarms.length ? listLogs_Alarms : []}
                             pagination={true}
                             pageSize={10}
-                            density="compact"
                             header={{
                                 background: 'rgb(190 190 190)',
                                 fontSize: '14px',

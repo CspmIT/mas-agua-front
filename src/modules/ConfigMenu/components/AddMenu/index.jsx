@@ -1,190 +1,396 @@
-import { Accordion, AccordionDetails, AccordionSummary, Button, List, ListItem, Typography } from '@mui/material'
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import { useEffect, useState } from 'react'
-import MenuItems from '../PermissionMenu/components/MenuItems'
+import { Fragment, useEffect, useMemo, useState } from 'react'
+import {
+	Table, TableBody, TableCell, TableContainer,
+	TableHead, TableRow, Paper, IconButton,
+	Tooltip, Button, Typography, Container,
+	Chip, Stack,
+	FormControl,
+	InputLabel,
+	Select,
+	MenuItem
+} from '@mui/material'
+import { Add, Delete, Edit, Security } from '@mui/icons-material'
 import CardCustom from '../../../../components/CardCustom'
-import { Add } from '@mui/icons-material'
+import Swal from 'sweetalert2'
 import { backend } from '../../../../utils/routes/app.routes'
 import { request } from '../../../../utils/js/request'
-import { createNewMenu, editMenu } from './utils/js/Actions'
-import Swal from 'sweetalert2'
-import BtnActions from './components/BtnActions'
+import ListIcon from '../../../../components/ListIcon'
+import MenuDialog from './components/MenuDialog'
+import LoaderComponent from '../../../../components/Loader'
 
 function AddMenu() {
-	const [expandedAccordions, setExpandedAccordions] = useState({})
-	const [groupedMenus, setGroupedMenus] = useState([])
-	const [dataMenu, setDataMenu] = useState([])
-	// Función para obtener los datos de los menús y agruparlos según sea necesario
-	const getDataMenu = async () => {
-		const menus = await request(`${backend[`${import.meta.env.VITE_APP_NAME}`]}/getAllMenu`, 'GET')
-		setDataMenu(menus.data)
-		setGroupedMenus(await groupedMenu(menus.data))
-	}
-	const groupedMenu = async (data) => {
-		const result = data.reduce((acc, menu) => {
-			const groupMenuId = parseInt(menu.group_menu)
-			if (!acc[groupMenuId]) {
-				acc[groupMenuId] = { ...menu, subMenus: [] }
-			}
-			if (menu.sub_menu) {
-				const parentMenu = acc[groupMenuId]
-				const subMenu = { ...menu, subMenus: [] }
-				const findAndAddSubMenu = (parent, sub) => {
-					if (parent.id === sub.sub_menu) {
-						parent.subMenus.push(sub)
-					} else {
-						for (let i = 0; i < parent.subMenus.length; i++) {
-							findAndAddSubMenu(parent.subMenus[i], sub)
-						}
-					}
-				}
-				findAndAddSubMenu(parentMenu, subMenu)
-			}
+	const [menus, setMenus] = useState([])
+	const [profiles, setProfiles] = useState([])
+	const [permissionsMap, setPermissionsMap] = useState({})
+	const [loadingApp, setLoadingApp] = useState(true)
+	const [openDialog, setOpenDialog] = useState(false)
+	const [dialogMode, setDialogMode] = useState('create')
+	const [selectedMenu, setSelectedMenu] = useState(null)
+	const [parentMenu, setParentMenu] = useState(null)
+	const [permissionFilter, setPermissionFilter] = useState('all')
+
+	const iconMap = useMemo(() => {
+		return ListIcon().reduce((acc, i) => {
+			acc[i.name] = i.icon
 			return acc
 		}, {})
-		return result
-	}
-	// Cargar los datos al inicializar el componente
-	useEffect(() => {
-		getDataMenu()
 	}, [])
 
-	// Manejar el cambio de expansión de los acordeones
-	const handleAccordionChange = (id) => (event, isExpanded) => {
-		setExpandedAccordions((prevExpandedAccordions) => ({
-			...prevExpandedAccordions,
-			[id]: isExpanded,
-		}))
+	const renderIcon = (name) =>
+		iconMap[name] || <span style={{ opacity: 0.3 }}>—</span>
+
+	// ---------------- LOAD DATA ----------------
+	const loadData = async () => {
+		try {
+			setLoadingApp(true)
+
+			const profilesRes = await request(
+				`${backend[import.meta.env.VITE_APP_NAME]}/listProfiles`,
+				'GET'
+			)
+			setProfiles(profilesRes.data)
+
+			const menuRes = await request(
+				`${backend[import.meta.env.VITE_APP_NAME]}/getAllMenu`,
+				'GET'
+			)
+
+			const ordered = [...menuRes.data].sort((a, b) => a.order - b.order)
+			setMenus(ordered)
+
+			const map = {}
+
+			for (let i = 0; i < ordered.length; i++) {
+				const m = ordered[i]
+				try {
+					const res = await request(
+						`${backend[import.meta.env.VITE_APP_NAME]}/getPermissionByMenu?id_menu=${m.id}`,
+						'GET'
+					)
+					map[m.id] = res.data?.data || []
+				} catch {
+					map[m.id] = []
+				}
+			}
+
+			setPermissionsMap(map)
+
+		} catch (e) {
+			console.error('Error inicializando AddMenu', e)
+			Swal.fire('Error', 'No se pudo cargar la información', 'error')
+		} finally {
+			setLoadingApp(false)
+		}
 	}
 
-	const createMenu = async () => {
-		const result = await createNewMenu(groupedMenus, false)
+	useEffect(() => {
+		loadData()
+	}, [])
 
-		if (result) {
-			getDataMenu()
-		}
+	// ---------------- ACTIONS ----------------
+	const openCreateMenu = () => {
+		setDialogMode('create')
+		setSelectedMenu(null)
+		setParentMenu(null)
+		setOpenDialog(true)
 	}
-	const createSubMenu = async (menu) => {
-		const result = await createNewMenu(menu, true)
-		if (result) {
-			getDataMenu()
-		}
+
+	const openCreateSubMenu = (menu) => {
+		setDialogMode('create')
+		setSelectedMenu(null)
+		setParentMenu(menu)
+		setOpenDialog(true)
 	}
-	const editSubMenu = async (menu) => {
-		const result = await editMenu(menu)
-		if (result) {
-			getDataMenu()
-		}
+
+	const openEditMenu = (menu) => {
+		setDialogMode('edit')
+		setSelectedMenu(menu)
+		setParentMenu(null)
+		setOpenDialog(true)
 	}
+
+	const openEditSubMenu = (menu) => {
+		setDialogMode('edit')
+		setSelectedMenu(menu)
+		setParentMenu(menu)
+		setOpenDialog(true)
+	}
+
 	const deleteSubMenu = async (menu) => {
-		const { value: result } = await Swal.fire({
+		const { value: ok } = await Swal.fire({
 			title: 'Atención!',
-			text: `¿Deseas eliminar el menú "${menu.name}" y todos sus submenús?`,
+			text: `¿Deseas eliminar "${menu.name}" y sus submenús?`,
 			icon: 'question',
-			allowOutsideClick: false,
 			showDenyButton: true,
-			showCancelButton: false,
 			confirmButtonText: 'Sí',
 			denyButtonText: 'No',
 		})
-		if (result) {
-			const deleteData = dataMenu
-				.filter((item) => isDescendant(menu, item))
-				.map((item) => {
-					item.status = 0
-					return item
-				})
-			const result = await request(`${backend[import.meta.env.VITE_APP_NAME]}/deleteMenu`, 'POST', deleteData)
-			if (!result) {
-				throw new Error('Error al eliminar un menu')
-			}
-			getDataMenu()
-		}
+
+		if (!ok) return
+
+		const deleteData = menus
+			.filter((item) => isDescendant(menu, item, menus))
+			.map((item) => ({ ...item, status: 0 }))
+
+		Swal.fire({ title: 'Eliminando...', allowOutsideClick: false, didOpen: Swal.showLoading })
+
+		await request(
+			`${backend[import.meta.env.VITE_APP_NAME]}/deleteMenu`,
+			'POST',
+			deleteData
+		)
+
+		Swal.fire('OK', 'Menú eliminado', 'success')
+		loadData()
 	}
 
-	const isDescendant = (menu, item) => {
-		if (item.id === menu.id) {
-			return true
-		}
-		let currentMenu = item
-		while (currentMenu.sub_menu !== null) {
-			if (currentMenu.sub_menu === menu.id) {
-				return true
-			}
-			currentMenu = dataMenu.find((menuItem) => menuItem.id === currentMenu.sub_menu)
-		}
-		return false
+	// ---------------- PERMISSIONS ----------------
+	const managePermissions = async (menu) => {
+		const res = await request(
+			`${backend[import.meta.env.VITE_APP_NAME]}/getPermissionByMenu?id_menu=${menu.id}`,
+			'GET'
+		)
+
+		const activeProfiles = res.data?.data || []
+		let selected = []
+
+		const { value: roles } = await Swal.fire({
+			title: `Permisos: ${menu.name}`,
+			html: profiles.map(p => `
+        <label style="display:flex;gap:10px;margin:6px 0;">
+          <input type="checkbox" value="${p.id}" ${activeProfiles.includes(p.id) ? 'checked' : ''}/>
+          ${p.description}
+        </label>
+      `).join(''),
+			preConfirm: () => {
+				const inputs = Swal.getPopup().querySelectorAll('input[type="checkbox"]')
+				selected = [...inputs].filter(i => i.checked).map(i => +i.value)
+				return selected
+			},
+			showCancelButton: true,
+			confirmButtonText: 'Guardar'
+		})
+
+		if (!roles) return
+
+		await request(
+			`${backend[import.meta.env.VITE_APP_NAME]}/postPermissionByMenu`,
+			'POST',
+			{ id_menu: menu.id, profiles: roles }
+		)
+
+		setPermissionsMap(prev => ({ ...prev, [menu.id]: roles }))
+		Swal.fire('OK', 'Permisos actualizados', 'success')
 	}
+
+	// ---------------- TREE ----------------
+	const buildMenuTree = (data) => {
+		const map = {}
+		const roots = []
+
+		data.forEach(i => map[i.id] = { ...i, children: [] })
+		data.forEach(i => i.sub_menu ? map[i.sub_menu]?.children.push(map[i.id]) : roots.push(map[i.id]))
+
+		const sort = (n) => { n.sort((a, b) => a.order - b.order); n.forEach(x => sort(x.children)) }
+		sort(roots)
+
+		return roots
+	}
+
+	// ---------------- FILTER TREE ----------------
+	const filterTreeByPermission = (tree, permissionsMap, filter) => {
+		if (filter === 'all') return tree
+
+		const profileId = filter === 'none' ? null : Number(filter)
+
+		const filterNode = (node) => {
+			const perms = permissionsMap[node.id] || []
+
+			const selfMatch =
+				filter === 'none'
+					? perms.length === 0
+					: perms.includes(profileId)
+
+			const filteredChildren = node.children
+				?.map(filterNode)
+				.filter(Boolean)
+
+			if (selfMatch || (filteredChildren && filteredChildren.length)) {
+				return { ...node, children: filteredChildren || [] }
+			}
+
+			return null
+		}
+
+		return tree.map(filterNode).filter(Boolean)
+	}
+
+	const renderPermissions = (menuId) => {
+		const ids = permissionsMap[menuId] || []
+		if (!ids.length) return <Chip size="small" label="Sin permisos" variant="outlined" />
+
+		const names = profiles.filter(p => ids.includes(p.id)).map(p => p.description)
+
+		return (
+			<Tooltip title={names.join(', ')} arrow>
+				<Stack direction="row" spacing={0.5}>
+					{names.slice(0, 2).map(n => <Chip key={n} size="small" label={n} />)}
+					{names.length > 2 && <Chip size="small" label={`+${names.length - 2}`} />}
+				</Stack>
+			</Tooltip>
+		)
+	}
+
+	if (loadingApp) {
+		return (
+			<Container className="w-full flex justify-center items-center min-h-[60vh]">
+				<LoaderComponent />
+			</Container>
+		)
+	}
+
+	const tree = buildMenuTree(menus)
+	const filteredTree = filterTreeByPermission(tree, permissionsMap, permissionFilter)
+
 	return (
-		<CardCustom className='w-full h-full flex flex-col items-center justify-center text-black dark:text-white relative p-3 rounded-md'>
-			<div className='w-full flex justify-start p-2'>
-				<Button onClick={createMenu} variant='contained'>
-					<Add />
-					Nuevo Menu
+		<Container className='w-full'>
+			{/* HEADER */}
+			<div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
+				<Typography className="w-full text-center md:!ms-40" variant="h4">Menús</Typography>
+				<Button variant="contained" className="sm:mx-10 whitespace-nowrap !px-5" onClick={openCreateMenu}>
+					Nuevo Menú
 				</Button>
 			</div>
 
-			<div className='w-full'>
-				{Object.values(groupedMenus).map((groupMenu) => {
-					if (groupMenu.status == 0) {
-						return false
-					}
-					const number = 240 - parseInt(groupMenu.level) * 10
-					const isExpanded = expandedAccordions[groupMenu.id] || false
-					return groupMenu.subMenus.length > 0 ? (
-						<Accordion
-							key={groupMenu.id}
-							expanded={isExpanded}
-							onChange={handleAccordionChange(groupMenu.id)}
-							sx={{ backgroundColor: `rgb(${number},${number},${number})` }}
-							className='!shadow-none border-2 border-solid border-white'
-						>
-							<AccordionSummary
-								expandIcon={<ExpandMoreIcon />}
-								sx={{ flexDirection: 'row-reverse' }}
-								aria-controls={`panel${groupMenu.id}-content`}
-								id={`panel${groupMenu.id}-header`}
+			{/* FILTER */}
+			<CardCustom className={'p-2 mb-2 rounded-md bg-grey-100'}>
+				<form
+					className='flex flex-wrap relative w-full justify-center items-end'
+					onSubmit={(e) => {
+						e.preventDefault()
+					}}
+				>
+
+					{/* FILTRO PERMISOS */}
+					<div className='md:w-1/4 p-1 w-full'>
+						<FormControl fullWidth size="small" className='shadow-sm'>
+							<InputLabel id="permission_filter_label">Permisos</InputLabel>
+
+							<Select
+								labelId="permission_filter_label"
+								label="Permisos"
+								value={permissionFilter}
+								onChange={(e) => setPermissionFilter(e.target.value)}
 							>
-								<Typography className='flex items-center'>{groupMenu.name}</Typography>
-								<BtnActions
-									data={groupMenu}
-									optCreate={createSubMenu}
-									optEdit={editSubMenu}
-									optDelete={deleteSubMenu}
-								/>
-							</AccordionSummary>
-							<AccordionDetails
-								className={`!pl-14 ${
-									isExpanded ? 'border-0 border-t-2 border-solid border-white' : ''
-								}`}
-							>
-								<List>
-									<MenuItems
-										items={groupMenu.subMenus}
-										expandedAccordions={expandedAccordions}
-										handleAccordionChange={handleAccordionChange}
-										newSubMenu={createSubMenu}
-										deleteSubMenu={deleteSubMenu}
-										editSubMenu={editSubMenu}
-									/>
-								</List>
-							</AccordionDetails>
-						</Accordion>
-					) : (
-						<ListItem className='flex !items-center !w-full !pl-10' key={groupMenu.id}>
-							<Typography className='flex items-center text-black'>{groupMenu.name}</Typography>
-							<BtnActions
-								data={groupMenu}
-								optCreate={createSubMenu}
-								optEdit={editSubMenu}
-								optDelete={deleteSubMenu}
-							/>
-						</ListItem>
-					)
-				})}
-			</div>
-		</CardCustom>
+								<MenuItem value="all">Todos los menús</MenuItem>
+								<MenuItem value="none">Sin permisos asignados</MenuItem>
+
+								{profiles.map((p) => (
+									<MenuItem key={p.id} value={String(p.id)}>
+										{p.description}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+					</div>
+				</form>
+			</CardCustom>
+
+			<CardCustom className='w-full p-3 rounded-xl'>
+				<TableContainer component={Paper}>
+					<Table size='small'>
+						<TableHead className='bg-slate-200'>
+							<TableRow>
+								<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }} />
+								<TableCell>Nombre</TableCell>
+								<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Link</TableCell>
+								<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>Permisos</TableCell>
+								<TableCell align='right'>Acciones</TableCell>
+							</TableRow>
+						</TableHead>
+
+						<TableBody>
+							{filteredTree.map(menu => (
+								<Fragment key={menu.id}>
+									<TableRow>
+										<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }} align='center'>
+											{renderIcon(menu.icon)}
+										</TableCell>
+
+										<TableCell>
+											<strong>{menu.name}</strong>
+											<Tooltip title='Agregar Submenú' placement='right' arrow>
+												<IconButton
+													size='small'
+													className='!bg-primary rounded-xl !m-2'
+													onClick={() => openCreateSubMenu(menu)}
+												>
+													<Add fontSize='small' className='text-white' />
+												</IconButton>
+											</Tooltip>
+										</TableCell>
+
+										<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+											{menu.link}
+										</TableCell>
+
+										<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+											{renderPermissions(menu.id)}
+										</TableCell>
+
+										<TableCell align='right'>
+											<IconButton onClick={() => openEditMenu(menu)} color='warning'><Edit /></IconButton>
+											<IconButton onClick={() => deleteSubMenu(menu)} color='error'><Delete /></IconButton>
+											<IconButton onClick={() => managePermissions(menu)} color='primary'><Security /></IconButton>
+										</TableCell>
+									</TableRow>
+
+									{menu.children.map(sub => (
+										<TableRow key={sub.id} sx={{ background: '#f5f5f5' }}>
+											<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }} align='center'>
+												{renderIcon(sub.icon)}
+											</TableCell>
+
+											<TableCell style={{ paddingLeft: 40 }}>↳ {sub.name}</TableCell>
+											<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{sub.link}</TableCell>
+											<TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>{renderPermissions(sub.id)}</TableCell>
+
+											<TableCell align='right'>
+												<IconButton onClick={() => openEditSubMenu(sub)} color='warning'><Edit /></IconButton>
+												<IconButton onClick={() => deleteSubMenu(sub)} color='error'><Delete /></IconButton>
+												<IconButton onClick={() => managePermissions(sub)} color='primary'><Security /></IconButton>
+											</TableCell>
+										</TableRow>
+									))}
+								</Fragment>
+							))}
+						</TableBody>
+					</Table>
+				</TableContainer>
+			</CardCustom>
+
+			<MenuDialog
+				open={openDialog}
+				onClose={() => setOpenDialog(false)}
+				menu={selectedMenu}
+				parentMenu={parentMenu}
+				profiles={profiles}
+				mode={dialogMode}
+				onSaved={loadData}
+			/>
+		</Container>
 	)
+}
+
+// ---------------- HELPERS ----------------
+const isDescendant = (menu, item, all) => {
+	if (item.id === menu.id) return true
+	let current = item
+	while (current.sub_menu !== null) {
+		if (current.sub_menu === menu.id) return true
+		current = all.find(m => m.id === current.sub_menu)
+	}
+	return false
 }
 
 export default AddMenu

@@ -38,12 +38,12 @@ const ChartsTable = () => {
       {
         header: 'ID',
         accessorKey: 'id',
-        size: 50
+        size: 75
       },
       {
         header: 'Titulo',
         accessorKey: 'name',
-        size: 350
+        size: 300
       },
       {
         header: 'Tipo',

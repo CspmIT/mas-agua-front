@@ -129,7 +129,6 @@ export const uploadCanvaDb = async (id, {
 		for (const image of objectDiagram?.images || []) {
 			let dataInflux = null;
 			const variable = image.variables?.[0];
-			console.log(image);
 			if (variable?.variable?.varsInflux) {
 				dataInflux = {
 					id: variable.id_influxvars,
@@ -207,7 +206,6 @@ export const uploadCanvaDb = async (id, {
 
 		setCircles(circles);
 		setTool(null);
-		console.log(finalElements);
 		return finalElements;
 	} catch (err) {
 		console.error('Error en uploadCanvaDb:', err);

@@ -12,7 +12,7 @@ const SHAPE_CONFIG = {
   rect: {
     radius: '85%',
     radiusMultiple: '90%',
-    amplitude: 6,
+    amplitude: 5,
     waveLength: '90%',
     fontSize: 24,
     outlineDistance: 4,
@@ -64,8 +64,6 @@ const isValidNumber = (v) =>
 
 const LiquidFillPorcentaje = ({
   multipleValues = null,
-
-  // ─── TU CONTRATO ORIGINAL ───
   value = 0,
   maxValue = 1,
   color = '#38bdf8',
@@ -81,7 +79,7 @@ const LiquidFillPorcentaje = ({
     typeof multipleValues === 'object'
 
   // ─────────────────────────────────────────────
-  // 1) MODO SINGLE – EXACTAMENTE TU ORIGINAL
+  // MODO SINGLE (recibe una sola variable)
   // ─────────────────────────────────────────────
 
   if (!hasMultiple) {
@@ -207,7 +205,7 @@ const LiquidFillPorcentaje = ({
   }
 
   // ─────────────────────────────────────────────
-  // 2) MODO MÚLTIPLE
+  // MODO MÚLTIPLE (recibe varias variables)
   // ─────────────────────────────────────────────
 
   const rawMain =
