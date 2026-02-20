@@ -11,18 +11,18 @@ const AlarmRow = ({ row, onMarkAsRead }) => {
                 display: 'flex',
                 alignItems: 'flex-center',
                 gap: 2,
-                py: 0.5,
-                px: 1.75,
+                // py: 0.5,
+                // px: 1.75,
                 borderRadius: 2,
                 backgroundColor: viewed ? 'transparent' : 'rgba(33, 150, 243, 0.08)',
-                '&:hover': {
-                    backgroundColor: 'rgba(33, 150, 243, 0.12)',
-                },
+                // '&:hover': {
+                //     backgroundColor: 'rgba(33, 150, 243, 0.12)',
+                // },
 
             }}
         >
             {/* Icono */}
-            <Box sx={{ mt: 1.5 }}>
+            <Box sx={{ mt: 1 }}>
                 <MdNotificationsActive
                     size={22}
                     color={viewed ? '#9ca3af' : '#1976d2'}
@@ -32,7 +32,7 @@ const AlarmRow = ({ row, onMarkAsRead }) => {
             {/* Contenido */}
             <Box sx={{ flex: 1 }}>
                 {/* Fecha + estado */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Typography
                         variant="caption"
                         sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}

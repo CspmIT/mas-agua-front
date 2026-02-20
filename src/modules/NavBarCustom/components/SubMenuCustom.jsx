@@ -64,8 +64,8 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 				<Collapse in={openSub} className='!w-full' timeout='auto' unmountOnExit>
 					{item.subMenus.map((submenu, index) => {
 						return (
-							<ListItemButton key={index} onClick={() => activeButton(submenu.link)}>
-								<Link to={submenu.link} className='text-black dark:text-white flex pl-5'>
+							<ListItemButton key={index} onClick={() => activeButton(submenu.link)} className='!bg-slate-100'>
+								<Link to={submenu.link} className='text-black dark:text-white flex pl-1'>
 									<ListItemIcon
 										className={`${
 											buttonActive?.includes(submenu.link)

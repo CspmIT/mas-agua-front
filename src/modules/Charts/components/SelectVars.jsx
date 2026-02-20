@@ -1,15 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import {
-    Box,
-    Button,
-    TextField,
-    Popover,
-    List,
-    ListItem,
-    ListItemText,
-    InputAdornment,
-    IconButton,
-} from '@mui/material'
+import { Box, Button, TextField, Popover, List, ListItem, ListItemText, InputAdornment, IconButton } from '@mui/material'
 import { Search, Add, Visibility, ExpandMore } from '@mui/icons-material'
 import ModalVar from '../../../components/DataGenerator/ModalVar'
 import { getVarsInflux } from '../../DrawDiagram/components/Fields/actions'

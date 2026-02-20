@@ -169,7 +169,7 @@ const Vars = () => {
 
             {!loading ? (
                 <>
-                    <CardCustom className={'p-2 my-5 rounded-md bg-grey-100'}>
+                    <CardCustom className={'p-2 my-2 rounded-md bg-grey-100'}>
                         <form onSubmit={handleSubmit(onSubmit)} className='flex flex-wrap relative w-full justify-center items-end mt-2'>
                             <div className='md:w-1/6 p-1 w-full'>
                                 <FormControl fullWidth size="small" className='shadow-sm'>
