@@ -181,14 +181,12 @@ const PermissionMenu = ({ user }) => {
 			const current = prev[id]?.effective ?? false
 			const nextValue = !current
 	
-			// toggle padre
 			newState[id] = {
 				effective: nextValue,
 				source: 'user',
 				userOverride: true,
 			}
 	
-			// toggle hijos
 			childrenIds.forEach((cid) => {
 				newState[cid] = {
 					effective: nextValue,
