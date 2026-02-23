@@ -16,7 +16,7 @@ import { useEffect, useState } from 'react'
 import { request } from '../../../../../utils/js/request'
 import { backend } from '../../../../../utils/routes/app.routes'
 import Swal from 'sweetalert2'
-import FormMenu from './FormMenu'   // 👈 IMPORT
+import FormMenu from './FormMenu' 
 
 const initialFormState = {
   name: '',

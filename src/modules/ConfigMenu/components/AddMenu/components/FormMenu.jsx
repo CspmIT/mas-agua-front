@@ -21,14 +21,12 @@ import '../utils/css/styles.css'
 function FormMenu({ value, onChange }) {
   const icons = ListIcon()
 
-  // -------- state --------
   const [maps, setMaps] = useState([])
   const [diagrams, setDiagrams] = useState([])
   const [loading, setLoading] = useState(false)
   const [openSelector, setOpenSelector] = useState(false)
   const [selectorType, setSelectorType] = useState(null) // 'map' | 'diagram'
 
-  // -------- helpers --------
   const changeValue = (e) => {
     onChange({
       ...value,
@@ -42,7 +40,6 @@ function FormMenu({ value, onChange }) {
     return ''
   }
 
-  // -------- loaders (on-demand, secuencial) --------
   const loadDiagrams = async () => {
     setLoading(true)
     try {
@@ -107,7 +104,6 @@ function FormMenu({ value, onChange }) {
 
   const data = selectorType === 'diagram' ? diagrams : maps
 
-  // -------- render --------
   return (
     <>
       <div className='flex flex-col gap-5 mt-4'>
