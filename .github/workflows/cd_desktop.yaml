@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'Configuracion de permisos por usuario'
+                  releaseBody: 'feat: configuracion de accesos por usuario'
                   prerelease: false
