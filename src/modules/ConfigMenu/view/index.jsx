@@ -13,15 +13,17 @@ import { backend } from '../../../utils/routes/app.routes';
 import PermissionMenu from '../components/PermissionMenu/PermissionMenu';
 import LoaderComponent from '../../../components/Loader';
 import Swal from 'sweetalert2';
-import { ColumnsProfile } from '../utils/DataTable/ColumnsProfile'
-import { ColumnsUser } from '../utils/DataTable/ColumnsUsers'
+import { storage } from '../../../storage/storage';
+import { ColumnsUser } from '../utils/DataTable/ColumnsUsers';
 
 function ConfigMenu() {
 	const { tabs, setTabs, setTabCurrent } = useContext(MainContext);
 	const navigate = useNavigate();
 	const [listUsers, setListUsers] = useState([]);
-	const [listProfile, setListProfile] = useState([]);
 	const [loading, setLoading] = useState(true);
+
+	const usuario = storage.get('usuario');
+	const isSuperAdmin = usuario?.profile === 4;
 
 	const getUsers = async () => {
 		try {
@@ -34,20 +36,9 @@ function ConfigMenu() {
 		}
 	};
 
-	const getProfiles = async () => {
-		try {
-			const response = await request(`${backend[import.meta.env.VITE_APP_NAME]}/listProfiles`, 'GET');
-			if (response?.data) {
-				setListProfile(response.data);
-			}
-		} catch (error) {
-			console.error('Error al obtener perfiles:', error);
-		}
-	};
-
 	const fetchAll = async () => {
 		setLoading(true);
-		await Promise.all([getProfiles(), getUsers()]);
+		await getUsers();
 		setLoading(false);
 	};
 
@@ -55,82 +46,26 @@ function ConfigMenu() {
 		fetchAll();
 	}, []);
 
-	const editProfile = (data) => {
-		const existingTabIndex = tabs.findIndex((tab) => tab.name === `Edicion Menu Perfil ${data.name}`);
+	const editUserAccess = (user) => {
+		console.log
+		const tabName = `Accesos de ${user.last_name} ${user.first_name}`;
+		const existingTabIndex = tabs.findIndex((tab) => tab.name === tabName);
+
 		if (existingTabIndex !== -1) {
 			setTabCurrent(existingTabIndex);
 		} else {
 			setTabs((prevTabs) => [
 				...prevTabs,
 				{
-					name: `Edicion Menu Perfil ${data.description}`,
-					id: data.id,
-					link: '/userEdit',
-					component: <PermissionMenu data={data} profile={data.id} />,
+					name: tabName,
+					id: user.id,
+					link: '/userAccess',
+					component: <PermissionMenu user={user} />,
 				},
 			]);
 			setTabCurrent(tabs.length);
 		}
 		navigate('/tabs');
-	};
-
-	const editUser = (data) => {
-		const existingTabIndex = tabs.findIndex((tab) => tab.name === `Edicion Menu de:${data.last_name}`);
-		if (existingTabIndex !== -1) {
-			setTabCurrent(existingTabIndex);
-		} else {
-			setTabs((prevTabs) => [
-				...prevTabs,
-				{
-					name: `Edicion Menu de:${data.last_name}`,
-					id: data.id,
-					link: '/userEdit',
-					component: <PermissionMenu data={data} id_user={data.id} />,
-				},
-			]);
-			setTabCurrent(tabs.length);
-		}
-		navigate('/tabs');
-	};
-
-	const swalNewPassword = async (info) => {
-		const result = await Swal.fire({
-			title: 'Crear nueva contraseña',
-			input: 'text',
-			inputLabel: 'Ingrese la nueva contraseña',
-			showCancelButton: true,
-			confirmButtonText: 'Guardar',
-			preConfirm: async (password) => {
-				if (!password) {
-					Swal.showValidationMessage('La contraseña no puede estar vacía');
-				} else {
-					await savePassword(info, password);
-				}
-			},
-		});
-	};
-
-	const savePassword = async (info, password) => {
-		try {
-			const data = {
-				id_user: info?.id,
-				id: info?.passwordRecloser?.id || 0,
-				password: password,
-			};
-			await request(`${backend[import.meta.env.VITE_APP_NAME]}/savePass`, 'POST', data);
-			await getUsers();
-			Swal.fire({
-				title: 'Perfecto!',
-				text: 'Se guardó correctamente',
-				icon: 'success',
-			});
-		} catch (error) {
-			Swal.fire({
-				title: 'Atención!',
-				text: 'Hubo un error en el guardado',
-				icon: 'warning',
-			});
-		}
 	};
 
 	return (
@@ -143,27 +78,22 @@ function ConfigMenu() {
 				<Box className="flex flex-col gap-5 w-full">
 					<Box>
 						<Typography variant="h4" className="text-center !mb-2">
-							Accesos por Perfiles
+							Habilitación de accesos por usuario
 						</Typography>
-						<TableCustom
-							columns={ColumnsProfile(editProfile, setListProfile)}
-							data={listProfile}
-							pagination
-							pageSize={10}
-						/>
-					</Box>
 
-					<Box>
-						<Typography variant="h4" className="text-center !mb-2">
-							Administración de Usuarios
-						</Typography>
 						<TableCustom
-							columns={ColumnsUser(editUser, swalNewPassword, listProfile, setListUsers)}
+							columns={ColumnsUser(editUserAccess)}
 							data={listUsers}
 							pagination
 							pageSize={10}
 						/>
 					</Box>
+
+					{!isSuperAdmin && (
+						<Typography className="text-center text-gray-500">
+							Modo solo lectura. Solo super admin puede modificar accesos.
+						</Typography>
+					)}
 				</Box>
 			)}
 		</Container>
