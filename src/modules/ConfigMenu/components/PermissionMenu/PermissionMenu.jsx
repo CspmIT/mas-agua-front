@@ -65,6 +65,28 @@ const PermissionMenu = ({ user }) => {
 		}, []);
 	};
 
+	const collectChildrenIds = (menu) => {
+		let ids = []
+		if (menu.subMenus?.length) {
+			for (const sub of menu.subMenus) {
+				ids.push(sub.id)
+				ids = ids.concat(collectChildrenIds(sub))
+			}
+		}
+		return ids
+	}
+	
+	const findMenuById = (menus, id) => {
+		for (const m of menus) {
+			if (m.id === id) return m
+			if (m.subMenus?.length) {
+				const found = findMenuById(m.subMenus, id)
+				if (found) return found
+			}
+		}
+		return null
+	}
+
 	/* ---------------- PERMISSIONS ---------------- */
 
 	const getPermission = async () => {
@@ -147,18 +169,37 @@ const PermissionMenu = ({ user }) => {
 	};
 
 	const toggleMenu = (id) => {
-		if (!isSuperAdmin) return;
-
-		setSelectedMenus((prev) => ({
-			...prev,
-			[id]: {
-				...prev[id],
-				effective: !prev[id].effective,
+		if (!isSuperAdmin) return
+	
+		setSelectedMenus((prev) => {
+			const newState = { ...prev }
+	
+			const menu = findMenuById(Object.values(groupedMenus), id)
+			if (!menu) return prev
+	
+			const childrenIds = collectChildrenIds(menu)
+			const current = prev[id]?.effective ?? false
+			const nextValue = !current
+	
+			// toggle padre
+			newState[id] = {
+				effective: nextValue,
 				source: 'user',
 				userOverride: true,
-			},
-		}));
-	};
+			}
+	
+			// toggle hijos
+			childrenIds.forEach((cid) => {
+				newState[cid] = {
+					effective: nextValue,
+					source: 'user',
+					userOverride: true,
+				}
+			})
+	
+			return newState
+		})
+	}
 
 	const SaveMenu = async () => {
 		try {
