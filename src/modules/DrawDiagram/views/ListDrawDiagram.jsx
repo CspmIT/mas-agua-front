@@ -6,12 +6,16 @@ import { backend } from '../../../utils/routes/app.routes';
 import TableCustom from '../../../components/TableCustom';
 import Swal from 'sweetalert2';
 import LoaderComponent from '../../../components/Loader';
+import { storage } from '../../../storage/storage';
 
 const ListDrawDiagram = () => {
 	const navigate = useNavigate();
 	const [listDiagram, setListDiagram] = useState([]);
 	const [columnsTable, setColumnsTable] = useState([]);
 	const [loading, setLoading] = useState(true);
+	const usuario = storage.get('usuario');
+	const isSuperAdmin = usuario?.profile === 4;
+
 
 	const fetchDiagrams = async () => {
 		const url = backend[import.meta.env.VITE_APP_NAME];
@@ -59,6 +63,22 @@ const ListDrawDiagram = () => {
 							>
 								Ver
 							</Button>
+
+							{/* SOLO ADMIN */}
+							{isSuperAdmin && !row.original.inMenu && (
+								<Button
+									variant="contained"
+									size="small"
+									sx={{
+										backgroundColor: '#0ea5e9',
+										'&:hover': { backgroundColor: '#0284c7' },
+									}}
+									onClick={() => navigate(`/config/menu`)}
+								>
+									Añadir a menú
+								</Button>
+							)}
+
 							<Button
 								variant="outlined"
 								color={row.original.status ? 'error' : 'success'}
@@ -134,7 +154,7 @@ const ListDrawDiagram = () => {
 		<Container className="w-full">
 			{/* Header responsivo */}
 			<div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
-	
+
 				{/* Título */}
 				<Typography
 					className='w-full text-center md:!ms-40'
@@ -143,7 +163,7 @@ const ListDrawDiagram = () => {
 				>
 					Diagramas
 				</Typography>
-	
+
 				{/* Botón */}
 				<div className='flex justify-center sm:justify-end'>
 					<Button
@@ -156,7 +176,7 @@ const ListDrawDiagram = () => {
 					</Button>
 				</div>
 			</div>
-	
+
 			{/* Tabla o Loader */}
 			{!loading ? (
 				<div className="w-full overflow-x-auto mb-5">
@@ -172,7 +192,7 @@ const ListDrawDiagram = () => {
 			)}
 		</Container>
 	)
-	
+
 };
 
 export default ListDrawDiagram;
