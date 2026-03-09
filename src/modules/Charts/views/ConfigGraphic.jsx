@@ -173,6 +173,7 @@ const ConfigGraphic = () => {
         data.porcentage = data.porcentage === 'true' || data.porcentage === true
         data.border = data.border === 'true' || data.border === true
         data.maxValue = parseFloat(data.maxValue)
+        data.order = Number(data.order)
         const endPoint = `${backend['Mas Agua']}/charts`
         try {
             if (idChart) {
