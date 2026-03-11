@@ -43,7 +43,6 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
     )
 
     useEffect(() => {
-        console.log(chartData)
         if (!chartData) return
 
         setValue('description', chartData.description)
