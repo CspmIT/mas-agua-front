@@ -364,6 +364,8 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 						>
 							<MenuItem value='last'>Ultimo</MenuItem>
 							<MenuItem value='mean'>Promedio</MenuItem>
+							<MenuItem value='max'>Máximo</MenuItem>
+							<MenuItem value='min'>Mínimo</MenuItem>
 						</TextField>
 					</div>
 				</div>
