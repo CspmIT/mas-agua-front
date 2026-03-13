@@ -83,7 +83,7 @@ const TooltipPositionPanel = ({
   };
 
   return (
-    <div className="absolute top-72 left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg max-w-md z-10">
+    <div className="absolute left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg max-w-md z-10">
       <h4 className="text-sm font-bold mb-2">Personalizar variable</h4>
 
       <label className="flex items-center space-x-2 mt-2">

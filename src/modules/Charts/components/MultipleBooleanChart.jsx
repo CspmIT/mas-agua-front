@@ -7,13 +7,18 @@ import { Card, Typography } from '@mui/material'
 const LedIndicator = ({
     label,
     value,
+    id_bit,
     textOn = 'Encendido',
     textOff = 'Apagado',
     colorOn = '#00ff00',
     colorOff = '#444444',
 }) => {
-    const hasValue = value !== 'Sin datos'
-    const isOn = hasValue && Boolean(value)
+    const resolvedValue = Array.isArray(value)
+        ? (value.find(b => b.id_bit === id_bit)?.value ?? 'Sin datos')
+        : value
+
+    const hasValue = resolvedValue !== 'Sin datos'
+    const isOn = hasValue && Boolean(resolvedValue)
 
     const color = !hasValue
         ? '#9ca3af'
@@ -127,6 +132,7 @@ const MultipleBooleanChart = ({
                         key={item.key}
                         label={item.title}
                         value={item.value}
+                        id_bit={item.id_bit}
                         textOn={item.textOn}
                         textOff={item.textOff}
                         colorOn={item.colorOn}
