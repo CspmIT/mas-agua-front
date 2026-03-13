@@ -45,16 +45,26 @@ const MapBase = ({
                 vars
             )
 
-            // Actualizamos los markers con los valores nuevos
             const updated = markers.map((marker) => {
                 const id = marker.popupInfo.data.id
-                const value = data[id] ?? 'Sin datos'
+                const id_bit = marker.popupInfo.id_bit   // <-- nuevo
+                const rawData = data[id]
+
+                let value
+
+                if (Array.isArray(rawData)) {
+                    // Variable binaria comprimida → buscar el bit asignado
+                    const match = rawData.find(b => b.id_bit === id_bit)
+                    value = match !== undefined ? match.value : 'Sin datos'
+                } else {
+                    value = rawData ?? 'Sin datos'
+                }
 
                 return {
                     ...marker,
                     popupInfo: {
                         ...marker.popupInfo,
-                        value: `${value} ${marker.popupInfo.data.unit ?? ''}`
+                        value,
                     }
                 }
             })
@@ -68,21 +78,30 @@ const MapBase = ({
 
     const formatMarkerValue = (marker) => {
         const rawValue = marker.popupInfo.value
+        const data = marker.popupInfo.data
 
-        if (rawValue == null) return "No hay datos"
+        if (rawValue == null || rawValue === 'Sin datos') return 'Sin datos'
 
-        // obtener calc_field
-        const influxConfig = Object.values(marker.popupInfo.data.varsInflux)[0]
-        const calcField = influxConfig.calc_field
-
-        // si el campo es status interpretamos 0/1
-        if (calcField === "status" || calcField === "estados_0" || calcField.includes("estado")) {
-            const numeric = Number(rawValue)
-            return numeric === 1 ? "Encendido" : "Apagado"
+        // Variable binaria comprimida → mostrar nombre del bit + estado
+        if (data?.binary_compressed && marker.popupInfo.id_bit != null) {
+            if (rawValue === 'Sin datos' || rawValue == null) return 'Sin datos'
+            return rawValue ? 'Encendido' : 'Apagado'
         }
 
-        // para todo lo demás, devolver el valor normal
-        return rawValue
+        // Variable booleana común
+        const unit = data?.unit?.toLowerCase() ?? ''
+        if (['booleano', 'bool', 'binario'].includes(unit)) {
+            return Number(rawValue) === 1 ? 'Encendido' : 'Apagado'
+        }
+
+        // Variable de campo status
+        const calcField = Object.values(data?.varsInflux ?? {})[0]?.calc_field ?? ''
+        if (calcField === 'status' || calcField.includes('estado')) {
+            return Number(rawValue) === 1 ? 'Encendido' : 'Apagado'
+        }
+
+        // Valor numérico normal
+        return `${rawValue} ${data?.unit ?? ''}`
     }
 
     useEffect(() => {
@@ -136,7 +155,11 @@ const MapBase = ({
                                 className='!rounded-xl !shadow-md'
                             >
                                 <Typography variant="body3">
-                                    {marker.popupInfo.data.name ?? 'No hay datos'}
+                                    {marker.popupInfo.data.binary_compressed
+                                        ? marker.popupInfo.data.bits?.find(b => b.id === marker.popupInfo.id_bit)?.name
+                                        ?? marker.popupInfo.data.name
+                                        : marker.popupInfo.data.name ?? 'No hay datos'
+                                    }
                                 </Typography>
                                 <Typography variant="body2">
                                     {formatMarkerValue(marker)}
@@ -146,7 +169,7 @@ const MapBase = ({
                     </Marker>
                 ))}
             </Map>
-            {controlPanel && (           
+            {controlPanel && (
                 <ControlPanel markers={markers} setMarkers={setMarkers} />
             )}
         </div>
