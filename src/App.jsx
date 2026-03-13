@@ -42,6 +42,7 @@ import { isTauri } from '@tauri-apps/api/core'
 import { useUpdater } from './hooks/useUpdater'
 import ConfigBoardChart from './modules/Charts/views/ConfigBoardChart'
 import Boards from './modules/Boards/views'
+import AdminDashboardPage from './modules/home/components/AdminDashboardPage'
 
 
 function App() {
@@ -96,6 +97,7 @@ function App() {
 		{ path: '/external', element: <ExternalUser /> },
 		{ path: '/list/pumps', element: <PumpsTable/>},
 		{ path: '/boards', element: <Boards />},
+		{ path: '/config/dashboard', element: <AdminDashboardPage />},
 	]
 
 	const externalRoutes = [
