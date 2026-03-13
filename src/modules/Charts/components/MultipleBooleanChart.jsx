@@ -126,7 +126,7 @@ const MultipleBooleanChart = ({
                 </div>
             )}
 
-            <div className="grid grid-cols-2 m-2 gap-1 justify-center align-middle">
+            <div className={`grid ${items.length > 6 ? 'grid-cols-3' : 'grid-cols-2'} m-2 gap-1 justify-center align-middle`}>
                 {items.map(item => (
                     <LedIndicator
                         key={item.key}
