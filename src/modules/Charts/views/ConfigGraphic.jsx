@@ -126,7 +126,7 @@ const ConfigGraphic = () => {
             maxValue: Number(maxValue),
             color,
             shape,
-            order,
+            order: Number(order),
             unidad,
             border: border === true || border === 'true',
             porcentage: porcentage === true || porcentage === 'true',
