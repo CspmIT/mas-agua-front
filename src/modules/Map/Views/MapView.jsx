@@ -141,7 +141,7 @@ const MapView = ({ create = false, search = false }) => {
         console.log('Datos a guardar:', map)  // <-- log para verificar datos antes de enviar
         try {
             let result = false
-            if (create && search)  result = await editMap(map)
+            if (create && search) result = await editMap(map)
             if (create && !search) result = await saveMap(map)
 
             if (result) {
@@ -168,10 +168,10 @@ const MapView = ({ create = false, search = false }) => {
             setNameMap(data[0].name)
             setViewState({
                 longitude: Number(data[0].longitude),
-                latitude:  Number(data[0].latitude),
-                zoom:      Number(data[0].zoom),
-                bearing:   Number(data[0].bearing),
-                pitch:     Number(data[0].pitch),
+                latitude: Number(data[0].latitude),
+                zoom: Number(data[0].zoom),
+                bearing: Number(data[0].bearing),
+                pitch: Number(data[0].pitch),
             })
 
             const loadedMarkers = data[0].MarkersMaps.map((markerMap) =>
@@ -181,7 +181,7 @@ const MapView = ({ create = false, search = false }) => {
                     markerMap.longitude,
                     markerMap.PopUpsMarkers.idVar,
                     markerMap.PopUpsMarkers.InfluxVar,
-                    markerMap.PopUpsMarkers.id_bit ?? null   
+                    markerMap.PopUpsMarkers.id_bit ?? null
                 )
             )
             setMarkers(loadedMarkers)
@@ -193,29 +193,29 @@ const MapView = ({ create = false, search = false }) => {
     }
 
     useEffect(() => {
-        if (!create)           { const id = searchParam.get('id'); searchMap(id) }
-        if (create && search)  { const id = searchParam.get('id'); searchMap(id) }
+        if (!create) { const id = searchParam.get('id'); searchMap(id) }
+        if (create && search) { const id = searchParam.get('id'); searchMap(id) }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     // ── Render ───────────────────────────────────────────────────────────────
     return (
         <div className="w-full h-[88vh] flex flex-col gap-1">
-
             {create && (
-                <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center pb-3">
-                    <FormLabel className='w-full text-center !text-3xl md:ms-32'>
-                        {create && search ? 'Editar Mapa' : 'Crear Mapa'}
-                    </FormLabel>
+                <div className="flex flex-col sm:flex-row sm:items-center px-1 gap-2">
+                    <div className="hidden sm:flex flex-1" />
 
-                    <div className="flex gap-2 mr-3">
-                        {/* Botón abrir modal */}
+                    <Typography className="flex-1 !text-3xl text-center">
+                        {search ? 'Editar Mapa' : 'Crear Mapa'}
+                    </Typography>
+
+                    <div className="flex-1 flex justify-center sm:justify-end gap-2">
                         <Button
                             onClick={openModal}
-                            variant="outlined"
+                            variant="contained"
                             startIcon={<AddLocation />}
                         >
-                            Agregar Marcador
+                            Agregar marcador
                         </Button>
 
                         <Button
