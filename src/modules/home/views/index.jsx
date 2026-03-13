@@ -166,6 +166,8 @@ const Home = () => {
                                 ? null // se resuelve luego con inflValues
                                 : null,
                             influxVar: influx?.InfluxVars ?? null,
+                            id_bit:  influx?.id_bit          ?? null,
+                            varId:   influx?.InfluxVars?.id  ?? null,
                         }
                     })
                 
