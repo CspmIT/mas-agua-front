@@ -87,7 +87,7 @@ const chartTypes = [
     {
         id: 12,
         title: 'Totalizado por periodo',
-        image: '/assets/img/charts/barChart.png?height=300&width=300',
+        image: '/assets/img/charts/totalizado-periodo.png?height=300&width=300',
         description:
             'Gráfico de barras que muestra el consumo mensual de los últimos 12 meses.',
     },
