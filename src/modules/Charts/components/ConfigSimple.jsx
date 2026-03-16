@@ -397,9 +397,30 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             />
                         )}
 
+                        {configs[id].maxValue !== false ? (
+                            <TextField
+                                type="number"
+                                className="w-full"
+                                label="Valor maximo del gráfico"
+                                inputProps={{ pattern: '^[0-9]+$' }}
+                                {...register('maxValue', {
+                                    required: 'Este campo es requerido',
+                                })}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'e' || e.key === '+' || e.key === '-') {
+                                        e.preventDefault()
+                                    }
+                                }}
+                                onChange={handleChange}
+                                error={!!errors.maxValue}
+                                helperText={errors.maxValue?.message}
+                                size="small"
+                            />
+                        ) : (
+                            <input type="hidden" {...register('maxValue')} value={0} />
+                        )}
 
-
-                        <TextField
+                        {/* <TextField
                             type="number"
                             className="w-full"
                             label="Valor maximo del gráfico"
@@ -422,8 +443,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             error={!!errors.maxValue}
                             helperText={errors.maxValue?.message}
                             size="small"
-                        />
-
+                        /> */}
 
                         {configs[id].description && (
                             <TextField
@@ -482,7 +502,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                     </Typography>
                     <Suspense fallback={<div>Cargando...</div>}>
 
-                        <ChartComponent {...config} />
+                        <ChartComponent {...config}/>
                         {isLiquid && (
                             <LiquidFillBottomInfo
                                 bottom1={{
