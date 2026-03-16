@@ -84,6 +84,13 @@ const chartTypes = [
         description: 'Tablero para visualizacion de gráficos, estados de bombas y estado de sala.',
         board: true
     },
+    {
+        id: 12,
+        title: 'Totalizado por periodo',
+        image: '/assets/img/charts/totalizado-periodo.png?height=300&width=300',
+        description:
+            'Gráfico de barras que muestra el consumo mensual de los últimos 12 meses.',
+    },
 ]
 
 function SelectType() {
