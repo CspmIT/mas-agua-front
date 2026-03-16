@@ -136,4 +136,21 @@ export const configs = {
         id: 9,
         typeGraph: 'BooleanChart',
     },
+    12: {
+        id: 12,
+        typeGraph: 'TotalizadoPeriodo',
+        format: false,
+        typeValue: false,
+        typeBorder: false,
+        typeUnity: false,
+        singleValue: true,
+        description: false,
+        description2: false,
+        maxValue: false,
+        order: 1,
+        preConfig: {
+            color: '#363F9C',
+            order: 1,
+        },
+    },
 }

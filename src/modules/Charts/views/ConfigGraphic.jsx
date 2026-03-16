@@ -209,18 +209,52 @@ const ConfigGraphic = () => {
         }
     }
 
+    const saveTotalizadoChart = async (data) => {
+        if (data?.idVar === undefined) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Atención!',
+                html: 'Debe seleccionar una variable para el gráfico',
+            })
+            return
+        }
+    
+        const payload = {
+            title: data.title,
+            type: 'TotalizadoPeriodo',
+            idVar: Number(data.idVar),
+            color: data.color,
+            order: Number(data.order),
+        }
+    
+        const url = backend[import.meta.env.VITE_APP_NAME]
+        const endpoint = idChart ? `${url}/chartSeries/${idChart}` : `${url}/chartSeries`
+    
+        try {
+            const response = await request(endpoint, 'POST', payload)
+            if (response) {
+                Swal.fire({ icon: 'success', title: '¡Éxito!', html: 'Se guardó correctamente la configuración' })
+                navigate('/')
+            }
+        } catch (error) {
+            Swal.fire({ icon: 'error', title: 'Error', html: 'No se pudo guardar el gráfico' })
+            console.error(error)
+        }
+    }
+
     const onSubmit = async (data) => {
         const { type } = data
         if (type === 'LineChart') {
             await saveLineChart(data)
         }
-
         if (type === 'LiquidFillPorcentaje') {
             saveLiquidChart(data)
         }
-
         if (isSimpleChart(type)) {
             saveSimpleChart(data)
+        }
+        if (type === 'TotalizadoPeriodo') { 
+            await saveTotalizadoChart(data)
         }
     }
 
