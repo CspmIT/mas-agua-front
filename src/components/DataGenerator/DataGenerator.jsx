@@ -49,6 +49,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 			setValue('topic', '')
 			setValue('field', '')
 			setValue('time', '')
+			setValue('unit', '')
 			setValue('unit_topic', '')
 			setValue('period', '')
 			setValue('unit_period', '')
@@ -88,6 +89,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 						calc_topic: val.calc_topic,
 						calc_field: val.calc_field,
 						calc_time: val.calc_time,
+						calc_unit: val.calc_unit,
 						calc_unit_topic: val.calc_unit_topic,
 						calc_period: val.calc_period,
 						calc_unit_period: val.calc_unit_period,
