@@ -288,9 +288,9 @@ export const ListImg = () => [
         srcView: `${urlBase}/led_OFF.png`,
         animation: 'boolean',
         optionsImage: {
-            error: '/assets/img/Diagram/diagramAction/led_OFF.png',
+            error: '/assets/img/Diagram/diagramAction/led_FAIL.png',
             success:
-                '/assets/img/Diagram/diagramAction/led_FAIL.png',
+                '/assets/img/Diagram/diagramAction/led_ON.png',
             default:
                 '/assets/img/Diagram/diagramAction/led_OFF.png',
         },

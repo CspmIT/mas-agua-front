@@ -1,4 +1,5 @@
 import LineChart from '../../Charts/components/LineChart'
+import GrafBarra from '../../../components/Graphs/barchart'
 import DoughnutChart from '../../Charts/components/DoughnutChart'
 import LoaderComponent from '../../../components/Loader'
 
@@ -20,6 +21,21 @@ const chartComponentMap = {
       <DoughnutChart data={chartData} />
     </div>
   ),
+
+  TotalizadoPeriodo: ({ chartData, chart }) => {
+    const color = chart.ChartConfig?.find(c => c.key === 'color')?.value ?? '#363F9C'
+
+    return (
+        <div className="w-full">
+            <GrafBarra
+                title=" "
+                seriesData={chartData ?? []}
+                seriesName="Consumo (m³)"
+                color={color}
+            />
+        </div>
+    )
+},
 }
 
 export const ChartFactory = ({ type, chartData, chart, loader, onZoomRange, onRestore }) => {

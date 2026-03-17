@@ -252,8 +252,12 @@ const Home = ({ targetUserId = null }) => {
                             textOff: led.textOff,
                             colorOn: led.colorOn,
                             colorOff: led.colorOff,
-                            value: null,
-                            influxVar: influx?.InfluxVars ?? null
+                            value: influx
+                                ? null // se resuelve luego con inflValues
+                                : null,
+                            influxVar: influx?.InfluxVars ?? null,
+                            id_bit:  influx?.id_bit          ?? null,
+                            varId:   influx?.InfluxVars?.id  ?? null,
                         }
                     })
 

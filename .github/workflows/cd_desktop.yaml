@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'fix: correccion dashboard en desktop'
+                  releaseBody: 'feat: soporte de variables binarias comprimidas en MapBase'
                   prerelease: false

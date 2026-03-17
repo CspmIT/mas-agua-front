@@ -6,6 +6,10 @@ import {
     IconButton,
     TextField,
     Typography,
+    MenuItem,
+    Select,
+    FormControl,
+    InputLabel,
 } from '@mui/material'
 import { ArrowBack } from '@mui/icons-material'
 import { useEffect, useState, Suspense, lazy } from 'react'
@@ -27,6 +31,9 @@ const emptyLed = () => ({
     colorOn: '#00ff00',
     colorOff: '#444444',
     idVar: null,
+    isBinaryCompressed: false,
+    bits: [],
+    idBit: null,
 })
 
 const ConfigMultipleBooleanChart = () => {
@@ -50,7 +57,7 @@ const ConfigMultipleBooleanChart = () => {
     })
 
     const leds = watch('chartData')
-    const MAX_LEDS = 6
+    const MAX_LEDS = 8
 
     /* =========================
        HELPERS
@@ -62,7 +69,14 @@ const ConfigMultipleBooleanChart = () => {
     }
 
     const setLedVar = (index, variable) => {
-        updateLed(index, 'idVar', variable?.id)
+        const updated = [...getValues('chartData')]
+
+        updated[index].idVar = variable?.id ?? null
+        updated[index].isBinaryCompressed = variable?.binary_compressed ?? false
+        updated[index].bits = variable?.bits ?? []
+        updated[index].idBit = null   // resetear bit al cambiar variable
+
+        setValue('chartData', updated)
     }
 
     const addLed = () => {
@@ -92,7 +106,7 @@ const ConfigMultipleBooleanChart = () => {
     const createChart = async () => {
         const dataSave = getValues()
         dataSave.type = 'MultipleBooleanChart'
-
+        console.log(dataSave)
         try {
             await request(
                 `${backend[import.meta.env.VITE_APP_NAME]}/charts`,
@@ -140,7 +154,7 @@ const ConfigMultipleBooleanChart = () => {
                 'error'
             )
             return
-        }        
+        }
 
         for (const led of leds) {
             if (!led.idVar) {
@@ -151,6 +165,12 @@ const ConfigMultipleBooleanChart = () => {
                 )
                 return
             }
+
+            if (led.isBinaryCompressed && !led.idBit) {
+                await Swal.fire('Error', 'Todos los LEDs con variable binaria comprimida deben tener un bit asignado', 'error')
+                return
+            }
+
         }
 
         const result = id ? await updateChart() : await createChart()
@@ -180,7 +200,8 @@ const ConfigMultipleBooleanChart = () => {
             // 2) Reconstruir LEDs
             const ledsFormatted = data.ChartData.map(d => {
                 const cfg = configByLed[d.key] || {}
-
+                const variable = d.InfluxVars || {}
+ 
                 return {
                     key: d.key,
                     title: cfg.title || d.label || '',
@@ -188,7 +209,10 @@ const ConfigMultipleBooleanChart = () => {
                     textOff: cfg.textOff || 'Apagado',
                     colorOn: cfg.colorOn || '#00ff00',
                     colorOff: cfg.colorOff || '#444444',
-                    idVar: d.InfluxVars?.id || null,
+                    idVar: variable.id || null,
+                    isBinaryCompressed: variable.binary_compressed ?? false,
+                    bits: variable.bits ?? [],
+                    idBit: d.id_bit ?? null,    
                 }
             })
 
@@ -317,13 +341,37 @@ const ConfigMultipleBooleanChart = () => {
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div className='!bg-white'>
                                     <SelectVars
                                         setValueState={v => setLedVar(index, v)}
                                         label="Variable del LED"
                                     />
                                 </div>
+
+                                {/* ── Selector de bit (solo si la variable es binaria comprimida) ── */}
+                                {led.isBinaryCompressed && (
+                                    <div className='!bg-white'>
+                                        <FormControl fullWidth size="small">
+                                            <InputLabel>Bit de la variable</InputLabel>
+                                            <Select
+                                                value={led.idBit ?? ''}
+                                                label="Bit de la variable"
+                                                onChange={e => updateLed(index, 'idBit', e.target.value)}
+                                            >
+                                                <MenuItem value="" disabled>
+                                                    Seleccioná un bit
+                                                </MenuItem>
+                                                {led.bits.map(b => (
+                                                    <MenuItem key={b.id} value={b.id}>
+                                                        {/* Ej: "bomba este (bit 0)" */}
+                                                        {b.name} (bit {b.bit})
+                                                    </MenuItem>
+                                                ))}
+                                            </Select>
+                                        </FormControl>
+                                    </div>
+                                )}
 
                                 <Button
                                     color="error"
