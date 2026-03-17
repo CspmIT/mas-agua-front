@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'feat: grafico totalizado por periodo'
+                  releaseBody: 'feat: soporte para variables binarias comprimidas en Alarmas'
                   prerelease: false
