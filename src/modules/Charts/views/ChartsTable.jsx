@@ -3,19 +3,30 @@ import { request } from '../../../utils/js/request'
 import { configs } from '../configs/configs'
 import { backend } from '../../../utils/routes/app.routes'
 import TableCustom from '../../../components/TableCustom'
-import { Box, Button, Container, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material'
+import {
+  Box, Button, Container, FormControl, InputLabel, MenuItem, Select, Typography
+} from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import LoaderComponent from '../../../components/Loader'
 import CardCustom from '../../../components/CardCustom'
 import { Controller, useForm } from 'react-hook-form'
+import { storage } from '../../../storage/storage'
+import AssignChartDialog from '../components/AssignChartDialog'
+
+const EXCLUDED_DASHBOARD_TYPES = ['TotalizadoPeriodo', 'LineChart', 'BoardChart']
 
 const ChartsTable = () => {
+  const usuario = storage.get('usuario');
+  const isSuperAdmin = usuario?.profile === 4;
   const navigate = useNavigate()
   const [charts, setCharts] = useState([])
   const [chartsOriginal, setChartsOriginal] = useState([])
   const [columnsTable, setColumnsTable] = useState([])
   const [loader, setLoader] = useState(true)
+  const [users, setUsers] = useState([])
+  const [assignDialog, setAssignDialog] = useState({ open: false, chartId: null })
+ 
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       type: '',
@@ -52,13 +63,15 @@ const ChartsTable = () => {
       {
         header: 'Orden',
         accessorKey: 'order',
+        size: 50,
       },
       {
         header: 'Estado',
         accessorKey: 'status',
+        size: 50,
         Cell: ({ row }) => {
           const isActive = row.original.status
-      
+
           return (
             <Typography
               variant="body2"
@@ -71,7 +84,7 @@ const ChartsTable = () => {
             </Typography>
           )
         },
-      },      
+      },
       {
         header: 'Acciones',
         accessorKey: 'actions',
@@ -123,9 +136,8 @@ const ChartsTable = () => {
 
                 const question = await Swal.fire({
                   icon: 'question',
-                  html: `Esta seguro que desea ${
-                    row.original.status ? 'desactivar' : 'activar'
-                  } este grafico?`,
+                  html: `Esta seguro que desea ${row.original.status ? 'desactivar' : 'activar'
+                    } este grafico?`,
                   showCancelButton: true,
                   cancelButtonText: 'Cancelar',
                   confirmButtonText: row.original.status ? 'Desactivar' : 'Activar',
@@ -174,6 +186,16 @@ const ChartsTable = () => {
             >
               {row.original.status ? 'Desactivar' : 'Activar'}
             </Button>
+            {!!row.original.status && !EXCLUDED_DASHBOARD_TYPES.includes(row.original.type) && (
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="small"
+                onClick={() => setAssignDialog({ open: true, chartId: row.original.id })}
+              >
+                Asignar
+              </Button>
+            )}
           </Box>
         ),
       },
@@ -205,8 +227,18 @@ const ChartsTable = () => {
     setCharts(chartsOriginal)
   }
 
+
+  const fetchUsers = async () => {
+    const url = backend[import.meta.env.VITE_APP_NAME]
+    const { data } = await request(`${url}/admin/users`, 'GET') // ajustá el endpoint de usuarios
+    setUsers(data)
+  }
+
   useEffect(() => {
     fetchCharts()
+    if (isSuperAdmin) {
+      fetchUsers()
+    }
   }, [])
 
   return (
@@ -303,6 +335,13 @@ const ChartsTable = () => {
             pagination={true}
             pageSize={10}
             topToolbar={true}
+          />
+
+          <AssignChartDialog
+            open={assignDialog.open}
+            chartId={assignDialog.chartId}
+            users={users}
+            onClose={() => setAssignDialog({ open: false, chartId: null })}
           />
         </>
       ) : (
