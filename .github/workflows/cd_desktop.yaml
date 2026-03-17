@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'feat: soporte de variables binarias comprimidas en MapBase'
+                  releaseBody: 'feat: grafico totalizado por periodo'
                   prerelease: false
