@@ -9,7 +9,10 @@ import {
     IconButton,
     CircularProgress,
     FormControlLabel,
-    Switch
+    Switch,
+    FormControl,
+    InputLabel,
+    Select,
 } from '@mui/material'
 import { Close } from '@mui/icons-material'
 import Swal from 'sweetalert2'
@@ -17,137 +20,133 @@ import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
 import { getVarsInflux } from '../../DrawDiagram/components/Fields/actions'
 
+const emptyForm = {
+    name: '',
+    id_influxvars: '',
+    id_bit: null,
+    condition: '',
+    value: '',
+    value2: '',
+    repeatInterval: 0,
+    type: 'single',
+    logicOperator: 'AND',
+    secondaryVariableId: '',
+    secondary_id_bit: null,
+    secondaryCondition: '',
+    secondaryValue: '',
+    hasTimeRange: false,
+    startime: '',
+    endtime: '',
+}
+
 const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
     const [loading, setLoading] = useState(false)
     const [variables, setVariables] = useState([])
+    const [form, setForm] = useState(emptyForm)
 
-    const [form, setForm] = useState({
-        name: '',
-        id_influxvars: '',
-        condition: '',
-        value: '',
-        value2: '',
-        repeatInterval: 0,
-        type: 'single',
-        logicOperator: 'AND',
-        secondaryVariableId: '',
-        secondaryCondition: '',
-        secondaryValue: '',
-        hasTimeRange: false,
-        startime: '',
-        endtime: '',
-    })
+    // Variable principal seleccionada (para acceder a sus bits)
+    const primaryVar    = variables.find(v => v.id === Number(form.id_influxvars)) ?? null
+    const secondaryVar  = variables.find(v => v.id === Number(form.secondaryVariableId)) ?? null
 
+    const primaryIsBinary   = primaryVar?.binary_compressed   ?? false
+    const secondaryIsBinary = secondaryVar?.binary_compressed ?? false
+
+    /* ── Cargar form al editar ─────────────────────────────────────────── */
     useEffect(() => {
         if (alarmData) {
             setForm({
-                name: alarmData.name || '',
-                id_influxvars: alarmData.id_influxvars || '',
-                condition: alarmData.condition || '',
-                value: alarmData.value ?? '',
-                value2: alarmData.value2 ?? '',
-                repeatInterval: alarmData.repeatInterval ?? 0,
-                type: alarmData.type || 'single',
-                logicOperator: alarmData.logicOperator || 'AND',
+                name:                alarmData.name              || '',
+                id_influxvars:       alarmData.id_influxvars     || '',
+                id_bit:              alarmData.id_bit            ?? null,
+                condition:           alarmData.condition         || '',
+                value:               alarmData.value             ?? '',
+                value2:              alarmData.value2            ?? '',
+                repeatInterval:      alarmData.repeatInterval    ?? 0,
+                type:                alarmData.type              || 'single',
+                logicOperator:       alarmData.logicOperator     || 'AND',
                 secondaryVariableId: alarmData.secondaryVariableId || '',
-                secondaryCondition: alarmData.secondaryCondition || '',
-                secondaryValue: alarmData.secondaryValue || '',
-                hasTimeRange: !!(alarmData.startime && alarmData.endtime),
-                startime: alarmData.startime || '',
-                endtime: alarmData.endtime || '',
+                secondary_id_bit:    alarmData.secondary_id_bit  ?? null,
+                secondaryCondition:  alarmData.secondaryCondition || '',
+                secondaryValue:      alarmData.secondaryValue    || '',
+                hasTimeRange:        !!(alarmData.startime && alarmData.endtime),
+                startime:            alarmData.startime          || '',
+                endtime:             alarmData.endtime           || '',
             })
         } else {
-            setForm({
-                name: '',
-                id_influxvars: '',
-                condition: '',
-                value: '',
-                value2: '',
-                repeatInterval: 0,
-                type: 'single',
-                logicOperator: 'AND',
-                secondaryVariableId: '',
-                secondaryCondition: '',
-                secondaryValue: '',
-                hasTimeRange: false,
-                startime: '',
-                endtime: '',
-            })
+            setForm(emptyForm)
         }
     }, [alarmData, openModal])
 
+    /* ── Cargar variables ──────────────────────────────────────────────── */
     useEffect(() => {
-        const fetchVars = async () => {
-            const variables = await getVarsInflux()
-            setVariables(variables)
+        if (openModal) {
+            getVarsInflux().then(setVariables)
         }
-        if (openModal) fetchVars()
     }, [openModal])
 
-    const handleChange = (field, value) => {
-        setForm((prev) => ({ ...prev, [field]: value }))
+    /* ── Helpers ───────────────────────────────────────────────────────── */
+    const handleChange = (field, value) => setForm(prev => ({ ...prev, [field]: value }))
+
+    // Al cambiar variable principal → resetear su bit
+    const handlePrimaryVarChange = (id) => {
+        setForm(prev => ({ ...prev, id_influxvars: id, id_bit: null }))
+    }
+
+    // Al cambiar variable secundaria → resetear su bit
+    const handleSecondaryVarChange = (id) => {
+        setForm(prev => ({ ...prev, secondaryVariableId: id, secondary_id_bit: null }))
     }
 
     const handleClose = () => {
-        setForm({
-            name: '',
-            id_influxvars: '',
-            condition: '',
-            value: '',
-            value2: '',
-            repeatInterval: 0,
-            type: 'single',
-            logicOperator: 'AND',
-            secondaryVariableId: '',
-            secondaryCondition: '',
-            secondaryValue: '',
-            startime: '',
-            endtime: '',
-        })
+        setForm(emptyForm)
         setOpenModal(false)
     }
 
+    /* ── Submit ────────────────────────────────────────────────────────── */
     const handleSubmit = async (e) => {
         e.preventDefault()
+
+        // Validar bit obligatorio si la variable es binaria comprimida
+        if (primaryIsBinary && !form.id_bit) {
+            Swal.fire('Error', 'Debe seleccionar un bit para la variable principal', 'error')
+            return
+        }
+        if (form.type === 'combined' && secondaryIsBinary && !form.secondary_id_bit) {
+            Swal.fire('Error', 'Debe seleccionar un bit para la variable secundaria', 'error')
+            return
+        }
+
         setLoading(true)
         try {
-            const url = backend[import.meta.env.VITE_APP_NAME]
+            const url     = backend[import.meta.env.VITE_APP_NAME]
             const payload = { ...form }
 
-            // Si no es "entre", limpiamos value2
             if (form.condition !== 'entre') delete payload.value2
 
-            // Si es simple, no mandamos campos de la segunda condición
             if (form.type === 'single') {
                 delete payload.secondaryVariableId
                 delete payload.secondaryCondition
                 delete payload.secondaryValue
                 delete payload.logicOperator
+                delete payload.secondary_id_bit
             }
 
-            // Si no tiene rango horario, limpiamos los campos de tiempo
             if (!form.hasTimeRange) {
                 delete payload.startime
                 delete payload.endtime
                 delete payload.hasTimeRange
             }
 
+            // Limpiar id_bit si la variable no es binaria comprimida
+            if (!primaryIsBinary)   payload.id_bit           = null
+            if (!secondaryIsBinary) payload.secondary_id_bit = null
+
             if (alarmData?.id) {
                 await request(`${url}/updateAlarm/${alarmData.id}`, 'PUT', payload)
-                await Swal.fire({
-                    showConfirmButton: false,
-                    timer: 1500,
-                    icon: 'success',
-                    text: 'Alarma editada correctamente',
-                })
+                await Swal.fire({ showConfirmButton: false, timer: 1500, icon: 'success', text: 'Alarma editada correctamente' })
             } else {
                 await request(`${url}/createAlarm`, 'POST', payload)
-                await Swal.fire({
-                    showConfirmButton: false,
-                    timer: 1500,
-                    icon: 'success',
-                    text: 'Alarma creada correctamente',
-                })
+                await Swal.fire({ showConfirmButton: false, timer: 1500, icon: 'success', text: 'Alarma creada correctamente' })
             }
 
             onSuccess?.()
@@ -160,14 +159,15 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
         }
     }
 
+    /* ── Render ────────────────────────────────────────────────────────── */
     return (
-        <Modal open={openModal} onClose={handleClose} className="flex justify-center items-center align-middle">
-            <Box className="relative bg-white p-6 rounded-lg shadow-lg max-w-[95vw]">
+        <Modal open={openModal} onClose={handleClose} className="flex justify-center items-center">
+            <Box className="relative bg-white p-6 rounded-lg shadow-lg max-w-[95vw] max-h-[90vh] overflow-y-auto">
                 <IconButton onClick={handleClose} className="!absolute top-3 right-3">
                     <Close color="error" />
                 </IconButton>
 
-                <form onSubmit={handleSubmit} className="p-5 flex flex-col h-full gap-3 justify-start items-center">
+                <form onSubmit={handleSubmit} className="p-5 flex flex-col gap-3 items-center">
                     <Typography variant="h5">
                         {alarmData?.id ? 'Editar alarma' : 'Crear nueva alarma'}
                     </Typography>
@@ -183,30 +183,53 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                     />
 
                     <div className="flex flex-wrap w-full gap-3 justify-center mb-4">
+
+                        {/* Nombre */}
                         <TextField
                             label="Nombre"
                             className="w-64"
                             value={form.name}
                             onChange={(e) => handleChange('name', e.target.value)}
                             required
-                            size='small'
+                            size="small"
                         />
 
+                        {/* Variable principal */}
                         <TextField
                             label="Variable"
                             className="w-64"
                             select
                             value={form.id_influxvars}
-                            onChange={(e) => handleChange('id_influxvars', e.target.value)}
+                            onChange={(e) => handlePrimaryVarChange(e.target.value)}
                             required
-                            size='small'
+                            size="small"
                         >
-                            <MenuItem value="">Selecciona una variable</MenuItem>
+                            <MenuItem value="">Seleccioná una variable</MenuItem>
                             {variables.map((v) => (
                                 <MenuItem key={v.id} value={v.id}>{v.name}</MenuItem>
                             ))}
                         </TextField>
 
+                        {/* Bit principal — solo si es binaria comprimida */}
+                        {primaryIsBinary && (
+                            <FormControl className="w-64" size="small" required>
+                                <InputLabel>Bit de la variable</InputLabel>
+                                <Select
+                                    value={form.id_bit ?? ''}
+                                    label="Bit de la variable"
+                                    onChange={(e) => handleChange('id_bit', e.target.value)}
+                                >
+                                    <MenuItem value="" disabled>Seleccioná un bit</MenuItem>
+                                    {(primaryVar?.bits ?? []).map((b) => (
+                                        <MenuItem key={b.id} value={b.id}>
+                                            {b.name} (bit {b.bit})
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        )}
+
+                        {/* Condición principal */}
                         <TextField
                             label="Condición"
                             className="w-64"
@@ -214,7 +237,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                             value={form.condition}
                             onChange={(e) => handleChange('condition', e.target.value)}
                             required
-                            size='small'
+                            size="small"
                         >
                             <MenuItem value=">">Mayor que</MenuItem>
                             <MenuItem value="<">Menor que</MenuItem>
@@ -231,7 +254,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                             value={form.value}
                             onChange={(e) => handleChange('value', e.target.value)}
                             required
-                            size='small'
+                            size="small"
                         />
 
                         {form.condition === 'entre' && (
@@ -242,11 +265,11 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                                 value={form.value2}
                                 onChange={(e) => handleChange('value2', e.target.value)}
                                 required
-                                size='small'
+                                size="small"
                             />
                         )}
 
-
+                        {/* ── Combinada ───────────────────────────────── */}
                         {form.type === 'combined' && (
                             <>
                                 <TextField
@@ -255,26 +278,46 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                                     select
                                     value={form.logicOperator}
                                     onChange={(e) => handleChange('logicOperator', e.target.value)}
-                                    size='small'
+                                    size="small"
                                 >
                                     <MenuItem value="AND">AND (y)</MenuItem>
                                     <MenuItem value="OR">OR (o)</MenuItem>
                                 </TextField>
 
+                                {/* Variable secundaria */}
                                 <TextField
                                     label="Variable secundaria"
                                     className="w-64"
                                     select
                                     value={form.secondaryVariableId}
-                                    onChange={(e) => handleChange('secondaryVariableId', e.target.value)}
+                                    onChange={(e) => handleSecondaryVarChange(e.target.value)}
                                     required
-                                    size='small'
+                                    size="small"
                                 >
-                                    <MenuItem value="">Selecciona una variable</MenuItem>
+                                    <MenuItem value="">Seleccioná una variable</MenuItem>
                                     {variables.map((v) => (
                                         <MenuItem key={v.id} value={v.id}>{v.name}</MenuItem>
                                     ))}
                                 </TextField>
+
+                                {/* Bit secundario — solo si es binaria comprimida */}
+                                {secondaryIsBinary && (
+                                    <FormControl className="w-64" size="small" required>
+                                        <InputLabel>Bit de la variable secundaria</InputLabel>
+                                        <Select
+                                            value={form.secondary_id_bit ?? ''}
+                                            label="Bit de la variable secundaria"
+                                            onChange={(e) => handleChange('secondary_id_bit', e.target.value)}
+                                        >
+                                            <MenuItem value="" disabled>Seleccioná un bit</MenuItem>
+                                            {(secondaryVar?.bits ?? []).map((b) => (
+                                                <MenuItem key={b.id} value={b.id}>
+                                                    {b.name} (bit {b.bit})
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )}
 
                                 <TextField
                                     label="Condición secundaria"
@@ -283,7 +326,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                                     value={form.secondaryCondition}
                                     onChange={(e) => handleChange('secondaryCondition', e.target.value)}
                                     required
-                                    size='small'
+                                    size="small"
                                 >
                                     <MenuItem value=">">Mayor que</MenuItem>
                                     <MenuItem value="<">Menor que</MenuItem>
@@ -299,11 +342,12 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                                     value={form.secondaryValue}
                                     onChange={(e) => handleChange('secondaryValue', e.target.value)}
                                     required
-                                    size='small'
+                                    size="small"
                                 />
                             </>
                         )}
 
+                        {/* Intervalo de repetición */}
                         <TextField
                             type="number"
                             className="w-64"
@@ -312,9 +356,10 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                             onChange={(e) => handleChange('repeatInterval', e.target.value)}
                             required
                             inputProps={{ min: 0 }}
-                            size='small'
+                            size="small"
                         />
 
+                        {/* Rango horario */}
                         <FormControlLabel
                             control={
                                 <Switch
@@ -325,14 +370,13 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                                             ...prev,
                                             hasTimeRange: checked,
                                             startime: checked ? (prev.startime || '00:00') : '',
-                                            endtime: checked ? (prev.endtime || '23:59') : '',
+                                            endtime:  checked ? (prev.endtime  || '23:59') : '',
                                         }))
                                     }}
-                                    
                                 />
                             }
                             label="Restringir alarma a un rango horario"
-                            className='w-full justify-center text-center'
+                            className="w-full justify-center"
                         />
 
                         {form.hasTimeRange && (
@@ -346,7 +390,6 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                                     required
                                     size="small"
                                 />
-
                                 <TextField
                                     type="time"
                                     className="w-40"
@@ -367,11 +410,7 @@ const ModalAlarm = ({ openModal, setOpenModal, onSuccess, alarmData }) => {
                         disabled={loading}
                         startIcon={loading && <CircularProgress size={20} color="inherit" />}
                     >
-                        {loading
-                            ? 'Guardando...'
-                            : alarmData?.id
-                                ? 'Guardar cambios'
-                                : 'Crear alarma'}
+                        {loading ? 'Guardando...' : alarmData?.id ? 'Guardar cambios' : 'Crear alarma'}
                     </Button>
                 </form>
             </Box>
