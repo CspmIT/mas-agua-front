@@ -21,6 +21,7 @@ function ViewDiagram() {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const [scale, setScale] = useState(1);
+  const [circles, setCircles] = useState([]);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const usuario = storage.get('usuario');
