@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Stage, Layer, Text, Line, Label, Tag, Group } from 'react-konva';
+import { Stage, Layer, Text, Line, Label, Tag, Group, Rect } from 'react-konva';
 import { uploadCanvaDb } from '../utils/js/drawActions';
 import CardCustom from '../../../components/CardCustom';
 import { IconButton, Box } from '@mui/material';
@@ -16,20 +16,18 @@ function ViewDiagram() {
   const stageRef = useRef();
   const [dashOffset, setDashOffset] = useState(0);
   const [elements, setElements] = useState([]);
-  const elementsRef = useRef(elements); // ref para leer estado dentro de intervalos
-  const [circles, setCircles] = useState([]);
+  const elementsRef = useRef(elements); 
   const [diagramMetadata, setDiagramMetadata] = useState({ id: null, title: '', backgroundColor: '#ffffff', backgroundImg: '' });
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [dimensions, setDimensions] = useState({ width: window.innerWidth - 10, height: window.innerHeight - 10 });
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const usuario = storage.get('usuario');
+  const containerRef = useRef(null);
 
-  // Mantener ref sincronizada
   useEffect(() => { elementsRef.current = elements; }, [elements]);
 
-  // carga inicial
   useEffect(() => {
     if (id) {
       setIsLoading(true);
@@ -39,13 +37,10 @@ function ViewDiagram() {
         setTool: () => { },
       }).then((updatedElements) => {
         setElements(updatedElements || []);
-        // autoFit (calculado en función de elementos cargados)
-        autoFitDiagram(updatedElements || []);
       }).finally(() => setIsLoading(false));
     }
   }, [id]);
 
-  // animación dashOffset (sin dependencias costosas)
   useEffect(() => {
     let frameId;
     const animate = () => {
@@ -56,14 +51,20 @@ function ViewDiagram() {
     return () => cancelAnimationFrame(frameId);
   }, []);
 
-  // resize
   useEffect(() => {
-    const handleResize = () => setDimensions({ width: window.innerWidth, height: window.innerHeight });
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    if (!containerRef.current) return;
+  
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        setDimensions({ width, height });
+      }
+    });
+  
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [isLoading]);
 
-  // ---------- Mejor: interval separado que NO depende de `elements` ----------
   useEffect(() => {
     const updateInflux = async () => {
       const currentElements = elementsRef.current;
@@ -75,7 +76,6 @@ function ViewDiagram() {
       try {
         const response = await request(`${backend['Mas Agua']}/multipleDataInflux`, 'POST', influxPayload);
         const result = response.data;
-        // actualizar solo elementos que cambian (funcional update)
         setElements(prev =>
           prev.map(el =>
             el.dataInflux?.id && result[el.dataInflux.id] !== undefined
@@ -90,9 +90,9 @@ function ViewDiagram() {
 
     const interval = setInterval(updateInflux, 15000);
     return () => clearInterval(interval);
-  }, []); // <-- SIN `elements` en dependencias
+  }, []); 
 
-  // funciones de zoom (memoizadas por estabilidad)
+  // funciones de zoom
   const zoomIn = useCallback(() => {
     const scaleBy = 1.05;
     const newScale = scale * scaleBy;
@@ -113,10 +113,8 @@ function ViewDiagram() {
     setPosition(newPos);
   }, [scale, position, dimensions]);
 
-  // render tooltip (extraer fuera para evitar repetir lógica)
   const renderTooltipLabel = useCallback((el) => {
     if (!el.dataInflux?.show) return null;
-    // ... lógica de cálculo compacta (igual a la original)
     const offset = 5;
     let labelX = el.x + (el.width || 0) / 2;
     let labelY = el.y + (el.height || 0) / 2;
@@ -142,23 +140,81 @@ function ViewDiagram() {
       const percentage = ((Number(rawValue) * 100) / Number(maxValue)).toFixed(1);
       text = `${percentage}%`;
     } else if (rawValue != null) {
-      text = !isNaN(rawValue) ? `${Number(rawValue).toFixed(2)} ${unit}` : `${rawValue}`;
+      text = !isNaN(rawValue) ? `${Number(rawValue).toFixed(1)} ${unit}` : `${rawValue}`;
     } else {
       text = 'No hay datos';
     }
 
     const isSondaConductimetro = el.src?.includes('Sonda_conductimetro.png');
     if (isSondaConductimetro) {
-      const relX = 0.29, relY = 0.15, boxWidth = 0.70;
-      const fontSize = el.width * 0.13;
+      const relX = 0.20;
+      const relY = 0.02;
+      const boxWidth = el.width * 1.25;
+      const boxHeight = el.height * 0.36;
+      const fontSize = el.width * 0.20;
+      const unitSize = el.width * 0.16;
+      const padding = el.width * 0.02;
+      
+      const [value = text, unit = ''] = text.split(' ');
+
       return (
-        <Group rotation={el.rotation || 0} key={`tooltip-${el.id}`}>
-          <Text text={text} x={el.x + el.width * relX} y={el.y + el.height * relY} width={el.width * boxWidth} align="center" fontSize={fontSize} fontFamily="Arial" fill="yellow" />
+        <Group key={`tooltip-${el.id}`} rotation={el.rotation || 0}>
+          {/* Fondo exterior */}
+          <Rect
+            x={el.x + el.width * relX - padding}
+            y={el.y + el.height * relY - padding}
+            width={boxWidth + padding * 2}
+            height={boxHeight + padding * 2}
+            fill="#3a3a3a"
+            cornerRadius={4}
+            stroke="#666"
+            strokeWidth={1.5}
+          />
+          {/* Pantalla */}
+          <Rect
+            x={el.x + el.width * relX}
+            y={el.y + el.height * relY}
+            width={boxWidth}
+            height={boxHeight}
+            fill="#0a1a0a"
+            cornerRadius={2}
+            stroke="#1a3a1a"
+            strokeWidth={1}
+          />
+          {/* Valor numérico */}
+          <Text
+            text={value}
+            x={el.x + el.width * relX}
+            y={el.y + el.height * relY + boxHeight * 0.1}
+            width={boxWidth}
+            align="center"
+            fontSize={fontSize}
+            fontFamily="'Courier New', monospace"
+            fontStyle="bold"
+            fill="#FFE000"
+            shadowColor="#FFE000"
+            shadowBlur={6}
+            shadowOpacity={0.5}
+          />
+          {/* Unidad */}
+          <Text
+            text={unit}
+            x={el.x + el.width * relX}
+            y={el.y + el.height * relY + boxHeight * 0.6}
+            width={boxWidth}
+            align="center"
+            fontSize={unitSize}
+            fontFamily="'Courier New', monospace"
+            fill="#AACCAA"
+            shadowColor="#88BB88"
+            shadowBlur={4}
+            shadowOpacity={0.4}
+          />
         </Group>
       );
     }
 
-    const tanqueImages = ['Estanque_cloro.png','Cisterna.png','Tanques_agua_multiple.png','Tanques_agua_simple.png','tanque_horizontal.png','Tanque_elevado.png'];
+    const tanqueImages = ['Estanque_cloro.png', 'Cisterna.png', 'Tanques_agua_multiple.png', 'Tanques_agua_simple.png', 'tanque_horizontal.png', 'Tanque_elevado.png'];
     const isEstanque = tanqueImages.some(name => el.src?.includes(name));
     if (isEstanque) {
       const percentage = (maxValue && !isNaN(maxValue) && Number(maxValue) !== 0 && rawValue != null && !isNaN(rawValue)) ? `${((Number(rawValue) * 100) / Number(maxValue)).toFixed(1)}%` : `${Math.round(rawValue)}${unit}`;
@@ -177,7 +233,7 @@ function ViewDiagram() {
         </Group>
       );
     }
-
+    
     return (
       <Label x={labelX} y={labelY} key={`tooltip-${el.id}`}>
         <Tag fill='#ffff' pointerDirection={pointerDir} pointerWidth={10} pointerHeight={10} lineJoin="round" cornerRadius={5} shadowColor="#94a3b8" shadowBlur={7} />
@@ -189,24 +245,27 @@ function ViewDiagram() {
   // autoFit (separada por claridad)
   const autoFitDiagram = useCallback((elementsParam) => {
     if (!elementsParam?.length) return;
+    if (dimensions.width === 0 || dimensions.height === 0) return;
     const minX = Math.min(...elementsParam.map(el => el.x));
     const minY = Math.min(...elementsParam.map(el => el.y));
     const maxX = Math.max(...elementsParam.map(el => (el.x + (el.width || 0))));
     const maxY = Math.max(...elementsParam.map(el => (el.y + (el.height || 0))));
     const diagramWidth = maxX - minX;
     const diagramHeight = maxY - minY;
-    const padding = 0;
-    const availableWidth = dimensions.width - padding;
-    const availableHeight = dimensions.height - padding;
-    const scaleX = availableWidth / diagramWidth;
-    const scaleY = availableHeight / diagramHeight;
-    const newScale = Math.min(scaleX, scaleY);
-    const offsetX = (availableWidth - diagramWidth * newScale) / 2;
-    const offsetY = (availableHeight - diagramHeight * newScale) / 2;
-    setScale(newScale);
-    setPosition({ x: offsetX - minX * newScale + padding / 2, y: offsetY - minY * newScale + padding / 2 });
-  }, [dimensions]);
+    const padding = 32;
+    const availableWidth = dimensions.width - padding * 2;
+    const availableHeight = dimensions.height - padding * 2;
 
+    const newScale = Math.min(availableWidth / diagramWidth, availableHeight / diagramHeight);
+    const offsetX = (dimensions.width - diagramWidth * newScale) / 2;
+    const offsetY = (dimensions.height - diagramHeight * newScale) / 2;
+    setScale(newScale);
+    setPosition({
+      x: offsetX - minX * newScale,
+      y: offsetY - minY * newScale,
+    });
+  }, [dimensions]);
+  
   const renderElementsAndTooltips = () => {
     return elements.map((el) => {
       const elementRender = (() => {
@@ -247,7 +306,14 @@ function ViewDiagram() {
       );
     });
   };
-
+  
+  useEffect(() => {
+    if (elements.length && dimensions.width > 0) {
+      autoFitDiagram(elements);
+    }
+  }, [dimensions, autoFitDiagram]);
+  
+  
   return (
     <>
       {isLoading ? (
@@ -263,7 +329,7 @@ function ViewDiagram() {
           </div>
 
           <CardCustom className="w-full h-full flex flex-col items-center justify-center !bg-gray-300/50 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
-            <div className="flex-1 w-full h-full rounded-br-lg relative text-end">
+            <div ref={containerRef} className="flex-1 w-full h-full rounded-br-lg relative text-end">
               <div className="absolute top-2 left-0 right-0 flex justify-between items-start px-4 z-10">
                 <div className="flex flex-col gap-2">
                   <IconButton onClick={zoomIn} title="Acercar" className="!bg-blue-600 !text-white !shadow-lg"><LuZoomIn /></IconButton>
@@ -277,11 +343,13 @@ function ViewDiagram() {
                 )}
               </div>
 
-              <Stage width={dimensions.width} height={dimensions.height} scaleX={scale} scaleY={scale} x={position.x} y={position.y} ref={stageRef} draggable onDragEnd={(e) => setPosition({ x: e.target.x(), y: e.target.y() })}>
-                <Layer>
-                  {renderElementsAndTooltips()}
-                </Layer>
-              </Stage>
+              {dimensions.width > 0 && (
+                <Stage width={dimensions.width} height={dimensions.height} scaleX={scale} scaleY={scale} x={position.x} y={position.y} ref={stageRef} draggable onDragEnd={(e) => setPosition({ x: e.target.x(), y: e.target.y() })}>
+                  <Layer>
+                    {renderElementsAndTooltips()}
+                  </Layer>
+                </Stage>
+              )}
             </div>
           </CardCustom>
         </div>
