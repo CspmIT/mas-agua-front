@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'fix: nueva imagen de presostato y cambio en sonda conductimetro'
+                  releaseBody: 'fix: correccion ViewDiagram'
                   prerelease: false
