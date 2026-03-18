@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Stage, Layer, Text, Line, Label, Tag, Group } from 'react-konva';
+import { Stage, Layer, Text, Line, Label, Tag, Group, Rect } from 'react-konva';
 import { uploadCanvaDb } from '../utils/js/drawActions';
 import CardCustom from '../../../components/CardCustom';
 import { IconButton, Box } from '@mui/material';
@@ -142,21 +142,80 @@ function ViewDiagram() {
       const percentage = ((Number(rawValue) * 100) / Number(maxValue)).toFixed(1);
       text = `${percentage}%`;
     } else if (rawValue != null) {
-      text = !isNaN(rawValue) ? `${Number(rawValue).toFixed(2)} ${unit}` : `${rawValue}`;
+      text = !isNaN(rawValue) ? `${Number(rawValue).toFixed(1)} ${unit}` : `${rawValue}`;
     } else {
       text = 'No hay datos';
     }
 
     const isSondaConductimetro = el.src?.includes('Sonda_conductimetro.png');
-    if (isSondaConductimetro) {
-      const relX = 0.29, relY = 0.15, boxWidth = 0.70;
-      const fontSize = el.width * 0.13;
-      return (
-        <Group rotation={el.rotation || 0} key={`tooltip-${el.id}`}>
-          <Text text={text} x={el.x + el.width * relX} y={el.y + el.height * relY} width={el.width * boxWidth} align="center" fontSize={fontSize} fontFamily="Arial" fill="yellow" />
-        </Group>
-      );
-    }
+if (isSondaConductimetro) {
+  const relX = 0.20;
+  const relY = 0.02;
+  const boxWidth = el.width * 1.25;
+  const boxHeight = el.height * 0.36;
+  const fontSize = el.width * 0.25;
+  const unitSize = el.width * 0.18;
+  const padding = el.width * 0.02;
+
+  // Separar valor y unidad si el texto tiene formato "9994.00 µS/cm"
+  const [value = text, unit = ''] = text.split(' ');
+
+  return (
+    <Group key={`tooltip-${el.id}`} rotation={el.rotation || 0}>
+      {/* Fondo exterior (marco gris metálico) */}
+      <Rect
+        x={el.x + el.width * relX - padding}
+        y={el.y + el.height * relY - padding}
+        width={boxWidth + padding * 2}
+        height={boxHeight + padding * 2}
+        fill="#3a3a3a"
+        cornerRadius={4}
+        stroke="#666"
+        strokeWidth={1.5}
+      />
+      {/* Pantalla LCD oscura */}
+      <Rect
+        x={el.x + el.width * relX}
+        y={el.y + el.height * relY}
+        width={boxWidth}
+        height={boxHeight}
+        fill="#0a1a0a"
+        cornerRadius={2}
+        stroke="#1a3a1a"
+        strokeWidth={1}
+      />
+      {/* Valor numérico */}
+      <Text
+        text={value}
+        x={el.x + el.width * relX}
+        y={el.y + el.height * relY + boxHeight * 0.1}
+        width={boxWidth}
+        align="center"
+        fontSize={fontSize}
+        fontFamily="'Courier New', monospace"
+        fontStyle="bold"
+        fill="#FFE000"
+        shadowColor="#FFE000"
+        shadowBlur={6}
+        shadowOpacity={0.5}
+      />
+      {/* Unidad */}
+      <Text
+        text={unit}
+        x={el.x + el.width * relX}
+        y={el.y + el.height * relY + boxHeight * 0.6}
+        width={boxWidth}
+        align="center"
+        fontSize={unitSize}
+        fontFamily="'Courier New', monospace"
+        fill="#AACCAA"
+        shadowColor="#88BB88"
+        shadowBlur={4}
+        shadowOpacity={0.4}
+      />
+    </Group>
+  );
+}
 
     const tanqueImages = ['Estanque_cloro.png','Cisterna.png','Tanques_agua_multiple.png','Tanques_agua_simple.png','tanque_horizontal.png','Tanque_elevado.png'];
     const isEstanque = tanqueImages.some(name => el.src?.includes(name));
