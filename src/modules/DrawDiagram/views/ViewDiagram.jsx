@@ -337,7 +337,7 @@ function ViewDiagram() {
                   <IconButton onClick={zoomOut} title="Alejar" className="!bg-blue-600 !text-white !shadow-lg"><LuZoomOut /></IconButton>
                 </div>
 
-                {usuario.profile === 4 && (
+                {usuario?.profile === 4 && (
                   <IconButton title="Volver" onClick={() => navigate('/config/diagram')} className="!bg-blue-600 !text-white !shadow-sm">
                     <LuArrowLeft />
                   </IconButton>
