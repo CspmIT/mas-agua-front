@@ -21,6 +21,7 @@ function ViewDiagram() {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const [scale, setScale] = useState(1);
+  const [circles, setCircles] = useState([]);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const usuario = storage.get('usuario');
@@ -151,7 +152,7 @@ function ViewDiagram() {
       const relY = 0.02;
       const boxWidth = el.width * 1.25;
       const boxHeight = el.height * 0.36;
-      const fontSize = el.width * 0.20;
+      const fontSize = el.width * 0.18;
       const unitSize = el.width * 0.16;
       const padding = el.width * 0.02;
       
