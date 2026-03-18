@@ -152,7 +152,7 @@ function ViewDiagram() {
       const relY = 0.02;
       const boxWidth = el.width * 1.25;
       const boxHeight = el.height * 0.36;
-      const fontSize = el.width * 0.20;
+      const fontSize = el.width * 0.18;
       const unitSize = el.width * 0.16;
       const padding = el.width * 0.02;
       
