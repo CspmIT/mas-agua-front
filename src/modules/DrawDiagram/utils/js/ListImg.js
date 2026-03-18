@@ -129,7 +129,7 @@ export const ListImg = () => [
         optionsImage: {
             error: `${urlBaseView}/Presostato_rojo.png`,
             success: `${urlBaseView}/Presostato_verde.png`,
-            default: `${urlBaseView}/Presostato_rojo.png`,
+            default: `${urlBaseView}/Presostato_gris.png`,
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
@@ -271,7 +271,7 @@ export const ListImg = () => [
         srcView: `${urlBase}/bomba_centrifuga_off.png`,
         animation: 'boolean',
         optionsImage: {
-            error: '/assets/img/Diagram/diagramAction/bomba_centrifuga_off.png',
+            error: '/assets/img/Diagram/diagramAction/bomba_centrifuga_fail.png',
             success:
                 '/assets/img/Diagram/diagramAction/bomba_centrifuga_on.png',
             default:
@@ -305,9 +305,9 @@ export const ListImg = () => [
         srcView: `${urlBase}/Relé Térmico_OFF.png`,
         animation: 'boolean',
         optionsImage: {
-            error: '/assets/img/Diagram/diagramAction/Relé térmico_OK.png',
+            error: '/assets/img/Diagram/diagramAction/Relé térmico_FAIL.png',
             success:
-                '/assets/img/Diagram/diagramAction/Relé térmico_FAIL.png',
+                '/assets/img/Diagram/diagramAction/Relé térmico_ON.png',
             default:
                 '/assets/img/Diagram/diagramAction/Relé térmico_OFF.png',
         },
@@ -396,7 +396,7 @@ export const ListImg = () => [
         srcView: `${urlBase}/Grupo generador (no cabinado) OFF.png`,
         animation: 'boolean',
         optionsImage: {
-            error: '/assets/img/Diagram/diagramAction/Grupo generador (no cabinado) OFF.png',
+            error: '/assets/img/Diagram/diagramAction/Grupo generador (no cabinado) FAIL.png',
             success:
                 '/assets/img/Diagram/diagramAction/Grupo generador (no cabinado) ON.png',
             default:
@@ -413,7 +413,7 @@ export const ListImg = () => [
         srcView: `${urlBase}/Contactor_OFF.png`,
         animation: 'boolean',
         optionsImage: {
-            error: '/assets/img/Diagram/diagramAction/Contactor_OFF.png',
+            error: '/assets/img/Diagram/diagramAction/Contactor_FAIL.png',
             success:
                 '/assets/img/Diagram/diagramAction/Contactor_ON.png',
             default:
