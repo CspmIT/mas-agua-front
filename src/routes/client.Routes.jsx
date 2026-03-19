@@ -13,5 +13,6 @@ export const clientRouteOverrides = {
 		'/': <Boards />,
 		'/home': <Boards />,
         '/graphics': <Home />,
+        
 	},
 }
