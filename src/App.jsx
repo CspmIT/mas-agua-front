@@ -1,6 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ThemeProvider, createTheme } from '@mui/material'
-import { useContext, useEffect, useMemo } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import { isTauri } from '@tauri-apps/api/core'
 import MainContent from './modules/core/views'
 import { MainContext } from './context/MainContext'
@@ -15,10 +15,15 @@ const EXTERNAL_PROFILE_ID = 5
 function App() {
 	const { checkForUpdates } = useUpdater()
 	const { darkMode } = useContext(MainContext)
-
-	const authUser = useMemo(() => storage.get('usuario'), [])
-	const isExternalUser = authUser?.profile === EXTERNAL_PROFILE_ID
-	const nameApp = authUser?.nameApp ?? null  
+	const [nameApp, setNameApp] = useState(null)
+	const [isExternalUser, setIsExternalUser] = useState(false)
+ 
+	useEffect(() => {
+		const user = storage.get('usuario')
+		if (!user) return
+		setIsExternalUser(user.profile === EXTERNAL_PROFILE_ID)
+		setNameApp(user.nameApp ?? null)
+	}, [])
 
 	const theme = useMemo(
 		() => createTheme({ palette: { mode: darkMode ? 'dark' : 'light' } }),
