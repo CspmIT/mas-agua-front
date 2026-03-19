@@ -11,6 +11,7 @@ import Home from '../modules/home/views'
 export const clientRouteOverrides = {
 	masagua_rio_tercero: {
 		'/': <Boards />,
-		'/home': <Home />,
+		'/home': <Boards />,
+        '/graphics': <Home />,
 	},
 }
