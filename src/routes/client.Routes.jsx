@@ -12,7 +12,5 @@ export const clientRouteOverrides = {
 	masagua_rio_tercero: {
 		'/': <Boards />,
 		'/home': <Boards />,
-        '/graphics': <Home />,
-        
 	},
 }
