@@ -30,7 +30,7 @@ function TabDinamic({ ...props }) {
 	]
 	useEffect(() => {
 		if (tabs.length == 0) {
-			navigate('/Home')
+			navigate('/')
 		}
 		if (tabs.length > 0 && props.pag === true) {
 			setTabActive(tabs.length)

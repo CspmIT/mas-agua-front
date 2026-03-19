@@ -65,16 +65,16 @@ function NavBarCustom({ setLoading }) {
 	useEffect(() => {
 		setButtonActive(location)
 		if (location === '/DashBoard') {
-			setButtonActive('/home')
+			setButtonActive('/')
 		}
 		if (infoNav != '') {
 			setButtonActive(typeof infoNav == 'object' ? infoNav[0].link : infoNav)
 		}
 		if (location === '/' || location === '/Home' || location === '') {
-			setButtonActive('/home')
+			setButtonActive('/')
 		}
 		if ((locationTAbs.includes('Abm') || locationTAbs.includes('AbmDevice')) && infoNav == '') {
-			navigate('/Home')
+			navigate('/')
 		}
 	}, [location, locationTAbs])
 
@@ -155,7 +155,7 @@ function NavBarCustom({ setLoading }) {
 						<MenuIcon />
 					</IconButton>
 
-					<img onClick={() => navigate('home')} className='max-h-10 cursor-pointer' src={Logo} />
+					<img onClick={() => navigate('/')} className='max-h-10 cursor-pointer' src={Logo} />
 					<div className='absolute right-5 flex flex-row items-center'>
 						<p className={`bg-blue-600 rounded-md shadow-sm px-3 py-1 mr-2 text-white select-none ${isMobile ? 'hidden' : ''}`}>
 							{nameCoop}
