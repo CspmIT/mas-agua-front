@@ -31,7 +31,8 @@ import Boards from '../modules/Boards/views'
 export const userRoutes = [
 	{ path: '/', element: <Home /> },
 	{ path: '/home', element: <Home /> },
-	{ path: '/chart', element: <ChartsDashboard /> },
+    { path: '/graphics', element: <Home /> },
+    { path: '/chart', element: <ChartsDashboard /> },
 	{ path: '/tabs', element: <TabDinamic /> },
 	{ path: '/config/security', element: <ConfigSecurity /> },
 	{ path: '/config/accesses', element: <ConfigMenu /> },
