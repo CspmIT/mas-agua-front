@@ -1,5 +1,4 @@
 import Boards from '../modules/Boards/views'
-import Home from '../modules/home/views'
 
 /**
  * Mapa de overrides por cliente (nameApp).
