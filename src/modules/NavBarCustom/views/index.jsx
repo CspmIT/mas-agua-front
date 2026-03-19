@@ -65,13 +65,13 @@ function NavBarCustom({ setLoading }) {
 	useEffect(() => {
 		setButtonActive(location)
 		if (location === '/DashBoard') {
-			setButtonActive('/')
+			setButtonActive('/home')
 		}
 		if (infoNav != '') {
 			setButtonActive(typeof infoNav == 'object' ? infoNav[0].link : infoNav)
 		}
 		if (location === '/' || location === '/Home' || location === '') {
-			setButtonActive('/')
+			setButtonActive('/home')
 		}
 		if ((locationTAbs.includes('Abm') || locationTAbs.includes('AbmDevice')) && infoNav == '') {
 			navigate('/')
