@@ -11,17 +11,20 @@ const chartComponents = {
 
 
 const formatValue = (value) => {
-    if (value === null || value === undefined) return 'Sin Datos'
+    if (value === null || value === undefined) return 'Sin datos'
     if (typeof value === 'boolean') return value ? 'Encendido' : 'Apagado'
     if (typeof value === 'number')
-        return Number.isFinite(value) ? Number(value.toFixed(2)) : '-'
+        return Number.isFinite(value) ? Number(value.toFixed(1)) : '-'
     return String(value)
 }
 
-const formatUnit = (item) => {
+const formatUnit = (item, value) => {
+    if (value == 'Sin datos') return ''
     const unit = item?.InfluxVars?.unit
-    return unit ? ` ${unit}` : ''
-}
+    if (!unit ) return ''
+    if (unit.trim().toLowerCase() === 'bool') return ''
+    return ` ${unit}`
+  }
 
 const resolveValue = (item, inflValues) => {
     if (!item) return null
@@ -264,17 +267,17 @@ const BoardChart = memo(
                                     <MetricChip
                                         label={pumpingL1Label}
                                         value={resolveValue(pumpingL1Item, inflValues)}
-                                        suffix={formatUnit(pumpingL1Item) || ' A'}
+                                        suffix={formatUnit(pumpingL1Item)}
                                     />
                                     <MetricChip
                                         label={pumpingL2Label}
                                         value={resolveValue(pumpingL2Item, inflValues)}
-                                        suffix={formatUnit(pumpingL2Item) || ' A'}
+                                        suffix={formatUnit(pumpingL2Item)}
                                     />
                                     <MetricChip
                                         label={pumpingL3Label}
                                         value={resolveValue(pumpingL3Item, inflValues)}
-                                        suffix={formatUnit(pumpingL3Item) || ' A'}
+                                        suffix={formatUnit(pumpingL3Item)}
                                     />
                                 </div>
                             </div>
@@ -296,7 +299,7 @@ const BoardChart = memo(
                                             <div className="text-xs text-slate-600">{item.label}</div>
                                             <div className="text-base font-semibold">
                                                 {formatValue(value)}
-                                                {formatUnit(item)}
+                                                {formatUnit(item, value)}
                                             </div>
                                         </div>
                                     )
