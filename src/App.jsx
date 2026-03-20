@@ -14,15 +14,13 @@ const EXTERNAL_PROFILE_ID = 5
 
 function App() {
 	const { checkForUpdates } = useUpdater()
-	const { darkMode } = useContext(MainContext)
-	const [nameApp, setNameApp] = useState(null)
+	const { darkMode, client } = useContext(MainContext)
 	const [isExternalUser, setIsExternalUser] = useState(false)
- 
+	console.log(client)
 	useEffect(() => {
 		const user = storage.get('usuario')
 		if (!user) return
 		setIsExternalUser(user.profile === EXTERNAL_PROFILE_ID)
-		setNameApp(user.nameApp ?? null)
 	}, [])
 
 	const theme = useMemo(
@@ -31,8 +29,7 @@ function App() {
 	)
 
 	// Rutas activas según perfil y cliente
-	const activeRoutes = useActiveRoutes(isExternalUser, nameApp)
-
+	const activeRoutes = useActiveRoutes(isExternalUser, client)
 	useEffect(() => {
 		if (isTauri()) {
 			checkForUpdates()

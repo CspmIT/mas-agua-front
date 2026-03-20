@@ -7,14 +7,14 @@ import { clientRouteOverrides } from '../routes/client.Routes'
  * Devuelve las rutas activas aplicando los overrides del cliente si existen.
  *
  * @param {boolean} isExternalUser
- * @param {string|null} nameApp  - identificador del cliente (del JWT)
+ * @param {string|null} client  - identificador del cliente (del JWT)
  * @returns {Array<{ path: string, element: JSX.Element }>}
  */
-export function useActiveRoutes(isExternalUser, nameApp) {
+export function useActiveRoutes(isExternalUser, client) {
 	return useMemo(() => {
 		if (isExternalUser) return externalRoutes
 
-		const overrides = clientRouteOverrides[nameApp] ?? {}
+		const overrides = clientRouteOverrides[client] ?? {}
 
 		// Si no hay overrides para este cliente, devolver las rutas tal cual
 		if (Object.keys(overrides).length === 0) return userRoutes
@@ -25,5 +25,5 @@ export function useActiveRoutes(isExternalUser, nameApp) {
 				? { ...route, element: overrides[route.path] }
 				: route
 		)
-	}, [isExternalUser, nameApp])
+	}, [isExternalUser, client])
 }
