@@ -13,22 +13,25 @@ function MainProvider({ children }) {
 	const [tabCurrent, setTabCurrent] = useState(0)
 	const [permission, setPermission] = useState([])
 	const [unreadCount, setUnreadCount] = useState(0)
+	const [client, setClient] = useState(null)
 
 	const fetchUnreadCount = async () => {
 		const url = backend[import.meta.env.VITE_APP_NAME]
 		try {
-		  const { data } = await request(`${url}/alerts/unread-count`, 'GET')
-		  setUnreadCount(Number(data.count) || 0)
+			const { data } = await request(`${url}/alerts/unread-count`, 'GET')
+			setUnreadCount(Number(data.count) || 0)
 		} catch (error) {
-		  console.error('Error al obtener alertas no leídas', error)
+			console.error('Error al obtener alertas no leídas', error)
 		}
-	  }
-	
-	  useEffect(() => {
+	}
+
+	useEffect(() => {
+		if (!client) return 
+
 		fetchUnreadCount()
 		const interval = setInterval(fetchUnreadCount, 15000)
 		return () => clearInterval(interval)
-	  }, [])
+	}, [client])
 
 	useEffect(() => {
 		if (tabs.length) {
@@ -56,6 +59,8 @@ function MainProvider({ children }) {
 				unreadCount,
 				setUnreadCount,
 				fetchUnreadCount,
+				client,
+				setClient,
 			}}
 		>
 			{children}
