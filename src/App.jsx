@@ -16,11 +16,10 @@ function App() {
 	const { checkForUpdates } = useUpdater()
 	const { darkMode, client } = useContext(MainContext)
 	const [isExternalUser, setIsExternalUser] = useState(false)
-	console.log(client)
 	useEffect(() => {
 		const user = storage.get('usuario')
 		if (!user) return
-		setIsExternalUser(user.profile === EXTERNAL_PROFILE_ID)
+		setIsExternalUser(user.profile == EXTERNAL_PROFILE_ID)
 	}, [])
 
 	const theme = useMemo(
