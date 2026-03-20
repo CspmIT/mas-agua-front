@@ -13,8 +13,8 @@ export const clientRouteOverrides = {
 		'/home': <Boards />,
 		'/graphics': <Home />
 	},
-	'Coop desarrollo 2': {
-		'/': <Boards />,
-		'/home': <Boards />,
-	},
+	// 'Coop desarrollo 2': {
+	// 	'/': <Boards />,
+	// 	'/home': <Boards />,
+	// },
 }

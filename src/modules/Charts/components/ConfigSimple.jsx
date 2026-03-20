@@ -13,17 +13,19 @@ import SelectVars from './SelectVars'
 import LiquidFillBottomInfo from '../../home/components/LiquidFillBottomInfo'
 import CardCustom from '../../../components/CardCustom/index'
 
+const BOTTOM_KEYS = ['bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6']
+
+const initialBottoms = BOTTOM_KEYS.reduce((acc, key) => ({
+    ...acc,
+    [key]: { enabled: false, label: '' },
+}), {})
 
 const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) => {
-    const [chartType, setChartType] = useState(configs[id].typeGraph)
+    const [chartType] = useState(configs[id].typeGraph)
     const isLiquid = configs[id].typeGraph === 'LiquidFillPorcentaje'
 
     const [secondaryEnabled, setSecondaryEnabled] = useState(false)
-    const [bottom1Enabled, setBottom1Enabled] = useState(false)
-    const [bottom2Enabled, setBottom2Enabled] = useState(false)
-
-    const [bottom1Label, setBottom1Label] = useState('')
-    const [bottom2Label, setBottom2Label] = useState('')
+    const [bottoms, setBottoms] = useState(initialBottoms)
 
     const [config, setConfig] = useState(
         chartData
@@ -41,6 +43,9 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
     const [title, setTitle] = useState(
         chartData?.ChartConfig.find(c => c.key === 'title')?.value || ''
     )
+
+    const setBottom = (key, field, value) =>
+        setBottoms(prev => ({ ...prev, [key]: { ...prev[key], [field]: value } }))
 
     useEffect(() => {
         if (!chartData) return
@@ -63,28 +68,26 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
         setValue('chartData', formattedChartData)
 
         setSecondaryEnabled(!!formattedChartData.find(d => d.key === 'secondary'))
-        setBottom1Enabled(!!formattedChartData.find(d => d.key === 'bottom1'))
-        setBottom2Enabled(!!formattedChartData.find(d => d.key === 'bottom2'))
 
-        setBottom1Label(
-            formattedChartData.find(d => d.key === 'bottom1')?.label || ''
-        )
-        setBottom2Label(
-            formattedChartData.find(d => d.key === 'bottom2')?.label || ''
+        setBottoms(
+            BOTTOM_KEYS.reduce((acc, key) => {
+                const found = formattedChartData.find(d => d.key === key)
+                return {
+                    ...acc,
+                    [key]: {
+                        enabled: !!found,
+                        label: found?.label || '',
+                    },
+                }
+            }, {})
         )
 
         const maxValue = chartData.ChartData.find(d => d.key === 'maxValue')?.value
         const unidad = chartData.ChartData.find(d => d.key === 'unidad')?.value
 
-        if (maxValue !== undefined) {
-            setValue('maxValue', maxValue)
-        }
-
-        if (unidad !== undefined) {
-            setValue('unidad', unidad)
-        }
+        if (maxValue !== undefined) { setValue('maxValue', maxValue) }
+        if (unidad !== undefined) { setValue('unidad', unidad) }
     }, [chartData])
-
 
     const upsertChartData = entry => {
         const prev = getValues('chartData') || []
@@ -93,20 +96,12 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
     }
 
     useEffect(() => {
-        if (!bottom1Enabled) return
-        const current = (getValues('chartData') || []).find(e => e.key === 'bottom1')
-        if (current) {
-            upsertChartData({ ...current, label: bottom1Label })
-        }
-    }, [bottom1Label])
-
-    useEffect(() => {
-        if (!bottom2Enabled) return
-        const current = (getValues('chartData') || []).find(e => e.key === 'bottom2')
-        if (current) {
-            upsertChartData({ ...current, label: bottom2Label })
-        }
-    }, [bottom2Label])
+        BOTTOM_KEYS.forEach(key => {
+            if (!bottoms[key].enabled) return
+            const current = (getValues('chartData') || []).find(e => e.key === key)
+            if (current) upsertChartData({ ...current, label: bottoms[key].label })
+        })
+    }, [bottoms])
 
     const handleChange = e => {
         const { name, value } = e.target
@@ -120,16 +115,12 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
     }
 
     const ChartComponent = lazy(() => import(`../components/${chartType}.jsx`))
+
     return (
         <div className="flex max-sm:flex-col w-[97%] gap-3">
             <Card className="max-sm:w-full w-2/3">
                 <CardContent>
-                    <Typography
-                        variant="h6"
-                        component="div"
-                        align="center"
-                        className="mb-2"
-                    >
+                    <Typography variant="h6" component="div" align="center" className="mb-2">
                         Seleccione los valores para el gráfico
                     </Typography>
                     <div className="flex flex-col gap-3 mb-3">
@@ -147,7 +138,6 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                         />
 
                         <div className='flex gap-4 max-sm:flex-col'>
-                            
                             <div className='w-1/2 max-sm:w-full'>
                                 {configs[id].typeValue && (
                                     <TextField
@@ -160,7 +150,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                             errors.porcentage &&
                                             errors.porcentage.message
                                         }
-                                        value={String(config.porcentage)} // Convertir el valor a string para asegurar compatibilidad
+                                        value={String(config.porcentage)}
                                         select
                                         size="small"
                                     >
@@ -220,7 +210,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                         label="Borde"
                                         {...register('border')}
                                         onChange={handleChange}
-                                        value={String(config.border)} // Convertir el valor a string para asegurar compatibilidad
+                                        value={String(config.border)}
                                         size="small"
                                     >
                                         <MenuItem value="true">Sí</MenuItem>
@@ -288,105 +278,41 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                     )}
                                 </CardCustom>
 
-                                <CardCustom className="p-2 !bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
-                                    {/* BOTTOM 1 */}
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={bottom1Enabled}
-                                                onChange={(e) =>
-                                                    setBottom1Enabled(
-                                                        e.target.checked
-                                                    )
-                                                }
-                                            />
-                                        }
-                                        label="Mostrar valor inferior 1"
-                                    />
-
-                                    {bottom1Enabled && (
-                                        <>
-                                            <div className='!bg-white mb-2'>
-                                                <TextField
-                                                    label="Texto a mostrar"
-                                                    value={bottom1Label}
-                                                    onChange={(e) => setBottom1Label(e.target.value)}
-                                                    fullWidth
-                                                    size="small"
+                                {/* BOTTOM 1 - 6 */}
+                                {BOTTOM_KEYS.map((key, i) => (
+                                    <CardCustom key={key} className="p-2 !bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={bottoms[key].enabled}
+                                                    onChange={e => setBottom(key, 'enabled', e.target.checked)}
                                                 />
-                                            </div>
-                                            <div className='!bg-white'>
-                                                <SelectVars
-                                                    label="Variable inferior"
-                                                    initialVar={
-                                                        chartData?.ChartData?.find(
-                                                            (d) => d.key === 'bottom1'
-                                                        )?.InfluxVars
-                                                    }
-                                                    onSelect={(v) =>
-                                                        upsertChartData({
-                                                            key: 'bottom1',
-                                                            label: bottom1Label,
-                                                            idVar: v.id,
-                                                        })
-                                                    }
-                                                    setValue={setValue}
-                                                />
-                                            </div>
-                                        </>
-                                    )}
-                                </CardCustom>
-
-                                <CardCustom className="p-2 !bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
-                                    {/* BOTTOM 2 */}
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={bottom2Enabled}
-                                                onChange={(e) =>
-                                                    setBottom2Enabled(
-                                                        e.target.checked
-                                                    )
-                                                }
-                                            />
-                                        }
-                                        label="Mostrar valor inferior 2"
-                                    />
-
-                                    {bottom2Enabled && (
-                                        <>
-                                            <div className='!bg-white mb-2'>
-                                                <TextField
-                                                    label="Texto a mostrar"
-                                                    value={bottom2Label}
-                                                    onChange={(e) => setBottom2Label(e.target.value)}
-                                                    fullWidth
-                                                    size="small"
-                                                />
-                                            </div>
-                                            <div className='!bg-white'>
-                                                <SelectVars
-                                                    label="Variable inferior"
-                                                    initialVar={
-                                                        chartData?.ChartData?.find(
-                                                            (d) => d.key === 'bottom2'
-                                                        )?.InfluxVars
-                                                    }
-                                                    onSelect={(v) =>
-                                                        upsertChartData({
-                                                            key: 'bottom2',
-                                                            label: bottom2Label,
-                                                            idVar: v.id,
-                                                        })
-                                                    }
-                                                    setValue={setValue}
-                                                />
-                                            </div>
-                                        </>
-                                    )}
-                                </CardCustom>
-
-
+                                            }
+                                            label={`Mostrar valor inferior ${i + 1}`}
+                                        />
+                                        {bottoms[key].enabled && (
+                                            <>
+                                                <div className="!bg-white mb-2">
+                                                    <TextField
+                                                        label="Texto a mostrar"
+                                                        value={bottoms[key].label}
+                                                        onChange={e => setBottom(key, 'label', e.target.value)}
+                                                        fullWidth
+                                                        size="small"
+                                                    />
+                                                </div>
+                                                <div className="!bg-white">
+                                                    <SelectVars
+                                                        label="Variable inferior"
+                                                        initialVar={chartData?.ChartData?.find(d => d.key === key)?.InfluxVars}
+                                                        onSelect={v => upsertChartData({ key, label: bottoms[key].label, idVar: v.id })}
+                                                        setValue={setValue}
+                                                    />
+                                                </div>
+                                            </>
+                                        )}
+                                    </CardCustom>
+                                ))}
                             </>
                         )}
 
@@ -419,31 +345,6 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                         ) : (
                             <input type="hidden" {...register('maxValue')} value={0} />
                         )}
-
-                        {/* <TextField
-                            type="number"
-                            className="w-full"
-                            label="Valor maximo del gráfico"
-                            inputProps={{
-                                pattern: '^[0-9]+$',
-                            }}
-                            {...register('maxValue', {
-                                required: 'Este campo es requerido',
-                            })}
-                            onKeyDown={(e) => {
-                                if (
-                                    e.key === 'e' ||
-                                    e.key === '+' ||
-                                    e.key === '-'
-                                ) {
-                                    e.preventDefault()
-                                }
-                            }}
-                            onChange={handleChange}
-                            error={!!errors.maxValue}
-                            helperText={errors.maxValue?.message}
-                            size="small"
-                        /> */}
 
                         {configs[id].description && (
                             <TextField
@@ -492,36 +393,29 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
             </Card>
             <Card className={`w-1/3 max-sm:w-full p-3 flex-col`}>
                 <div className='h-[42dvh] 2xl:h-[35dvh]'>
-                    <Typography
-                        variant="h6"
-                        component="div"
-                        align="center"
-                        className="mb-2"
-                    >
+                    <Typography variant="h6" component="div" align="center" className="mb-2">
                         {title}
                     </Typography>
                     <Suspense fallback={<div>Cargando...</div>}>
 
-                        <ChartComponent {...config}/>
+                        <ChartComponent {...config} />
                         {isLiquid && (
                             <LiquidFillBottomInfo
-                                bottom1={{
-                                    label: bottom1Label,
-                                    value: 0,
-                                    unit: 'm',
-                                }}
-                                bottom2={{
-                                    label: bottom2Label,
-                                    value: 0,
-                                    unit: '%',
-                                }}
+                                items={BOTTOM_KEYS
+                                    .filter(key => bottoms[key].enabled)
+                                    .map(key => ({
+                                        label: bottoms[key].label,
+                                        value: 0,
+                                        unit: '',
+                                    }))
+                                }
                             />
                         )}
 
                     </Suspense>
                 </div>
             </Card>
-        </div>
+        </div >
     )
 }
 
