@@ -26,13 +26,13 @@ const DropdownImage = () => {
 		navigator('/')
 	}
 	const handleChangeClient = async () => {
+		navigator('/ListClients/1')
 		storage.remove('usuario')
 		setInfoNav('')
 		setTabs([])
 		setTabActive(0)
 		setTabCurrent(0)
 		await removeData('token')
-		navigator('/ListClients/1')
 	}
 
 	useEffect(() => {

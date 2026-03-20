@@ -1,17 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import VarsProvider from '../../../components/DataGenerator/ProviderVars'
-import {
-  Button,
-  Card,
-  Divider,
-  IconButton,
-  TextField,
-  Typography,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-} from '@mui/material'
+import { Button, Card, Divider, IconButton, TextField, Typography, FormControl, InputLabel, MenuItem, Select } from '@mui/material'
 import { ArrowBack } from '@mui/icons-material'
 import { useEffect, useMemo, useState, Suspense, lazy } from 'react'
 import { useForm } from 'react-hook-form'
@@ -28,7 +17,7 @@ const ConfigBoardChart = () => {
 
   const [loader, setLoader] = useState(true)
   const [charts, setCharts] = useState([])
-
+  const [varObjects, setVarObjects] = useState({})
   const {
     handleSubmit,
     register,
@@ -40,10 +29,8 @@ const ConfigBoardChart = () => {
     defaultValues: {
       title: '',
       order: '',
-
       topLeftChartId: '',
       topRightChartId: '',
-
       // BOMBEO
       pumpingStatusLabel: 'Estado',
       pumpingRuntimeLabel: 'Tiempo de funcionamiento',
@@ -57,11 +44,10 @@ const ConfigBoardChart = () => {
       pumpingCurrentL1VarId: null,
       pumpingCurrentL2VarId: null,
       pumpingCurrentL3VarId: null,
-
       // SALA (4 items)
-      roomItem0Label: 'Status electricidad',
+      roomItem0Label: 'Energia',
       roomItem0VarId: null,
-      roomItem1Label: 'Status internet',
+      roomItem1Label: 'Conectividad',
       roomItem1VarId: null,
       roomItem2Label: 'Temperatura',
       roomItem2VarId: null,
@@ -91,13 +77,20 @@ const ConfigBoardChart = () => {
   const getLabelFromData = (dataArr, key, fallback = '') =>
     getDataItem(dataArr, key)?.label ?? fallback
 
+  const setVarField = (field, v) => {
+    setValue(field, v?.id ?? null)          // form guarda solo el id
+    setVarObjects(prev => ({ ...prev, [field]: v ?? null }))  // estado guarda el objeto
+  }
+
   const buildChartConfig = () => {
     const d = getValues()
     const cfg = []
 
     const push = (key, value, type = 'string') =>
       cfg.push({ key, value, type })
-    // ===== GRAFICOS =====
+    //extraer el id de la variable de influx
+    const getVarId = (v) => v?.id ?? v ?? null
+    // ===== CHART =====
     push('board.top.leftChartId', d.topLeftChartId ?? '', 'number')
     push('board.top.rightChartId', d.topRightChartId ?? '', 'number')
     // ===== BOMBEO =====
@@ -106,28 +99,27 @@ const ConfigBoardChart = () => {
     push('board.pumping.currentL1.label', d.pumpingCurrentL1Label)
     push('board.pumping.currentL2.label', d.pumpingCurrentL2Label)
     push('board.pumping.currentL3.label', d.pumpingCurrentL3Label)
-    push('board.pumping.status.key', d.pumpingStatusVarId)
-    push('board.pumping.runtime.key', d.pumpingRuntimeVarId)
-    push('board.pumping.starts.key', d.pumpingStartsVarId)
-    push('board.pumping.currentL1.key', d.pumpingCurrentL1VarId)
-    push('board.pumping.currentL2.key', d.pumpingCurrentL2VarId)
-    push('board.pumping.currentL3.key', d.pumpingCurrentL3VarId)
+    push('board.pumping.status.key', getVarId(d.pumpingStatusVarId))
+    push('board.pumping.runtime.key', getVarId(d.pumpingRuntimeVarId))
+    push('board.pumping.starts.key', getVarId(d.pumpingStartsVarId))
+    push('board.pumping.currentL1.key', getVarId(d.pumpingCurrentL1VarId))
+    push('board.pumping.currentL2.key', getVarId(d.pumpingCurrentL2VarId))
+    push('board.pumping.currentL3.key', getVarId(d.pumpingCurrentL3VarId))
     // ===== SALA =====
     push('board.room.item0.label', d.roomItem0Label)
-    push('board.room.item0.key', d.roomItem0VarId)
+    push('board.room.item0.key', getVarId(d.roomItem0VarId))
     push('board.room.item1.label', d.roomItem1Label)
-    push('board.room.item1.key', d.roomItem1VarId)
+    push('board.room.item1.key', getVarId(d.roomItem1VarId))
     push('board.room.item2.label', d.roomItem2Label)
-    push('board.room.item2.key', d.roomItem2VarId)
+    push('board.room.item2.key', getVarId(d.roomItem2VarId))
     push('board.room.item3.label', d.roomItem3Label)
-    push('board.room.item3.key', d.roomItem3VarId)
+    push('board.room.item3.key', getVarId(d.roomItem3VarId))
 
     return cfg
   }
 
   const previewChartData = useMemo(() => {
     const items = []
-
     // ===== BOMBEO =====
     if (watch('pumpingStatusVarId')) {
       items.push({
@@ -138,7 +130,6 @@ const ConfigBoardChart = () => {
         },
       })
     }
-
     if (watch('pumpingRuntimeVarId')) {
       items.push({
         key: 'board.pumping.runtime',
@@ -149,7 +140,6 @@ const ConfigBoardChart = () => {
         },
       })
     }
-
     if (watch('pumpingStartsVarId')) {
       items.push({
         key: 'board.pumping.starts',
@@ -160,7 +150,6 @@ const ConfigBoardChart = () => {
         },
       })
     }
-
     if (watch('pumpingCurrentL1VarId')) {
       items.push({
         key: 'board.pumping.currentL1',
@@ -171,7 +160,6 @@ const ConfigBoardChart = () => {
         },
       })
     }
-
     if (watch('pumpingCurrentL2VarId')) {
       items.push({
         key: 'board.pumping.currentL2',
@@ -182,7 +170,6 @@ const ConfigBoardChart = () => {
         },
       })
     }
-
     if (watch('pumpingCurrentL3VarId')) {
       items.push({
         key: 'board.pumping.currentL3',
@@ -193,7 +180,6 @@ const ConfigBoardChart = () => {
         },
       })
     }
-
     // ===== SALA =====
     if (watch('roomItem0VarId')) {
       items.push({
@@ -205,7 +191,6 @@ const ConfigBoardChart = () => {
         },
       })
     }
-
     if (watch('roomItem1VarId')) {
       items.push({
         key: 'board.room.item1',
@@ -216,7 +201,6 @@ const ConfigBoardChart = () => {
         },
       })
     }
-
     if (watch('roomItem2VarId')) {
       items.push({
         key: 'board.room.item2',
@@ -227,7 +211,6 @@ const ConfigBoardChart = () => {
         },
       })
     }
-
     if (watch('roomItem3VarId')) {
       items.push({
         key: 'board.room.item3',
@@ -238,12 +221,12 @@ const ConfigBoardChart = () => {
         },
       })
     }
+
     return items
   }, [watch()])
 
   const send = async () => {
     const data = getValues()
-
     if (!data.title) {
       await Swal.fire('Error', 'Debe ingresar un título', 'error')
       return
@@ -255,21 +238,18 @@ const ConfigBoardChart = () => {
       type: 'BoardChart',
       chartConfig: buildChartConfig(),
     }
-
     try {
       await request(
         `${backend[import.meta.env.VITE_APP_NAME]}/charts${id ? `/${id}` : ''}`,
         'POST',
         payload
       )
-
       await Swal.fire(
         'OK',
         id ? 'Tablero editado' : 'Tablero creado',
         'success'
       )
-
-      navigate('/config/allGraphic')
+      navigate('/boards')
     } catch {
       await Swal.fire('Error', 'No se pudo guardar el tablero', 'error')
     }
@@ -303,11 +283,9 @@ const ConfigBoardChart = () => {
         `${backend[import.meta.env.VITE_APP_NAME]}/indicatorCharts`,
         'GET'
       )
-
       const filtered = (data || []).filter(
         (c) => c.type === 'LiquidFillPorcentaje' || c.type === 'CirclePorcentaje'
       )
-
       setCharts(filtered)
     } catch (e) {
       console.error(e)
@@ -317,7 +295,6 @@ const ConfigBoardChart = () => {
 
   const fetchChartData = async () => {
     if (!id) return
-
     try {
       const { data } = await request(
         `${backend[import.meta.env.VITE_APP_NAME]}/charts/${id}`,
@@ -325,75 +302,68 @@ const ConfigBoardChart = () => {
       )
       const cfg = data.ChartConfig || []
       const chartData = data.ChartData || []
+  
+      // Extraer objetos completos
+      const pumpingStatus    = getVarIdFromData(chartData, 'board.pumping.status')
+      const pumpingRuntime   = getVarIdFromData(chartData, 'board.pumping.runtime')
+      const pumpingStarts    = getVarIdFromData(chartData, 'board.pumping.starts')
+      const pumpingCurrentL1 = getVarIdFromData(chartData, 'board.pumping.currentL1')
+      const pumpingCurrentL2 = getVarIdFromData(chartData, 'board.pumping.currentL2')
+      const pumpingCurrentL3 = getVarIdFromData(chartData, 'board.pumping.currentL3')
+      const roomItem0        = getVarIdFromData(chartData, 'board.room.item0')
+      const roomItem1        = getVarIdFromData(chartData, 'board.room.item1')
+      const roomItem2        = getVarIdFromData(chartData, 'board.room.item2')
+      const roomItem3        = getVarIdFromData(chartData, 'board.room.item3')
+  
       reset({
         title: data.name || '',
         order: data.order ?? '',
-
-        // ===== TOP =====
-        topLeftChartId: getConfigValue(cfg, 'board.top.leftChartId', ''),
+        // ===== CHART =====
+        topLeftChartId:  getConfigValue(cfg, 'board.top.leftChartId', ''),
         topRightChartId: getConfigValue(cfg, 'board.top.rightChartId', ''),
-
         // ===== BOMBEO =====
-        pumpingStatusVarId: getVarIdFromData(chartData, 'board.pumping.status'),
-        pumpingRuntimeVarId: getVarIdFromData(chartData, 'board.pumping.runtime'),
-        pumpingStartsVarId: getVarIdFromData(chartData, 'board.pumping.starts'),
-        pumpingCurrentL1VarId: getVarIdFromData(chartData, 'board.pumping.currentL1'),
-        pumpingCurrentL2VarId: getVarIdFromData(chartData, 'board.pumping.currentL2'),
-        pumpingCurrentL3VarId: getVarIdFromData(chartData, 'board.pumping.currentL3'),
-
-        pumpingStatusLabel: getLabelFromData(
-          chartData,
-          'board.pumping.status',
-          'Estado'
-        ),
-        pumpingRuntimeLabel: getLabelFromData(
-          chartData,
-          'board.pumping.runtime',
-          'Tiempo de funcionamiento'
-        ),
-        pumpingStartsLabel: getLabelFromData(
-          chartData,
-          'board.pumping.starts',
-          'Cantidad de arranques'
-        ),
-        pumpingCurrentL1Label: getLabelFromData(
-          chartData,
-          'board.pumping.currentL1',
-          'I_L1'
-        ),
-        pumpingCurrentL2Label: getLabelFromData(
-          chartData,
-          'board.pumping.currentL2',
-          'I_L2'
-        ),
-        pumpingCurrentL3Label: getLabelFromData(
-          chartData,
-          'board.pumping.currentL3',
-          'I_L3'
-        ),
-
+        pumpingStatusVarId:    pumpingStatus?.id    ?? null,
+        pumpingRuntimeVarId:   pumpingRuntime?.id   ?? null,
+        pumpingStartsVarId:    pumpingStarts?.id    ?? null,
+        pumpingCurrentL1VarId: pumpingCurrentL1?.id ?? null,
+        pumpingCurrentL2VarId: pumpingCurrentL2?.id ?? null,
+        pumpingCurrentL3VarId: pumpingCurrentL3?.id ?? null,
+        pumpingStatusLabel:    getLabelFromData(chartData, 'board.pumping.status',    'Estado'),
+        pumpingRuntimeLabel:   getLabelFromData(chartData, 'board.pumping.runtime',   'Tiempo de funcionamiento'),
+        pumpingStartsLabel:    getLabelFromData(chartData, 'board.pumping.starts',    'Cantidad de arranques'),
+        pumpingCurrentL1Label: getLabelFromData(chartData, 'board.pumping.currentL1', 'I_L1'),
+        pumpingCurrentL2Label: getLabelFromData(chartData, 'board.pumping.currentL2', 'I_L2'),
+        pumpingCurrentL3Label: getLabelFromData(chartData, 'board.pumping.currentL3', 'I_L3'),
         // ===== SALA =====
         roomItem0Label: getLabelFromData(chartData, 'board.room.item0', 'Normal'),
-        roomItem0VarId: getVarIdFromData(chartData, 'board.room.item0'),
-
         roomItem1Label: getLabelFromData(chartData, 'board.room.item1', 'Online'),
-        roomItem1VarId: getVarIdFromData(chartData, 'board.room.item1'),
-
         roomItem2Label: getLabelFromData(chartData, 'board.room.item2', '°C'),
-        roomItem2VarId: getVarIdFromData(chartData, 'board.room.item2'),
-
         roomItem3Label: getLabelFromData(chartData, 'board.room.item3', '%'),
-        roomItem3VarId: getVarIdFromData(chartData, 'board.room.item3'),
+        roomItem0VarId: roomItem0?.id ?? null,
+        roomItem1VarId: roomItem1?.id ?? null,
+        roomItem2VarId: roomItem2?.id ?? null,
+        roomItem3VarId: roomItem3?.id ?? null,
       })
-
-
+  
+      setVarObjects({
+        pumpingStatusVarId:    pumpingStatus,
+        pumpingRuntimeVarId:   pumpingRuntime,
+        pumpingStartsVarId:    pumpingStarts,
+        pumpingCurrentL1VarId: pumpingCurrentL1,
+        pumpingCurrentL2VarId: pumpingCurrentL2,
+        pumpingCurrentL3VarId: pumpingCurrentL3,
+        roomItem0VarId: roomItem0,
+        roomItem1VarId: roomItem1,
+        roomItem2VarId: roomItem2,
+        roomItem3VarId: roomItem3,
+      })
+  
     } catch (e) {
       await Swal.fire('Error', 'Error al cargar el tablero', 'error')
     } finally {
       setLoader(false)
     }
   }
-
 
   useEffect(() => {
     fetchAllCharts()
@@ -507,11 +477,10 @@ const ConfigBoardChart = () => {
               <div className='md:col-span-2'>
                 <div className="!bg-white">
                   <SelectVars
-                    initialVar={watch('pumpingStatusVarId')}
-
-                    setValue={(v) =>
-                      setValue('pumpingStatusVarId', v?.id ?? null)
-                    }
+                    initialVar={varObjects.pumpingStatusVarId ?? null}
+                    onSelect={(v) => {
+                      setValue('pumpingStatusVarId', v ?? null)
+                    }}
                     label="-Seleccionar variable-"
                   />
                 </div>
@@ -528,9 +497,9 @@ const ConfigBoardChart = () => {
                       className='!mb-2'
                     />
                     <SelectVars
-                      initialVar={watch('pumpingRuntimeVarId')}
-                      setValue={(v) =>
-                        setValue('pumpingRuntimeVarId', v?.id ?? null)
+                      initialVar={varObjects.pumpingRuntimeVarId ?? null}
+                      onSelect={(v) =>
+                        setValue('pumpingRuntimeVarId', v ?? null)
                       }
                       label="-Seleccionar variable-"
                     />
@@ -547,9 +516,9 @@ const ConfigBoardChart = () => {
                       className='!mb-2'
                     />
                     <SelectVars
-                      initialVar={watch('pumpingStartsVarId')}
-                      setValue={(v) =>
-                        setValue('pumpingStartsVarId', v?.id ?? null)
+                      initialVar={varObjects.pumpingStartsVarId ?? null}
+                      onSelect={(v) =>
+                        setValue('pumpingStartsVarId', v ?? null)
                       }
                       label="-Seleccionar variable-"
                     />
@@ -568,9 +537,9 @@ const ConfigBoardChart = () => {
                       className='!mb-2'
                     />
                     <SelectVars
-                      initialVar={watch('pumpingCurrentL1VarId')}
-                      setValue={(v) =>
-                        setValue('pumpingCurrentL1VarId', v?.id ?? null)
+                      initialVar={varObjects.pumpingCurrentL1VarId ?? null}
+                      onSelect={(v) =>
+                        setValue('pumpingCurrentL1VarId', v ?? null)
                       }
                       label="-Seleccionar variable-"
                     />
@@ -587,9 +556,9 @@ const ConfigBoardChart = () => {
                       className='!mb-2'
                     />
                     <SelectVars
-                      initialVar={watch('pumpingCurrentL2VarId')}
-                      setValue={(v) =>
-                        setValue('pumpingCurrentL2VarId', v?.id ?? null)
+                      initialVar={varObjects.pumpingCurrentL2VarId ?? null}
+                      onSelect={(v) =>
+                        setValue('pumpingCurrentL2VarId', v ?? null)
                       }
                       label="-Seleccionar variable-"
                     />
@@ -605,9 +574,9 @@ const ConfigBoardChart = () => {
                       fullWidth
                     />
                     <SelectVars
-                      initialVar={watch('pumpingCurrentL3VarId')}
-                      setValue={(v) =>
-                        setValue('pumpingCurrentL3VarId', v?.id ?? null)
+                      initialVar={varObjects.pumpingCurrentL3VarId ?? null}
+                      onSelect={(v) =>
+                        setValue('pumpingCurrentL3VarId', v ?? null)
                       }
                       label="-Seleccionar variable-"
                     />
@@ -631,8 +600,8 @@ const ConfigBoardChart = () => {
               />
               <div className="!bg-white">
                 <SelectVars
-                  initialVar={watch('roomItem0VarId')}
-                  setValue={(v) => setValue('roomItem0VarId', v?.id ?? null)}
+                  initialVar={varObjects.roomItem0VarId ?? null}
+                  onSelect={(v) => setValue('roomItem0VarId', v ?? null)}
                   label="-Seleccionar variable-"
                 />
               </div>
@@ -646,8 +615,8 @@ const ConfigBoardChart = () => {
               />
               <div className="!bg-white">
                 <SelectVars
-                  initialVar={watch('roomItem1VarId')}
-                  setValue={(v) => setValue('roomItem1VarId', v?.id ?? null)}
+                  initialVar={varObjects.roomItem1VarId ?? null}
+                  onSelect={(v) => setValue('roomItem1VarId', v ?? null)}
                   label="-Seleccionar variable-"
                 />
               </div>
@@ -661,8 +630,8 @@ const ConfigBoardChart = () => {
               />
               <div className="!bg-white">
                 <SelectVars
-                  initialVar={watch('roomItem2VarId')}
-                  setValue={(v) => setValue('roomItem2VarId', v?.id ?? null)}
+                  initialVar={varObjects.roomItem2VarId ?? null}
+                  onSelect={(v) => setValue('roomItem2VarId', v ?? null)}
                   label="-Seleccionar variable-"
                 />
               </div>
@@ -676,8 +645,8 @@ const ConfigBoardChart = () => {
               />
               <div className="!bg-white">
                 <SelectVars
-                  initialVar={watch('roomItem3VarId')}
-                  setValue={(v) => setValue('roomItem3VarId', v?.id ?? null)}
+                  initialVar={varObjects.roomItem3VarId ?? null}
+                  onSelect={(v) => setValue('roomItem3VarId', v ?? null)}
                   label="-Seleccionar variable-"
                 />
               </div>
