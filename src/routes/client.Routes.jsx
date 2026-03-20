@@ -8,7 +8,11 @@ import Boards from '../modules/Boards/views'
  *   { [nameApp]: { [path]: JSX.Element } }
  */
 export const clientRouteOverrides = {
-	masagua_rio_tercero: {
+	'Rio Tercero': {
+		'/': <Boards />,
+		'/home': <Boards />,
+	},
+	'Coop desarrollo 2': {
 		'/': <Boards />,
 		'/home': <Boards />,
 	},
