@@ -1,6 +1,7 @@
 import { createContext, useEffect, useState } from 'react'
 import { request } from '../utils/js/request'
 import { backend } from '../utils/routes/app.routes'
+import { storage } from '../storage/storage'
 
 const MainContext = createContext()
 
@@ -13,7 +14,10 @@ function MainProvider({ children }) {
 	const [tabCurrent, setTabCurrent] = useState(0)
 	const [permission, setPermission] = useState([])
 	const [unreadCount, setUnreadCount] = useState(0)
-	const [client, setClient] = useState(null)
+	const [client, setClient] = useState(() => {
+		const coop = storage.get('usuarioCooptech')
+		return coop?.cliente?.name ?? null
+	})
 
 	const fetchUnreadCount = async () => {
 		const url = backend[import.meta.env.VITE_APP_NAME]
