@@ -7,6 +7,8 @@ import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
 import MultipleBooleanChart from '../../Charts/components/MultipleBooleanChart'
 import { Chart } from 'highcharts'
 
+const BOTTOM_KEYS = ['bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6']
+
 export const ChartComponentDbWrapper = ({
     chartId,
     ChartComponent,
@@ -14,7 +16,7 @@ export const ChartComponentDbWrapper = ({
     initialData,
     inflValues,
 }) => {
-    
+
     const [chartData, setChartData] = useState(initialData)
     const [LiquidButtomData, setLiquidButtomData] = useState({})
     const [loading, setLoading] = useState(true)
@@ -40,7 +42,7 @@ export const ChartComponentDbWrapper = ({
     const resolveLiquidProps = (data) => {
         const result = { ...data }
 
-        const slots = ['value', 'secondary', 'bottom1', 'bottom2', 'maxValue']
+        const slots = ['value', 'secondary', 'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6', 'maxValue']
 
         slots.forEach((k) => {
             const infl = data[k]
@@ -52,7 +54,6 @@ export const ChartComponentDbWrapper = ({
             result[k] = {
                 ...infl,
                 value: inflValues[infl.id] ?? 0,
-
             }
         })
         return result
@@ -147,7 +148,12 @@ export const ChartComponentDbWrapper = ({
                     <ChartComponent {...initialProps} {...chartData} />
                 </div>
                 <div className='w-full px-1 flex items-center justify-center'>
-                    <LiquidFillBottomInfo bottom1={bottom1} bottom2={bottom2} />
+                    <LiquidFillBottomInfo
+                        items={BOTTOM_KEYS
+                            .map(key => LiquidButtomData?.[key])
+                            .filter(item => item?.id)
+                        }
+                    />
                 </div>
             </div>
         )

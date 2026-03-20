@@ -3,10 +3,13 @@ import { jwtDecode } from 'jwt-decode'
 import { storage } from '../utils/storage'
 import Swal from 'sweetalert2'
 import { removeData, saveData } from '../../../storage/cookies-store'
+import { useContext } from 'react'
+import { MainContext } from '../../../context/MainContext'
 
 const LoginCooptech = () => {
 	const navigate = useNavigate()
 	const { token } = useParams(['token'])
+	const { setClient } = useContext(MainContext)
 	const validateUserCooptech = async () => {
 		try {
 			if (token === 'null') {
@@ -35,6 +38,8 @@ const LoginCooptech = () => {
 				sameSite: import.meta.env.VITE_ENTORNO === 'desarrollo' ? 'Lax' : 'None',
 			})
 			storage.set('usuario', decodedToken)
+			const client = storage.get('usuarioCooptech')
+			setClient(client?.cliente.name ?? null)
 			navigate('/')
 		} catch (error) {
 			Swal.fire('Atencion', error.response?.data?.error || error.response?.data || error.message, 'error')

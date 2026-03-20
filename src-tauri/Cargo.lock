@@ -1723,7 +1723,7 @@ dependencies = [
 
 [[package]]
 name = "masagua-desktop"
-version = "1.0.17"
+version = "1.0.18"
 dependencies = [
  "serde",
  "serde_json",
