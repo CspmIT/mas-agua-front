@@ -366,7 +366,6 @@ const Home = ({ targetUserId = null }) => {
     }
 
     async function removeWidget(layoutId) {
-        console.log(layoutId)
         try {
             await request(removeChartUrl, 'POST', {
                 chart_id: layoutId,
