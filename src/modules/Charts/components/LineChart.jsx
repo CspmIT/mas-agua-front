@@ -123,17 +123,18 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
         const t = memoizedXSeries[i]
         return [t, v]
       })
+      const { areaStyle, ...restSeries } = series
 
       return {
-        ...series,
+        ...restSeries,    
         type: 'line',
-        data,
+        data: (series.data || []).map((v, i) => [memoizedXSeries[i], v]),
         connectNulls: true,
         showSymbol: true,
         showAllSymbol: 'auto',
         symbolSize: 2,
         sampling: 'none',
-        ...(series.areaStyle && { areaStyle: { opacity: 0.15 } }),
+        ...(areaStyle && { areaStyle: { opacity: 0.15 } }), 
       }
     })
   }, [ySeries, memoizedXSeries])
@@ -160,31 +161,31 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
 
       legend: isMobile
         ? {
-            type: 'scroll',
-            bottom: 50,
-            top: 'auto',
-            itemWidth: 14,
-            itemHeight: 10,
-            itemGap: 10,
-            textStyle: {
-              fontSize: 11,
-            },
-            data: memoizedYSeries.map((s) => s.name),
-          }
-        : {
-            type: 'scroll',
-            orient: 'horizontal',
-            top: 0,
-            left: 'center',
-            itemGap: 14,
-            data: memoizedYSeries.map((s) => s.name),
+          type: 'scroll',
+          bottom: 50,
+          top: 'auto',
+          itemWidth: 14,
+          itemHeight: 10,
+          itemGap: 10,
+          textStyle: {
+            fontSize: 11,
           },
+          data: memoizedYSeries.map((s) => s.name),
+        }
+        : {
+          type: 'scroll',
+          orient: 'horizontal',
+          top: 0,
+          left: 'center',
+          itemGap: 14,
+          data: memoizedYSeries.map((s) => s.name),
+        },
 
       grid: {
         left: '3%',
         right: '4%',
         top: isMobile ? '8%' : '10%',
-        bottom: isMobile ? 90 : 20, 
+        bottom: isMobile ? 90 : 20,
         containLabel: true,
       },
 

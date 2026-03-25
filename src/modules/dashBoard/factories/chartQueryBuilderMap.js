@@ -130,26 +130,27 @@ export const chartQueryBuilderMap = {
     }
 
     const ySeries = lineChart.getYSeries().map((series) => {
+      // Construir la key igual que el backend
       const varId = String(series.idVar.id)
-      const map = timeValueMaps[varId] || new Map()
-
+      const idBit = series.id_bit 
+      
+      const resultKey = idBit ? `${varId}_bit${idBit}` : varId
+      const map = timeValueMaps[resultKey] || new Map()
+  
       const alignedData = xSeriesMs.map((t) => {
-        const value = map.get(t)
-
-        if (typeof value === 'boolean') return value ? 1 : 0
-
-        if (value !== null && value !== undefined && !isNaN(value)) {
-          return Number(parseFloat(value).toFixed(3))
-        }
-
-        return null
+          const value = map.get(t)
+          if (typeof value === 'boolean') return value ? 1 : 0
+          if (value !== null && value !== undefined && !isNaN(value)) {
+              return Number(parseFloat(value).toFixed(3))
+          }
+          return null
       })
-
+  
       return {
-        ...series,
-        data: alignedData,
+          ...series,
+          data: alignedData,
       }
-    })
+  })
 
     return { xSeries: xSeriesMs, ySeries }
   },
