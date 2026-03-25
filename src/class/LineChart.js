@@ -11,7 +11,9 @@ export class LineChartRepository extends SeriesChart {
                 idVar: serie.InfluxVars,
                 smooth: serie.line === 'smooth',
                 color: serie.color,
-                areaStyle: serie.areaStyle || null,
+                areaStyle: serie.areaStyle,
+                binary_compressed: serie.InfluxVars?.binary_compressed ?? false,
+                id_bit:            serie.id_bit,
             }))
         } catch (error) {
             throw Error(error)
@@ -77,6 +79,8 @@ export class LineChartRepository extends SeriesChart {
               render: true,
               calc: influxVars.calc,
               equation: influxVars.equation,   // la ecuación completa vive en el back
+              binary_compressed: influxVars.binary_compressed,
+              id_bit:            serie.id_bit,
             })
           )
         })
