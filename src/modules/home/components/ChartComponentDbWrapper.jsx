@@ -5,7 +5,8 @@ import LiquidFillBottomInfo from './LiquidFillBottomInfo'
 import logo from '../../../assets/img/Logo/MasAgua_hexagonal.png'
 import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
 import MultipleBooleanChart from '../../Charts/components/MultipleBooleanChart'
-import { Chart } from 'highcharts'
+import CirclePorcentaje from '../../Charts/components/CirclePorcentaje'
+import GaugeSpeed from '../../Charts/components/GaugeSpeed'
 
 const BOTTOM_KEYS = ['bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6']
 
@@ -20,7 +21,14 @@ export const ChartComponentDbWrapper = ({
     const [chartData, setChartData] = useState(initialData)
     const [LiquidButtomData, setLiquidButtomData] = useState({})
     const [loading, setLoading] = useState(true)
-    const isLiquidPorcentaje = ChartComponent === LiquidFillPorcentaje
+    const isLiquidFill =
+        ChartComponent === LiquidFillPorcentaje ||
+        ChartComponent === CirclePorcentaje ||
+        ChartComponent === GaugeSpeed
+
+    const isScalarValue =
+        ChartComponent === CirclePorcentaje ||
+        ChartComponent === GaugeSpeed
 
     // Extrae valor simple desde inflValues (gráficos normales)
     const resolveSimpleValue = (influxVar) => {
@@ -41,21 +49,23 @@ export const ChartComponentDbWrapper = ({
 
     const resolveLiquidProps = (data) => {
         const result = { ...data }
-
+ 
         const slots = ['value', 'secondary', 'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6', 'maxValue']
-
+ 
         slots.forEach((k) => {
             const infl = data[k]
+            
             if (!infl?.id) {
                 result[k] = infl ?? ''
                 return
-            }
-
-            result[k] = {
-                ...infl,
-                value: inflValues[infl.id] ?? 0,
+            }else {
+                result[k] = {
+                    ...infl,
+                    value: inflValues[infl.id] ?? 0,
+                }
             }
         })
+ 
         return result
     }
 
@@ -74,7 +84,6 @@ export const ChartComponentDbWrapper = ({
 
         if (!inflValues || Object.keys(inflValues).length === 0) return
 
-        // 1) PumpControl — igual que antes
         if (ChartComponent === PumpControl) {
             const updatedPumps = resolvePumpOrState(initialData.initialPumps)
             const updatedStates = resolvePumpOrState(initialData.initialStates)
@@ -88,16 +97,20 @@ export const ChartComponentDbWrapper = ({
             setLoading(false)
             return
         }
-        // 2) LiquidPorcentaje — adapter por slots
-        if (isLiquidPorcentaje) {
-            const multipleValues = resolveLiquidProps(initialData)
-            setChartData({ ...initialData, multipleValues })
+        // adapter por slots
+        if (isLiquidFill) {
+            const multipleValues = resolveLiquidProps(initialData, isScalarValue)    
+            let finalData = { ...initialData, multipleValues }
+    
+            if (isScalarValue && initialData?.value?.id) {
+                finalData.value = resolveSimpleValue(initialData.value)
+            }
+            setChartData(finalData)
             setLiquidButtomData(multipleValues)
             setLoading(false)
             return
         }
 
-        // 3) MultipleBooleanChart
         if (ChartComponent === MultipleBooleanChart) {
             const resolvedItems = resolveMultipleBooleanItems(initialData.items)
             setChartData({
@@ -107,7 +120,6 @@ export const ChartComponentDbWrapper = ({
             return
         }
 
-        // 4) Simples clásicos
         if (initialData?.value?.id) {
             const value = resolveSimpleValue(initialData.value)
             setChartData({ ...initialData, value })
@@ -136,11 +148,9 @@ export const ChartComponentDbWrapper = ({
         )
     }
 
-    if (!isLiquidPorcentaje) {
+    if (!isLiquidFill) {
         return <ChartComponent {...initialProps} {...chartData} />
     } else {
-        const bottom1 = LiquidButtomData?.bottom1
-        const bottom2 = LiquidButtomData?.bottom2
 
         return (
             <div className="flex flex-col h-full w-full">
@@ -153,6 +163,7 @@ export const ChartComponentDbWrapper = ({
                             .map(key => LiquidButtomData?.[key])
                             .filter(item => item?.id)
                         }
+                        chart={ChartComponent}
                     />
                 </div>
             </div>

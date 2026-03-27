@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'fix: soporte de variables binarias comprimidas en LineChart'
+                  releaseBody: 'feat: soporte de LiquidFillBottom a CirclePorcentaje y GaugeSpeed'
                   prerelease: false

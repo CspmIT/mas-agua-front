@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Button, ButtonBase, Typography } from '@mui/material'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
-
-const ITEMS_PER_PAGE = 2
+import GaugeSpeed from '../../Charts/components/GaugeSpeed'
 
 const formatValue = value => {
     if (value === null || value === undefined || value === '') return null
@@ -28,9 +27,11 @@ const BottomItem = ({ item }) => {
     )
 }
 
-const LiquidFillBottomInfo = ({ items = [] }) => {
+const LiquidFillBottomInfo = ({ items = [], chart }) => {
     const [page, setPage] = useState(0)
-
+    const isGauge = chart === GaugeSpeed
+    const ITEMS_PER_PAGE = isGauge ? 1 : 2
+    
     const validItems = items.filter(item => item && (item.value || item.value === 0))
 
     if (validItems.length === 0) return null
