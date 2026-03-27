@@ -22,7 +22,8 @@ const initialBottoms = BOTTOM_KEYS.reduce((acc, key) => ({
 
 const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) => {
     const [chartType] = useState(configs[id].typeGraph)
-    const isLiquid = configs[id].typeGraph === 'LiquidFillPorcentaje'
+    const isMultipleValues = ['LiquidFillPorcentaje', 'CirclePorcentaje', 'GaugeSpeed'].includes(configs[id].typeGraph)
+    const isLiquid = chartType === 'LiquidFillPorcentaje'
 
     const [secondaryEnabled, setSecondaryEnabled] = useState(false)
     const [bottoms, setBottoms] = useState(initialBottoms)
@@ -220,7 +221,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             </div>
                         </div>
 
-                        {isLiquid && (
+                        {isMultipleValues && (
                             <>
                                 {/* VARIABLE PRINCIPAL */}
                                 <SelectVars
@@ -240,44 +241,47 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                     setValue={setValue}
                                 />
 
-                                {/* VARIABLE SECUNDARIA */}
-                                <CardCustom className="p-2 !bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                checked={secondaryEnabled}
-                                                onChange={(e) =>
-                                                    setSecondaryEnabled(
-                                                        e.target.checked
-                                                    )
+                                {isLiquid && (
+                                    <>
+                                        {/* VARIABLE SECUNDARIA */}
+                                        <CardCustom className="p-2 !bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
+                                            <FormControlLabel
+                                                control={
+                                                    <Checkbox
+                                                        checked={secondaryEnabled}
+                                                        onChange={(e) =>
+                                                            setSecondaryEnabled(
+                                                                e.target.checked
+                                                            )
+                                                        }
+                                                    />
                                                 }
+                                                label="Mostrar variable secundaria"
                                             />
-                                        }
-                                        label="Mostrar variable secundaria"
-                                    />
 
-                                    {secondaryEnabled && (
-                                        <div className='!bg-white'>
-                                            <SelectVars
-                                                label="Variable secundaria"
-                                                initialVar={
-                                                    chartData?.ChartData?.find(
-                                                        (d) => d.key === 'secondary'
-                                                    )?.InfluxVars
-                                                }
-                                                onSelect={(v) =>
-                                                    upsertChartData({
-                                                        key: 'secondary',
-                                                        label: 'secondary',
-                                                        idVar: v.id,
-                                                    })
-                                                }
-                                                setValue={setValue}
-                                            />
-                                        </div>
-                                    )}
-                                </CardCustom>
+                                            {secondaryEnabled && (
+                                                <div className='!bg-white'>
+                                                    <SelectVars
+                                                        label="Variable secundaria"
+                                                        initialVar={
+                                                            chartData?.ChartData?.find(
+                                                                (d) => d.key === 'secondary'
+                                                            )?.InfluxVars
+                                                        }
+                                                        onSelect={(v) =>
+                                                            upsertChartData({
+                                                                key: 'secondary',
+                                                                label: 'secondary',
+                                                                idVar: v.id,
+                                                            })
+                                                        }
+                                                        setValue={setValue}
+                                                    />
+                                                </div>
+                                            )}
+                                        </CardCustom>
 
+                                    </>)}
                                 {/* BOTTOM 1 - 6 */}
                                 {BOTTOM_KEYS.map((key, i) => (
                                     <CardCustom key={key} className="p-2 !bg-slate-50 border-2 border-slate-100 rounded-md shadow-sm">
@@ -316,7 +320,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                             </>
                         )}
 
-                        {!isLiquid && (
+                        {!isMultipleValues && (
                             <SelectVars
                                 setValue={setValue}
                                 label="Seleccione una variable"
@@ -356,7 +360,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 size="small"
                             />
                         )}
-                        {configs[id].description2 && (
+                        {/* {configs[id].description2 && (
                             <TextField
                                 type="text"
                                 className="w-full"
@@ -365,7 +369,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                 onChange={handleChange}
                                 size="small"
                             />
-                        )}
+                        )} */}
                         <TextField
                             defaultValue={config.color}
                             type="color"
@@ -399,7 +403,7 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                     <Suspense fallback={<div>Cargando...</div>}>
 
                         <ChartComponent {...config} />
-                        {isLiquid && (
+                        {isMultipleValues && (
                             <LiquidFillBottomInfo
                                 items={BOTTOM_KEYS
                                     .filter(key => bottoms[key].enabled)
