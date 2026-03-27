@@ -5,7 +5,6 @@ import LiquidFillBottomInfo from './LiquidFillBottomInfo'
 import logo from '../../../assets/img/Logo/MasAgua_hexagonal.png'
 import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
 import MultipleBooleanChart from '../../Charts/components/MultipleBooleanChart'
-import { Chart } from 'highcharts'
 import CirclePorcentaje from '../../Charts/components/CirclePorcentaje'
 import GaugeSpeed from '../../Charts/components/GaugeSpeed'
 
@@ -24,6 +23,10 @@ export const ChartComponentDbWrapper = ({
     const [loading, setLoading] = useState(true)
     const isLiquidFill =
         ChartComponent === LiquidFillPorcentaje ||
+        ChartComponent === CirclePorcentaje ||
+        ChartComponent === GaugeSpeed
+
+    const isScalarValue =
         ChartComponent === CirclePorcentaje ||
         ChartComponent === GaugeSpeed
 
@@ -46,21 +49,23 @@ export const ChartComponentDbWrapper = ({
 
     const resolveLiquidProps = (data) => {
         const result = { ...data }
-
+ 
         const slots = ['value', 'secondary', 'bottom1', 'bottom2', 'bottom3', 'bottom4', 'bottom5', 'bottom6', 'maxValue']
-
+ 
         slots.forEach((k) => {
             const infl = data[k]
+            
             if (!infl?.id) {
                 result[k] = infl ?? ''
                 return
-            }
-
-            result[k] = {
-                ...infl,
-                value: inflValues[infl.id] ?? 0,
+            }else {
+                result[k] = {
+                    ...infl,
+                    value: inflValues[infl.id] ?? 0,
+                }
             }
         })
+ 
         return result
     }
 
@@ -94,8 +99,13 @@ export const ChartComponentDbWrapper = ({
         }
         // adapter por slots
         if (isLiquidFill) {
-            const multipleValues = resolveLiquidProps(initialData)
-            setChartData({ ...initialData, multipleValues })
+            const multipleValues = resolveLiquidProps(initialData, isScalarValue)    
+            let finalData = { ...initialData, multipleValues }
+    
+            if (isScalarValue && initialData?.value?.id) {
+                finalData.value = resolveSimpleValue(initialData.value)
+            }
+            setChartData(finalData)
             setLiquidButtomData(multipleValues)
             setLoading(false)
             return
