@@ -162,18 +162,12 @@ const ConfigGraphic = () => {
     
 
     const saveSimpleChart = async (data) => {
-        if (data?.idVar === undefined) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Atención!',
-                html: 'Debe seleccionar una variable para el gráfico',
-            })
-            return
-        }
+     
         data.porcentage = data.porcentage === 'true' || data.porcentage === true
         data.border = data.border === 'true' || data.border === true
         data.maxValue = parseFloat(data.maxValue)
         data.order = Number(data.order)
+        data.chartData = data.chartData ?? []
         const endPoint = `${backend['Mas Agua']}/charts`
         try {
             if (idChart) {
@@ -247,11 +241,11 @@ const ConfigGraphic = () => {
         if (type === 'LineChart') {
             await saveLineChart(data)
         }
-        if (type === 'LiquidFillPorcentaje') {
-            saveLiquidChart(data)
-        }
         if (isSimpleChart(type)) {
             saveSimpleChart(data)
+        }
+        if (type === 'LiquidFillPorcentaje') {
+            saveLiquidChart(data)
         }
         if (type === 'TotalizadoPeriodo') { 
             await saveTotalizadoChart(data)
