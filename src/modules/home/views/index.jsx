@@ -7,6 +7,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { request } from '../../../utils/js/request'
 import Swal from 'sweetalert2'
 import { backend } from '../../../utils/routes/app.routes'
+import { storage } from '../../../storage/storage'
 import PumpControl from '../../Charts/views/ConfigBombs'
 import GaugeSpeed from '../../Charts/components/GaugeSpeed'
 import BooleanChart from '../../Charts/components/BooleanChart'
@@ -70,6 +71,7 @@ const Home = ({ targetUserId = null }) => {
     const containerRef = useRef(null)
     const [currentBreakpoint, setCurrentBreakpoint] = useState('lg')
     const isAdminMode = targetUserId !== null
+    const userId = storage.get('usuario')?.sub
 
     const dashboardUrl = isAdminMode
         ? `${backend['Mas Agua']}/admin/dashboard/${targetUserId}`
@@ -406,26 +408,22 @@ const Home = ({ targetUserId = null }) => {
     }
 
     async function handleOpenAddChart() {
-        await getAvailableCharts()
+        const resolvedUserId = isAdminMode ? targetUserId : userId
+        await getAvailableCharts(resolvedUserId)
         setOpenAddChart(true)
     }
 
-    async function getAvailableCharts() {
+    async function getAvailableCharts(userId) {
         try {
             const { data } = await request(
-                `${backend['Mas Agua']}/allCharts`,
+                `${backend['Mas Agua']}/chartbyuser/${userId}`,
                 'GET'
             )
-
+    
             const validTypes = Object.keys(chartComponents)
-            const activeChartIds = new Set(charts.map(c => c.chart_id))
-
-            const filteredData = data.filter(chart =>
-                validTypes.includes(chart.type) && !activeChartIds.has(chart.id)
-            )
-
+            const filteredData = data.filter(chart => validTypes.includes(chart.type))
+    
             setAvailableCharts(filteredData)
-
         } catch (error) {
             console.error(error)
         }

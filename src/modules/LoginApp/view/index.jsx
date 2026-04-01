@@ -177,7 +177,7 @@ function LoginApp() {
 							)}
 							<div className='w-full flex justify-center items-center'>
 								<Button className='w-1/2 ' type='submit' variant='contained' title='Iniciar Session'>
-									{!recovery ? 'Iniciar Sesion' : 'Recupeara'}
+									{!recovery ? 'Iniciar Sesion' : 'Recupear'}
 								</Button>
 							</div>
 							{!recovery ? (

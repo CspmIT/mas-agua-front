@@ -42,7 +42,8 @@ export default function AdminDashboardPage() {
                 display: "flex",
                 alignItems: "center",
                 gap: 16,
-                flexWrap: "wrap"
+                flexWrap: "wrap",
+                boxShadow: "0 2px 14px 0 rgba(44,106,160,0.10)",
             }}>
                 <Autocomplete
                     options={users}
@@ -110,12 +111,45 @@ export default function AdminDashboardPage() {
                 // key={selectedUser.id} fuerza remount completo al cambiar de usuario
             ) : (
                 <div style={{
-                    textAlign: "center",
-                    padding: "200px 0",
-                    color: "#94a3b8",
-                    fontSize: 16
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "80px 0",
+                    gap: 16,
                 }}>
-                    Seleccioná un usuario para ver y editar su dashboard
+                    {/* Ícono SVG de dashboard/usuario */}
+                    <div style={{
+                        width: 77,
+                        height: 77,
+                        borderRadius: "50%",
+                        background: "#2c6aa0",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 4px 18px 0 rgba(44,106,160,0.10)",
+                        marginBottom: 4,
+                    }}>
+                        <svg width="44" height="44" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            {/* Silueta de usuario */}
+                            <circle cx="22" cy="16" r="7" fill="#c8ddf0" opacity="0.5" />
+                            <ellipse cx="22" cy="33" rx="12" ry="7" fill="#c8ddf0" opacity="0.5" />
+                            {/* Pequeños cuadraditos de "widgets" en esquina inferior derecha */}
+                            <rect x="30" y="28" width="5" height="5" rx="1.2" fill="#c8ddf0" opacity="0.7" />
+                            <rect x="36" y="28" width="5" height="5" rx="1.2" fill="#c8ddf0" opacity="0.4" />
+                            <rect x="30" y="34" width="5" height="5" rx="1.2" fill="#c8ddf0" opacity="0.4" />
+                            <rect x="36" y="34" width="5" height="5" rx="1.2" fill="#c8ddf0" opacity="0.25" />
+                        </svg>
+                    </div>
+
+                    <div style={{ textAlign: "center" }}>
+                        <div style={{ fontSize: 18, fontWeight: 600, color: "#334155", marginBottom: 4 }}>
+                            Ningún usuario seleccionado
+                        </div>
+                        <div style={{ fontSize: 14, color: "#94a3b8", maxWidth: 350 }}>
+                            Elegí un usuario para visualizar y editar su dashboard personalizado
+                        </div>
+                    </div>
                 </div>
             )}
 
