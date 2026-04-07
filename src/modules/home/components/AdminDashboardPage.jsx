@@ -41,8 +41,10 @@ export default function AdminDashboardPage() {
                 marginBottom: 4,
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "space-between",
                 gap: 16,
-                flexWrap: "wrap",
+                paddingLeft: 24,
+                paddingRight: 24,
                 boxShadow: "0 2px 14px 0 rgba(44,106,160,0.10)",
             }}>
                 <Autocomplete
@@ -108,7 +110,6 @@ export default function AdminDashboardPage() {
                 <div className="bg-slate-50 rounded-lg border border-slate-200 p-4">
                     <Home key={selectedUser.id} targetUserId={selectedUser.id} />
                 </div>
-                // key={selectedUser.id} fuerza remount completo al cambiar de usuario
             ) : (
                 <div style={{
                     display: "flex",
@@ -147,12 +148,11 @@ export default function AdminDashboardPage() {
                             Ningún usuario seleccionado
                         </div>
                         <div style={{ fontSize: 14, color: "#94a3b8", maxWidth: 350 }}>
-                            Elegí un usuario para visualizar y editar su dashboard personalizado
+                            Seleccione un usuario para visualizar y editar su dashboard personalizado
                         </div>
                     </div>
                 </div>
             )}
-
         </div>
     )
 }

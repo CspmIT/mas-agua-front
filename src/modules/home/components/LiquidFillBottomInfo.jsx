@@ -22,7 +22,9 @@ const BottomItem = ({ item }) => {
     return (
         <Typography variant="subtitle1" className="text-center leading-tight">
             {label && <span className="font-medium">{label} </span>}
-            <span className="font-bold text-lg">{value} {unit}</span>
+            <span className="font-bold text-lg">
+                {value} <span className="text-sm font-md">{unit}</span>
+            </span>
         </Typography>
     )
 }
@@ -31,7 +33,7 @@ const LiquidFillBottomInfo = ({ items = [], chart }) => {
     const [page, setPage] = useState(0)
     const isGauge = chart === GaugeSpeed
     const ITEMS_PER_PAGE = isGauge ? 1 : 2
-    
+
     const validItems = items.filter(item => item && (item.value || item.value === 0))
 
     if (validItems.length === 0) return null
