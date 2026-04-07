@@ -3,23 +3,38 @@ import { request } from '../../../utils/js/request'
 import { configs } from '../configs/configs'
 import { backend } from '../../../utils/routes/app.routes'
 import TableCustom from '../../../components/TableCustom'
-import { Box, Button, Container, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material'
+import {
+  Box, Button, Container, FormControl, InputLabel, MenuItem, Select, Typography
+} from '@mui/material'
 import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import LoaderComponent from '../../../components/Loader'
 import CardCustom from '../../../components/CardCustom'
 import { Controller, useForm } from 'react-hook-form'
+import { storage } from '../../../storage/storage'
+import AssignChartDialog from '../components/AssignChartDialog'
+import AssignProfileDialog from '../components/AssignProfileDialog'
+
+const EXCLUDED_DASHBOARD_TYPES = ['TotalizadoPeriodo', 'LineChart', 'BoardChart']
 
 const ChartsTable = () => {
+  const usuario = storage.get('usuario');
+  const isSuperAdmin = usuario?.profile === 4;
   const navigate = useNavigate()
   const [charts, setCharts] = useState([])
   const [chartsOriginal, setChartsOriginal] = useState([])
   const [columnsTable, setColumnsTable] = useState([])
   const [loader, setLoader] = useState(true)
+  const [users, setUsers] = useState([])
+  const [assignDialog, setAssignDialog] = useState({ open: false, chartId: null })
+  const [profileDialog, setProfileDialog] = useState({ open: false, chartId: null })
+  const [profiles, setProfiles] = useState([])
+
   const { control, handleSubmit, reset } = useForm({
     defaultValues: {
       type: '',
       status: '',
+      profile: '',
     },
   })
 
@@ -52,13 +67,15 @@ const ChartsTable = () => {
       {
         header: 'Orden',
         accessorKey: 'order',
+        size: 50,
       },
       {
         header: 'Estado',
         accessorKey: 'status',
+        size: 50,
         Cell: ({ row }) => {
           const isActive = row.original.status
-      
+
           return (
             <Typography
               variant="body2"
@@ -71,7 +88,7 @@ const ChartsTable = () => {
             </Typography>
           )
         },
-      },      
+      },
       {
         header: 'Acciones',
         accessorKey: 'actions',
@@ -123,9 +140,8 @@ const ChartsTable = () => {
 
                 const question = await Swal.fire({
                   icon: 'question',
-                  html: `Esta seguro que desea ${
-                    row.original.status ? 'desactivar' : 'activar'
-                  } este grafico?`,
+                  html: `Esta seguro que desea ${row.original.status ? 'desactivar' : 'activar'
+                    } este grafico?`,
                   showCancelButton: true,
                   cancelButtonText: 'Cancelar',
                   confirmButtonText: row.original.status ? 'Desactivar' : 'Activar',
@@ -174,6 +190,38 @@ const ChartsTable = () => {
             >
               {row.original.status ? 'Desactivar' : 'Activar'}
             </Button>
+            {/* {!!row.original.status && !EXCLUDED_DASHBOARD_TYPES.includes(row.original.type) && (
+              <Button
+                variant="outlined"
+                color="secondary"
+                size="small"
+                onClick={() => setAssignDialog({ open: true, chartId: row.original.id })}
+              >
+                Asignar
+              </Button>
+            )} */}
+            {!!row.original.status && !EXCLUDED_DASHBOARD_TYPES.includes(row.original.type) && (
+              <>
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  size="small"
+                  onClick={() => setAssignDialog({ open: true, chartId: row.original.id })}
+                >
+                  Usuarios
+                </Button>
+              </>
+            )}
+            {!!row.original.status && (
+              <Button
+                variant="outlined"
+                color="info"
+                size="small"
+                onClick={() => setProfileDialog({ open: true, chartId: row.original.id })}
+              >
+                Perfiles
+              </Button>
+            )}
           </Box>
         ),
       },
@@ -185,7 +233,7 @@ const ChartsTable = () => {
   }
 
   // FILTROS PARA TABLA
-  const onSubmit = ({ type, status }) => {
+  const onSubmit = ({ type, status, profile }) => {
     let filtered = [...chartsOriginal]
 
     if (type) {
@@ -197,16 +245,38 @@ const ChartsTable = () => {
     } else if (status === "0") {
       filtered = filtered.filter((c) => c.status === 0)
     }
+
+    if (profile) {
+      filtered = filtered.filter((c) =>
+        c.ChartProfiles?.some(cp => String(cp.profile_id) === String(profile))
+      )
+    }
+
     setCharts(filtered)
   }
 
   const onResetFilters = () => {
-    reset({ type: '', status: '' })
+    reset({ type: '', status: '', profile: '' })
     setCharts(chartsOriginal)
+  }
+
+
+  const fetchUsers = async () => {
+    const url = backend[import.meta.env.VITE_APP_NAME]
+    const { data } = await request(`${url}/admin/users`, 'GET')
+    setUsers(data)
+  }
+
+  const fetchProfiles = async () => {
+    const url = backend[import.meta.env.VITE_APP_NAME]
+    const { data } = await request(`${url}/listProfiles`, 'GET')
+    setProfiles(data)
   }
 
   useEffect(() => {
     fetchCharts()
+    fetchProfiles()
+    if (isSuperAdmin) fetchUsers()
   }, [])
 
   return (
@@ -274,6 +344,27 @@ const ChartsTable = () => {
                 </FormControl>
               </div>
 
+              {/* PERFIL */}
+              <div className="md:w-1/4 p-1 w-full">
+                <FormControl fullWidth size="small" className="shadow-sm">
+                  <InputLabel id="profile_label">Perfil</InputLabel>
+                  <Controller
+                    name="profile"
+                    control={control}
+                    render={({ field }) => (
+                      <Select {...field} labelId="profile_label" label="Perfil">
+                        <MenuItem value="">Todos</MenuItem>
+                        {profiles.map((p) => (
+                          <MenuItem key={p.id} value={p.id}>
+                            {p.description}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    )}
+                  />
+                </FormControl>
+              </div>
+
               {/* BOTONES */}
               <div className="p-1 w-full justify-center flex gap-2">
                 <Button
@@ -303,6 +394,18 @@ const ChartsTable = () => {
             pagination={true}
             pageSize={10}
             topToolbar={true}
+          />
+
+          <AssignChartDialog
+            open={assignDialog.open}
+            chartId={assignDialog.chartId}
+            users={users}
+            onClose={() => setAssignDialog({ open: false, chartId: null })}
+          />
+          <AssignProfileDialog
+            open={profileDialog.open}
+            chartId={profileDialog.chartId}
+            onClose={() => setProfileDialog({ open: false, chartId: null })}
           />
         </>
       ) : (

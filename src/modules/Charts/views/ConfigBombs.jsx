@@ -201,7 +201,7 @@ export default function PumpControl({
                     ))}
 
                     <div
-                        className={`grid gap-2 ${
+                        className={`grid gap-1 ${
                             pumps.length === 1
                                 ? 'grid-cols-1 justify-items-center'
                                 : pumps.length === 2
@@ -213,7 +213,7 @@ export default function PumpControl({
                             return (
                                 <Card
                                     key={pump.id}
-                                    className="!relative !bg-gray-100 border-2 border-gray-200 w-full max-w-sm max-h-36"
+                                    className="!relative !bg-gray-100 border-2 border-gray-200 w-full max-w-sm"
                                 >
                                     {edit && (
                                         <Button
@@ -232,7 +232,7 @@ export default function PumpControl({
                                         <h4 className="text-md text-center font-small">
                                             {pump.name}
                                         </h4>
-                                        <p className="text-xl text-center font-bold text-blue-600 pt-2">
+                                        <p className="text-lg text-center font-bold text-blue-600">
                                             {pump.value
                                                 ? pump.value + ' ' + pump.unit
                                                 : '-'}
