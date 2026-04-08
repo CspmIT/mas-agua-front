@@ -121,12 +121,12 @@ const GaugeSpeed = ({
               : `{value|Sin datos}\n{sub|${description}}`,
           rich: {
             value: {
-              fontSize: 24,
+              fontSize: 22,
               fontWeight: 'bold',
               color: '#111827',
             },
             sub: {
-              fontSize: 22,
+              fontSize: 18,
               color: '#4b5563',
             },
           },
