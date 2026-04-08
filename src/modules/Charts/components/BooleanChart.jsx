@@ -20,7 +20,7 @@ const BooleanChart = ({
       {
         type: 'scatter',
         symbol: 'circle',
-        symbolSize: 110,
+        symbolSize: 65,
         data: [[0.5, 0.55]],
         itemStyle: {
           color: !hasValue
@@ -67,7 +67,7 @@ const BooleanChart = ({
       {
         type: 'scatter',
         symbol: 'circle',
-        symbolSize: 130,
+        symbolSize: 80,
         data: [[0.5, 0.55]],
         itemStyle: {
           color: 'transparent',
@@ -94,7 +94,7 @@ const BooleanChart = ({
               x: api.getWidth() / 2,
               y: api.getHeight() * 0.82,
               textAlign: 'center',
-              fontSize: 20,
+              fontSize: 18,
               fontWeight: 600,
               fill: !hasValue
                 ? '#6b7280'
