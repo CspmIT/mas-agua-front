@@ -21,9 +21,9 @@ const BottomItem = ({ item }) => {
 
     return (
         <Typography variant="subtitle1" className="text-center leading-tight">
-            {label && <span className="font-medium">{label} </span>}
-            <span className="font-bold text-lg">
-                {value} <span className="text-sm font-md">{unit}</span>
+            {label && <span className="text-sm">{label} </span>}
+            <span className="font-bold text-md">
+                {value} <span className="text-sm font-sm">{unit}</span>
             </span>
         </Typography>
     )
