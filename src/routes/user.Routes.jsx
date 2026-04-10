@@ -27,6 +27,7 @@ import ConfigAlarms from '../modules/ConfigAlarms/views/index'
 import ExternalUser from '../modules/ExternalUsers/views/index'
 import PumpsTable from '../modules/PumpsTable/views/index'
 import Boards from '../modules/Boards/views'
+import AdminDashboardPage from '../modules/home/components/AdminDashboardPage'
 
 export const userRoutes = [
 	{ path: '/', element: <Home /> },
@@ -68,4 +69,5 @@ export const userRoutes = [
 	{ path: '/external', element: <ExternalUser /> },
 	{ path: '/list/pumps', element: <PumpsTable /> },
 	{ path: '/boards', element: <Boards /> },
+	{ path: '/config/dashboard', element: <AdminDashboardPage />},
 ]
