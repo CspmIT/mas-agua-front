@@ -16,7 +16,7 @@ function ViewDiagram() {
   const stageRef = useRef();
   const [dashOffset, setDashOffset] = useState(0);
   const [elements, setElements] = useState([]);
-  const elementsRef = useRef(elements); 
+  const elementsRef = useRef(elements);
   const [diagramMetadata, setDiagramMetadata] = useState({ id: null, title: '', backgroundColor: '#ffffff', backgroundImg: '' });
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -54,14 +54,14 @@ function ViewDiagram() {
 
   useEffect(() => {
     if (!containerRef.current) return;
-  
+
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
         setDimensions({ width, height });
       }
     });
-  
+
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, [isLoading]);
@@ -91,7 +91,7 @@ function ViewDiagram() {
 
     const interval = setInterval(updateInflux, 15000);
     return () => clearInterval(interval);
-  }, []); 
+  }, []);
 
   // funciones de zoom
   const zoomIn = useCallback(() => {
@@ -137,6 +137,10 @@ function ViewDiagram() {
       const selectedBitId = el.dataInflux.id_bit;
       const bitData = rawValue.find(b => b.id_bit === selectedBitId);
       text = bitData ? bitData.bit : (el.dataInflux.name || 'Bit desconocido');
+    }
+    // ── NUEVO: calc_binary_compressed → muestra el label del resultado ──
+    else if (el.dataInflux.calc_binary_compressed && rawValue?.label) {
+      text = rawValue.label;
     } else if (maxValue && !isNaN(maxValue) && Number(maxValue) !== 0 && rawValue != null && !isNaN(rawValue)) {
       const percentage = ((Number(rawValue) * 100) / Number(maxValue)).toFixed(1);
       text = `${percentage}%`;
@@ -155,7 +159,7 @@ function ViewDiagram() {
       const fontSize = el.width * 0.18;
       const unitSize = el.width * 0.16;
       const padding = el.width * 0.02;
-      
+
       const [value = text, unit = ''] = text.split(' ');
 
       return (
@@ -234,7 +238,7 @@ function ViewDiagram() {
         </Group>
       );
     }
-    
+
     return (
       <Label x={labelX} y={labelY} key={`tooltip-${el.id}`}>
         <Tag fill='#ffff' pointerDirection={pointerDir} pointerWidth={10} pointerHeight={10} lineJoin="round" cornerRadius={5} shadowColor="#94a3b8" shadowBlur={7} />
@@ -266,7 +270,7 @@ function ViewDiagram() {
       y: offsetY - minY * newScale,
     });
   }, [dimensions]);
-  
+
   const renderElementsAndTooltips = () => {
     return elements.map((el) => {
       const elementRender = (() => {
@@ -307,14 +311,14 @@ function ViewDiagram() {
       );
     });
   };
-  
+
   useEffect(() => {
     if (elements.length && dimensions.width > 0) {
       autoFitDiagram(elements);
     }
   }, [dimensions, autoFitDiagram]);
-  
-  
+
+
   return (
     <>
       {isLoading ? (
