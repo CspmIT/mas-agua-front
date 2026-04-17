@@ -12,19 +12,29 @@ const RenderImage = ({ el }) => {
     const val = el.dataInflux?.value;
     const unit = el.dataInflux?.unit;
     const userColors = el.dataInflux?.boolean_colors;
-  
+
     if (unit === 'text' && typeof val === 'string' && val.toLowerCase().includes('bomba')) {
 
       const normalized = val.trim().toLowerCase();
-    
+
       if (normalized.includes('apagada')) return config.optionsImage.default;
       if (normalized.includes('encendida')) return config.optionsImage.success;
-    
+
       return config.optionsImage.error;
     }
 
+    if (el.dataInflux?.calc_binary_compressed && val && typeof val === 'object') {
+      const imageKey = val.image;
+
+      if (imageKey && config.optionsImage?.[imageKey]) {
+        return config.optionsImage[imageKey];
+      }
+
+      return config.optionsImage?.default || el.src;
+    }
+
     if (el.dataInflux?.binary_compressed && Array.isArray(val)) {
-      
+
       const selectedBitId = el.dataInflux.id_bit;
       const bitData = val.find(b => b.id_bit === selectedBitId);
 
@@ -45,12 +55,12 @@ const RenderImage = ({ el }) => {
         ? config.optionsImage.success
         : config.optionsImage.default;
     }
-    
+
     // Si es una imagen booleana
     if (config.animation === 'boolean' && config.optionsImage) {
       const isTrue = val === 1 || val === true;
       const isFalse = val === 0 || val === false;
-  
+
       if (userColors) {
         // Elegimos la key de imagen en base a lo que configuró el usuario
         if (isTrue && userColors.true) {
@@ -60,13 +70,13 @@ const RenderImage = ({ el }) => {
           return config.optionsImage[userColors.false];
         }
       }
-  
+
       // Si no hay personalización → usamos la lógica por defecto
       if (isTrue) return config.optionsImage.success;
       if (isFalse) return config.optionsImage.error;
       return config.optionsImage.default;
 
-    }    
+    }
 
     if (config.srcView) return config.srcView;
     return el.src;
@@ -106,9 +116,9 @@ const RenderImage = ({ el }) => {
           strokeEnabled={false}
         />
       )}
-      <KonvaImage 
-        image={image} 
-        width={el.width} 
+      <KonvaImage
+        image={image}
+        width={el.width}
         height={el.height}
       />
     </Group>
@@ -125,22 +135,22 @@ function generateWavePoints(el, config, offset) {
 
   let percent;
   if (!isNaN(maxValue) && maxValue !== 0 && !isNaN(rawValue)) {
-      percent = Math.max(0, Math.min((rawValue * 100) / maxValue, 100));
+    percent = Math.max(0, Math.min((rawValue * 100) / maxValue, 100));
   } else if (!isNaN(rawValue)) {
-      percent = Math.max(0, Math.min(rawValue, 100));
+    percent = Math.max(0, Math.min(rawValue, 100));
   } else {
-      return [];
+    return [];
   }
-  
+
   const height = el.height;
   const width = el.width;
 
   // Alto y ancho de la ola
-  const waveHeight = height * 0.015; 
-  const waveWidth = width * 0.1; 
+  const waveHeight = height * 0.015;
+  const waveWidth = width * 0.1;
 
-  const minTop = height * (configAnimation.margenTopMin ?? 0); 
-  let maxTop = height * (configAnimation.margenTopMax ?? 1); 
+  const minTop = height * (configAnimation.margenTopMin ?? 0);
+  let maxTop = height * (configAnimation.margenTopMax ?? 1);
 
   if (configAnimation.offsetBottom) {
     maxTop -= height * configAnimation.offsetBottom;
@@ -149,10 +159,10 @@ function generateWavePoints(el, config, offset) {
   // Calcular la posición del borde superior basado en el porcentaje
   let topOffset = ((maxTop - minTop) * (1 - percent / 100)) + minTop;
 
-  const leftOffset = width * configAnimation.margenLeft; 
-  const widthTop = width * (configAnimation.widthTop / 100); 
-  const widthBottom = width * (configAnimation.widthBottom / 100); 
-  const initDraw = ((width - widthBottom) / 2) + leftOffset; 
+  const leftOffset = width * configAnimation.margenLeft;
+  const widthTop = width * (configAnimation.widthTop / 100);
+  const widthBottom = width * (configAnimation.widthBottom / 100);
+  const initDraw = ((width - widthBottom) / 2) + leftOffset;
 
   const points = [];
 
@@ -163,8 +173,8 @@ function generateWavePoints(el, config, offset) {
   }
 
   // Borde inferior fijo (alineado con la base de la imagen)
-  points.push(leftOffset + widthBottom, maxTop); 
-  points.push(leftOffset, maxTop); 
+  points.push(leftOffset + widthBottom, maxTop);
+  points.push(leftOffset, maxTop);
 
   return points;
 }

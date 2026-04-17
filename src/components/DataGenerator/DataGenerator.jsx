@@ -9,12 +9,13 @@ import { request } from '../../utils/js/request'
 import { backend } from '../../utils/routes/app.routes'
 import LoaderComponent from '../Loader'
 import { Close } from '@mui/icons-material'
+import BitCalcVarModal from './BitCalcVarModal'
 
 const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 	const [requireCalc, setRequireCalc] = useState(false)
 	const [binaryCompressed, setBinaryCompressed] = useState(data?.binary_compressed || false);
 	const [bits, setBits] = useState(data?.binary_compressed ? data.bits ?? [] : []);
-
+	const [isBitCalcVar, setIsBitCalcVar] = useState(false);
 	const [display, setDisplay] = useState([])
 	const {
 		register,
@@ -27,6 +28,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 		setRequireCalc(prev => !prev);
 		setBinaryCompressed(false);
 		setBits([]);
+		setIsBitCalcVar(false);
 		dispatch({ type: "SET_EQUATION", payload: [] });
 		dispatch({ type: "SET_CALC_VAR", payload: [] });
 	};
@@ -34,6 +36,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 
 	const handleBinaryCompressed = () => {
 		setBinaryCompressed(prev => !prev);
+		setIsBitCalcVar(false);
 		// Limpiamos fórmula si estaba prendida
 		if (requireCalc) {
 			setRequireCalc(false);
@@ -43,6 +46,19 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 		}
 	};
 
+	const handleBitCalcVar = () => {
+		setIsBitCalcVar(prev => !prev);
+		// Limpiar los otros modos
+		if (requireCalc) {
+			setRequireCalc(false);
+			dispatch({ type: "SET_EQUATION", payload: [] });
+			dispatch({ type: "SET_CALC_VAR", payload: [] });
+		}
+		if (binaryCompressed) {
+			setBinaryCompressed(false);
+			setBits([]);
+		}
+	};
 
 	useEffect(() => {
 		if (requireCalc) {
@@ -117,7 +133,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 				varsInflux: dataConsult,
 				process: data.process,
 				equation: state?.equation || null,
-				binary_compressed: binaryCompressed,
+				binary_compressed: binaryCompressed || isBitCalcVar,
 				bits: binaryCompressed ? bits.map(b => ({ id: b.id, name: b.name, bit: b.bit })) : [],
 			}
 
@@ -253,6 +269,11 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 					control={<Switch checked={binaryCompressed} />}
 					label='¿Variable binaria comprimida?'
 					onChange={handleBinaryCompressed}
+				/>
+				<FormControlLabel
+					control={<Switch checked={isBitCalcVar} />}
+					label='¿Calculo de bits comprimidos?'
+					onChange={handleBitCalcVar}
 				/>
 			</div>
 			{!requireCalc ? (
@@ -439,6 +460,21 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 				</Paper>
 			)}
 
+			<div
+				className={`flex flex-col gap-4 items-center justify-center transition-all duration-500 ease-in-out overflow-hidden ${isBitCalcVar ? 'max-h-[90vh] opacity-100' : 'max-h-0 opacity-0'
+					}`}
+			>
+				{isBitCalcVar && (
+					<BitCalcVarModal
+						open={isBitCalcVar}
+						onClose={() => setIsBitCalcVar(false)}
+						onSaved={() => {
+							if (onSaved) onSaved();
+							if (handleClose) handleClose();
+						}}
+					/>
+				)}
+			</div>
 
 			<div
 				className={`flex flex-col gap-4 items-center justify-center transition-all duration-500 ease-in-out overflow-hidden ${requireCalc ? 'max-h-[90vh] opacity-100' : 'max-h-0 opacity-0'
