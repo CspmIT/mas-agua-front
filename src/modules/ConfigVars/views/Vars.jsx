@@ -9,10 +9,12 @@ import Swal from 'sweetalert2'
 import CardCustom from '../../../components/CardCustom'
 import { Controller, useForm } from 'react-hook-form'
 import LoaderComponent from '../../../components/Loader'
+import BitCalcVarModal from '../../../components/DataGenerator/BitCalcVarModal'
 
 const Vars = () => {
     const [loading, setLoading] = useState(true)
     const [modal, setModal] = useState(false)
+    const [modalBitCalc, setModalBitCalc] = useState(false);
     const [detailVar, setDetailVar] = useState(null)
     const [vars, setVars] = useState([])
     const [varsOriginal, setVarsOriginal] = useState([]);
@@ -76,8 +78,13 @@ const Vars = () => {
                             color="primary"
                             variant="contained"
                             onClick={() => {
-                                setDetailVar(row.original)
-                                setModal(true)
+                                if (row.original.calc_binary_compressed) {
+                                    setDetailVar(row.original);
+                                    setModalBitCalc(true);
+                                } else {
+                                    setDetailVar(row.original);
+                                    setModal(true);
+                                }
                             }}
                         >
                             Editar
@@ -260,6 +267,17 @@ const Vars = () => {
                 openModal={modal}
                 setOpenModal={setModal}
                 data={detailVar}
+                onSaved={() => getVars()}
+            />
+            <BitCalcVarModal
+                open={modalBitCalc}
+                onClose={() => setModalBitCalc(false)}
+                data={detailVar?.bitCalcVar ? {
+                    ...detailVar.bitCalcVar,
+                    name: detailVar.name,
+                    unit: detailVar.unit,
+                    process: detailVar.process,
+                } : null}
                 onSaved={() => getVars()}
             />
         </Container>
