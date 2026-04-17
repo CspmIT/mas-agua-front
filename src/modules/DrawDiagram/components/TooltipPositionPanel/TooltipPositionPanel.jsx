@@ -22,6 +22,7 @@ const TooltipPositionPanel = ({
   const unit = selectedElement.dataInflux.unit?.toLowerCase() || '';
   const isBooleanUnit = ['booleano', 'binario', 'bool'].includes(unit);
   const isBinaryCompressed = selectedElement.dataInflux.binary_compressed || false;
+  const isCalc_binary = selectedElement.dataInflux.calc_binary_compressed || false;
 
   const [booleanColors, setBooleanColors] = useState(
     selectedElement.dataInflux.boolean_colors || { false: '-', true: '-' }
@@ -54,7 +55,7 @@ const TooltipPositionPanel = ({
   );
   const handleBinaryBitSelect = (e) => {
     const id_bit = Number(e.target.value);
-    
+
     const selectedBit = binaryBits.find(b => Number(b.id) === id_bit);
     if (!selectedBit) return;
 
@@ -142,14 +143,16 @@ const TooltipPositionPanel = ({
       </div>
 
       {/* Check Calcular valor */}
-      <label className="flex items-center space-x-2 mt-4">
-        <input
-          type="checkbox"
-          checked={calculatePercentage}
-          onChange={handleCalculatePercentageToggle}
-        />
-        <span className="text-sm">Calcular valor de la variable</span>
-      </label>
+      {!isBinaryCompressed && !isCalc_binary && (
+        <label className="flex items-center space-x-2 mt-4">
+          <input
+            type="checkbox"
+            checked={calculatePercentage}
+            onChange={handleCalculatePercentageToggle}
+          />
+          <span className="text-sm">Calcular valor de la variable</span>
+        </label>
+      )}
 
       {/* Valor máximo habilitable */}
       {calculatePercentage && (
@@ -167,7 +170,7 @@ const TooltipPositionPanel = ({
         </div>
       )}
 
-      {isBinaryCompressed && (
+      {isBinaryCompressed && !isCalc_binary && (
         <div className="mt-4 border-t pt-3">
           <h5 className="text-sm font-semibold mb-2">Asignación de Bits</h5>
 

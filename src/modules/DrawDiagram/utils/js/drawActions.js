@@ -148,6 +148,8 @@ export const uploadCanvaDb = async (id, {
 					binary_compressed: variable.variable.binary_compressed,
 					id_bit: variable.id_bit,
 					bit_name: variable.bit?.name || null,
+					calc_binary_compressed: variable.variable.calc_binary_compressed,
+					
 				};
 
 				influxVarsToRequest.push({ dataInflux: dataInflux });
