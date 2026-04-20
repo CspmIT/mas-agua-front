@@ -130,6 +130,7 @@ export const ListImg = () => [
             error: `${urlBaseView}/Presostato_rojo.png`,
             success: `${urlBaseView}/Presostato_verde.png`,
             default: `${urlBaseView}/Presostato_gris.png`,
+            warning: `${urlBaseView}/Presostato_amarillo.png`,
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
@@ -170,6 +171,8 @@ export const ListImg = () => [
                 '/assets/img/Diagram/diagramAction/Valvula__OK.png',
             default:
                 '/assets/img/Diagram/diagramAction/Valvula_OFF.png',
+            warning:
+                '/assets/img/Diagram/diagramAction/Valvula__OFFLINE.png',
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
@@ -187,6 +190,8 @@ export const ListImg = () => [
                 '/assets/img/Diagram/diagramAction/Bomba presurizadora (verde).png',
             default:
                 '/assets/img/Diagram/diagramAction/Bomba presurizadora (gris).png',
+            warning:
+                '/assets/img/Diagram/diagramAction/Bomba presurizadora (amarilla).png',
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
@@ -204,6 +209,8 @@ export const ListImg = () => [
                 '/assets/img/Diagram/diagramAction/Bomba sumergible verde.png',
             default:
                 '/assets/img/Diagram/diagramAction/Bomba sumergible gris.png',
+            warning:
+                '/assets/img/Diagram/diagramAction/Bomba sumergible (amarilla).png',
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
@@ -276,6 +283,8 @@ export const ListImg = () => [
                 '/assets/img/Diagram/diagramAction/bomba_centrifuga_on.png',
             default:
                 '/assets/img/Diagram/diagramAction/bomba_centrifuga_off.png',
+            warning:
+                '/assets/img/Diagram/diagramAction/bomba_centrifuga_offline.png',
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
@@ -293,6 +302,8 @@ export const ListImg = () => [
                 '/assets/img/Diagram/diagramAction/led_ON.png',
             default:
                 '/assets/img/Diagram/diagramAction/led_OFF.png',
+            warning:
+                '/assets/img/Diagram/diagramAction/led_OFFLINE.png',
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
@@ -310,6 +321,8 @@ export const ListImg = () => [
                 '/assets/img/Diagram/diagramAction/Relé térmico_ON.png',
             default:
                 '/assets/img/Diagram/diagramAction/Relé térmico_OFF.png',
+            warning:
+                '/assets/img/Diagram/diagramAction/Relé térmico_OFFLINE.png',
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
@@ -367,6 +380,8 @@ export const ListImg = () => [
                 '/assets/img/Diagram/diagramAction/bomba_sumergible_OK.png',
             default:
                 '/assets/img/Diagram/diagramAction/bomba_sumergible_default.png',
+            warning:
+                '/assets/img/Diagram/diagramAction/bomba_sumergible_OFFLINE.png',
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
@@ -384,6 +399,8 @@ export const ListImg = () => [
                 '/assets/img/Diagram/diagramAction/grupo_generador_ON.png',
             default:
                 '/assets/img/Diagram/diagramAction/grupo_generador_default.png',
+            warning:
+                '/assets/img/Diagram/diagramAction/grupo_generador_OFFLINE.png',
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
@@ -401,6 +418,8 @@ export const ListImg = () => [
                 '/assets/img/Diagram/diagramAction/Grupo generador (no cabinado) ON.png',
             default:
                 '/assets/img/Diagram/diagramAction/Grupo generador (no cabinado) OFF.png',
+            warning:
+                '/assets/img/Diagram/diagramAction/Grupo generador (no cabinado) OFFLINE.png',
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
@@ -418,6 +437,8 @@ export const ListImg = () => [
                 '/assets/img/Diagram/diagramAction/Contactor_ON.png',
             default:
                 '/assets/img/Diagram/diagramAction/Contactor_OFF.png',
+            warning:
+                '/assets/img/Diagram/diagramAction/Contactor_OFFLINE.png',
         },
         variables: {
             variable1: { id_variable: 0, show: false, require: false },
