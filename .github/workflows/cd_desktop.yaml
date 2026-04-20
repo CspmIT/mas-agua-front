@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'feat: calculo entre variables binarias comprimidas'
+                  releaseBody: 'feat: nueva opcion de imagen amarilla para advertencia'
                   prerelease: false
