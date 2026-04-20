@@ -242,7 +242,6 @@ export const saveDiagramKonva = async ({
 		elements.forEach((el) => {
 			switch (el.type) {
 				case 'image':
-					console.log(el);
 					saveObjects.images.push({
 						...(el.id ? { id: getNumericId(el.id) } : {}),
 						name: el.name || '',

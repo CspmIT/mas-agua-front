@@ -209,6 +209,7 @@ const TooltipPositionPanel = ({
                 <option value="default">Apagado (gris)</option>
                 <option value="success">Encendido (verde)</option>
                 <option value="error">En falla (rojo)</option>
+                <option value="warning">Advertencia (amarillo)</option>
               </select>
             </div>
 
@@ -227,6 +228,7 @@ const TooltipPositionPanel = ({
                 <option value="default">Apagado (gris)</option>
                 <option value="success">Encendido (verde)</option>
                 <option value="error">En falla (rojo)</option>
+                <option value="warning">Advertencia (amarillo)</option>
               </select>
             </div>
           </div>
