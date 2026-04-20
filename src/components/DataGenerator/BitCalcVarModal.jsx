@@ -13,6 +13,7 @@ const IMAGE_OPTIONS = [
   { value: 'default', label: 'Apagado (gris)' },
   { value: 'success', label: 'Encendido (verde)' },
   { value: 'error', label: 'En falla (rojo)' },
+  { value: 'warning', label: 'Advertencia (amarillo)' },
 ];
 
 export default function BitCalcVarModal({ open, onClose, data = null, onSaved }) {

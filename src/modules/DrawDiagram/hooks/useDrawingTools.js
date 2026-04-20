@@ -53,7 +53,6 @@ export const useDrawingTools = ({
     }
 
     const selectedElement = elements.find((el) => String(el.id) === String(id));
-    console.log(selectedElement);
 
     if (selectedElement?.type === 'polyline') {
       setTool('polyline');
