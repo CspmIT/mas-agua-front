@@ -135,6 +135,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 				equation: state?.equation || null,
 				binary_compressed: binaryCompressed || isBitCalcVar,
 				bits: binaryCompressed ? bits.map(b => ({ id: b.id, name: b.name, bit: b.bit })) : [],
+				decimales: Number.isInteger(Number(data.decimales)) ? Number(data.decimales) : 1,
 			}
 
 			await request(`${backend[import.meta.env.VITE_APP_NAME]}/saveVariable`, 'POST', dataReturn)
@@ -165,6 +166,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 		setValue('unit', data?.unit)
 		setValue('process', data?.process)
 		setValue('type_var', data?.type)
+		setValue('decimales', data?.decimales ?? 1)
 		if (data?.calc) {
 			setDisplay(data?.equation)
 			handleRquiredCalc()
@@ -240,6 +242,23 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 					})}
 					error={!!errors.unit}
 					helperText={errors.unit && errors.unit.message}
+					size="small"
+				/>
+				<TextField
+					type='number'
+					className='w-1/12'
+					label='Decimales'
+					defaultValue={data?.decimales ?? 1}
+					inputProps={{ min: 0, max: 6, step: 1 }}
+					{...register('decimales', {
+						required: 'Este campo es requerido',
+						valueAsNumber: true,
+						min: { value: 0, message: 'Mínimo 0' },
+						max: { value: 6, message: 'Máximo 6' },
+						validate: (v) => Number.isInteger(Number(v)) || 'Debe ser un entero',
+					})}
+					error={!!errors.decimales}
+					helperText={errors.decimales && errors.decimales.message}
 					size="small"
 				/>
 				<TextField

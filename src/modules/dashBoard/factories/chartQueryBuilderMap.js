@@ -141,7 +141,7 @@ export const chartQueryBuilderMap = {
           const value = map.get(t)
           if (typeof value === 'boolean') return value ? 1 : 0
           if (value !== null && value !== undefined && !isNaN(value)) {
-              return Number(parseFloat(value).toFixed(3))
+              return Number(parseFloat(value))
           }
           return null
       })

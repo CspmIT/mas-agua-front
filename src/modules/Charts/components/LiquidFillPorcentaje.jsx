@@ -157,7 +157,7 @@ const LiquidFillPorcentaje = ({
                 return `${(params.value * 100).toFixed(1)} %`
               }
 
-              return `${safeValue.toFixed(2)} ${unidad}${other ? `\n${other}` : ''}`
+              return `${safeValue} ${unidad}${other ? `\n${other}` : ''}`
             },
 
             fontSize: cfg.fontSize,
@@ -324,14 +324,14 @@ const LiquidFillPorcentaje = ({
             const lineMain = hasMainValue
               ? porcentage
                 ? `${(percentage * 100).toFixed(1)} %`
-                : `${main.toFixed(2)} ${unidad}`
+                : `${main} ${unidad}`
               : 'Sin datos'
 
             let result = `{main|${lineMain}}`
 
             if (hasSecondaryInflux) {
               const lineSec = hasSecondaryValue
-                ? `${Number(rawSecondary).toFixed(2)} ${secondaryObj.unit ?? ''}`
+                ? `${Number(rawSecondary)} ${secondaryObj.unit ?? ''}`
                 : 'Sin datos'
 
               result += `\n{sec|${lineSec}}`

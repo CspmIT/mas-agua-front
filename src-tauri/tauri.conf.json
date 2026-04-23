@@ -1,6 +1,6 @@
 {
 	"productName": "Mas Agua",
-	"version": "1.0.21",
+	"version": "1.0.22",
 	"identifier": "com.masagua.desktop",
 	"build": {
 		"beforeDevCommand": "npm run dev",
