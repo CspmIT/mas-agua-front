@@ -27,14 +27,20 @@ const csvConfig = mkConfig({
 	useKeysAsHeaders: true,
 })
 
+const toolbarIconSx = (baseColor, hoverBg, darkHoverBg) => ({
+	color: baseColor,
+	borderRadius: '10px',
+	transition: 'background-color 0.15s ease, transform 0.15s ease',
+	'&:hover': {
+		backgroundColor: hoverBg,
+		transform: 'translateY(-1px)',
+	},
+	'body.dark &:hover': {
+		backgroundColor: darkHoverBg,
+	},
+})
+
 const TableCustom = ({ data, columns, ...prop }) => {
-	// // exportar en excel por linea
-	// const handleExportRows = (rows) => {
-	// 	const rowData = rows.map((row) => row.original)
-	// 	const csv = generateCsv(csvConfig)(rowData)
-	// 	download(csvConfig)(csv)
-	// }
-	// exportar en excel toda la info
 	const handleExportData = () => {
 		const getFlattenedHeadersAndKeys = (cols) => {
 			const flattened = []
@@ -73,7 +79,6 @@ const TableCustom = ({ data, columns, ...prop }) => {
 		download(csvConfig)(csv)
 	}
 
-	// Exportado de pdf
 	const handleExportRowsPdf = (rows) => {
 		const doc = new jsPDF()
 		const tableData = rows
@@ -104,7 +109,6 @@ const TableCustom = ({ data, columns, ...prop }) => {
 			}
 			return acc
 		}, {}) || {}
-	// creo una constante con las configuracion inicial para poder modificar con props
 	const tableInitialState = {
 		density: prop.density ? prop.density : window.innerWidth < 750 ? 'compact' : 'comfortable',
 		expanded: true,
@@ -114,15 +118,12 @@ const TableCustom = ({ data, columns, ...prop }) => {
 		sorting: [],
 		grouping: [],
 	}
-	// activacion de paginacion
 	if (prop.pagination) {
 		tableInitialState.pagination = { pageIndex: 0, pageSize: prop.pageSize || 5 }
 	}
-	// controlo si llega un agrupacion por columna
 	if (prop.groupBy) {
 		tableInitialState.grouping.push(prop.groupBy)
 	}
-	// controlo si llega un orden por columna
 	if (prop.orderBy) {
 		tableInitialState.sorting.push({ id: prop.orderBy, desc: false })
 	}
@@ -134,7 +135,6 @@ const TableCustom = ({ data, columns, ...prop }) => {
 	const localization = {
 		hideAll: 'Ocultar todo',
 		showAll: 'Mostrar todo',
-		// Puedes personalizar otros textos aquí si es necesario
 	}
 
 	const table = useMaterialReactTable({
@@ -167,205 +167,261 @@ const TableCustom = ({ data, columns, ...prop }) => {
 				},
 			},
 		},
-		muiTableContainerProps: { sx: { maxHeight: prop.pagination ? 'auto' : 50000 } },
-		// HABILITACION DE ROWS
+		muiTableContainerProps: {
+			sx: {
+				maxHeight: prop.pagination ? 'auto' : 50000,
+				backgroundColor: 'transparent',
+				'body.dark &': { backgroundColor: 'transparent' },
+			},
+		},
 		enableBatchRowSelection: prop.checkbox ?? false,
 		enableMultiRowSelection: prop.checkbox ?? false,
 		enableRowSelection: prop.checkbox ?? false,
 		enableSelectAll: prop.checkbox ?? false,
 		enableSubRowSelection: prop.checkbox ?? false,
-		// HABILITACION DE COLUMNA
 		enableFullScreenToggle: prop.fullScreen || false,
-		// si esta true te deja copiar el campo de la tabla
 		enableClickToCopy: prop.copy,
-		// habilita los 3 puntos para acciones por columna
 		enableColumnActions: false,
-		// habilita hacer drag and drop aunque faltan otras opciones para que funcione al 100%
 		enableColumnDragging: false,
-		// habilita el poder filtrar por todas las columnas
 		enableColumnFilters: prop.filter || false,
-		// activa un boton que te genera un modal para editar el campo en la tabla, pero hay que combinarlo con otra funcion para el guardado, actualizacion, etc.
 		enableEditing: false,
-		// permite agrupar por columnas
 		enableGrouping: prop.grouping,
-		// junto con el de los 3 puntos de accion te permite ocultar columnas, o activando el toopbar
 		enableHiding: prop.hide,
-		// habilita el ordenamiento de columnas osea ordenar los datos por alguna columna en especifico
 		enableSorting: prop.sort,
 
-		// svg para cuando la tabla esta vacia
 		renderEmptyRowsFallback: () => {
 			return <NoRegisterTable />
 		},
 
-		// clases para el header de la tabla (muiTableHeadRowProps, muiTableHeadCellProps, muiTableHeadProps)
 		muiTableHeadRowProps: {
 			sx: {
-				backgroundColor: 'white',
+				backgroundColor: '#2c6aa0',
 				boxShadow: 'none',
-				border: 'none',
+				borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+				'body.dark &': {
+					backgroundColor: '#1f4e79',
+					borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+				},
 			},
 		},
 
-		muiTableHeadCellProps: (cell) => {
-			return {
-				sx: {
-					backgroundColor: 'white',
-					...prop.header,
+		muiTableHeadCellProps: () => ({
+			sx: {
+				backgroundColor: 'transparent',
+				color: '#ffffff',
+				fontSize: '0.72rem',
+				fontWeight: 700,
+				letterSpacing: '0.06em',
+				textTransform: 'uppercase',
+				borderBottom: 'none',
+				'& .Mui-TableHeadCell-Content': { justifyContent: 'flex-start' },
+				'& .MuiButtonBase-root, & .MuiSvgIcon-root, & .MuiTableSortLabel-icon': {
+					color: '#ffffff !important',
 				},
-			}
-		},
+				'body.dark &': { color: '#ffffff' },
+				...prop.header,
+			},
+		}),
 
-		// ------------------------------------
-
-		// clases para la linea de herramientas de arriba ()
 		muiTopToolbarProps: {
 			sx: {
-				backgroundColor: 'white',
+				backgroundColor: '#ffffff',
+				borderBottom: '1px solid rgba(15, 42, 68, 0.06)',
+				'body.dark &': {
+					backgroundColor: 'rgba(17, 24, 39, 0.6)',
+					borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+				},
 			},
 		},
-		// Se creo a mano las herramientas para poder escribir en español las opciones
 		renderTopToolbar: ({ table }) => (
 			<Box
 				sx={{
 					display: 'flex',
 					justifyContent: 'flex-end',
 					alignItems: 'center',
-					backgroundColor: 'white',
+					gap: 0.5,
+					px: 1,
+					py: 0.75,
+					backgroundColor: 'transparent',
+					'& .MuiFormControl-root input': {
+						fontSize: '0.875rem',
+					},
 					...prop.toolbarClass,
 				}}
 			>
 				{prop.btnCustomToolbar && prop.btnCustomToolbar}
 				{prop.exportExcel && (
-					<IconButton
-						onClick={() => handleExportData()}
-						table={table}
-						title='Exportar a excel'
-						sx={{
-							color: 'green',
-						}}
-					>
-						<SiMicrosoftexcel />
-					</IconButton>
+					<Tooltip title='Exportar a Excel'>
+						<IconButton
+							onClick={() => handleExportData()}
+							table={table}
+							sx={toolbarIconSx('#059669', 'rgba(16, 185, 129, 0.12)', 'rgba(16, 185, 129, 0.18)')}
+						>
+							<SiMicrosoftexcel />
+						</IconButton>
+					</Tooltip>
 				)}
 
 				{prop.exportPdf && (
-					<IconButton
-						// si se descomenta este y se comenta el otro onclick se puede hacer que sea por linea la descarga, pero no tengo tiempo para hacerlo ahora
-						// onClick={() => handleExportRows(table.getRowModel().rows)}
-						onClick={() => handleExportRowsPdf(table.getPrePaginationRowModel().rows)}
-						table={table}
-						title='Exportar a PDF'
-						sx={{
-							color: 'red',
-						}}
-					>
-						<FaFilePdf />
-					</IconButton>
+					<Tooltip title='Exportar a PDF'>
+						<IconButton
+							onClick={() => handleExportRowsPdf(table.getPrePaginationRowModel().rows)}
+							table={table}
+							sx={toolbarIconSx('#e11d48', 'rgba(244, 63, 94, 0.12)', 'rgba(244, 63, 94, 0.18)')}
+						>
+							<FaFilePdf />
+						</IconButton>
+					</Tooltip>
 				)}
 				<MRT_GlobalFilterTextField placeholder='Escriba su busqueda' table={table} />
 				{prop.getPage && prop.checkAlert && (
-					<IconButton
-						onClick={() => pags()}
-						table={table}
-						title='Limpiar alertas'
-						sx={{
-							'&:hover': {
-								backgroundColor: '#ecec97',
-							},
-							background: 'yellow',
-							color: 'black',
-						}}
-					>
-						<PiBroomFill />
-					</IconButton>
+					<Tooltip title='Limpiar alertas'>
+						<IconButton
+							onClick={() => pags()}
+							table={table}
+							sx={toolbarIconSx('#b45309', 'rgba(245, 158, 11, 0.15)', 'rgba(245, 158, 11, 0.22)')}
+						>
+							<PiBroomFill />
+						</IconButton>
+					</Tooltip>
 				)}
 				<MRT_ToggleGlobalFilterButton title='Buscar' table={table} />
 				{prop.filter && <MRT_ToggleFiltersButton title='Filtrar' table={table} />}
 
 				{prop.hide && <MRT_ShowHideColumnsButton title='Mostras/Ocultar Columnas' table={table} />}
 				{prop.density && <MRT_ToggleDensePaddingButton title='Densidad' table={table} />}
-
-				{/* descomentar si queremos hacer un fullScreen en la tabla */}
-				{/* <MRT_ToggleFullScreenButton table={table} /> */}
-
-				{/* descomentar si queremos hacer un boton de impresion en la tabla */}
-				{/* <Tooltip title='Print'>
-					<IconButton onClick={() => window.print()}>
-						<Print />
-					</IconButton>
-				</Tooltip> */}
 			</Box>
 		),
-		// ------------------------------------
-
-		// clases para la linea de herramientas de abajo
 
 		muiBottomToolbarProps: {
 			sx: {
 				minHeight: prop.pagination ? '3.5rem' : '2rem',
-				backgroundColor: 'transparent',
-				color: 'black !important',
+				backgroundColor: '#eef2f7',
+				color: '#1f2937 !important',
+				borderTop: '1px solid rgba(15, 42, 68, 0.1)',
+				boxShadow: 'none',
+				'body.dark &': {
+					backgroundColor: 'rgba(30, 41, 59, 0.75)',
+					color: '#e5e7eb !important',
+					borderTop: '1px solid rgba(255, 255, 255, 0.06)',
+				},
+				'& .MuiTablePagination-root, & .MuiTablePagination-toolbar, & .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows, & .MuiTablePagination-select, & .MuiSelect-icon, & .MuiIconButton-root':
+					{
+						color: 'inherit',
+					},
 				...prop.footer,
 			},
 		},
 
-		// ------------------------------------
-
-		// clases para el fondo y bordes de la tabla
-
 		muiTablePaperProps: {
+			elevation: 0,
 			sx: {
-				backgroundColor: 'white',
+				backgroundColor: '#ffffff',
+				borderRadius: '14px',
+				border: '1px solid rgba(15, 42, 68, 0.08)',
+				boxShadow: '0 2px 6px rgba(15, 42, 68, 0.05), 0 12px 32px -12px rgba(15, 42, 68, 0.14)',
+				overflow: 'hidden',
+				transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+				opacity: 0,
+				transform: 'translateY(8px)',
+				animation: 'tableMountIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+				'@keyframes tableMountIn': {
+					'0%': { opacity: 0, transform: 'translateY(8px)' },
+					'100%': { opacity: 1, transform: 'translateY(0)' },
+				},
+				'&:hover': {
+					boxShadow: '0 4px 10px rgba(15, 42, 68, 0.06), 0 18px 40px -14px rgba(15, 42, 68, 0.18)',
+				},
+				'body.dark &': {
+					backgroundColor: 'rgba(17, 24, 39, 0.85)',
+					border: '1px solid rgba(255, 255, 255, 0.06)',
+					boxShadow: '0 2px 6px rgba(0, 0, 0, 0.25), 0 12px 32px -12px rgba(0, 0, 0, 0.5)',
+				},
+				'body.dark &:hover': {
+					boxShadow: '0 4px 10px rgba(0, 0, 0, 0.3), 0 18px 40px -14px rgba(0, 0, 0, 0.55)',
+				},
 				...prop.card,
 			},
 		},
 
-		// ------------------------------------
-
-		// clases para la paginacion
-
 		muiPaginationProps: {
 			showRowsPerPage: true,
-			// El texto de las filas por paginas esta al final en el useEfect
+			shape: 'rounded',
+			sx: {
+				'& .MuiPaginationItem-root': {
+					borderRadius: '8px',
+					fontWeight: 500,
+					color: '#1f2937',
+					'&:hover': { backgroundColor: 'rgba(44, 106, 160, 0.1)' },
+				},
+				'& .MuiPaginationItem-root.Mui-selected': {
+					backgroundColor: '#2c6aa0',
+					color: '#ffffff',
+					fontWeight: 600,
+					'&:hover': { backgroundColor: '#1f4e79' },
+				},
+				'body.dark & .MuiPaginationItem-root': {
+					color: '#e5e7eb',
+					'&:hover': { backgroundColor: 'rgba(94, 165, 240, 0.15)' },
+				},
+				'body.dark & .MuiPaginationItem-root.Mui-selected': {
+					backgroundColor: '#5ea5f0',
+					color: '#0f172a',
+					'&:hover': { backgroundColor: '#3b82f6' },
+				},
+			},
 		},
 		paginationDisplayMode: 'pages',
 
-		// ------------------------------------
-		// clases para el body de la tabla(muiTableBodyCellProps, muiTableBodyProps, muiTableBodyRowProps)
-		muiTableBodyCellProps: ({ row }) => ({
-			sx: {
-				backgroundColor:
-					prop.ChangeColorRow && prop.ChangeColorRow(row)
-						? 'yellow !important'
-						: undefined,
-				color:
-					prop.ChangeColorRow && prop.ChangeColorRow(row)
-						? 'black'
-						: undefined,
-				...prop.bodyContent,
-			},
-		}),
-		
+		muiTableBodyCellProps: ({ row }) => {
+			const isHighlighted = prop.ChangeColorRow && prop.ChangeColorRow(row)
+			return {
+				sx: {
+					borderBottom: '1px solid rgba(15, 42, 68, 0.04)',
+					color: isHighlighted ? '#7c2d12' : '#1f2937',
+					fontSize: '0.875rem',
+					backgroundColor: isHighlighted ? 'rgba(245, 158, 11, 0.14) !important' : undefined,
+					'body.dark &': {
+						borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+						color: isHighlighted ? '#fbbf24' : '#e5e7eb',
+						backgroundColor: isHighlighted ? 'rgba(245, 158, 11, 0.18) !important' : undefined,
+					},
+					...prop.bodyContent,
+				},
+			}
+		},
+
 		muiTableBodyProps: {
 			sx: () => ({
-				'& tr:nth-of-type(odd):not([data-selected="true"]):not([data-pinned="true"]) > td': {
-					backgroundColor: '#f9fafb',
+				'& tr > td': {
+					transition: 'background-color 0.18s ease',
 				},
-				'& tr:nth-of-type(odd):not([data-selected="true"]):not([data-pinned="true"]):hover > td': {
-					backgroundColor: '#e2e8f0',
+				'& tr:nth-of-type(odd):not([data-selected="true"]):not([data-pinned="true"]) > td': {
+					backgroundColor: '#ffffff',
 				},
 				'& tr:nth-of-type(even):not([data-selected="true"]):not([data-pinned="true"]) > td': {
-					backgroundColor: '#f1f5f9',
+					backgroundColor: '#f8fafc',
 				},
-				'& tr:nth-of-type(even):not([data-selected="true"]):not([data-pinned="true"]):hover > td': {
-					backgroundColor: '#e2e8f0',
+				'& tr:not([data-selected="true"]):not([data-pinned="true"]):hover > td': {
+					backgroundColor: 'rgba(54, 139, 237, 0.08) !important',
+				},
+				'& tr:not([data-selected="true"]):not([data-pinned="true"]):hover > td:first-of-type': {
+					boxShadow: 'inset 3px 0 0 #2c6aa0',
+				},
+				'body.dark & tr:nth-of-type(odd):not([data-selected="true"]):not([data-pinned="true"]) > td': {
+					backgroundColor: 'rgba(17, 24, 39, 0.6)',
+				},
+				'body.dark & tr:nth-of-type(even):not([data-selected="true"]):not([data-pinned="true"]) > td': {
+					backgroundColor: 'rgba(31, 41, 55, 0.5)',
+				},
+				'body.dark & tr:not([data-selected="true"]):not([data-pinned="true"]):hover > td': {
+					backgroundColor: 'rgba(94, 165, 240, 0.1) !important',
+				},
+				'body.dark & tr:not([data-selected="true"]):not([data-pinned="true"]):hover > td:first-of-type': {
+					boxShadow: 'inset 3px 0 0 #5ea5f0',
 				},
 			}),
 		},
-		// ------------------------------------
-
-		// funcion para guardar las columnas que se ocultan
 
 		...hideColumn,
 	})

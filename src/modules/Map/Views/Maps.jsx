@@ -1,4 +1,4 @@
-import { Box, Button, Container, Typography } from '@mui/material'
+import { Box, Button, Container } from '@mui/material'
 import { useEffect, useState } from 'react'
 import TableCustom from '../../../components/TableCustom'
 import { backend } from '../../../utils/routes/app.routes'
@@ -6,6 +6,7 @@ import { request } from '../../../utils/js/request'
 import { useNavigate } from 'react-router-dom'
 import LoaderComponent from '../../../components/Loader'
 import { storage } from '../../../storage/storage'
+import PageHeader from '../../../components/PageHeader'
 
 const Maps = () => {
     const [maps, setMaps] = useState([])
@@ -85,25 +86,12 @@ const Maps = () => {
         getMaps()
     }, [])
     return (
-        <Container className='w-full'>
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
-                <Typography className='w-full text-center md:!ms-24' variant="h4" align="center">
-                    Mapas
-                </Typography>
-
-                <div className='flex justify-center sm:justify-end'>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => {
-                            navigate('/map/create')
-                        }}
-                        className="sm:mx-10 whitespace-nowrap"
-                    >
-                        Crear mapa
-                    </Button>
-                </div>
-            </div>
+        <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+            <PageHeader
+                title='Mapas'
+                createLabel='Crear mapa'
+                onCreate={() => navigate('/map/create')}
+            />
 
             {!loader ? (
                 <TableCustom

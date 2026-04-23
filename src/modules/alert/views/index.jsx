@@ -4,11 +4,11 @@ import { backend } from '../../../utils/routes/app.routes'
 import TableCustom from '../../../components/TableCustom'
 import Swal from 'sweetalert2'
 import LoaderComponent from '../../../components/Loader'
-import { Box, Button, FormLabel, IconButton, Tooltip } from '@mui/material'
-import CardCustom from '../../../components/CardCustom'
+import { Container, IconButton, Tooltip } from '@mui/material'
 import { FaEye } from 'react-icons/fa'
 import { MainContext } from '../../../context/MainContext'
 import AlarmRow from '../components/AlarmRow'
+import PageHeader from '../../../components/PageHeader'
 
 const Alert = () => {
     const [listLogs_Alarms, setListLogs_Alarms] = useState([])
@@ -96,63 +96,57 @@ const Alert = () => {
         fetchLogs_Alarms();
     }, [])
 
+    const hasUnread = listLogs_Alarms.some(a => !a.viewed)
+
     return (
-        <div className="w-full">
+        <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
             {loading ? (
                 <LoaderComponent />
             ) : (
-                <CardCustom className="w-full bg-white dark:bg-gray-900 shadow-lg rounded-2xl p-2 sm:p-6 flex flex-col gap-6 transition-all">
-
-                    {/* Header responsivo */}
-                    <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-b border-gray-300 dark:border-gray-700 pb-3">
-                        <FormLabel className='w-full text-center !text-3xl md:ms-24'>
-                            Registro de Alarmas
-                        </FormLabel>
-
-                        {listLogs_Alarms.some(a => !a.viewed) && (
-                            <div className="flex justify-center sm:justify-end px-1 sm:px-2">
+                <>
+                    <PageHeader
+                        title='Registro de alarmas'
+                        action={
+                            hasUnread && (
                                 <Tooltip title='Marcar todas como leídas'>
                                     <IconButton
-                                        size="small"
                                         onClick={markAllAsRead}
                                         sx={{
                                             color: 'white',
-                                            backgroundColor: '#2c6aa0',
-                                            padding: {
-                                                xs: '8px',
-                                                sm: '8px',
+                                            background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+                                            boxShadow: '0 4px 14px rgba(44, 106, 160, 0.35)',
+                                            borderRadius: '999px',
+                                            px: 2.25,
+                                            py: 1,
+                                            gap: 1,
+                                            fontSize: '0.85rem',
+                                            fontWeight: 500,
+                                            transition: 'all 0.2s',
+                                            '&:hover': {
+                                                background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+                                                boxShadow: '0 8px 24px rgba(44, 106, 160, 0.45)',
+                                                transform: 'translateY(-1px)',
                                             },
                                         }}
                                     >
                                         <FaEye />
+                                        <span>Marcar todas</span>
                                     </IconButton>
                                 </Tooltip>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Tabla responsiva */}
-                    <div className="flex-1 overflow-x-auto rounded-lg shadow-md">
-                        <TableCustom
-                            columns={columnsTable}
-                            data={listLogs_Alarms.length ? listLogs_Alarms : []}
-                            pagination={true}
-                            pageSize={10}
-                            header={{
-                                background: 'rgb(190 190 190)',
-                                fontSize: '14px',
-                                fontWeight: 'bold',
-                            }}
-                            toolbarClass={{ background: 'rgb(190 190 190)' }}
-                            body={{ backgroundColor: 'rgba(209, 213, 219, 0.31)' }}
-                            footer={{ background: 'rgb(190 190 190)' }}
-                            ChangeColorRow={ChangeColorRow}
-                            topToolbar
-                        />
-                    </div>
-                </CardCustom>
+                            )
+                        }
+                    />
+                    <TableCustom
+                        columns={columnsTable}
+                        data={listLogs_Alarms.length ? listLogs_Alarms : []}
+                        pagination={true}
+                        pageSize={10}
+                        ChangeColorRow={ChangeColorRow}
+                        topToolbar
+                    />
+                </>
             )}
-        </div>
+        </Container>
     )
 }
 

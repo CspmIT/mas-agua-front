@@ -1,4 +1,4 @@
-import { Box, Button, Container, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material'
+import { Box, Button, Container, FormControl, InputLabel, MenuItem, Select } from '@mui/material'
 import TableCustom from '../../../components/TableCustom'
 import { useEffect, useState } from 'react'
 import { getVarsInflux } from '../../DrawDiagram/components/Fields/actions'
@@ -10,6 +10,7 @@ import CardCustom from '../../../components/CardCustom'
 import { Controller, useForm } from 'react-hook-form'
 import LoaderComponent from '../../../components/Loader'
 import BitCalcVarModal from '../../../components/DataGenerator/BitCalcVarModal'
+import PageHeader from '../../../components/PageHeader'
 
 const Vars = () => {
     const [loading, setLoading] = useState(true)
@@ -154,25 +155,15 @@ const Vars = () => {
     }, [])
 
     return (
-        <Container className='w-full'>
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
-                <Typography className='w-full text-center md:!ms-40' variant="h4" align="center">
-                    Variables
-                </Typography>
-                <div className='flex justify-center sm:justify-end'>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => {
-                            setDetailVar(null)
-                            setModal(true)
-                        }}
-                        className="sm:mx-10 whitespace-nowrap"
-                    >
-                        Crear Variable
-                    </Button>
-                </div>
-            </div>
+        <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+            <PageHeader
+                title='Variables'
+                createLabel='Crear variable'
+                onCreate={() => {
+                    setDetailVar(null)
+                    setModal(true)
+                }}
+            />
 
             {!loading ? (
                 <>

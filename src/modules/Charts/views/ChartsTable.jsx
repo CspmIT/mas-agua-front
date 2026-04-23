@@ -14,6 +14,7 @@ import { Controller, useForm } from 'react-hook-form'
 import { storage } from '../../../storage/storage'
 import AssignChartDialog from '../components/AssignChartDialog'
 import AssignProfileDialog from '../components/AssignProfileDialog'
+import PageHeader from '../../../components/PageHeader'
 
 const EXCLUDED_DASHBOARD_TYPES = ['TotalizadoPeriodo', 'LineChart', 'BoardChart']
 
@@ -280,23 +281,12 @@ const ChartsTable = () => {
   }, [])
 
   return (
-    <Container className="w-full">
-      <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
-        <Typography className="w-full text-center md:!ms-40" variant="h4" align="center">
-          Gráficos
-        </Typography>
-
-        <div className="flex justify-center sm:justify-end">
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => navigate('/config/graphic')}
-            className="sm:mx-10 whitespace-nowrap"
-          >
-            Crear grafico
-          </Button>
-        </div>
-      </div>
+    <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+      <PageHeader
+        title='Gráficos'
+        createLabel='Crear gráfico'
+        onCreate={() => navigate('/config/graphic')}
+      />
 
       {!loader ? (
         <>

@@ -157,9 +157,9 @@ function NavBarCustom({ setLoading }) {
 
 					<img onClick={() => navigate('/')} className='max-h-10 cursor-pointer' src={Logo} />
 					<div className='absolute right-5 flex flex-row items-center'>
-						<p className={`bg-blue-600 rounded-md shadow-sm px-3 py-1 mr-2 text-white select-none ${isMobile ? 'hidden' : ''}`}>
+						<span className={`inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-3.5 py-1 mr-2 text-white/95 text-sm font-medium tracking-wide select-none ${isMobile ? 'hidden' : ''}`}>
 							{nameCoop}
-						</p>
+						</span>
 						{!isTauri() && (
 							<ButtonDownloads />
 						)}
@@ -247,10 +247,10 @@ function NavBarCustom({ setLoading }) {
 										<Link to={item.link} className={`!w-full text-black dark:text-white`}>
 											<ListItemButton
 												sx={{
-													minHeight: 48,
+													minHeight: 32,
 													justifyContent: !isMobile && open ? 'initial' : 'center',
 													padding: !isMobile ? '1rem' : '0.2rem',
-													py: 1.8
+													py: 1.2
 												}}
 												className={`!w-full ${item.link === '/Alert' && newEvent ? styles.backgroundAlert : ''
 													}`}

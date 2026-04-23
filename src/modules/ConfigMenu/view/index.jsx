@@ -1,7 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import {
 	Box,
-	Button,
 	Container,
 	Typography,
 } from '@mui/material';
@@ -12,9 +11,9 @@ import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
 import PermissionMenu from '../components/PermissionMenu/PermissionMenu';
 import LoaderComponent from '../../../components/Loader';
-import Swal from 'sweetalert2';
 import { storage } from '../../../storage/storage';
 import { ColumnsUser } from '../utils/DataTable/ColumnsUsers';
+import PageHeader from '../../../components/PageHeader';
 
 function ConfigMenu() {
 	const { tabs, setTabs, setTabCurrent } = useContext(MainContext);
@@ -69,32 +68,24 @@ function ConfigMenu() {
 	};
 
 	return (
-		<Container>
+		<Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
 			{loading ? (
-				<Box className="w-full h-full flex justify-center items-center">
+				<Box className='w-full h-full flex justify-center items-center'>
 					<LoaderComponent />
 				</Box>
 			) : (
-				<Box className="flex flex-col gap-5 w-full">
-					<Box>
-						<Typography variant="h4" className="text-center !mb-2">
-							Habilitación de accesos por usuario
-						</Typography>
-
-						<TableCustom
-							columns={ColumnsUser(editUserAccess)}
-							data={listUsers}
-							pagination
-							pageSize={10}
-						/>
-					</Box>
-
-					{!isSuperAdmin && (
-						<Typography className="text-center text-gray-500">
-							Modo solo lectura. Solo super admin puede modificar accesos.
-						</Typography>
-					)}
-				</Box>
+				<>
+					<PageHeader
+						title='Habilitación de accesos por usuario'
+						subtitle={!isSuperAdmin ? 'Modo solo lectura. Solo super admin puede modificar accesos.' : undefined}
+					/>
+					<TableCustom
+						columns={ColumnsUser(editUserAccess)}
+						data={listUsers}
+						pagination
+						pageSize={10}
+					/>
+				</>
 			)}
 		</Container>
 	);

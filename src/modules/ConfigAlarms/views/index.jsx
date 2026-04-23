@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Container, Typography } from '@mui/material';
+import { Box, Button, Container } from '@mui/material';
 import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
 import TableCustom from '../../../components/TableCustom';
 import Swal from 'sweetalert2';
 import LoaderComponent from '../../../components/Loader';
 import ModalAlarms from '../components/ModalAlarm';
+import PageHeader from '../../../components/PageHeader';
 
 const ConfigAlarms = () => {
   const [listAlarm, setListAlarm] = useState([]);
@@ -198,25 +199,15 @@ const ConfigAlarms = () => {
 
   return (
     <>
-      <Container className="w-full">
-        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
-          <Typography className='w-full text-center md:!ms-40' variant="h4" align="center">
-            Alarmas
-          </Typography>
-          <div className='flex justify-center sm:justify-end'>
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                setSelectedAlarm(null)
-                setModalAlarms(true)
-              }}
-              className="sm:mx-10 whitespace-nowrap"
-            >
-              Crear alarma
-            </Button>
-          </div>
-        </div>
+      <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+        <PageHeader
+          title='Alarmas'
+          createLabel='Crear alarma'
+          onCreate={() => {
+            setSelectedAlarm(null)
+            setModalAlarms(true)
+          }}
+        />
         {!loading ? (
           <TableCustom
             columns={columnsTable}

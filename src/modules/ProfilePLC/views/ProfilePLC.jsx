@@ -5,7 +5,6 @@ import {
     CircularProgress,
     Container,
     Switch,
-    Typography,
 } from '@mui/material'
 import TableCustom from '../../../components/TableCustom'
 import ModalVarPLC from '../../ConfigVars/components/ModalVarPLC'
@@ -16,6 +15,7 @@ import { FiUpload } from 'react-icons/fi'
 import { FaPencilAlt, FaTrash } from 'react-icons/fa'
 import Swal from 'sweetalert2'
 import LoaderComponent from '../../../components/Loader'
+import PageHeader from '../../../components/PageHeader'
 
 const ProfilePLC = () => {
     const [loading, setLoading] = useState(true)
@@ -247,25 +247,15 @@ const ProfilePLC = () => {
                 <CircularProgress color="inherit" />
             </Backdrop>
 
-            <Container className='w-full'>
-                <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
-                    <Typography className='w-full text-center md:!ms-40' variant="h4" align="center">
-                        Perfil PLC
-                    </Typography>
-                    <div className='flex justify-center sm:justify-end'>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={() => {
-                                setModalData(false)
-                                setModalPLC(true)
-                            }}
-                            className="sm:mx-10 whitespace-nowrap"
-                        >
-                            Crear Perfil de PLC
-                        </Button>
-                    </div>
-                </div>
+            <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+                <PageHeader
+                    title='Perfil PLC'
+                    createLabel='Crear perfil de PLC'
+                    onCreate={() => {
+                        setModalData(false)
+                        setModalPLC(true)
+                    }}
+                />
 
                 {!loading ? (
                     <TableCustom

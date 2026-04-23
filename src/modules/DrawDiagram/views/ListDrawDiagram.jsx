@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Container, Typography } from '@mui/material';
+import { Box, Button, Container } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
@@ -7,6 +7,7 @@ import TableCustom from '../../../components/TableCustom';
 import Swal from 'sweetalert2';
 import LoaderComponent from '../../../components/Loader';
 import { storage } from '../../../storage/storage';
+import PageHeader from '../../../components/PageHeader';
 
 const ListDrawDiagram = () => {
 	const navigate = useNavigate();
@@ -151,35 +152,15 @@ const ListDrawDiagram = () => {
 	}, []);
 
 	return (
-		<Container className="w-full">
-			{/* Header responsivo */}
-			<div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
+		<Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+			<PageHeader
+				title='Diagramas'
+				createLabel='Crear diagrama'
+				onCreate={() => navigate('/newDiagram')}
+			/>
 
-				{/* Título */}
-				<Typography
-					className='w-full text-center md:!ms-40'
-					variant="h4"
-					align="center"
-				>
-					Diagramas
-				</Typography>
-
-				{/* Botón */}
-				<div className='flex justify-center sm:justify-end'>
-					<Button
-						variant="contained"
-						color="primary"
-						onClick={() => navigate('/newDiagram')}
-						className="sm:mx-10 whitespace-nowrap"
-					>
-						Crear Diagrama
-					</Button>
-				</div>
-			</div>
-
-			{/* Tabla o Loader */}
 			{!loading ? (
-				<div className="w-full overflow-x-auto mb-5">
+				<div className='w-full overflow-x-auto'>
 					<TableCustom
 						columns={columnsTable}
 						data={listDiagram.length ? listDiagram : []}

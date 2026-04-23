@@ -30,16 +30,21 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 				onClick={(evento) => handleOpen(evento)}
 				className='!w-full'
 				sx={{
-					justifyContent: isMobile ? 'center' : 'flex-start',
+					minHeight: 32,
+					justifyContent: !isMobile && openSideBar ? 'initial' : 'center',
+					padding: !isMobile ? '1rem' : '0.2rem',
+					py: 1.2,
 				}}
 			>
 				<ListItemIcon
-					className={`${
+					className={`${!isMobile && openSideBar ? '!mr-3' : ''} ${
 						item.subMenus.some((value) => buttonActive?.includes(value.link))
 							? ' !text-blue-500 dark:!text-blue-500'
 							: ''
 					}`}
 					sx={{
+						minWidth: 0,
+						justifyContent: 'center',
 						...(isMobile && {
 							margin: -2,
 							minWidth: 'auto !important',
@@ -50,6 +55,7 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 				</ListItemIcon>
 				<ListItemText
 					sx={{
+						opacity: !isMobile && openSideBar ? 1 : 0,
 						display: isMobile ? 'none !important' : 'block',
 					}}
 					className={`${
@@ -92,10 +98,13 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 				<Popper
 					id={item.name}
 					key={item.name}
-					className='p-2 bg-[#ffffff] z-50 rounded-md shadow-md flex flex-col justify-start'
+					className='p-2 bg-[#ffffff] z-50 rounded-xl shadow-lg flex flex-col justify-start'
 					placement={isMobile ? 'top-end' : 'left-start'}
 					open={openSub}
-					anchorEl={anchorEl} 
+					anchorEl={anchorEl}
+					modifiers={[
+						{ name: 'offset', options: { offset: [0, 5] } },
+					]}
 					sx={{
 						...(isMobile && {
 							transform: 'translate3d(-50px, -76px, 0px) !important',
