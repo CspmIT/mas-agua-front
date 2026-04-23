@@ -1,4 +1,4 @@
-import { Box, Button, Container } from '@mui/material'
+import { Container } from '@mui/material'
 import { useEffect, useState } from 'react'
 import TableCustom from '../../../components/TableCustom'
 import { backend } from '../../../utils/routes/app.routes'
@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import LoaderComponent from '../../../components/Loader'
 import { storage } from '../../../storage/storage'
 import PageHeader from '../../../components/PageHeader'
+import { ActionsRow, EditChip, ToneChip } from '../../../components/TableActions'
 
 const Maps = () => {
     const [maps, setMaps] = useState([])
@@ -50,33 +51,15 @@ const Maps = () => {
                 accessorKey: 'actions',
                 size: 250,
                 Cell: ({ row }) => (
-                    <Box display="flex" gap={1}>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            size="small"
-                            onClick={() => {
-                                navigate(`/map/edit?id=${row.original.id}`)
-                            }}
-                        >
-                            Editar
-                        </Button>
+                    <ActionsRow>
+                        <EditChip onClick={() => navigate(`/map/edit?id=${row.original.id}`)} />
 
-                        {/* SOLO ADMIN */}
                         {isSuperAdmin && !row.original.inMenu && (
-                            <Button
-                                variant="contained"
-                                size="small"
-                                sx={{
-                                    backgroundColor: '#0ea5e9',
-                                    '&:hover': { backgroundColor: '#0284c7' },
-                                }}
-                                onClick={() => navigate(`/config/menu`)}
-                            >
+                            <ToneChip tone='accent' onClick={() => navigate(`/config/menu`)}>
                                 Añadir a menú
-                            </Button>
+                            </ToneChip>
                         )}
-                    </Box>
+                    </ActionsRow>
                 ),
             },
         ])

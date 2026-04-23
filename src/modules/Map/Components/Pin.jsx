@@ -1,50 +1,101 @@
-const ICON = `M12 2C7.03 2 3 6.03 3 11c0 2.21.81 4.22 2.14 5.86L12 22l6.86-5.14A8.962 8.962 0 0021 11c0-4.97-4.03-9-9-9z`;
+// Cuerpo con bordes más redondeados: top esférico + punta suave (sin pico afilado)
+const PIN_PATH =
+	'M12 1.5C6.2 1.5 1.5 6.2 1.5 12c0 3.8 2.8 7.6 8.3 12 1.3 1 2.6 1 3.9 0 5.5-4.4 8.3-8.2 8.3-12 0-5.8-4.7-10.5-10.5-10.5z'
 
-function Pin({ size = 43, label = '', color = '#3498db' }) {
-  return (
-    <svg
-      height={size}
-      viewBox="0 0 24 24"
-      style={{
-        filter: 'drop-shadow(0 6px 10px rgba(0,0,0,0.4))',
-      }}
-    >
-      {/* Halo */}
-      <circle
-        cx="12"
-        cy="11"
-        r="9"
-        fill={color}
-        opacity="0.25"
-      />
+function Pin({ size = 46, label = '', color = '#2c6aa0', active = true }) {
+	const gradientId = `pinGradient-${color.replace('#', '')}`
+	const haloId = `pinHalo-${color.replace('#', '')}`
+	const text = String(label || '').slice(0, 3).toUpperCase()
 
-      {/* Pin */}
-      <defs>
-        <linearGradient id="pinGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#93c5fd" />
-          <stop offset="35%" stopColor={color} />
-          <stop offset="100%" stopColor="#2c6aa0" />
-        </linearGradient>
-      </defs>
+	return (
+		<svg
+			height={size}
+			viewBox='0 0 24 28'
+			style={{
+				overflow: 'visible',
+				filter: 'drop-shadow(0 6px 12px rgba(15, 42, 68, 0.35))',
+				cursor: 'pointer',
+				transition: 'transform 0.2s cubic-bezier(0.22, 1, 0.36, 1)',
+			}}
+			onMouseEnter={(e) => {
+				e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)'
+			}}
+			onMouseLeave={(e) => {
+				e.currentTarget.style.transform = 'translateY(0) scale(1)'
+			}}
+		>
+			<defs>
+				<linearGradient id={gradientId} x1='0' y1='0' x2='0' y2='1'>
+					<stop offset='0%' stopColor='#5ea5f0' />
+					<stop offset='55%' stopColor={color} />
+					<stop offset='100%' stopColor='#1f4e79' />
+				</linearGradient>
+				<radialGradient id={haloId} cx='50%' cy='50%' r='50%'>
+					<stop offset='0%' stopColor={color} stopOpacity='0.35' />
+					<stop offset='100%' stopColor={color} stopOpacity='0' />
+				</radialGradient>
+			</defs>
 
-      <path d={ICON} fill="url(#pinGradient)" />
+			{/* Halo pulse */}
+			{active && (
+				<circle cx='12' cy='12' r='11' fill={`url(#${haloId})`}>
+					<animate
+						attributeName='r'
+						values='9;13;9'
+						dur='2.4s'
+						repeatCount='indefinite'
+					/>
+					<animate
+						attributeName='opacity'
+						values='0.7;0;0.7'
+						dur='2.4s'
+						repeatCount='indefinite'
+					/>
+				</circle>
+			)}
 
-      {/* Texto */}
-      {label && (
-        <text
-          x="12"
-          y="13"
-          fontSize="9"
-          fontWeight="bold"
-          fill="#ffffff"
-          textAnchor="middle"
-          style={{ pointerEvents: 'none' }}
-        >
-          {label}
-        </text>
-      )}
-    </svg>
-  );
+			{/* Pin body — bordes suaves */}
+			<path
+				d={PIN_PATH}
+				fill={`url(#${gradientId})`}
+				stroke='rgba(255, 255, 255, 0.55)'
+				strokeWidth='0.7'
+				strokeLinejoin='round'
+			/>
+
+			{/* Badge blanco redondeado */}
+			<circle
+				cx='12'
+				cy='12'
+				r='6.2'
+				fill='#ffffff'
+				opacity='0.96'
+				stroke={color}
+				strokeWidth='0.4'
+				strokeOpacity='0.35'
+			/>
+
+			{/* Label SCADA */}
+			{text && (
+				<text
+					x='12'
+					y='14'
+					textAnchor='middle'
+					style={{
+						pointerEvents: 'none',
+						fontFamily:
+							"'Inter', 'Roboto Condensed', 'Segoe UI', system-ui, sans-serif",
+						fontSize: '5.2px',
+						fontWeight: 800,
+						letterSpacing: '0.14em',
+						fill: color,
+					}}
+				>
+					{text}
+				</text>
+			)}
+		</svg>
+	)
 }
 
-export default Pin;
+export default Pin

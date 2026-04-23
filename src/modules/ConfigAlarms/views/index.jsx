@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Container } from '@mui/material';
+import { Container } from '@mui/material';
 import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
 import TableCustom from '../../../components/TableCustom';
@@ -7,6 +7,7 @@ import Swal from 'sweetalert2';
 import LoaderComponent from '../../../components/Loader';
 import ModalAlarms from '../components/ModalAlarm';
 import PageHeader from '../../../components/PageHeader';
+import { ActionsRow, EditChip, StatusPill, StatusToggleChip } from '../../../components/TableActions';
 
 const ConfigAlarms = () => {
   const [listAlarm, setListAlarm] = useState([]);
@@ -95,36 +96,22 @@ const ConfigAlarms = () => {
           header: 'Estado',
           accessorKey: 'status',
           size: 50,
-          Cell: ({ row }) => (
-            <span
-              className={`text-sm font-semibold ${row.original.status ? 'text-green-600' : 'text-red-600'
-                }`}
-            >
-              {row.original.status ? 'Activo' : 'Inactivo'}
-            </span>
-          ),
+          Cell: ({ row }) => <StatusPill active={!!row.original.status} />,
         },
 
         {
           header: 'Acciones',
           accessorKey: 'actions',
           Cell: ({ row }) => (
-            <Box display="flex" gap={1}>
-              <Button
-                variant="contained"
-                color="primary"
-                size="small"
+            <ActionsRow>
+              <EditChip
                 onClick={() => {
                   setSelectedAlarm(row.original)
                   setModalAlarms(true)
                 }}
-              >
-                Editar
-              </Button>
-              <Button
-                variant="outlined"
-                color={row.original.status ? 'error' : 'success'}
-                size="small"
+              />
+              <StatusToggleChip
+                active={!!row.original.status}
                 onClick={async (e) => {
                   e.preventDefault()
                   const confirm = await Swal.fire({
@@ -171,10 +158,8 @@ const ConfigAlarms = () => {
                     })
                   }
                 }}
-              >
-                {row.original.status ? 'Desactivar' : 'Activar'}
-              </Button>
-            </Box>
+              />
+            </ActionsRow>
           ),
         },
       ]

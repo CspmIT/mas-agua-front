@@ -1,5 +1,13 @@
-import { Button, TextField, Typography, FormLabel, Dialog, DialogTitle, DialogContent, DialogActions, FormControl, InputLabel, Select, MenuItem, IconButton } from '@mui/material'
-import { AddLocation, Close } from '@mui/icons-material'
+import {
+    Box,
+    Button,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Select,
+    TextField,
+} from '@mui/material'
+import { AddLocation } from '@mui/icons-material'
 import MapBase from '../Components/MapBase'
 import SelectVars from '../../Charts/components/SelectVars'
 import { useForm } from 'react-hook-form'
@@ -10,6 +18,74 @@ import { request } from '../../../utils/js/request'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import CardCustom from '../../../components/CardCustom'
 import LoaderComponent from '../../../components/Loader'
+import PageHeader from '../../../components/PageHeader'
+import ModalShell from '../../../components/ModalShell'
+
+const primaryPillSx = {
+    borderRadius: '999px',
+    textTransform: 'none',
+    fontWeight: 500,
+    px: 2.5,
+    py: 0.85,
+    minHeight: 0,
+    background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+    boxShadow: '0 4px 14px rgba(44, 106, 160, 0.35)',
+    transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+    '&:hover': {
+        background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+        boxShadow: '0 8px 24px rgba(44, 106, 160, 0.45)',
+        transform: 'translateY(-1px)',
+    },
+    '&:active': { transform: 'translateY(0)' },
+}
+
+const outlinePillSx = {
+    borderRadius: '999px',
+    textTransform: 'none',
+    fontWeight: 500,
+    px: 2.5,
+    py: 0.85,
+    minHeight: 0,
+    borderColor: 'rgba(44, 106, 160, 0.4)',
+    color: '#2c6aa0',
+    backgroundColor: 'rgba(44, 106, 160, 0.04)',
+    '&:hover': {
+        borderColor: '#2c6aa0',
+        backgroundColor: 'rgba(44, 106, 160, 0.1)',
+    },
+    'body.dark &': {
+        color: '#5ea5f0',
+        borderColor: 'rgba(94, 165, 240, 0.4)',
+    },
+}
+
+const ghostCancelSx = {
+    borderRadius: '999px',
+    textTransform: 'none',
+    fontWeight: 500,
+    px: 2.25,
+    py: 0.75,
+    minHeight: 0,
+    borderColor: 'rgba(15, 42, 68, 0.14)',
+    color: '#475569',
+}
+
+const sectionSx = {
+    borderRadius: '14px',
+    border: '1px solid rgba(15, 42, 68, 0.06)',
+    backgroundColor: 'transparent',
+    p: { xs: 1.75, sm: 2 },
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 1.5,
+    'body.dark &': { border: '1px solid rgba(255, 255, 255, 0.06)' },
+}
+
+const SectionTitle = ({ children }) => (
+    <div className='text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-gray-400 px-1 -mt-0.5'>
+        {children}
+    </div>
+)
 
 const MapView = ({ create = false, search = false }) => {
     const {
@@ -52,7 +128,7 @@ const MapView = ({ create = false, search = false }) => {
             lat: parseFloat(lat),
             lng: parseFloat(lng),
             idVar,
-            id_bit,        // <-- nuevo: bit asignado si es binaria comprimida
+            id_bit,
             data: data || null,
         },
     })
@@ -60,7 +136,7 @@ const MapView = ({ create = false, search = false }) => {
     const handleVarSelect = (variable) => {
         setValue('idVar', variable?.id ?? null)
         setSelectedVar(variable ?? null)
-        setSelectedBitId('')           // reset bit al cambiar variable
+        setSelectedBitId('')
     }
 
     const openModal = () => {
@@ -138,7 +214,6 @@ const MapView = ({ create = false, search = false }) => {
         if (!mapName) return
 
         const map = { name: mapName, viewState, markers }
-        console.log('Datos a guardar:', map)  // <-- log para verificar datos antes de enviar
         try {
             let result = false
             if (create && search) result = await editMap(map)
@@ -158,6 +233,7 @@ const MapView = ({ create = false, search = false }) => {
     const searchMap = async (id) => {
         if (!id) {
             Swal.fire({ icon: 'error', title: 'Atención', html: '<h3>No se pueden cargar los datos.</h3>' })
+            setLoading(false)
             return
         }
 
@@ -193,55 +269,78 @@ const MapView = ({ create = false, search = false }) => {
     }
 
     useEffect(() => {
-        if (!create) { const id = searchParam.get('id'); searchMap(id) }
-        if (create && search) { const id = searchParam.get('id'); searchMap(id) }
+        const id = searchParam.get('id')
+
+        if (!create || (create && search)) {
+            // reset state antes de traer el nuevo mapa
+            setLoading(true)
+            setMarkers([])
+            setNameMap('')
+            searchMap(id)
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+    }, [searchParam])
+
+    const headerTitle = search ? 'Editar Mapa' : 'Crear Mapa'
+    const tagEyebrow = create && !search ? 'Nuevo mapa' : 'Mapa'
+    const tagName = create && !search ? 'Sin guardar' : (nameMap || 'Mapa sin nombre')
 
     // ── Render ───────────────────────────────────────────────────────────────
     return (
-        <div className="w-full h-[88vh] flex flex-col gap-1">
+        <div className="w-full h-[88vh] flex flex-col">
             {create && (
-                <div className="flex flex-col sm:flex-row sm:items-center px-1 gap-2">
-                    <div className="hidden sm:flex flex-1" />
-
-                    <Typography className="flex-1 !text-3xl text-center">
-                        {search ? 'Editar Mapa' : 'Crear Mapa'}
-                    </Typography>
-
-                    <div className="flex-1 flex justify-center sm:justify-end gap-2">
-                        <Button
-                            onClick={openModal}
-                            variant="contained"
-                            startIcon={<AddLocation />}
-                        >
-                            Agregar marcador
-                        </Button>
-
-                        <Button
-                            onClick={handleSubmit}
-                            color="success"
-                            variant="contained"
-                        >
-                            Guardar
-                        </Button>
-                    </div>
-                </div>
+                <PageHeader
+                    title={headerTitle}
+                    action={
+                        <div className='flex gap-2'>
+                            <Button
+                                onClick={openModal}
+                                variant='outlined'
+                                startIcon={<AddLocation sx={{ fontSize: 18 }} />}
+                                sx={outlinePillSx}
+                            >
+                                Agregar marcador
+                            </Button>
+                            <Button
+                                onClick={handleSubmit}
+                                variant='contained'
+                                disableElevation
+                                sx={primaryPillSx}
+                            >
+                                Guardar
+                            </Button>
+                        </div>
+                    }
+                />
             )}
 
             {/* ── Label nombre mapa ── */}
-            <div className="w-full">
-                <div className="absolute mt-1 px-5 z-30 bg-[#2c6aa0] text-white font-semibold rounded-t-md shadow-md">
-                    {create && !search ? 'Nuevo Mapa' : (nameMap || 'Mapa sin nombre')}
+            <div className='flex'>
+                <div
+                    className='inline-flex items-center gap-2 text-white rounded-t-md shadow-md'
+                    style={{
+                        padding: '4px 20px',
+                        background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+                        boxShadow: '0 4px 20px rgba(44, 106, 160, 0.3)',
+                    }}
+                >
+                    <span className='text-[9px] font-semibold uppercase tracking-[0.18em] text-white/75'>
+                        {tagEyebrow}
+                    </span>
+                    <span className='text-white/40'>·</span>
+                    <span className='text-sm font-semibold text-white truncate max-w-[50vw]'>
+                        {tagName}
+                    </span>
                 </div>
             </div>
 
             {/* ── Mapa ── */}
-            <CardCustom className="p-3 rounded-xl rounded-tl-none h-auto w-auto flex-1 mt-6 pt-2">
+            <CardCustom className="p-3 rounded-xl rounded-tl-none h-auto w-auto flex-1">
                 {loading && !create ? (
                     <LoaderComponent />
                 ) : (
                     <MapBase
+                        key={searchParam.get('id') ?? 'new'}
                         height="100%"
                         markers={markers}
                         setMarkers={setMarkers}
@@ -255,27 +354,36 @@ const MapView = ({ create = false, search = false }) => {
             </CardCustom>
 
             {/* ── Modal agregar marcador ── */}
-            <Dialog
+            <ModalShell
                 open={modalOpen}
                 onClose={closeModal}
-                fullWidth
-                maxWidth="sm"
-                PaperProps={{ sx: { borderRadius: 3 } }}
+                eyebrow='Marcador'
+                title='Nuevo marcador'
+                maxWidth='480px'
+                footer={
+                    <>
+                        <Button variant='outlined' sx={ghostCancelSx} onClick={closeModal}>
+                            Cancelar
+                        </Button>
+                        <Button
+                            onClick={saveMarker}
+                            variant='contained'
+                            disableElevation
+                            sx={primaryPillSx}
+                            startIcon={<AddLocation sx={{ fontSize: 18 }} />}
+                        >
+                            Agregar
+                        </Button>
+                    </>
+                }
             >
-                <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="font-semibold text-lg">Nuevo marcador</span>
-                    <IconButton onClick={closeModal} size="small">
-                        <Close fontSize="small" />
-                    </IconButton>
-                </DialogTitle>
-
-                <DialogContent dividers>
-                    <div className="flex flex-col gap-4 pt-1">
-
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                    <Box sx={sectionSx}>
+                        <SectionTitle>Información</SectionTitle>
                         <TextField
-                            label="Nombre del marcador"
+                            label='Nombre del marcador'
                             fullWidth
-                            size="small"
+                            size='small'
                             {...register('markerName', {
                                 required: 'Debe dar un nombre al marcador',
                                 validate: (value) =>
@@ -284,42 +392,45 @@ const MapView = ({ create = false, search = false }) => {
                             error={!!errors?.markerName}
                             helperText={errors?.markerName?.message}
                         />
-
-                        <div className="flex gap-3">
-                            <TextField
-                                label="Latitud"
-                                fullWidth
-                                size="small"
-                                {...register('markerLat', { required: 'Debe asignar una latitud' })}
-                                error={!!errors?.markerLat}
-                                helperText={errors?.markerLat?.message}
-                            />
-                            <TextField
-                                label="Longitud"
-                                fullWidth
-                                size="small"
-                                {...register('markerLng', { required: 'Debe asignar una longitud' })}
-                                error={!!errors?.markerLng}
-                                helperText={errors?.markerLng?.message}
-                            />
+                        <div className='flex flex-wrap gap-2'>
+                            <div style={{ flex: '1 1 150px' }}>
+                                <TextField
+                                    fullWidth
+                                    size='small'
+                                    label='Latitud'
+                                    {...register('markerLat', { required: 'Debe asignar una latitud' })}
+                                    error={!!errors?.markerLat}
+                                    helperText={errors?.markerLat?.message}
+                                />
+                            </div>
+                            <div style={{ flex: '1 1 150px' }}>
+                                <TextField
+                                    fullWidth
+                                    size='small'
+                                    label='Longitud'
+                                    {...register('markerLng', { required: 'Debe asignar una longitud' })}
+                                    error={!!errors?.markerLng}
+                                    helperText={errors?.markerLng?.message}
+                                />
+                            </div>
                         </div>
+                    </Box>
 
-                        {/* Selector variable */}
+                    <Box sx={sectionSx}>
+                        <SectionTitle>Variable</SectionTitle>
                         <SelectVars
                             setValueState={handleVarSelect}
-                            label="Variable del marcador"
+                            label='Variable del marcador'
                         />
-
-                        {/* Selector bit — solo si es binaria comprimida */}
                         {isBinaryCompressed && (
-                            <FormControl fullWidth size="small">
+                            <FormControl fullWidth size='small'>
                                 <InputLabel>Bit de la variable</InputLabel>
                                 <Select
                                     value={selectedBitId}
-                                    label="Bit de la variable"
+                                    label='Bit de la variable'
                                     onChange={(e) => setSelectedBitId(e.target.value)}
                                 >
-                                    <MenuItem value="" disabled>Seleccioná un bit</MenuItem>
+                                    <MenuItem value='' disabled>Seleccioná un bit</MenuItem>
                                     {availableBits.map((b) => (
                                         <MenuItem key={b.id} value={b.id}>
                                             {b.name} (bit {b.bit})
@@ -328,20 +439,9 @@ const MapView = ({ create = false, search = false }) => {
                                 </Select>
                             </FormControl>
                         )}
-
-                    </div>
-                </DialogContent>
-
-                <DialogActions sx={{ px: 3, py: 2 }}>
-                    <Button onClick={closeModal} color="inherit">
-                        Cancelar
-                    </Button>
-                    <Button onClick={saveMarker} variant="contained" startIcon={<AddLocation />}>
-                        Agregar
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
+                    </Box>
+                </Box>
+            </ModalShell>
         </div>
     )
 }

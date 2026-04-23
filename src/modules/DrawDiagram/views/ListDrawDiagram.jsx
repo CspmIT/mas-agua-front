@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Container } from '@mui/material';
+import { Container } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import LoaderComponent from '../../../components/Loader';
 import { storage } from '../../../storage/storage';
 import PageHeader from '../../../components/PageHeader';
+import { ActionsRow, EditChip, StatusPill, StatusToggleChip, ToneChip } from '../../../components/TableActions';
 
 const ListDrawDiagram = () => {
 	const navigate = useNavigate();
@@ -37,53 +38,26 @@ const ListDrawDiagram = () => {
 				{
 					header: 'Estado',
 					accessorKey: 'status',
-					Cell: ({ row }) => (
-						<span className={`text-sm font-semibold ${row.original.status ? 'text-green-600' : 'text-red-600'}`}>
-							{row.original.status ? 'Activo' : 'Inactivo'}
-						</span>
-					),
+					Cell: ({ row }) => <StatusPill active={!!row.original.status} />,
 				},
 				{
 					header: 'Acciones',
 					accessorKey: 'actions',
 					Cell: ({ row }) => (
-						<Box display="flex" gap={1}>
-							<Button
-								variant="contained"
-								color="primary"
-								size="small"
-								onClick={() => navigate(`/newDiagram/${row.original.id}`)}
-							>
-								Editar
-							</Button>
-							<Button
-								variant="contained"
-								color="secondary"
-								size="small"
-								onClick={() => navigate(`/viewDiagram/${row.original.id}`)}
-							>
+						<ActionsRow>
+							<EditChip onClick={() => navigate(`/newDiagram/${row.original.id}`)} />
+							<ToneChip tone='info' onClick={() => navigate(`/viewDiagram/${row.original.id}`)}>
 								Ver
-							</Button>
+							</ToneChip>
 
-							{/* SOLO ADMIN */}
 							{isSuperAdmin && !row.original.inMenu && (
-								<Button
-									variant="contained"
-									size="small"
-									sx={{
-										backgroundColor: '#0ea5e9',
-										'&:hover': { backgroundColor: '#0284c7' },
-									}}
-									onClick={() => navigate(`/config/menu`)}
-								>
+								<ToneChip tone='accent' onClick={() => navigate(`/config/menu`)}>
 									Añadir a menú
-								</Button>
+								</ToneChip>
 							)}
 
-							<Button
-								variant="outlined"
-								color={row.original.status ? 'error' : 'success'}
-								size="small"
+							<StatusToggleChip
+								active={!!row.original.status}
 								onClick={async (e) => {
 									e.preventDefault();
 									const confirm = await Swal.fire({
@@ -125,10 +99,8 @@ const ListDrawDiagram = () => {
 										});
 									}
 								}}
-							>
-								{row.original.status ? 'Desactivar' : 'Activar'}
-							</Button>
-						</Box>
+							/>
+						</ActionsRow>
 					),
 				},
 			];

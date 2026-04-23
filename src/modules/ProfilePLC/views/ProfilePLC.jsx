@@ -1,7 +1,5 @@
 import {
     Backdrop,
-    Box,
-    Button,
     CircularProgress,
     Container,
     Switch,
@@ -16,6 +14,7 @@ import { FaPencilAlt, FaTrash } from 'react-icons/fa'
 import Swal from 'sweetalert2'
 import LoaderComponent from '../../../components/Loader'
 import PageHeader from '../../../components/PageHeader'
+import { ActionsRow, DeleteChip, EditChip, ToneChip } from '../../../components/TableActions'
 
 const ProfilePLC = () => {
     const [loading, setLoading] = useState(true)
@@ -157,67 +156,56 @@ const ProfilePLC = () => {
             header: 'Acciones',
             accessorKey: 'actions',
             Cell: ({ row }) => {
-                const statusBtnVariant =
-                    row.original.status == 2 ? 'success' : 'error'
+                const isUpload = row.original.status === 2
+                const handleSecondary = async () => {
+                    if (row.original.status === 1) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Atencion',
+                            text: 'Primero debe desactivar el perfil para poder eliminarlo.',
+                        })
+                        return
+                    }
+                    if (row.original.status === 2) {
+                        editPLC(row.original.id)
+                        setModalPLC(true)
+                        return
+                    }
+                    if (row.original.status === 0) {
+                        const value = await Swal.fire({
+                            icon: 'warning',
+                            title: 'Atencion',
+                            html: '<h5>Esta por eliminar los archivos del perfil del servidor.</h5><p>¿Esta seguro ejecutar esta funcion?</p>',
+                            confirmButtonText: 'Si, eliminar',
+                            cancelButtonText: 'Cancelar',
+                            showCancelButton: true,
+                        })
+                        if (value.isConfirmed) deleteFilePLC(row.original.id)
+                    }
+                }
+
                 return (
-                    <div className="flex gap-2">
-                        <Button
-                            size="small"
-                            color="primary"
-                            variant="contained"
+                    <ActionsRow>
+                        <EditChip
                             disabled={row.original.status === 2}
                             onClick={() => {
                                 editPLC(row.original.id)
                                 setModalPLC(true)
                             }}
                         >
-                            <FaPencilAlt className="me-2" /> Editar
-                        </Button>
-                        <Button
-                            size="small"
-                            color={statusBtnVariant}
-                            variant="contained"
-                            onClick={async () => {
-                                if (row.original.status === 1) {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Atencion',
-                                        text: 'Primero debe desactivar el perfil para poder eliminarlo.',
-                                    })
-                                    return false
-                                }
-                                if (row.original.status === 2) {
-                                    editPLC(row.original.id)
-                                }
-                                if (row.original.status === 0) {
-                                    const value = await Swal.fire({
-                                        icon: 'warning',
-                                        title: 'Atencion',
-                                        html: '<h5>Esta por eliminar los archivos del perfil del servidor.</h5><p>¿Esta seguro ejecutar esta funcion?</p>',
-                                        confirmButtonText: 'Si, eliminar',
-                                        cancelButtonText: 'Cancelar',
-                                        showCancelButton: true,
-                                    })
-                                    if (value.isConfirmed) {
-                                        deleteFilePLC(row.original.id)
-                                    }
-                                    return false
-                                }
-                                setModalPLC(true)
-                            }}
-                        >
-                            {row.original.status === 2 ? (
-                                <>
-                                    <FiUpload className="me-1" /> {'Subir'}
-                                </>
-                            ) : (
-                                <>
-                                    <FaTrash className="me-1" />
-                                    {' Eliminar'}
-                                </>
-                            )}
-                        </Button>
-                    </div>
+                            <FaPencilAlt className='me-2' /> Editar
+                        </EditChip>
+
+                        {isUpload ? (
+                            <ToneChip tone='success' onClick={handleSecondary}>
+                                <FiUpload className='me-1' /> Subir
+                            </ToneChip>
+                        ) : (
+                            <DeleteChip onClick={handleSecondary}>
+                                <FaTrash className='me-1' /> Eliminar
+                            </DeleteChip>
+                        )}
+                    </ActionsRow>
                 )
             },
         },

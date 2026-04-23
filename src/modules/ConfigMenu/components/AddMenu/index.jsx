@@ -17,6 +17,7 @@ import ListIcon from '../../../../components/ListIcon'
 import MenuDialog from './components/MenuDialog'
 import LoaderComponent from '../../../../components/Loader'
 import PageHeader from '../../../../components/PageHeader'
+import FiltersBar from '../../../../components/FiltersBar'
 
 const actionIconSx = (lightColor, darkColor) => ({
 	color: lightColor,
@@ -363,46 +364,31 @@ function AddMenu() {
 				onCreate={openCreateMenu}
 			/>
 
-			{/* FILTER */}
-			<Box
-				sx={{
-					mb: 2,
-					p: 1.5,
-					borderRadius: '12px',
-					border: '1px solid rgba(15, 42, 68, 0.08)',
-					backgroundColor: '#ffffff',
-					boxShadow: '0 1px 2px rgba(15, 42, 68, 0.03)',
-					'body.dark &': {
-						backgroundColor: 'rgba(17, 24, 39, 0.85)',
-						border: '1px solid rgba(255, 255, 255, 0.06)',
-					},
-				}}
+			<FiltersBar
+				showFilter={false}
+				showReset={permissionFilter !== 'all'}
+				onReset={() => setPermissionFilter('all')}
 			>
-				<form
-					className='flex flex-wrap relative w-full items-end gap-2'
-					onSubmit={e => e.preventDefault()}
-				>
-					<div className='md:w-1/4 p-1 w-full'>
-						<FormControl fullWidth size='small'>
-							<InputLabel id='permission_filter_label'>Permisos</InputLabel>
-							<Select
-								labelId='permission_filter_label'
-								label='Permisos'
-								value={permissionFilter}
-								onChange={(e) => setPermissionFilter(e.target.value)}
-							>
-								<MenuItem value='all'>Todos los menús</MenuItem>
-								<MenuItem value='none'>Sin permisos asignados</MenuItem>
-								{profiles.map((p) => (
-									<MenuItem key={p.id} value={String(p.id)}>
-										{p.description}
-									</MenuItem>
-								))}
-							</Select>
-						</FormControl>
-					</div>
-				</form>
-			</Box>
+				<div className='flex-1 min-w-[220px]'>
+					<FormControl fullWidth size='small'>
+						<InputLabel id='permission_filter_label'>Permisos</InputLabel>
+						<Select
+							labelId='permission_filter_label'
+							label='Permisos'
+							value={permissionFilter}
+							onChange={(e) => setPermissionFilter(e.target.value)}
+						>
+							<MenuItem value='all'>Todos los menús</MenuItem>
+							<MenuItem value='none'>Sin permisos asignados</MenuItem>
+							{profiles.map((p) => (
+								<MenuItem key={p.id} value={String(p.id)}>
+									{p.description}
+								</MenuItem>
+							))}
+						</Select>
+					</FormControl>
+				</div>
+			</FiltersBar>
 
 			<Box sx={tableShellSx}>
 				<TableContainer>

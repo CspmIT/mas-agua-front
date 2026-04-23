@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { Circle, Edit, Visibility, VisibilityOff } from '@mui/icons-material'
+import { Circle, Visibility, VisibilityOff } from '@mui/icons-material'
 import { IconButton } from '@mui/material'
-import { BiWindowOpen } from 'react-icons/bi'
+import { ActionsRow, EditChip } from '../../../../components/TableActions'
 
 const profile = {
 	1: 'Super Admin',
@@ -61,21 +61,16 @@ export const ColumnsUser = (editUserRecloser) => [
 		},
 	},
 	{
-		header: '',
-		accessorKey: 'btn-dashboard',
-		size: 10,
+		header: 'Acciones',
+		accessorKey: 'actions',
+		size: 120,
 		enableSorting: false,
 		enableColumnFilter: false,
 		enableClickToCopy: false,
-		Cell: ({ row }) => {
-			return (
-				<IconButton
-					onClick={() => editUserRecloser(row.original)}
-					className=' !bg-[#ffbf1e] hover:!bg-[#ffde89] !text-black !shadow-md'
-				>
-					<Edit />
-				</IconButton>
-			)
-		},
+		Cell: ({ row }) => (
+			<ActionsRow>
+				<EditChip onClick={() => editUserRecloser(row.original)} />
+			</ActionsRow>
+		),
 	},
 ]
