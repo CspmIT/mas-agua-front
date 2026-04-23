@@ -7,7 +7,7 @@ import GaugeSpeed from '../../Charts/components/GaugeSpeed'
 const formatValue = value => {
     if (value === null || value === undefined || value === '') return null
     const num = Number(value)
-    return isNaN(num) ? value : num.toFixed(2)
+    return isNaN(num) ? value : num
 }
 
 const BottomItem = ({ item }) => {
