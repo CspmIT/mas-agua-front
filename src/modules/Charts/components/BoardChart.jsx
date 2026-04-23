@@ -14,7 +14,7 @@ const formatValue = (value) => {
     if (value === null || value === undefined) return 'Sin datos'
     if (typeof value === 'boolean') return value ? 'Encendido' : 'Apagado'
     if (typeof value === 'number')
-        return Number.isFinite(value) ? Number(value.toFixed(1)) : '-'
+        return Number.isFinite(value) ? value : '-'
     return String(value)
 }
 
