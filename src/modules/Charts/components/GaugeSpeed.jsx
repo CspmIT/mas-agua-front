@@ -117,7 +117,7 @@ const GaugeSpeed = ({
           offsetCenter: [0, '85%'],
           formatter: () =>
             hasValue
-              ? `{value|${safeValue.toFixed(2)} ${unidad}}\n{sub|${description}}`
+              ? `{value|${safeValue} ${unidad}}\n{sub|${description}}`
               : `{value|Sin datos}\n{sub|${description}}`,
           rich: {
             value: {

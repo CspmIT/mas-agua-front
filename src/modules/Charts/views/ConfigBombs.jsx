@@ -233,7 +233,7 @@ export default function PumpControl({
                                             {pump.name}
                                         </h4>
                                         <p className="text-lg text-center font-bold text-blue-600">
-                                            {pump.value
+                                            {pump.value != null
                                                 ? pump.value + ' ' + pump.unit
                                                 : '-'}
                                         </p>
