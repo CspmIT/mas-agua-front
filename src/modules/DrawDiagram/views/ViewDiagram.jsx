@@ -145,7 +145,7 @@ function ViewDiagram() {
       const percentage = ((Number(rawValue) * 100) / Number(maxValue)).toFixed(1);
       text = `${percentage}%`;
     } else if (rawValue != null) {
-      text = !isNaN(rawValue) ? `${Number(rawValue).toFixed(1)} ${unit}` : `${rawValue}`;
+      text = !isNaN(rawValue) ? `${Number(rawValue)} ${unit}` : `${rawValue}`;
     } else {
       text = 'No hay datos';
     }
