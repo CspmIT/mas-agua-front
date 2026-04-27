@@ -193,16 +193,27 @@ function NavBarCustom({ setLoading }) {
 					}),
 				}}
 			>
-				<div className='bg-white dark:bg-gray-800 h-full w-full sm:w-auto'>
-					<DrawerHeaderCustom className='!min-h-11 !h-11' style={{ display: isMobile ? 'none' : '' }}>
+				<div className='bg-white dark:bg-gray-800 h-full w-full flex flex-col border-r border-slate-200 dark:border-slate-700'>
+					<DrawerHeaderCustom className='!min-h-11 !h-11 shrink-0' style={{ display: isMobile ? 'none' : '' }}>
 						<IconButton onClick={handleDrawerClose}>
 							<ChevronLeftIcon className='dark:text-white' />
 						</IconButton>
 					</DrawerHeaderCustom>
-					<Divider />
+					<Divider className='shrink-0' />
 
 					<List
+						className='navbar-scroll'
 						sx={{
+							flex: 1,
+							minHeight: 0,
+							overflowY: 'auto',
+							overflowX: 'hidden',
+							'&::-webkit-scrollbar': { width: 6 },
+							'&::-webkit-scrollbar-thumb': {
+								backgroundColor: 'rgba(54, 139, 237, 0.35)',
+								borderRadius: 3,
+							},
+							'&::-webkit-scrollbar-track': { backgroundColor: 'transparent' },
 							...(isMobile && {
 								display: 'flex',
 								flexDirection: 'row',
@@ -210,6 +221,7 @@ function NavBarCustom({ setLoading }) {
 								width: '100%',
 								height: '100%',
 								padding: 0,
+								overflow: 'hidden',
 							}),
 						}}
 					>

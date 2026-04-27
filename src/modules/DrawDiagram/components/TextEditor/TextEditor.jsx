@@ -6,7 +6,7 @@ const TextEditor = ({
   textInput,
   onChange,
   onSave,
-  onCancel
+  onCancel,
 }) => {
   if (!textPosition) return null;
 
@@ -28,14 +28,11 @@ const TextEditor = ({
         fontSize: `${textStyle.fontSize}px`,
         fontStyle: textStyle.fontStyle,
         color: textStyle.fill,
-        padding: '4px 8px',
-        borderRadius: 4,
-        border: '1px solid #ccc',
         zIndex: 20,
         width: 200,
-        background: '#fff',
       }}
-      placeholder="Escribe aquí y presiona Enter"
+      className='px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/90 shadow-[0_4px_14px_rgba(15,42,68,0.18)] dark:shadow-[0_4px_14px_rgba(0,0,0,0.45)] outline-none focus:border-[#2c6aa0] dark:focus:border-[#5ea5f0] transition-colors resize-none'
+      placeholder='Escribe aquí y presiona Enter'
       autoFocus
       value={textInput}
       onChange={(e) => onChange(e.target.value)}

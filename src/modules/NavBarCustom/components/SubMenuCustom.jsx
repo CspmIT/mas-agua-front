@@ -1,4 +1,4 @@
-import { Collapse, ListItemButton, ListItemIcon, ListItemText, MenuItem, Popper, useMediaQuery } from '@mui/material'
+import { Collapse, ListItemButton, ListItemIcon, ListItemText, MenuItem, Popper, Paper, ClickAwayListener, useMediaQuery } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ListIcon from '../../../components/ListIcon'
@@ -10,6 +10,9 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 	const handleOpen = (evento) => {
 		setOpenSub(!openSub)
 		setAnchorEl(evento.currentTarget)
+	}
+	const handleClose = () => {
+		setOpenSub(false)
 	}
 	useEffect(() => {
 		if (!openSideBar) {
@@ -23,6 +26,8 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 		const componentIcon = listIcon.filter((icono) => icono.name === menu.icon)?.[0] || ''
 		return componentIcon.icon
 	}
+
+	const hasActiveChild = item.subMenus.some((value) => buttonActive?.includes(value.link))
 
 	return (
 		<div className='!w-full'>
@@ -38,9 +43,7 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 			>
 				<ListItemIcon
 					className={`${!isMobile && openSideBar ? '!mr-3' : ''} ${
-						item.subMenus.some((value) => buttonActive?.includes(value.link))
-							? ' !text-blue-500 dark:!text-blue-500'
-							: ''
+						hasActiveChild ? ' !text-blue-500 dark:!text-blue-500' : ''
 					}`}
 					sx={{
 						minWidth: 0,
@@ -58,71 +61,153 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 						opacity: !isMobile && openSideBar ? 1 : 0,
 						display: isMobile ? 'none !important' : 'block',
 					}}
-					className={`${
-						item.subMenus.some((value) => buttonActive?.includes(value.link))
-							? ' !text-blue-500 dark:!text-blue-500'
-							: ''
-					}`}
+					className={`${hasActiveChild ? ' !text-blue-500 dark:!text-blue-500' : ''}`}
 					primary={item.name}
 				/>
 			</ListItemButton>
 			{openSideBar ? (
 				<Collapse in={openSub} className='!w-full' timeout='auto' unmountOnExit>
-					{item.subMenus.map((submenu, index) => {
-						return (
-							<ListItemButton key={index} onClick={() => activeButton(submenu.link)} className='!bg-slate-100'>
-								<Link to={submenu.link} className='text-black dark:text-white flex pl-1'>
-									<ListItemIcon
-										className={`${
-											buttonActive?.includes(submenu.link)
-												? ' !text-blue-500 dark:!text-blue-500'
-												: ''
-										}`}
-									>
-										{getIcon(submenu)}
-									</ListItemIcon>
-									<ListItemText
-										className={`${
-											buttonActive?.includes(submenu.link)
-												? ' !text-blue-500 dark:!text-blue-500'
-												: ''
-										}`}
-										primary={submenu.name}
-									/>
-								</Link>
-							</ListItemButton>
-						)
-					})}
+					<div className='relative ml-6 pl-3 border-l border-slate-200 dark:border-slate-700 py-1'>
+						{item.subMenus.map((submenu, index) => {
+							const isActive = buttonActive?.includes(submenu.link)
+							return (
+								<ListItemButton
+									key={index}
+									onClick={() => activeButton(submenu.link)}
+									sx={{
+										minHeight: 30,
+										py: 0.5,
+										px: 1,
+										my: 0.25,
+										borderRadius: '8px',
+										transition: 'background-color 150ms ease',
+										backgroundColor: isActive ? 'rgba(54, 139, 237, 0.10)' : 'transparent',
+										'&:hover': {
+											backgroundColor: isActive ? 'rgba(54, 139, 237, 0.14)' : 'rgba(54, 139, 237, 0.06)',
+										},
+									}}
+								>
+									<Link to={submenu.link} className='text-slate-600 dark:text-slate-300 flex items-center gap-2 w-full'>
+										<ListItemIcon
+											sx={{
+												minWidth: 0,
+												'& svg': { fontSize: '1.5rem' },
+											}}
+											className={`${isActive ? '!text-blue-500 dark:!text-blue-400' : '!text-slate-500 dark:!text-slate-400'}`}
+										>
+											{getIcon(submenu)}
+										</ListItemIcon>
+										<ListItemText
+											primaryTypographyProps={{
+												fontSize: '1rem',
+												fontWeight: isActive ? 600 : 400,
+												sx: { lineHeight: 1.2 },
+											}}
+											className={`${isActive ? '!text-blue-500 dark:!text-blue-400' : ''}`}
+											primary={submenu.name}
+										/>
+									</Link>
+								</ListItemButton>
+							)
+						})}
+					</div>
 				</Collapse>
 			) : anchorEl ? (
 				<Popper
 					id={item.name}
 					key={item.name}
-					className='p-2 bg-[#ffffff] z-50 rounded-xl shadow-lg flex flex-col justify-start'
-					placement={isMobile ? 'top-end' : 'left-start'}
+					placement={isMobile ? 'top-end' : 'right-start'}
 					open={openSub}
 					anchorEl={anchorEl}
 					modifiers={[
-						{ name: 'offset', options: { offset: [0, 5] } },
+						{ name: 'offset', options: { offset: [0, 10] } },
+						{ name: 'preventOverflow', options: { boundary: 'viewport', padding: 12, altAxis: true } },
+						{ name: 'flip', options: { fallbackPlacements: ['right-end', 'left-start', 'left-end', 'bottom-start'] } },
 					]}
 					sx={{
+						zIndex: 2500,
 						...(isMobile && {
 							transform: 'translate3d(-50px, -76px, 0px) !important',
-							position: isMobile ? 'fixed !important' : 'absolute !important',
+							position: 'fixed !important',
 						}),
 					}}
 				>
-					{item.subMenus?.map((item2, index) => (
-						<MenuItem
-							className={`gap-3  ${
-								buttonActive.includes(item2.link) ? ' !text-blue-500' : ' !text-gray-500'
-							}`}
-							key={index}
-							onClick={() => activeButton(item2.link)}
+					<ClickAwayListener onClickAway={handleClose}>
+						<Paper
+							elevation={0}
+							className='bg-white dark:bg-slate-900 !rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden'
+							sx={{
+								minWidth: 220,
+								maxWidth: 280,
+								maxHeight: 'calc(100vh - 96px)',
+								overflowY: 'auto',
+								display: 'flex',
+								flexDirection: 'column',
+								transformOrigin: 'left top',
+								boxShadow: '0 18px 40px -12px rgba(15, 42, 68, 0.28), 0 4px 12px -4px rgba(15, 42, 68, 0.12)',
+								animation: 'submenuPopIn 220ms cubic-bezier(0.22, 1, 0.36, 1) both',
+								'@keyframes submenuPopIn': {
+									'0%': {
+										opacity: 0,
+										transform: 'translateX(-8px) scale(0.96)',
+									},
+									'100%': {
+										opacity: 1,
+										transform: 'translateX(0) scale(1)',
+									},
+								},
+								'&::-webkit-scrollbar': { width: 6 },
+								'&::-webkit-scrollbar-thumb': {
+									backgroundColor: 'rgba(54, 139, 237, 0.35)',
+									borderRadius: 3,
+								},
+								'&::-webkit-scrollbar-track': { backgroundColor: 'transparent' },
+							}}
 						>
-							{getIcon(item2)} {item2.name}
-						</MenuItem>
-					))}
+							<div className='p-1.5'>
+								{item.subMenus?.map((item2, index) => {
+									const isActive = buttonActive?.includes(item2.link)
+									return (
+										<MenuItem
+											key={index}
+											onClick={() => {
+												activeButton(item2.link)
+												handleClose()
+											}}
+											sx={{
+												gap: 1.5,
+												py: 1,
+												px: 1.5,
+												my: 0.25,
+												borderRadius: '10px',
+												fontSize: '0.9rem',
+												fontWeight: isActive ? 600 : 500,
+												color: isActive ? '#368bed' : 'inherit',
+												backgroundColor: isActive ? 'rgba(54, 139, 237, 0.10)' : 'transparent',
+												transition: 'background-color 150ms ease, color 150ms ease',
+												'& .submenu-icon': {
+													color: isActive ? '#368bed' : 'rgb(100, 116, 139)',
+													transition: 'color 150ms ease',
+												},
+												'&:hover': {
+													backgroundColor: isActive ? 'rgba(54, 139, 237, 0.16)' : 'rgba(54, 139, 237, 0.08)',
+													color: '#368bed',
+												},
+												'&:hover .submenu-icon': {
+													color: '#368bed',
+												},
+											}}
+										>
+											<span className='submenu-icon inline-flex items-center justify-center shrink-0 text-lg'>
+												{getIcon(item2)}
+											</span>
+											<span className='truncate'>{item2.name}</span>
+										</MenuItem>
+									)
+								})}
+							</div>
+						</Paper>
+					</ClickAwayListener>
 				</Popper>
 			) : null}
 		</div>

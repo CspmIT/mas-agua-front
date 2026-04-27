@@ -1,4 +1,43 @@
 import React, { useEffect, useState } from 'react';
+import {
+  Box,
+  Button,
+  Checkbox,
+  Divider,
+  FormControl,
+  FormControlLabel,
+  MenuItem,
+  Select,
+  TextField,
+} from '@mui/material';
+import {
+  floatingPanelSx,
+  ghostPillSx,
+  panelLabelClass,
+  panelTitleClass,
+  primaryPillSx,
+} from '../../utils/js/diagramTheme';
+
+const POSITIONS = ['Arriba', 'Izquierda', 'Centro', 'Derecha', 'Abajo'];
+
+const BOOLEAN_COLOR_OPTIONS = [
+  { value: '-', label: 'Seleccione...' },
+  { value: 'default', label: 'Apagado (gris)' },
+  { value: 'success', label: 'Encendido (verde)' },
+  { value: 'error', label: 'En falla (rojo)' },
+  { value: 'warning', label: 'Advertencia (amarillo)' },
+];
+
+const PositionButton = ({ active, onClick, children }) => (
+  <Button
+    size='small'
+    variant={active ? 'contained' : 'outlined'}
+    onClick={onClick}
+    sx={{ ...(active ? primaryPillSx : ghostPillSx), minWidth: 0, px: 1.25 }}
+  >
+    {children}
+  </Button>
+);
 
 const TooltipPositionPanel = ({
   selectedElement,
@@ -7,13 +46,11 @@ const TooltipPositionPanel = ({
   onShowTooltip,
   onSetMaxValue,
   onSetBooleanColors,
-  onSetBinaryBit
+  onSetBinaryBit,
 }) => {
   if (!selectedElement?.dataInflux || selectedElement.type !== 'image') return null;
 
-  const positions = ['Arriba', 'Abajo', 'Izquierda', 'Derecha', 'Centro'];
   const isTooltipShow = selectedElement.dataInflux.show;
-
   const [localMaxValue, setLocalMaxValue] = useState(selectedElement.dataInflux.max_value_var || '');
   const [calculatePercentage, setCalculatePercentage] = useState(
     selectedElement.dataInflux.calculatePercentage || false
@@ -39,10 +76,7 @@ const TooltipPositionPanel = ({
     if (Array.isArray(creationBits)) {
       setBinaryBits(creationBits);
     } else if (Array.isArray(editBits)) {
-      const normalizedBits = editBits.map(b => ({
-        id: b.id_bit,
-        name: b.bit
-      }));
+      const normalizedBits = editBits.map((b) => ({ id: b.id_bit, name: b.bit }));
       setBinaryBits(normalizedBits);
     } else {
       setBinaryBits([]);
@@ -50,19 +84,18 @@ const TooltipPositionPanel = ({
   }, [selectedElement, isBinaryCompressed]);
 
   const selectedBitId = String(
-    selectedElement.dataInflux.binary?.id_bit ?? // creación
-    selectedElement.dataInflux.id_bit ?? ''       // edición
+    selectedElement.dataInflux.binary?.id_bit ?? selectedElement.dataInflux.id_bit ?? ''
   );
+
   const handleBinaryBitSelect = (e) => {
     const id_bit = Number(e.target.value);
-
-    const selectedBit = binaryBits.find(b => Number(b.id) === id_bit);
+    const selectedBit = binaryBits.find((b) => Number(b.id) === id_bit);
     if (!selectedBit) return;
 
     onSetBinaryBit?.({
       id_var: selectedElement.dataInflux.id,
       id_bit: selectedBit.id,
-      name: selectedBit.name
+      name: selectedBit.name,
     });
   };
 
@@ -75,166 +108,127 @@ const TooltipPositionPanel = ({
   };
 
   const handleCalculatePercentageToggle = () => {
-    setCalculatePercentage(prev => {
+    setCalculatePercentage((prev) => {
       const newValue = !prev;
-      // Guardar en el elemento que se debe calcular porcentaje
       onSetMaxValue(newValue ? parseFloat(localMaxValue) || 0 : null, newValue);
       return newValue;
     });
   };
 
+  const currentPosition = selectedElement.dataInflux.position;
+
   return (
-    <div className="absolute left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg max-w-md z-10">
-      <h4 className="text-sm font-bold mb-2">Personalizar variable</h4>
+    <Box
+      sx={floatingPanelSx}
+      className='absolute left-2 top-2 z-10 w-64 p-3 flex flex-col gap-3'
+    >
+      <h4 className={panelTitleClass}>Personalizar variable</h4>
 
-      <label className="flex items-center space-x-2 mt-2">
-        <input
-          type="checkbox"
-          checked={!isTooltipShow}
-          onChange={(e) => {
-            if (e.target.checked) onHideTooltip();
-            else onShowTooltip?.();
-          }}
-        />
-        <span className="text-sm">Ocultar</span>
-      </label>
+      <FormControlLabel
+        control={
+          <Checkbox
+            size='small'
+            checked={!isTooltipShow}
+            onChange={(e) => {
+              if (e.target.checked) onHideTooltip();
+              else onShowTooltip?.();
+            }}
+          />
+        }
+        label={<span className='text-sm text-slate-700 dark:text-gray-300'>Ocultar tooltip</span>}
+      />
 
-      <div className="grid grid-cols-3 gap-2 my-3 text-xs">
-        <div></div>
-        <button
-          className={`px-2 py-1 rounded ${selectedElement.dataInflux.position === 'Arriba' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => onChangePosition('Arriba')}
-        >
-          Arriba
-        </button>
-        <div></div>
-
-        <button
-          className={`px-2 py-1 rounded ${selectedElement.dataInflux.position === 'Izquierda' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => onChangePosition('Izquierda')}
-        >
-          Izquierda
-        </button>
-
-        <button
-          className={`px-2 py-1 rounded ${selectedElement.dataInflux.position === 'Centro' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => onChangePosition('Centro')}
-        >
-          Centro
-        </button>
-
-        <button
-          className={`px-2 py-1 rounded ${selectedElement.dataInflux.position === 'Derecha' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => onChangePosition('Derecha')}
-        >
-          Derecha
-        </button>
-
-        <div></div>
-
-        <button
-          className={`px-2 py-1 rounded ${selectedElement.dataInflux.position === 'Abajo' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => onChangePosition('Abajo')}
-        >
-          Abajo
-        </button>
-
-        <div></div>
+      <div>
+        <label className={`${panelLabelClass} block mb-1.5`}>Posición</label>
+        <div className='grid grid-cols-3 gap-1.5'>
+          <div />
+          <PositionButton active={currentPosition === 'Arriba'} onClick={() => onChangePosition('Arriba')}>Arriba</PositionButton>
+          <div />
+          <PositionButton active={currentPosition === 'Izquierda'} onClick={() => onChangePosition('Izquierda')}>Izq.</PositionButton>
+          <PositionButton active={currentPosition === 'Centro'} onClick={() => onChangePosition('Centro')}>Centro</PositionButton>
+          <PositionButton active={currentPosition === 'Derecha'} onClick={() => onChangePosition('Derecha')}>Der.</PositionButton>
+          <div />
+          <PositionButton active={currentPosition === 'Abajo'} onClick={() => onChangePosition('Abajo')}>Abajo</PositionButton>
+          <div />
+        </div>
       </div>
 
-      {/* Check Calcular valor */}
       {!isBinaryCompressed && !isCalc_binary && (
-        <label className="flex items-center space-x-2 mt-4">
-          <input
-            type="checkbox"
-            checked={calculatePercentage}
-            onChange={handleCalculatePercentageToggle}
-          />
-          <span className="text-sm">Calcular valor de la variable</span>
-        </label>
+        <FormControlLabel
+          control={
+            <Checkbox
+              size='small'
+              checked={calculatePercentage}
+              onChange={handleCalculatePercentageToggle}
+            />
+          }
+          label={<span className='text-sm text-slate-700 dark:text-gray-300'>Calcular valor de la variable</span>}
+        />
       )}
 
-      {/* Valor máximo habilitable */}
       {calculatePercentage && (
-        <div className="mt-1 grid grid-cols-1 gap-1">
-          <label className="text-sm">Valor máximo:</label>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={localMaxValue}
-            onChange={handleMaxValueChange}
-            placeholder="Ej: 300"
-            className="bg-gray-100 border rounded p-1"
-          />
-        </div>
+        <TextField
+          size='small'
+          type='number'
+          label='Valor máximo'
+          value={localMaxValue}
+          onChange={handleMaxValueChange}
+          placeholder='Ej: 300'
+          inputProps={{ min: 0, step: 0.01 }}
+        />
       )}
 
       {isBinaryCompressed && !isCalc_binary && (
-        <div className="mt-4 border-t pt-3">
-          <h5 className="text-sm font-semibold mb-2">Asignación de Bits</h5>
-
-          <select
-            onChange={handleBinaryBitSelect}
-            value={selectedBitId}
-            className="w-full border rounded p-1 bg-gray-100 text-sm"
-          >
-            <option value="" disabled>Elegí el bit</option>
-            {binaryBits.map(b => (
-              <option key={b.id} value={String(b.id)}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <>
+          <Divider flexItem />
+          <div>
+            <label className={`${panelLabelClass} block mb-1.5`}>Asignación de bits</label>
+            <FormControl fullWidth size='small'>
+              <Select value={selectedBitId} onChange={handleBinaryBitSelect} displayEmpty>
+                <MenuItem value='' disabled>Elegí el bit</MenuItem>
+                {binaryBits.map((b) => (
+                  <MenuItem key={b.id} value={String(b.id)}>{b.name}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+        </>
       )}
 
       {isBooleanUnit && (
-        <div className="mt-4 border-t pt-3">
-          <h5 className="text-sm font-semibold mb-2">Colores por estado</h5>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">False:</span>
-              <select
-                value={booleanColors.false}
-                onChange={(e) => {
-                  const newColors = { ...booleanColors, false: e.target.value };
-                  setBooleanColors(newColors);
-                  onSetBooleanColors?.(newColors);
-                }}
-                className="border rounded px-2 py-1 text-sm bg-gray-100"
-              >
-                <option value="-">Seleccione...</option>
-                <option value="default">Apagado (gris)</option>
-                <option value="success">Encendido (verde)</option>
-                <option value="error">En falla (rojo)</option>
-                <option value="warning">Advertencia (amarillo)</option>
-              </select>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">True:</span>
-              <select
-                value={booleanColors.true}
-                onChange={(e) => {
-                  const newColors = { ...booleanColors, true: e.target.value };
-                  setBooleanColors(newColors);
-                  onSetBooleanColors?.(newColors);
-                }}
-                className="border rounded px-2 py-1 text-sm bg-gray-100"
-              >
-                <option value="-">Seleccione...</option>
-                <option value="default">Apagado (gris)</option>
-                <option value="success">Encendido (verde)</option>
-                <option value="error">En falla (rojo)</option>
-                <option value="warning">Advertencia (amarillo)</option>
-              </select>
-            </div>
+        <>
+          <Divider flexItem />
+          <div className='flex flex-col gap-2'>
+            <label className={panelLabelClass}>Colores por estado</label>
+            {['false', 'true'].map((stateKey) => (
+              <FormControl key={stateKey} fullWidth size='small'>
+                <Select
+                  value={booleanColors[stateKey]}
+                  onChange={(e) => {
+                    const newColors = { ...booleanColors, [stateKey]: e.target.value };
+                    setBooleanColors(newColors);
+                    onSetBooleanColors?.(newColors);
+                  }}
+                  renderValue={(selected) => {
+                    const opt = BOOLEAN_COLOR_OPTIONS.find((o) => o.value === selected);
+                    return (
+                      <span className='text-sm'>
+                        <span className='font-medium mr-1.5'>{stateKey === 'true' ? 'True:' : 'False:'}</span>
+                        {opt?.label}
+                      </span>
+                    );
+                  }}
+                >
+                  {BOOLEAN_COLOR_OPTIONS.map((opt) => (
+                    <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            ))}
           </div>
-        </div>
+        </>
       )}
-    </div>
+    </Box>
   );
 };
 
