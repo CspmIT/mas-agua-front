@@ -13,6 +13,20 @@ import { useEffect } from 'react'
 import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
 
+// Offset por anchor para que el popup no se pise con el pin
+// (el pin se dibuja ~43px por encima de la coordenada y ~24px de ancho)
+const POPUP_OFFSET = {
+    top: [0, 0],
+    'top-left': [0, 0],
+    'top-right': [0, 0],
+    bottom: [0, -42],
+    'bottom-left': [0, -42],
+    'bottom-right': [0, -42],
+    left: [18, -22],
+    right: [-18, -22],
+    center: [-8, -58],
+}
+
 const MapBase = ({
     navigationcontrol = true,
     height = '100%',
@@ -26,6 +40,7 @@ const MapBase = ({
     setViewState,
     draggable = false,
     withInfo = false, // Determina si se consulta InfluxDB
+    onEditMarker = null,
 }) => {
     function extractInfluxVarsFromMarkers(markers) {
         return markers.map((m) => ({
@@ -144,24 +159,16 @@ const MapBase = ({
                     >
                         <Pin label={marker.name} color="#3498db" />
                         {withInfo && marker.popupInfo && marker.popupInfo.data && (
-
                             <Popup
                                 key={`popup-${index}`}
-                                anchor="top-left"
+                                anchor={marker.popupInfo.anchor || undefined}
+                                offset={POPUP_OFFSET}
                                 closeButton={false}
                                 latitude={Number(marker.popupInfo.lat)}
                                 longitude={Number(marker.popupInfo.lng)}
                                 closeOnClick={false}
-                                className='!rounded-xl !shadow-md'
                             >
-                                <Typography variant="body3">
-                                    {marker.popupInfo.data.binary_compressed
-                                        ? marker.popupInfo.data.bits?.find(b => b.id === marker.popupInfo.id_bit)?.name
-                                        ?? marker.popupInfo.data.name
-                                        : marker.popupInfo.data.name ?? 'No hay datos'
-                                    }
-                                </Typography>
-                                <Typography variant="body2">
+                                <Typography variant="inherit">
                                     {formatMarkerValue(marker)}
                                 </Typography>
                             </Popup>
@@ -170,7 +177,11 @@ const MapBase = ({
                 ))}
             </Map>
             {controlPanel && (
-                <ControlPanel markers={markers} setMarkers={setMarkers} />
+                <ControlPanel
+                    markers={markers}
+                    setMarkers={setMarkers}
+                    onEdit={onEditMarker}
+                />
             )}
         </div>
     )
