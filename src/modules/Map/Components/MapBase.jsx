@@ -144,23 +144,14 @@ const MapBase = ({
                     >
                         <Pin label={marker.name} color="#3498db" />
                         {withInfo && marker.popupInfo && marker.popupInfo.data && (
-
                             <Popup
                                 key={`popup-${index}`}
-                                anchor="top-left"
+                                anchor="top"
                                 closeButton={false}
                                 latitude={Number(marker.popupInfo.lat)}
                                 longitude={Number(marker.popupInfo.lng)}
                                 closeOnClick={false}
-                                className='!rounded-xl !shadow-md'
                             >
-                                <Typography variant="body3">
-                                    {marker.popupInfo.data.binary_compressed
-                                        ? marker.popupInfo.data.bits?.find(b => b.id === marker.popupInfo.id_bit)?.name
-                                        ?? marker.popupInfo.data.name
-                                        : marker.popupInfo.data.name ?? 'No hay datos'
-                                    }
-                                </Typography>
                                 <Typography variant="body2">
                                     {formatMarkerValue(marker)}
                                 </Typography>
