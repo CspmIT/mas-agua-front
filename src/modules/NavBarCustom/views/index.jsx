@@ -1,6 +1,7 @@
 import MenuIcon from '@mui/icons-material/Menu'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
-import { ListItemText, ListItemIcon, ListItemButton, ListItem, IconButton, Divider, List, Toolbar, useMediaQuery, Badge } from '@mui/material'
+import { ListItemText, ListItemIcon, ListItemButton, ListItem, IconButton, Divider, List, Toolbar, useMediaQuery, Badge, Tooltip } from '@mui/material'
+import { HiSparkles } from 'react-icons/hi2'
 import DropdownImage from '../../core/components/DropdownImage'
 import { useCallback, useContext, useEffect, useRef, useState } from 'react'
 import ButtonModeDark from '../../core/components/ButtonModeDark'
@@ -156,6 +157,52 @@ function NavBarCustom({ setLoading }) {
 					</IconButton>
 
 					<img onClick={() => navigate('/')} className='max-h-10 cursor-pointer' src={Logo} />
+					<Tooltip title='Asistente IA' placement='bottom'>
+						<button
+							type='button'
+							onClick={() => navigate('/assistant')}
+							aria-label='Abrir asistente IA'
+							aria-current={location === '/assistant' ? 'page' : undefined}
+							className={[
+								'group relative ml-3 sm:ml-4 inline-flex items-center gap-2 h-9 rounded-full select-none transition-all duration-200',
+								'px-3 sm:px-4 text-white font-semibold tracking-tight',
+								'focus:outline-none focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-[#1f4e79]',
+								'hover:-translate-y-[1px]',
+							].join(' ')}
+							style={{
+								background:
+									'linear-gradient(90deg, #2c6aa0  0%, #1f4e79 50%, #0f2a44 100%)',
+								boxShadow: [
+									'0 6px 22px -6px #2563eb',
+									'0 2px 6px rgba(0,0,0,0.25)',
+									'inset 0 0 0 1.5px rgba(255,255,255,0.55)',
+								].join(', '),
+							}}
+						>
+							<span
+								className='pointer-events-none absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300'
+								style={{
+									background:
+										'radial-gradient(120% 120% at 30% 0%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0) 55%)',
+								}}
+								aria-hidden
+							/>
+							<span className='relative inline-flex w-5 h-5 items-center justify-center'>
+								<span
+									className='absolute inset-0 rounded-full bg-white/45 blur-[7px] opacity-80 group-hover:opacity-100 transition-opacity'
+									aria-hidden
+								/>
+								<span
+									className='absolute inset-[3px] rounded-full bg-white/30 animate-ping'
+									aria-hidden
+								/>
+								<HiSparkles className='relative text-[15px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.30)]' />
+							</span>
+							<span className='hidden sm:inline relative text-[13px] uppercase tracking-[0.10em]'>
+								Asistente IA
+							</span>
+						</button>
+					</Tooltip>
 					<div className='absolute right-5 flex flex-row items-center'>
 						<span className={`inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-3.5 py-1 mr-2 text-white/95 text-sm font-medium tracking-wide select-none ${isMobile ? 'hidden' : ''}`}>
 							{nameCoop}

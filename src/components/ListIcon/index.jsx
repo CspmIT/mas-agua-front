@@ -11,7 +11,7 @@ import {
     FaBell, 
 } from 'react-icons/fa'
 import { FaTable } from "react-icons/fa6";
-import { HiVariable } from 'react-icons/hi2'
+import { HiVariable, HiSparkles } from 'react-icons/hi2'
 import { MdContentPaste, MdNotificationsActive, MdSchema } from 'react-icons/md'
 import { RiAlertFill, RiDashboardFill } from 'react-icons/ri'
 
@@ -95,10 +95,15 @@ const ListIcon = () => [
         name: 'FaBell', 
         icon: <FaBell className=' text-3xl' /> 
     },
-    { 
-        title: 'Bombeo de succión', 
-        name: 'FaTable', 
-        icon: <FaTable className=' text-3xl' /> 
+    {
+        title: 'Bombeo de succión',
+        name: 'FaTable',
+        icon: <FaTable className=' text-3xl' />
+    },
+    {
+        title: 'Asistente IA',
+        name: 'HiSparkles',
+        icon: <HiSparkles className=' text-3xl' />,
     }
 ]
 

@@ -28,6 +28,8 @@ import ExternalUser from '../modules/ExternalUsers/views/index'
 import PumpsTable from '../modules/PumpsTable/views/index'
 import Boards from '../modules/Boards/views'
 import AdminDashboardPage from '../modules/home/components/AdminDashboardPage'
+import AssistantPage from '../modules/Assistant/views/AssistantPage'
+import AssistantDocsPage from '../modules/Assistant/views/AssistantDocsPage'
 
 export const userRoutes = [
 	{ path: '/', element: <Home /> },
@@ -70,4 +72,6 @@ export const userRoutes = [
 	{ path: '/list/pumps', element: <PumpsTable /> },
 	{ path: '/boards', element: <Boards /> },
 	{ path: '/config/dashboard', element: <AdminDashboardPage />},
+	{ path: '/assistant', element: <AssistantPage /> },
+	{ path: '/assistant/docs', element: <AssistantDocsPage /> },
 ]
