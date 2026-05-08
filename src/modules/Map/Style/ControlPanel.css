@@ -1,24 +1,24 @@
 .control-panel {
   font-size: 14px;
-  line-height: 18px;
+  line-height: 14px;
   width: 344px;
   background: #fff;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
-  margin: 24px;
-  padding: 12px 24px;
+  margin: 6px;
+  padding: 10px 10px;
   position: absolute;
   top: 0;
   right: 0;
   outline: none;
   cursor: auto;
-  max-height: 65vh; /* Ajusta según sea necesario */
+  max-height: 75vh; 
   overflow-y: auto;
 }
 
 .control-panel h3 {
   font-size: 1.2em;
   font-weight: 500;
-  margin: 8px 0;
+  margin: 4px 0;
 }
 
 .control-panel a {
@@ -26,20 +26,20 @@
 }
 
 .control-panel p {
-  margin-bottom: 16px;
+  margin-bottom: 1px;
 }
 
 .control-panel .legend {
   display: inline-block;
-  width: 12px;
-  height: 12px;
+  width: 6px;
+  height: 6px;
 }
 .control-panel hr {
-  margin: 12px -24px;
+  margin: 6px -12px;
 }
 .control-panel .source-link {
   text-align: right;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 .control-panel .source-link a {
   font-weight: bold;
@@ -59,7 +59,7 @@
 .control-panel .input label {
   text-transform: uppercase;
   width: 50%;
-  margin-right: 10%;
+  margin-right: 5%;
   color: #486865;
   margin-bottom: 4px;
 }
@@ -87,8 +87,8 @@
 }
 
 .control-panel .input .tooltip {
-  left: 50%;
-  top: 24px;
+  left: 25%;
+  top: 12px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 200ms;

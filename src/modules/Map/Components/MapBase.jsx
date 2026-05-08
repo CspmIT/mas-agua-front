@@ -26,6 +26,7 @@ const MapBase = ({
     setViewState,
     draggable = false,
     withInfo = false, // Determina si se consulta InfluxDB
+    onEditMarker = null,
 }) => {
     function extractInfluxVarsFromMarkers(markers) {
         return markers.map((m) => ({
@@ -146,7 +147,7 @@ const MapBase = ({
                         {withInfo && marker.popupInfo && marker.popupInfo.data && (
                             <Popup
                                 key={`popup-${index}`}
-                                anchor="top"
+                                anchor={marker.popupInfo.anchor || undefined}
                                 closeButton={false}
                                 latitude={Number(marker.popupInfo.lat)}
                                 longitude={Number(marker.popupInfo.lng)}
@@ -161,7 +162,11 @@ const MapBase = ({
                 ))}
             </Map>
             {controlPanel && (
-                <ControlPanel markers={markers} setMarkers={setMarkers} />
+                <ControlPanel
+                    markers={markers}
+                    setMarkers={setMarkers}
+                    onEdit={onEditMarker}
+                />
             )}
         </div>
     )
