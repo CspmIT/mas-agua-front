@@ -28,6 +28,11 @@ const MapView = ({ create = false, search = false }) => {
     const [loading, setLoading] = useState(true)
     const [modalOpen, setModalOpen] = useState(false)
 
+    // ── Edit / popup options ─────────────────────────────────────────────────
+    const [editingIndex, setEditingIndex] = useState(null)
+    const [anchor, setAnchor] = useState('')      // '' = automático
+    const [editInitialVar, setEditInitialVar] = useState(null)
+
     // ── Binary compressed state ──────────────────────────────────────────────
     const [selectedVar, setSelectedVar] = useState(null)
     const [selectedBitId, setSelectedBitId] = useState('')
@@ -44,7 +49,7 @@ const MapView = ({ create = false, search = false }) => {
     })
 
     // ── Helpers ──────────────────────────────────────────────────────────────
-    const generateMarker = (name, lat, lng, idVar, data, id_bit = null) => ({
+    const generateMarker = (name, lat, lng, idVar, data, id_bit = null, anchor = '') => ({
         name,
         latitude: parseFloat(lat),
         longitude: parseFloat(lng),
@@ -52,7 +57,8 @@ const MapView = ({ create = false, search = false }) => {
             lat: parseFloat(lat),
             lng: parseFloat(lng),
             idVar,
-            id_bit,        // <-- nuevo: bit asignado si es binaria comprimida
+            id_bit,        // <-- bit asignado si es binaria comprimida
+            anchor,        // <-- ubicación del popup ('' = automático)
             data: data || null,
         },
     })
@@ -67,8 +73,34 @@ const MapView = ({ create = false, search = false }) => {
         resetForm()
         setSelectedVar(null)
         setSelectedBitId('')
+        setAnchor('')
+        setEditingIndex(null)
+        setEditInitialVar(null)
         setModalOpen(true)
     }
+
+    const openEditModal = (marker, index) => {
+        resetForm({
+            markerName: marker.name,
+            markerLat: marker.latitude,
+            markerLng: marker.longitude,
+            idVar: marker.popupInfo.idVar,
+        })
+        setSelectedVar(marker.popupInfo.data)
+        setEditInitialVar(marker.popupInfo.data)
+        setSelectedBitId(marker.popupInfo.id_bit ?? '')
+        setAnchor(marker.popupInfo.anchor ?? '')
+        setEditingIndex(index)
+        setModalOpen(true)
+    }
+
+    // SelectVars dispara handleVarSelect en mount con initialVar y eso resetea el bit.
+    // Re-aplicamos el bit del marker que estamos editando una vez montado.
+    useEffect(() => {
+        if (editingIndex === null) return
+        const m = markers[editingIndex]
+        if (m) setSelectedBitId(m.popupInfo.id_bit ?? '')
+    }, [editingIndex])
 
     const closeModal = () => setModalOpen(false)
 
@@ -94,11 +126,16 @@ const MapView = ({ create = false, search = false }) => {
             markerLat,
             markerLng,
             idVar,
-            null,
-            isBinaryCompressed ? Number(selectedBitId) : null
+            selectedVar,
+            isBinaryCompressed ? Number(selectedBitId) : null,
+            anchor,
         )
 
-        setMarkers(prev => [...prev, marker])
+        if (editingIndex !== null) {
+            setMarkers(prev => prev.map((m, i) => (i === editingIndex ? marker : m)))
+        } else {
+            setMarkers(prev => [...prev, marker])
+        }
         closeModal()
     }
 
@@ -181,7 +218,8 @@ const MapView = ({ create = false, search = false }) => {
                     markerMap.longitude,
                     markerMap.PopUpsMarkers.idVar,
                     markerMap.PopUpsMarkers.InfluxVar,
-                    markerMap.PopUpsMarkers.id_bit ?? null
+                    markerMap.PopUpsMarkers.id_bit ?? null,
+                    markerMap.PopUpsMarkers.anchor ?? '',
                 )
             )
             setMarkers(loadedMarkers)
@@ -250,6 +288,7 @@ const MapView = ({ create = false, search = false }) => {
                         controlPanel={create}
                         draggable={create}
                         withInfo={!create}
+                        onEditMarker={create ? openEditModal : null}
                     />
                 )}
             </CardCustom>
@@ -263,7 +302,9 @@ const MapView = ({ create = false, search = false }) => {
                 PaperProps={{ sx: { borderRadius: 3 } }}
             >
                 <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span className="font-semibold text-lg">Nuevo marcador</span>
+                    <span className="font-semibold text-lg">
+                        {editingIndex !== null ? 'Editar marcador' : 'Nuevo marcador'}
+                    </span>
                     <IconButton onClick={closeModal} size="small">
                         <Close fontSize="small" />
                     </IconButton>
@@ -279,7 +320,8 @@ const MapView = ({ create = false, search = false }) => {
                             {...register('markerName', {
                                 required: 'Debe dar un nombre al marcador',
                                 validate: (value) =>
-                                    !markers.some((m) => m.name === value) || 'El marcador ya existe',
+                                    !markers.some((m, i) => m.name === value && i !== editingIndex) ||
+                                    'El marcador ya existe',
                             })}
                             error={!!errors?.markerName}
                             helperText={errors?.markerName?.message}
@@ -308,6 +350,7 @@ const MapView = ({ create = false, search = false }) => {
                         <SelectVars
                             setValueState={handleVarSelect}
                             label="Variable del marcador"
+                            initialVar={editInitialVar || false}
                         />
 
                         {/* Selector bit — solo si es binaria comprimida */}
@@ -329,6 +372,27 @@ const MapView = ({ create = false, search = false }) => {
                             </FormControl>
                         )}
 
+                        {/* Posición del popup */}
+                        <FormControl fullWidth size="small">
+                            <InputLabel>Posición del popup</InputLabel>
+                            <Select
+                                value={anchor}
+                                label="Posición del popup"
+                                onChange={(e) => setAnchor(e.target.value)}
+                            >
+                                <MenuItem value="">Automático</MenuItem>
+                                <MenuItem value="top">Arriba</MenuItem>
+                                <MenuItem value="bottom">Abajo</MenuItem>
+                                <MenuItem value="left">Izquierda</MenuItem>
+                                <MenuItem value="right">Derecha</MenuItem>
+                                <MenuItem value="top-left">Arriba-Izquierda</MenuItem>
+                                <MenuItem value="top-right">Arriba-Derecha</MenuItem>
+                                <MenuItem value="bottom-left">Abajo-Izquierda</MenuItem>
+                                <MenuItem value="bottom-right">Abajo-Derecha</MenuItem>
+                                <MenuItem value="center">Centro</MenuItem>
+                            </Select>
+                        </FormControl>
+
                     </div>
                 </DialogContent>
 
@@ -336,8 +400,12 @@ const MapView = ({ create = false, search = false }) => {
                     <Button onClick={closeModal} color="inherit">
                         Cancelar
                     </Button>
-                    <Button onClick={saveMarker} variant="contained" startIcon={<AddLocation />}>
-                        Agregar
+                    <Button
+                        onClick={saveMarker}
+                        variant="contained"
+                        startIcon={<AddLocation />}
+                    >
+                        {editingIndex !== null ? 'Guardar' : 'Agregar'}
                     </Button>
                 </DialogActions>
             </Dialog>
