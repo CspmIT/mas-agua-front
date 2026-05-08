@@ -381,14 +381,14 @@ const MapView = ({ create = false, search = false }) => {
                                 onChange={(e) => setAnchor(e.target.value)}
                             >
                                 <MenuItem value="">Automático</MenuItem>
-                                <MenuItem value="top">Arriba</MenuItem>
-                                <MenuItem value="bottom">Abajo</MenuItem>
-                                <MenuItem value="left">Izquierda</MenuItem>
-                                <MenuItem value="right">Derecha</MenuItem>
-                                <MenuItem value="top-left">Arriba-Izquierda</MenuItem>
-                                <MenuItem value="top-right">Arriba-Derecha</MenuItem>
-                                <MenuItem value="bottom-left">Abajo-Izquierda</MenuItem>
-                                <MenuItem value="bottom-right">Abajo-Derecha</MenuItem>
+                                <MenuItem value="top">Abajo</MenuItem>
+                                <MenuItem value="bottom">Arriba</MenuItem>
+                                <MenuItem value="left">Derecha</MenuItem>
+                                <MenuItem value="right">Izquierda</MenuItem>
+                                <MenuItem value="top-left">Abajo-Derecha</MenuItem>
+                                <MenuItem value="top-right">Abajo-Izquierda</MenuItem>
+                                <MenuItem value="bottom-left">Arriba-Derecha</MenuItem>
+                                <MenuItem value="bottom-right">Arriba-Izquierda</MenuItem>
                                 <MenuItem value="center">Centro</MenuItem>
                             </Select>
                         </FormControl>
