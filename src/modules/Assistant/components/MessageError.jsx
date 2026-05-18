@@ -5,7 +5,13 @@ import { TbReload } from 'react-icons/tb'
  * @param {{ message: string, code?: string, onRetry: () => void }} props
  */
 const MessageError = ({ message, code, onRetry }) => {
-	const isDegraded = code === 'service' || code === 'network'
+	const isDegraded = code === 'service' || code === 'network' || code === 'timeout'
+	const isRate = code === 'rate'
+	const eyebrow = isRate
+		? 'Demasiadas consultas'
+		: isDegraded
+		? 'Servicio degradado'
+		: 'No pudimos completar la consulta'
 	return (
 		<div
 			role='alert'
@@ -18,7 +24,7 @@ const MessageError = ({ message, code, onRetry }) => {
 				</div>
 				<div className='min-w-0 flex-1'>
 					<div className='text-[10.5px] font-semibold uppercase tracking-[0.16em] text-rose-700/90 dark:text-rose-300 mb-0.5'>
-						{isDegraded ? 'Servicio degradado' : 'No pudimos completar la consulta'}
+						{eyebrow}
 					</div>
 					<p className='text-[13.5px] text-rose-900/90 dark:text-rose-100/90 leading-snug'>
 						{message}

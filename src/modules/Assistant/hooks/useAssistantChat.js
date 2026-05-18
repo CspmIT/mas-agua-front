@@ -70,7 +70,7 @@ export const useAssistantChat = ({ enableTools: initialTools = false } = {}) => 
 			try {
 				const data = await sendChat({
 					question: trimmed,
-					enable_tools: !!tools,
+					enableTools: !!tools,
 					signal: ctl.signal,
 				})
 				replaceMessage(pendingId, {

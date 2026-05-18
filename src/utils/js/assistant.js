@@ -7,11 +7,12 @@ import { getData } from '../../storage/cookies-store'
  * Servicio de asistente IA (RAG).
  *
  * El frontend NUNCA llama al AI service directamente: todas las peticiones
- * pasan por el gateway Node, que valida el JWT y reenvía. El tenant viaja
- * implícito en el JWT (claim nameApp). NO se envía tenant_id en body ni query.
+ * pasan por el gateway Node bajo /api/ai/*, que valida el JWT y reenvía.
+ * El tenant viaja implícito en el JWT (claim nameApp). NO se envía tenant_id
+ * en body ni query.
  *
- * Errores normalizados: lanzan { status, code, message } para que el caller
- * decida (401 -> logout, 5xx -> banner, etc).
+ * Errores normalizados: lanzan { status, code, message, details? } para que
+ * el caller decida (401 -> logout, 5xx -> banner, 429 -> wait, etc).
  */
 
 const buildBaseUrl = () => backend[import.meta.env.VITE_APP_NAME]
@@ -23,6 +24,7 @@ const resolveToken = async () => {
 }
 
 const NETWORK_MSG = 'El asistente no está disponible en este momento'
+const TIMEOUT_MSG = 'El asistente tardó demasiado en responder. Probá de nuevo.'
 
 const normalizeError = (error) => {
 	if (axios.isCancel?.(error)) {
@@ -36,20 +38,44 @@ const normalizeError = (error) => {
 		typeof data === 'string'
 			? data
 			: data?.message || data?.error || data?.detail || null
+
 	if (status === 401) return { status, code: 'auth', message: 'Sesión expirada', details: data }
-	if (status === 413) return { status, code: 'validation', message: 'El archivo supera los 25 MB', details: data }
+	if (status === 403)
+		return {
+			status,
+			code: 'forbidden',
+			message: backendMsg || 'No tenés permisos para esta acción',
+			details: data,
+		}
+	if (status === 400)
+		return {
+			status,
+			code: 'validation',
+			message: backendMsg || 'Solicitud inválida',
+			details: data,
+		}
+	if (status === 413)
+		return { status, code: 'validation', message: backendMsg || 'El archivo supera los 25 MB', details: data }
 	if (status === 422)
 		return {
 			status,
 			code: 'validation',
-			message: backendMsg || 'No se pudo extraer texto del archivo',
+			message: backendMsg || 'Datos inválidos',
 			details: data,
 		}
-	if (status === 400)
-		return { status, code: 'validation', message: backendMsg || 'Solicitud inválida', details: data }
-	if (status === 503)
-		return { status, code: 'rate', message: 'Esperá unos segundos y volvé a intentar', details: data }
-	if (status >= 500) return { status, code: 'service', message: NETWORK_MSG, details: data }
+	if (status === 429)
+		return {
+			status,
+			code: 'rate',
+			message: backendMsg || 'Demasiadas consultas. Esperá un momento.',
+			details: data,
+		}
+	if (status === 504)
+		return { status, code: 'timeout', message: backendMsg || TIMEOUT_MSG, details: data }
+	if (status === 503 || status === 502)
+		return { status, code: 'service', message: backendMsg || NETWORK_MSG, details: data }
+	if (status >= 500)
+		return { status, code: 'service', message: backendMsg || NETWORK_MSG, details: data }
 	return { status, code: 'unknown', message: backendMsg || 'Ocurrió un error inesperado', details: data }
 }
 
@@ -63,14 +89,18 @@ const authHeaders = async (extra = {}) => {
 }
 
 /**
- * @param {{ question: string, enable_tools?: boolean, signal?: AbortSignal }} req
+ * Envía una pregunta al asistente.
+ * El gateway espera enableTools (camelCase) y lo traduce a enable_tools antes
+ * de reenviar al AI service.
+ *
+ * @param {{ question: string, enableTools?: boolean, signal?: AbortSignal }} req
  */
-export const sendChat = async ({ question, enable_tools = false, signal } = {}) => {
-	const url = `${buildBaseUrl()}/assistant/chat`
+export const sendChat = async ({ question, enableTools = false, signal } = {}) => {
+	const url = `${buildBaseUrl()}/ai/chat`
 	try {
 		const { data } = await axios.post(
 			url,
-			{ question, enable_tools },
+			{ question, enableTools },
 			{
 				withCredentials: true,
 				signal,
@@ -92,21 +122,28 @@ export const sendChat = async ({ question, enable_tools = false, signal } = {}) 
  *   file: File,
  *   title: string,
  *   docType: 'manual_bomba'|'procedimiento'|'ficha_tecnica'|'manual_general'|'documento',
+ *   externalId?: string,
  *   onProgress?: (pct: number) => void,
  *   signal?: AbortSignal,
  * }} args
  */
-export const ingestDocument = async ({ file, title, docType, onProgress, signal }) => {
-	const url = `${buildBaseUrl()}/assistant/ingest`
+export const ingestDocument = async ({ file, title, docType, externalId, onProgress, signal }) => {
+	const url = `${buildBaseUrl()}/ai/ingest/document`
 	const fd = new FormData()
 	fd.append('file', file)
 	fd.append('title', title)
+	// El form-data se reenvía tal cual al AI service: campos en snake_case.
 	fd.append('doc_type', docType)
+	if (externalId) fd.append('external_id', externalId)
 	try {
 		const { data } = await axios.post(url, fd, {
 			withCredentials: true,
 			signal,
-			headers: await authHeaders({ 'Content-Type': 'multipart/form-data' }),
+			// Sin Content-Type: axios detecta el FormData y genera
+			// multipart/form-data; boundary=... con el boundary aleatorio
+			// correcto. Forzar el header acá deja al body sin separador
+			// y rompe el parser del gateway.
+			headers: await authHeaders(),
 			onUploadProgress: (e) => {
 				if (!onProgress || !e.total) return
 				onProgress(Math.round((e.loaded * 100) / e.total))
@@ -120,7 +157,7 @@ export const ingestDocument = async ({ file, title, docType, onProgress, signal 
 
 /** @param {string} docId */
 export const deleteDocument = async (docId) => {
-	const url = `${buildBaseUrl()}/assistant/document/${encodeURIComponent(docId)}`
+	const url = `${buildBaseUrl()}/ai/ingest/document/${encodeURIComponent(docId)}`
 	try {
 		await axios.delete(url, {
 			withCredentials: true,
@@ -133,10 +170,11 @@ export const deleteDocument = async (docId) => {
 
 /**
  * Lista de documentos indexados del tenant actual.
- * Requiere GET /api/assistant/documents en el backend Node (metadata en MySQL).
+ * Pendiente de implementar en el backend Node. Mientras no exista, lanza
+ * { code: 'not_implemented' } para que la UI muestre placeholder.
  */
 export const listDocuments = async () => {
-	const url = `${buildBaseUrl()}/assistant/documents`
+	const url = `${buildBaseUrl()}/ai/ingest/document`
 	try {
 		const { data } = await axios.get(url, {
 			withCredentials: true,
@@ -147,7 +185,7 @@ export const listDocuments = async () => {
 		const norm = normalizeError(error)
 		if (norm.status === 404 || norm.status === 501) {
 			norm.code = 'not_implemented'
-			norm.message = 'Endpoint /api/assistant/documents pendiente en el backend'
+			norm.message = 'Endpoint /api/ai/ingest/documents pendiente en el backend'
 		}
 		throw norm
 	}
@@ -155,8 +193,35 @@ export const listDocuments = async () => {
 
 /**
  * URL de descarga del documento original.
- * Requiere GET /api/assistant/document/:doc_id/file en el backend Node.
+ * Pendiente de implementar en el backend Node.
  * @param {string} docId
  */
 export const getDocumentDownloadUrl = (docId) =>
-	`${buildBaseUrl()}/assistant/document/${encodeURIComponent(docId)}/file`
+	`${buildBaseUrl()}/ai/ingest/document/${encodeURIComponent(docId)}/file`
+
+/**
+ * Liveness check del servicio AI. No requiere JWT.
+ * Devuelve { ok: boolean, status, upstream?, message? }.
+ */
+export const getHealth = async () => {
+	const url = `${buildBaseUrl()}/ai/health`
+	try {
+		const { data, status } = await axios.get(url, {
+			withCredentials: true,
+			validateStatus: (s) => s === 200 || s === 503,
+		})
+		return {
+			ok: status === 200 && data?.status === 'ok',
+			status,
+			upstream: data?.upstream || null,
+			message: data?.message || null,
+		}
+	} catch (error) {
+		return {
+			ok: false,
+			status: 0,
+			upstream: null,
+			message: error?.message || NETWORK_MSG,
+		}
+	}
+}

@@ -266,7 +266,7 @@ const DevPlaceholder = () => (
 			Endpoint pendiente · solo dev
 		</div>
 		<p>
-			El backend Node todavía no expone <code className='font-mono'>GET /api/assistant/documents</code>.
+			El backend Node todavía no expone <code className='font-mono'>GET /api/ai/ingest/documents</code>.
 			La pantalla queda lista; cuando el endpoint exista, esta vista carga la lista del tenant.
 		</p>
 	</div>
