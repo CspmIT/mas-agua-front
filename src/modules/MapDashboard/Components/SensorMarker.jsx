@@ -22,7 +22,7 @@ const truncateLabel = (name) => {
     return String(name).slice(0, 3).toUpperCase().padStart(2, '0').slice(0, 3)
 }
 
-const SensorMarker = ({ marker, snapshot }) => {
+const SensorMarker = ({ marker, snapshot, onClick = null, selected = false }) => {
     const s = snapshot || { status: 'off', value: null, kind: null, trend: null }
     const status = s.status || 'off'
     const offset = ANCHOR_TO_OFFSET[marker.anchor ?? ''] || ANCHOR_TO_OFFSET['']
@@ -34,11 +34,27 @@ const SensorMarker = ({ marker, snapshot }) => {
             anchor='bottom'
         >
             <div style={{ position: 'relative', width: 0, height: 0, pointerEvents: 'none' }}>
-                <SensorPin
-                    type={marker.sensor_type}
-                    status={status}
-                    label={truncateLabel(marker.name)}
-                />
+                <div
+                    onClick={onClick ? (e) => {
+                        e.stopPropagation()
+                        onClick(marker, s)
+                    } : undefined}
+                    style={{
+                        pointerEvents: onClick ? 'auto' : 'none',
+                        transform: selected ? 'scale(1.18)' : 'scale(1)',
+                        transformOrigin: 'center bottom',
+                        transition: 'transform 0.18s ease',
+                        filter: selected
+                            ? 'drop-shadow(0 0 4px rgba(255,255,255,0.9)) drop-shadow(0 0 6px rgba(54,139,237,0.6))'
+                            : 'none',
+                    }}
+                >
+                    <SensorPin
+                        type={marker.sensor_type}
+                        status={status}
+                        label={truncateLabel(marker.name)}
+                    />
+                </div>
                 <StatusFloatingLabel
                     type={marker.sensor_type}
                     status={status}
