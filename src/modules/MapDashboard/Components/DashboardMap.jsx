@@ -3,7 +3,14 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { useState } from 'react'
 import SensorMarker from './SensorMarker'
 
-const DashboardMap = ({ markers, snapshot, activeFilters, initialViewState }) => {
+const DashboardMap = ({
+    markers,
+    snapshot,
+    activeFilters,
+    initialViewState,
+    onPinClick = null,
+    selectedId = null,
+}) => {
     const [viewState, setViewState] = useState(
         initialViewState || {
             longitude: -62.005196,
@@ -29,7 +36,13 @@ const DashboardMap = ({ markers, snapshot, activeFilters, initialViewState }) =>
             <NavigationControl position='top-left' />
             <FullscreenControl position='top-left' />
             {visible.map((m) => (
-                <SensorMarker key={m.id} marker={m} snapshot={snapshot[m.id]} />
+                <SensorMarker
+                    key={m.id}
+                    marker={m}
+                    snapshot={snapshot[m.id]}
+                    onClick={onPinClick}
+                    selected={selectedId === m.id}
+                />
             ))}
         </Map>
     )
