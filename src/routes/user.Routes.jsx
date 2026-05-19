@@ -3,7 +3,6 @@ import ChartsDashboard from '../modules/dashBoard/views/ChartsDashboard'
 import TabDinamic from '../modules/tabs/views'
 import ConfigSecurity from '../modules/configSecurity/views'
 import ConfigMenu from '../modules/ConfigMenu/view'
-import Notification from '../modules/Notification'
 import Profile from '../modules/profile/views'
 import Notifications from '../modules/ConfigNotifications/views/index'
 import ListDrawDiagram from '../modules/DrawDiagram/views/ListDrawDiagram'
@@ -40,7 +39,6 @@ export const userRoutes = [
 	{ path: '/tabs', element: <TabDinamic /> },
 	{ path: '/config/security', element: <ConfigSecurity /> },
 	{ path: '/config/accesses', element: <ConfigMenu /> },
-	{ path: '/notificaciones', element: <Notification /> },
 	{ path: '/profile', element: <Profile /> },
 	{ path: '/config/notifications', element: <Notifications /> },
 	{ path: '/config/diagram', element: <ListDrawDiagram /> },
