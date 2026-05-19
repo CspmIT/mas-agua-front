@@ -1,8 +1,9 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import {
 	Box,
 	Container,
 	Typography,
+	useMediaQuery,
 } from '@mui/material';
 import TableCustom from '../../../components/TableCustom';
 import { MainContext } from '../../../context/MainContext';
@@ -23,6 +24,15 @@ function ConfigMenu() {
 
 	const usuario = storage.get('usuario');
 	const isSuperAdmin = usuario?.profile === 4;
+	const isMobile = useMediaQuery('(max-width: 768px)');
+
+	const columnVisibility = useMemo(
+		() =>
+			isMobile
+				? { email: false, profile: false, status: false }
+				: {},
+		[isMobile]
+	);
 
 	const getUsers = async () => {
 		try {
@@ -84,6 +94,7 @@ function ConfigMenu() {
 						data={listUsers}
 						pagination
 						pageSize={10}
+						columnVisibility={columnVisibility}
 					/>
 				</>
 			)}

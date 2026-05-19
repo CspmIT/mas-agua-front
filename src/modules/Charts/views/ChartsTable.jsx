@@ -4,8 +4,9 @@ import { configs } from '../configs/configs'
 import { backend } from '../../../utils/routes/app.routes'
 import TableCustom from '../../../components/TableCustom'
 import {
-  Container, FormControl, InputLabel, MenuItem, Select,
+  Button, Container, FormControl, InputLabel, MenuItem, Select, useMediaQuery,
 } from '@mui/material'
+import { Add } from '@mui/icons-material'
 import { useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import LoaderComponent from '../../../components/Loader'
@@ -19,10 +20,35 @@ import { ActionsRow, EditChip, StatusPill, StatusToggleChip, ToneChip } from '..
 
 const EXCLUDED_DASHBOARD_TYPES = ['TotalizadoPeriodo', 'LineChart', 'BoardChart']
 
+const primaryActionSx = {
+  borderRadius: '999px',
+  textTransform: 'none',
+  fontWeight: 500,
+  letterSpacing: '0.01em',
+  px: 2.5,
+  py: 1,
+  minHeight: 0,
+  background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+  boxShadow: '0 4px 14px rgba(44, 106, 160, 0.35)',
+  transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+  '&:hover': {
+    background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+    boxShadow: '0 8px 24px rgba(44, 106, 160, 0.45)',
+    transform: 'translateY(-1px)',
+  },
+  '&:active': { transform: 'translateY(0)' },
+}
+
 const ChartsTable = () => {
   const usuario = storage.get('usuario')
   const isSuperAdmin = usuario?.profile === 4
   const navigate = useNavigate()
+  const isMobile = useMediaQuery('(max-width: 768px)')
+
+  const columnVisibility = useMemo(
+    () => (isMobile ? { id: false, type: false } : {}),
+    [isMobile]
+  )
   const [charts, setCharts] = useState([])
   const [chartsOriginal, setChartsOriginal] = useState([])
   const [columnsTable, setColumnsTable] = useState([])
@@ -187,8 +213,19 @@ const ChartsTable = () => {
     <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
       <PageHeader
         title='Gráficos'
-        createLabel='Crear gráfico'
-        onCreate={() => navigate('/config/graphic')}
+        action={
+          <div className='flex w-full justify-center sm:w-auto sm:justify-end'>
+            <Button
+              onClick={() => navigate('/config/graphic')}
+              variant='contained'
+              disableElevation
+              startIcon={<Add sx={{ fontSize: 18 }} />}
+              sx={primaryActionSx}
+            >
+              Crear gráfico
+            </Button>
+          </div>
+        }
       />
 
       {!loader ? (
@@ -257,6 +294,8 @@ const ChartsTable = () => {
             pagination={true}
             pageSize={10}
             topToolbar={true}
+            columnVisibility={columnVisibility}
+            density={isMobile ? 'compact' : undefined}
           />
 
           <AssignChartDialog

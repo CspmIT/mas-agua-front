@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Container } from '@mui/material';
+import { useEffect, useMemo, useState } from 'react';
+import { Button, Container, useMediaQuery } from '@mui/material';
+import { Add } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
@@ -10,6 +11,25 @@ import { storage } from '../../../storage/storage';
 import PageHeader from '../../../components/PageHeader';
 import { ActionsRow, EditChip, StatusPill, StatusToggleChip, ToneChip } from '../../../components/TableActions';
 
+const primaryActionSx = {
+	borderRadius: '999px',
+	textTransform: 'none',
+	fontWeight: 500,
+	letterSpacing: '0.01em',
+	px: 2.5,
+	py: 1,
+	minHeight: 0,
+	background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+	boxShadow: '0 4px 14px rgba(44, 106, 160, 0.35)',
+	transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+	'&:hover': {
+		background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+		boxShadow: '0 8px 24px rgba(44, 106, 160, 0.45)',
+		transform: 'translateY(-1px)',
+	},
+	'&:active': { transform: 'translateY(0)' },
+};
+
 const ListDrawDiagram = () => {
 	const navigate = useNavigate();
 	const [listDiagram, setListDiagram] = useState([]);
@@ -17,6 +37,12 @@ const ListDrawDiagram = () => {
 	const [loading, setLoading] = useState(true);
 	const usuario = storage.get('usuario');
 	const isSuperAdmin = usuario?.profile === 4;
+	const isMobile = useMediaQuery('(max-width: 768px)');
+
+	const columnVisibility = useMemo(
+		() => (isMobile ? { id: false } : {}),
+		[isMobile]
+	);
 
 
 	const fetchDiagrams = async () => {
@@ -127,8 +153,19 @@ const ListDrawDiagram = () => {
 		<Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
 			<PageHeader
 				title='Diagramas'
-				createLabel='Crear diagrama'
-				onCreate={() => navigate('/newDiagram')}
+				action={
+					<div className='flex w-full justify-center sm:w-auto sm:justify-end'>
+						<Button
+							onClick={() => navigate('/newDiagram')}
+							variant='contained'
+							disableElevation
+							startIcon={<Add sx={{ fontSize: 18 }} />}
+							sx={primaryActionSx}
+						>
+							Crear diagrama
+						</Button>
+					</div>
+				}
 			/>
 
 			{!loading ? (
@@ -138,6 +175,8 @@ const ListDrawDiagram = () => {
 						data={listDiagram.length ? listDiagram : []}
 						pagination={true}
 						pageSize={10}
+						columnVisibility={columnVisibility}
+						density={isMobile ? 'compact' : undefined}
 					/>
 				</div>
 			) : (
