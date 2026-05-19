@@ -1,5 +1,5 @@
-import { Container } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { Container, useMediaQuery } from '@mui/material'
+import { useEffect, useMemo, useState } from 'react'
 import TableCustom from '../../../components/TableCustom'
 import { backend } from '../../../utils/routes/app.routes'
 import { request } from '../../../utils/js/request'
@@ -16,6 +16,15 @@ const Maps = () => {
     const navigate = useNavigate()
     const usuario = storage.get('usuario');
     const isSuperAdmin = usuario?.profile === 4;
+    const isMobile = useMediaQuery('(max-width: 768px)')
+
+    const columnVisibility = useMemo(
+        () =>
+            isMobile
+                ? { id: false, latitude: false, longitude: false, createdAt: false }
+                : {},
+        [isMobile]
+    )
 
     async function getMaps() {
         const url = backend[import.meta.env.VITE_APP_NAME]
@@ -25,10 +34,19 @@ const Maps = () => {
             {
                 header: 'ID',
                 accessorKey: 'id',
+                size: 25,
             },
             {
                 header: 'Nombre',
-                accessorKey: 'name'
+                accessorKey: 'name',
+                Cell: ({ row }) => {
+                    const name = row.original?.name?.trim()
+                    return name ? name : (
+                        <span className='italic text-slate-400 dark:text-gray-500'>
+                            Mapa sin nombre
+                        </span>
+                    )
+                },
             },
             {
                 header: 'Latitud',
@@ -82,6 +100,7 @@ const Maps = () => {
                     data={maps.length > 0 ? maps : []}
                     pagination={true}
                     pageSize={10}
+                    columnVisibility={columnVisibility}
                 />
             ) : (
                 <LoaderComponent />

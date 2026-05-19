@@ -18,8 +18,8 @@ import ConfigGraphic from '../modules/Charts/views/ConfigGraphic'
 import ChartsTable from '../modules/Charts/views/ChartsTable'
 import ConfigMultipleBooleanChart from '../modules/Charts/views/ConfigMultipleBooleanChart'
 import ConfigBoardChart from '../modules/Charts/views/ConfigBoardChart'
-import MapView from '../modules/Map/Views/MapView'
-import Maps from '../modules/Map/Views/Maps'
+import MapView from '../modules/MapDashboard/Views/MapView'
+import Maps from '../modules/MapDashboard/Views/Maps'
 import Vars from '../modules/ConfigVars/views/Vars'
 import ProfilePLC from '../modules/ProfilePLC/views/ProfilePLC'
 import Alert from '../modules/alert/views'
@@ -30,6 +30,7 @@ import Boards from '../modules/Boards/views'
 import AdminDashboardPage from '../modules/home/components/AdminDashboardPage'
 import AssistantPage from '../modules/Assistant/views/AssistantPage'
 import AssistantDocsPage from '../modules/Assistant/views/AssistantDocsPage'
+import PressureDashboard from '../modules/MapDashboard/Views/PressureDashboard'
 
 export const userRoutes = [
 	{ path: '/', element: <Home /> },
@@ -60,7 +61,7 @@ export const userRoutes = [
 	{ path: '/config/graphic/multipleBoolean/:id', element: <ConfigMultipleBooleanChart /> },
 	{ path: '/config/graphic/board', element: <ConfigBoardChart /> },
 	{ path: '/config/graphic/board/:id', element: <ConfigBoardChart /> },
-	{ path: '/map', element: <MapView /> },
+	{ path: '/map', element: <PressureDashboard /> },
 	{ path: '/maps', element: <Maps /> },
 	{ path: '/map/create', element: <MapView create={true} /> },
 	{ path: '/map/edit', element: <MapView create={true} search={true} /> },
@@ -74,4 +75,5 @@ export const userRoutes = [
 	{ path: '/config/dashboard', element: <AdminDashboardPage />},
 	{ path: '/assistant', element: <AssistantPage /> },
 	{ path: '/assistant/docs', element: <AssistantDocsPage /> },
+	{ path: '/dashboard/pressure', element: <PressureDashboard /> },
 ]
