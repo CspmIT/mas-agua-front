@@ -63,7 +63,7 @@ const FiltersBar = ({ children, onFilter, onReset, showReset = true, showFilter 
 		>
 			{children}
 			{(showFilter || showReset) && (
-				<div className='flex gap-1.5 shrink-0'>
+				<div className='flex gap-1.5 w-full justify-center sm:w-auto sm:justify-start shrink-0'>
 					{showFilter && (
 						<Button
 							type='submit'

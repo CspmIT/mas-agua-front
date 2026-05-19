@@ -48,7 +48,7 @@ const PageHeader = ({ title, subtitle, eyebrow, action, onCreate, createLabel, c
 				</h1>
 				{subtitle && <p className='mt-1 text-sm text-slate-500 dark:text-gray-400'>{subtitle}</p>}
 			</div>
-			{resolvedAction && <div className='shrink-0 flex justify-start sm:justify-end'>{resolvedAction}</div>}
+			{resolvedAction && <div className='shrink-0 flex w-full justify-center sm:w-auto sm:justify-end'>{resolvedAction}</div>}
 		</div>
 	)
 }

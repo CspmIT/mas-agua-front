@@ -11,7 +11,7 @@ import {
 } from 'material-react-table'
 import NoRegisterTable from './NoRegisterTable'
 import { storage } from '../../storage/storage'
-import { Box, IconButton, Tooltip } from '@mui/material'
+import { Box, IconButton, Tooltip, useMediaQuery } from '@mui/material'
 import { PiBroomFill } from 'react-icons/pi'
 import { useEffect } from 'react'
 import { SiMicrosoftexcel } from 'react-icons/si'
@@ -41,6 +41,7 @@ const toolbarIconSx = (baseColor, hoverBg, darkHoverBg) => ({
 })
 
 const TableCustom = ({ data, columns, ...prop }) => {
+	const isMobile = useMediaQuery('(max-width: 768px)')
 	const handleExportData = () => {
 		const getFlattenedHeadersAndKeys = (cols) => {
 			const flattened = []
@@ -119,7 +120,7 @@ const TableCustom = ({ data, columns, ...prop }) => {
 		grouping: [],
 	}
 	if (prop.pagination) {
-		tableInitialState.pagination = { pageIndex: 0, pageSize: prop.pageSize || 5 }
+		tableInitialState.pagination = { pageIndex: 0, pageSize: prop.pageSize || 3 }
 	}
 	if (prop.groupBy) {
 		tableInitialState.grouping.push(prop.groupBy)
@@ -347,6 +348,10 @@ const TableCustom = ({ data, columns, ...prop }) => {
 		muiPaginationProps: {
 			showRowsPerPage: true,
 			shape: 'rounded',
+			siblingCount: isMobile ? 0 : 1,
+			boundaryCount: 1,
+			showFirstButton: !isMobile,
+			showLastButton: !isMobile,
 			sx: {
 				'& .MuiPaginationItem-root': {
 					borderRadius: '8px',
