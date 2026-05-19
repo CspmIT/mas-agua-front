@@ -1,8 +1,19 @@
 import { Add, Edit, Search } from '@mui/icons-material'
-import { Divider, IconButton, InputAdornment, List, ListItem, ListItemText, TextField, Typography } from '@mui/material'
+import {
+	Box,
+	Divider,
+	IconButton,
+	InputAdornment,
+	List,
+	ListItem,
+	ListItemText,
+	TextField,
+	Typography,
+} from '@mui/material'
 import { useEffect, useState } from 'react'
 import ModalVar from '../../../../components/DataGenerator/ModalVar'
 import { getVarsInflux } from './actions'
+import { floatingPanelSx, iconButtonPrimarySx } from '../../utils/js/diagramTheme'
 
 function ListField({ onSelectVariable, onClose }) {
 	const [listVariable, setListVariable] = useState([])
@@ -21,75 +32,88 @@ function ListField({ onSelectVariable, onClose }) {
 	}, [openModal])
 
 	const filter = (text) => {
-		const lowered = text.toLowerCase();
+		const lowered = text.toLowerCase()
 		setListfilter(
-		  listVariable.filter((variable) =>
-			variable.name.toLowerCase().includes(lowered)
-		  )
-		);
-	  };
-	  
+			listVariable.filter((variable) => variable.name.toLowerCase().includes(lowered))
+		)
+	}
 
 	return (
-		<div className={`w-full h-full pt-4 bg-white`}>
-			<div className='flex w-full justify-center items-center mb-4 relative '>
-				<ModalVar openModal={openModal} setOpenModal={setOpenModal} data={varSelected} />
+		<Box sx={floatingPanelSx} className='w-full p-3 flex flex-col gap-3'>
+			<ModalVar openModal={openModal} setOpenModal={setOpenModal} data={varSelected} />
 
-				<Typography className='text-center uppercase !font-bold ' typography={'h6'}>
-					variables
+			<div className='flex items-center justify-between'>
+				<Typography
+					typography={'subtitle1'}
+					className='uppercase !font-semibold !tracking-tight text-slate-800 dark:!text-gray-100'
+				>
+					Variables
 				</Typography>
 				<IconButton
-					color='primary'
-					className='!bg-blue-200 !absolute top-0 right-5'
+					size='small'
+					sx={iconButtonPrimarySx}
 					onClick={() => {
 						setOpenModal(true)
 						setVarSelected(null)
 					}}
 				>
-					<Add />
+					<Add fontSize='small' />
 				</IconButton>
 			</div>
+
 			<Divider />
-			<div className={`w-full flex flex-col gap-3 h-full overflow-y-auto `}>
-				<TextField
-					onChange={(e) => filter(e.target.value)}
-					label='Buscar'
-					variant='outlined'
-					InputProps={{
-						endAdornment: (
-							<InputAdornment position='end'>
-								<Search />
-							</InputAdornment>
-						),
-					}}
-				/>
-				{listVariable.length ? (
-					<List
-					dense={false}
-					className="overflow-y-auto max-h-[400px]"
-				  >
+
+			<TextField
+				size='small'
+				fullWidth
+				onChange={(e) => filter(e.target.value)}
+				label='Buscar'
+				variant='outlined'
+				InputProps={{
+					endAdornment: (
+						<InputAdornment position='end'>
+							<Search fontSize='small' />
+						</InputAdornment>
+					),
+				}}
+			/>
+
+			{listVariable.length ? (
+				<List dense className='overflow-y-auto max-h-[400px] !py-0'>
 					{listfilter.map((variable, index) => (
-					  <ListItem key={index} button onClick={() => {
-						onSelectVariable(variable); 
-						onClose?.(); 
-					  }}>
-						<ListItemText primary={variable.name} />
-						<IconButton
-						  color='warning'
-						  className='!bg-yellow-200'
-						  onClick={() => {
-							setVarSelected(variable)
-							setOpenModal(true)
-						  }}
+						<ListItem
+							key={index}
+							button
+							onClick={() => {
+								onSelectVariable(variable)
+								onClose?.()
+							}}
+							className='!rounded-md hover:!bg-[#2c6aa0]/10 dark:hover:!bg-[#5ea5f0]/15'
 						>
-						  <Edit />
-						</IconButton>
-					  </ListItem>
+							<ListItemText
+								primary={variable.name}
+								primaryTypographyProps={{
+									className: 'text-slate-800 dark:!text-gray-100',
+								}}
+							/>
+							<IconButton
+								size='small'
+								color='warning'
+								className='!bg-yellow-100 dark:!bg-yellow-900/40'
+								onClick={(e) => {
+									e.stopPropagation()
+									setVarSelected(variable)
+									setOpenModal(true)
+								}}
+							>
+								<Edit fontSize='small' />
+							</IconButton>
+						</ListItem>
 					))}
-				  </List>
-				) : null}
-			</div>
-		</div>
+				</List>
+			) : null}
+		</Box>
 	)
 }
+
 export default ListField

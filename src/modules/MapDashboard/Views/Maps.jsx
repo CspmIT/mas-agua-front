@@ -1,11 +1,13 @@
-import { Box, Button, Container, Typography } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { Container, useMediaQuery } from '@mui/material'
+import { useEffect, useMemo, useState } from 'react'
 import TableCustom from '../../../components/TableCustom'
 import { backend } from '../../../utils/routes/app.routes'
 import { request } from '../../../utils/js/request'
 import { useNavigate } from 'react-router-dom'
 import LoaderComponent from '../../../components/Loader'
 import { storage } from '../../../storage/storage'
+import PageHeader from '../../../components/PageHeader'
+import { ActionsRow, EditChip, ToneChip } from '../../../components/TableActions'
 
 const Maps = () => {
     const [maps, setMaps] = useState([])
@@ -14,6 +16,15 @@ const Maps = () => {
     const navigate = useNavigate()
     const usuario = storage.get('usuario');
     const isSuperAdmin = usuario?.profile === 4;
+    const isMobile = useMediaQuery('(max-width: 768px)')
+
+    const columnVisibility = useMemo(
+        () =>
+            isMobile
+                ? { id: false, latitude: false, longitude: false, createdAt: false }
+                : {},
+        [isMobile]
+    )
 
     async function getMaps() {
         const url = backend[import.meta.env.VITE_APP_NAME]
@@ -23,10 +34,19 @@ const Maps = () => {
             {
                 header: 'ID',
                 accessorKey: 'id',
+                size: 25,
             },
             {
                 header: 'Nombre',
-                accessorKey: 'name'
+                accessorKey: 'name',
+                Cell: ({ row }) => {
+                    const name = row.original?.name?.trim()
+                    return name ? name : (
+                        <span className='italic text-slate-400 dark:text-gray-500'>
+                            Mapa sin nombre
+                        </span>
+                    )
+                },
             },
             {
                 header: 'Latitud',
@@ -49,33 +69,15 @@ const Maps = () => {
                 accessorKey: 'actions',
                 size: 250,
                 Cell: ({ row }) => (
-                    <Box display="flex" gap={1}>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            size="small"
-                            onClick={() => {
-                                navigate(`/map/edit?id=${row.original.id}`)
-                            }}
-                        >
-                            Editar
-                        </Button>
+                    <ActionsRow>
+                        <EditChip onClick={() => navigate(`/map/edit?id=${row.original.id}`)} />
 
-                        {/* SOLO ADMIN */}
                         {isSuperAdmin && !row.original.inMenu && (
-                            <Button
-                                variant="contained"
-                                size="small"
-                                sx={{
-                                    backgroundColor: '#0ea5e9',
-                                    '&:hover': { backgroundColor: '#0284c7' },
-                                }}
-                                onClick={() => navigate(`/config/menu`)}
-                            >
+                            <ToneChip tone='accent' onClick={() => navigate(`/config/menu`)}>
                                 Añadir a menú
-                            </Button>
+                            </ToneChip>
                         )}
-                    </Box>
+                    </ActionsRow>
                 ),
             },
         ])
@@ -85,25 +87,12 @@ const Maps = () => {
         getMaps()
     }, [])
     return (
-        <Container className='w-full'>
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
-                <Typography className='w-full text-center md:!ms-24' variant="h4" align="center">
-                    Mapas
-                </Typography>
-
-                <div className='flex justify-center sm:justify-end'>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => {
-                            navigate('/map/create')
-                        }}
-                        className="sm:mx-10 whitespace-nowrap"
-                    >
-                        Crear mapa
-                    </Button>
-                </div>
-            </div>
+        <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+            <PageHeader
+                title='Mapas'
+                createLabel='Crear mapa'
+                onCreate={() => navigate('/map/create')}
+            />
 
             {!loader ? (
                 <TableCustom
@@ -111,6 +100,7 @@ const Maps = () => {
                     data={maps.length > 0 ? maps : []}
                     pagination={true}
                     pageSize={10}
+                    columnVisibility={columnVisibility}
                 />
             ) : (
                 <LoaderComponent />

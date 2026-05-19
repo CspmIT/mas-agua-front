@@ -1,5 +1,5 @@
-import { Button, Box } from '@mui/material';
 import { FaKey } from 'react-icons/fa';
+import { ActionsRow, EditChip, ToneChip } from '../../../../components/TableActions';
 
 const PROFILE_MAP = {
 	1: 'Moderador',
@@ -53,29 +53,13 @@ export const ColumnsUser = (editUser, swalNewPassword) => [
 		header: 'Acciones',
 		accessorKey: 'actions',
 		size: 300,
-		Cell: ({ row }) => {
-			return (
-				<Box display="flex" gap={1}>
-					<Button
-						size="small"
-						color="primary"
-						variant="contained"
-						onClick={() => editUser(row.original)}
-					>
-						Editar
-					</Button>
-
-					<Button
-						size="small"
-						color="warning"
-						variant="outlined"
-						onClick={() => swalNewPassword?.(row.original)}
-						startIcon={<FaKey />}
-					>
-						Clave de operación
-					</Button>
-				</Box>
-			);
-		},
+		Cell: ({ row }) => (
+			<ActionsRow>
+				<EditChip onClick={() => editUser(row.original)} />
+				<ToneChip tone='warning' onClick={() => swalNewPassword?.(row.original)}>
+					<FaKey className='me-1.5' /> Clave de operación
+				</ToneChip>
+			</ActionsRow>
+		),
 	},
 ];

@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Box, Button, Container, Typography } from '@mui/material';
+import { useEffect, useMemo, useState } from 'react';
+import { Button, Container, useMediaQuery } from '@mui/material';
+import { Add } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
@@ -7,6 +8,27 @@ import TableCustom from '../../../components/TableCustom';
 import Swal from 'sweetalert2';
 import LoaderComponent from '../../../components/Loader';
 import { storage } from '../../../storage/storage';
+import PageHeader from '../../../components/PageHeader';
+import { ActionsRow, EditChip, StatusPill, StatusToggleChip, ToneChip } from '../../../components/TableActions';
+
+const primaryActionSx = {
+	borderRadius: '999px',
+	textTransform: 'none',
+	fontWeight: 500,
+	letterSpacing: '0.01em',
+	px: 2.5,
+	py: 1,
+	minHeight: 0,
+	background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+	boxShadow: '0 4px 14px rgba(44, 106, 160, 0.35)',
+	transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+	'&:hover': {
+		background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+		boxShadow: '0 8px 24px rgba(44, 106, 160, 0.45)',
+		transform: 'translateY(-1px)',
+	},
+	'&:active': { transform: 'translateY(0)' },
+};
 
 const ListDrawDiagram = () => {
 	const navigate = useNavigate();
@@ -15,6 +37,12 @@ const ListDrawDiagram = () => {
 	const [loading, setLoading] = useState(true);
 	const usuario = storage.get('usuario');
 	const isSuperAdmin = usuario?.profile === 4;
+	const isMobile = useMediaQuery('(max-width: 768px)');
+
+	const columnVisibility = useMemo(
+		() => (isMobile ? { id: false } : {}),
+		[isMobile]
+	);
 
 
 	const fetchDiagrams = async () => {
@@ -36,53 +64,26 @@ const ListDrawDiagram = () => {
 				{
 					header: 'Estado',
 					accessorKey: 'status',
-					Cell: ({ row }) => (
-						<span className={`text-sm font-semibold ${row.original.status ? 'text-green-600' : 'text-red-600'}`}>
-							{row.original.status ? 'Activo' : 'Inactivo'}
-						</span>
-					),
+					Cell: ({ row }) => <StatusPill active={!!row.original.status} />,
 				},
 				{
 					header: 'Acciones',
 					accessorKey: 'actions',
 					Cell: ({ row }) => (
-						<Box display="flex" gap={1}>
-							<Button
-								variant="contained"
-								color="primary"
-								size="small"
-								onClick={() => navigate(`/newDiagram/${row.original.id}`)}
-							>
-								Editar
-							</Button>
-							<Button
-								variant="contained"
-								color="secondary"
-								size="small"
-								onClick={() => navigate(`/viewDiagram/${row.original.id}`)}
-							>
+						<ActionsRow>
+							<EditChip onClick={() => navigate(`/newDiagram/${row.original.id}`)} />
+							<ToneChip tone='info' onClick={() => navigate(`/viewDiagram/${row.original.id}`)}>
 								Ver
-							</Button>
+							</ToneChip>
 
-							{/* SOLO ADMIN */}
 							{isSuperAdmin && !row.original.inMenu && (
-								<Button
-									variant="contained"
-									size="small"
-									sx={{
-										backgroundColor: '#0ea5e9',
-										'&:hover': { backgroundColor: '#0284c7' },
-									}}
-									onClick={() => navigate(`/config/menu`)}
-								>
+								<ToneChip tone='accent' onClick={() => navigate(`/config/menu`)}>
 									Añadir a menú
-								</Button>
+								</ToneChip>
 							)}
 
-							<Button
-								variant="outlined"
-								color={row.original.status ? 'error' : 'success'}
-								size="small"
+							<StatusToggleChip
+								active={!!row.original.status}
 								onClick={async (e) => {
 									e.preventDefault();
 									const confirm = await Swal.fire({
@@ -124,10 +125,8 @@ const ListDrawDiagram = () => {
 										});
 									}
 								}}
-							>
-								{row.original.status ? 'Desactivar' : 'Activar'}
-							</Button>
-						</Box>
+							/>
+						</ActionsRow>
 					),
 				},
 			];
@@ -151,40 +150,33 @@ const ListDrawDiagram = () => {
 	}, []);
 
 	return (
-		<Container className="w-full">
-			{/* Header responsivo */}
-			<div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
+		<Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+			<PageHeader
+				title='Diagramas'
+				action={
+					<div className='flex w-full justify-center sm:w-auto sm:justify-end'>
+						<Button
+							onClick={() => navigate('/newDiagram')}
+							variant='contained'
+							disableElevation
+							startIcon={<Add sx={{ fontSize: 18 }} />}
+							sx={primaryActionSx}
+						>
+							Crear diagrama
+						</Button>
+					</div>
+				}
+			/>
 
-				{/* Título */}
-				<Typography
-					className='w-full text-center md:!ms-40'
-					variant="h4"
-					align="center"
-				>
-					Diagramas
-				</Typography>
-
-				{/* Botón */}
-				<div className='flex justify-center sm:justify-end'>
-					<Button
-						variant="contained"
-						color="primary"
-						onClick={() => navigate('/newDiagram')}
-						className="sm:mx-10 whitespace-nowrap"
-					>
-						Crear Diagrama
-					</Button>
-				</div>
-			</div>
-
-			{/* Tabla o Loader */}
 			{!loading ? (
-				<div className="w-full overflow-x-auto mb-5">
+				<div className='w-full overflow-x-auto'>
 					<TableCustom
 						columns={columnsTable}
 						data={listDiagram.length ? listDiagram : []}
 						pagination={true}
 						pageSize={10}
+						columnVisibility={columnVisibility}
+						density={isMobile ? 'compact' : undefined}
 					/>
 				</div>
 			) : (

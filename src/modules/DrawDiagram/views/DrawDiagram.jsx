@@ -9,16 +9,16 @@ import TextEditor from '../components/TextEditor/TextEditor';
 import Sidebar from '../components/Sidebar/Sidebar';
 import DiagramCanvas from '../components/DiagramCanvas/DiagramCanvas';
 import TopNavbar from '../components/TopNavbar/TopNavbar';
-import CardCustom from '../../../components/CardCustom';
 import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box } from '@mui/material';
+import { Box, Container } from '@mui/material';
 import LoaderComponent from '../../../components/Loader';
 import TooltipPositionPanel from '../components/TooltipPositionPanel/TooltipPositionPanel';
 import { useDrawingTools } from '../hooks/useDrawingTools';
 import { useTooltipManager } from '../hooks/useTooltipManager';
 import { useDiagramState } from '../hooks/useDiagramState';
 import { useTextTools } from '../hooks/useTextTools';
+import { canvasAreaSx, panelShellSx } from '../utils/js/diagramTheme';
 
 const imageList = ListImg();
 
@@ -387,17 +387,18 @@ const DrawDiagram = () => {
   }, [id]);
 
   return (
-    <>
-      {isLoading ? (
-        <Box
-          className="absolute inset-0 flex items-center justify-center"
-          style={{ zIndex: 1000 }}
-        >
-          <LoaderComponent />
-        </Box>
-      ) : (
-        <>
-          <div className="w-full rounded-xl shadow-md border-2 border-gray-400">
+    <Container
+      maxWidth={false}
+      disableGutters
+      className='w-full px-2 py-2 h-[calc(100vh-72px)]'
+    >
+      <Box sx={panelShellSx} className='w-full h-full flex flex-col overflow-hidden relative'>
+        {isLoading ? (
+          <div className='flex-1 flex items-center justify-center'>
+            <LoaderComponent />
+          </div>
+        ) : (
+          <>
             {/* Barra arriba */}
             <TopNavbar
               onClear={handleClearCanvas}
@@ -413,7 +414,7 @@ const DrawDiagram = () => {
               setIsPanning={setIsPanning}
             />
             {/* Contenedor horizontal de sidebar + canvas */}
-            <div className="flex w-full max-h-[85vh]">
+            <div className='flex flex-1 min-h-0 w-full'>
               <Sidebar
                 tool={tool}
                 setTool={setTool}
@@ -430,7 +431,7 @@ const DrawDiagram = () => {
                 handleDeleteElement={handleDeleteElement}
               />
               {/* Contenido principal (canvas + overlays) */}
-              <div className="flex-1 bg-gray-300 rounded-br-lg relative">
+              <Box sx={canvasAreaSx} className='flex-1 relative'>
                 {/* Selector de imágenes */}
                 {showImageSelector && (
                   <ImageSelector
@@ -480,7 +481,7 @@ const DrawDiagram = () => {
                 />
                 {/* Selector de variables */}
                 {showListField && (
-                  <div className="absolute left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-20 max-w-md">
+                  <div className='absolute left-2 top-2 z-20 max-w-md w-80'>
                     <ListField
                       onSelectVariable={handleAssignVariable}
                       onClose={() => setShowListField(false)}
@@ -544,12 +545,12 @@ const DrawDiagram = () => {
                     setEditingTextId(null);
                   }}
                 />
-              </div>
+              </Box>
             </div>
-          </div>
-        </>
-      )}
-    </>
+          </>
+        )}
+      </Box>
+    </Container>
   );
 }
 
