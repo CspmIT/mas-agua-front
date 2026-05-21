@@ -11,7 +11,7 @@ import LoaderComponent from '../../../components/Loader'
 
 
 const MainContent = () => {
-	const { user, setInfoNav } = useContext(MainContext)
+	const { user, setUser, setClient, setInfoNav } = useContext(MainContext)
 	const location = useLocation()
 	const navigate = useNavigate()
 	const authUser = storage.get('usuario')
@@ -20,6 +20,8 @@ const MainContent = () => {
 		if (!authUser || !token) {
 			localStorage.clear()
 			await removeData('token')
+			setUser(false)
+			setClient(null)
 			navigate('/login')
 			return
 		}
@@ -44,7 +46,7 @@ const MainContent = () => {
 					<LoaderComponent />
 				) : (
 					<>
-						<div className={`sm:pl-20 pl-4 pr-4 pb-20 z-10 flex relative ${style.boxMain}`}>
+						<div className={`sm:pl-20 pl-4 pr-4 pb-14 z-10 flex relative ${style.boxMain}`}>
 							<Outlet />
 						</div>
 						<Footer />

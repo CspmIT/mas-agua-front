@@ -1,5 +1,6 @@
 import { Button, Card, IconButton, TextField } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
+import { MainContext } from '../../../context/MainContext'
 import LogoBlanco from '../../../../src/assets/img/Logo_Cooptech.png'
 import { useForm } from 'react-hook-form'
 import { TbEye, TbEyeClosed } from 'react-icons/tb'
@@ -23,6 +24,7 @@ function LoginApp() {
 		reset,
 	} = useForm()
 	const navigate = useNavigate()
+	const { setUser, setClient } = useContext(MainContext)
 	const [imgApp, setImgApp] = useState(null)
 	const [recovery, setRecovery] = useState(false)
 	const [pass, setPass] = useState('password')
@@ -80,6 +82,8 @@ function LoginApp() {
 						storage.remove('usuario')
 						storage.remove('usuarioCooptech')
 						storage.remove('tokenCooptech')
+						setUser(false)
+						setClient(null)
 						return false
 					}
 					const decoded = jwtDecode(token.token)
@@ -91,6 +95,8 @@ function LoginApp() {
 						sameSite: 'Lax',
 					})
 					storage.set('usuario', decoded)
+					setUser(true)
+					setClient(responseData.cliente[0]?.name ?? null)
 					setLoading(false)
 
 					navigate('/')
@@ -176,8 +182,8 @@ function LoginApp() {
 								/>
 							)}
 							<div className='w-full flex justify-center items-center'>
-								<Button className='w-1/2 ' type='submit' variant='contained' title='Iniciar Session'>
-									{!recovery ? 'Iniciar Sesion' : 'Recupear'}
+								<Button className='w-1/2 ' type='submit' variant='contained' title='Iniciar Sesión'>
+									{!recovery ? 'Iniciar Sesion' : 'Recuperar contraseña'}
 								</Button>
 							</div>
 							{!recovery ? (
