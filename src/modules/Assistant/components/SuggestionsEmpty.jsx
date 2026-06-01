@@ -11,14 +11,13 @@ const SUGGESTIONS = [
 		text: 'Procedimiento de purga semanal de bombas',
 	},
 	{
-		eyebrow: 'Tiempo real · activa el toggle',
+		eyebrow: 'Tiempo real',
 		text: '¿Cuál es el caudal promedio de la última hora?',
-		needsTools: true,
 	},
 ]
 
 /**
- * @param {{ onPick: (text: string, opts?: { enableTools?: boolean }) => void }} props
+ * @param {{ onPick: (text: string) => void }} props
  */
 const SuggestionsEmpty = ({ onPick }) => {
 	return (
@@ -36,9 +35,8 @@ const SuggestionsEmpty = ({ onPick }) => {
 				¿Qué necesitás resolver hoy?
 			</h2>
 			<p className='mt-2 text-[13.5px] text-slate-500 dark:text-slate-400 max-w-md'>
-				Consultá manuales, procedimientos y la configuración de tu planta. Activá{' '}
-				<span className='font-medium text-[#10B981]'>datos en tiempo real</span> para preguntar por
-				variables actuales.
+				Consultá manuales, procedimientos, la configuración de tu planta y los{' '}
+				<span className='font-medium text-[#10B981]'>datos en tiempo real</span> de tus variables.
 			</p>
 
 			<div className='mt-5 w-full grid grid-cols-1 sm:grid-cols-3 gap-2.5'>
@@ -46,7 +44,7 @@ const SuggestionsEmpty = ({ onPick }) => {
 					<button
 						key={i}
 						type='button'
-						onClick={() => onPick(s.text, { enableTools: !!s.needsTools })}
+						onClick={() => onPick(s.text)}
 						className='group text-left rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-white/[0.03] hover:border-[#368bed]/45 hover:bg-[#368bed]/[0.04] dark:hover:bg-[#368bed]/[0.06] transition-all p-3.5 flex flex-col gap-2 h-full'
 					>
 						<div className='flex items-center justify-between gap-2'>
