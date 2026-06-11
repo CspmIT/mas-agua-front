@@ -4,7 +4,8 @@ import { backend } from '../../../utils/routes/app.routes'
 import TableCustom from '../../../components/TableCustom'
 import Swal from 'sweetalert2'
 import LoaderComponent from '../../../components/Loader'
-import { Box, Button, Chip, FormLabel, getFormControlLabelUtilityClasses } from '@mui/material'
+import { Box, Button, Chip, FormLabel, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import CardCustom from '../../../components/CardCustom'
 import { useState } from 'react'
 import InfoCard from '../components/InfoCard'
@@ -17,10 +18,44 @@ const CONTROL_LABELS = {
   timed_reboot: 'Reinicio temporizado',
 }
 
+// Paleta del proyecto, usada como acentos por sección
+const ACCENT = { bombas: '#368bed', controles: '#d8621d' }
+
+// Estilos compartidos de los desplegables (look limpio, sin sombra/divisor de MUI)
+const accordionSx = {
+  borderRadius: '18px',
+  boxShadow: 'none',
+  '&:before': { display: 'none' },
+}
+const summarySx = {
+  px: 2,
+  minHeight: 0,
+  borderRadius: '18px',
+  '& .MuiAccordionSummary-content': { my: 1.25 },
+}
+const detailsSx = { p: { xs: 0.75, sm: 1 }, pt: 0 }
+
+// Título de cada sección: punto de acento + nombre + contador
+const SectionTitle = ({ color, children, count }) => (
+  <Box className="flex items-center gap-2.5">
+    <span
+      className="inline-block rounded-full"
+      style={{ width: 11, height: 11, background: color, boxShadow: `0 0 0 4px ${color}26` }}
+    />
+    <span className="text-lg font-bold tracking-tight text-gray-800 dark:text-gray-100">
+      {children}
+    </span>
+    <span className="text-xs font-bold text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 rounded-full px-2 py-0.5">
+      {count}
+    </span>
+  </Box>
+)
+
 const PumpsTable = () => {
   const [listpumps, setListPumps] = useState([])
   const [infoSuccion, setInfoSuccion] = useState([])
-  const [columnsTable, setColumnsTable] = useState([])
+  const [bombColumns, setBombColumns] = useState([])
+  const [commandColumns, setCommandColumns] = useState([])
   const [loading, setLoading] = useState(true)
   
   const getActionIdByName = (actions, name) =>
@@ -36,31 +71,21 @@ const PumpsTable = () => {
       setInfoSuccion(data.info_succion)
       setListPumps(data.bombs)
 
-      const columns = [
-        {
-          header: 'Equipo',
-          accessorKey: 'name',
-        },
-        {
-          header: 'Control',
-          accessorKey: 'control_type',
-          Cell: ({ row }) => {
-            const label = CONTROL_LABELS[row.original.control_type] || 'ON / OFF'
+      // --- Celdas reutilizables entre ambas tablas ---
+      const controlCell = ({ row }) => {
+        const label = CONTROL_LABELS[row.original.control_type] || 'ON / OFF'
 
-            return (
-              <Chip
-                label={label}
-                color="primary"
-                variant="outlined"
-                sx={{ fontWeight: 'bold' }}
-              />
-            )
-          },
-        },
-        {
-          header: 'Estado',
-          accessorKey: 'status',
-          Cell: ({ row }) => {
+        return (
+          <Chip
+            label={label}
+            color="primary"
+            variant="outlined"
+            sx={{ fontWeight: 'bold' }}
+          />
+        )
+      }
+
+      const statusCell = ({ row }) => {
             const r = row.original
             const { control_type } = r
 
@@ -142,12 +167,9 @@ const PumpsTable = () => {
                 sx={{ fontWeight: 'bold' }}
               />
             )
-          },
-        },
-        {
-          header: 'Modo Actual',
-          accessorKey: 'actual_mode',
-          Cell: ({ row }) => {
+      }
+
+      const modeCell = ({ row }) => {
             const r = row.original
 
             // Solo las bombas tienen modo de operación (Automático / forzado)
@@ -184,12 +206,9 @@ const PumpsTable = () => {
                 sx={{ fontWeight: 'bold' }}
               />
             )
-          },
-        },
-        {
-          header: 'Acciones',
-          accessorKey: 'actions',
-          Cell: ({ row }) => {
+      }
+
+      const actionsCell = ({ row }) => {
             const r = row.original
             const { control_type } = r
 
@@ -232,15 +251,23 @@ const PumpsTable = () => {
             // Cubre ON/OFF, Habilitado/Deshabilitado, Cisterna/Alcantarilla, etc.
             if (control_type === 'osmosis_onoff') {
               const notEnabled = r.enabled === false
+              // ¿Esta acción es el estado actual? -> se deshabilita (no tiene sentido re-enviarla)
+              const isCurrentState = (a) => {
+                if (r.status_label && a.name === r.status_label) return true // genérico (label === nombre de acción)
+                if (a.name === 'ON' && r.status === true) return true        // fallback ON/OFF osmosis
+                if (a.name === 'OFF' && r.status === false) return true
+                return false
+              }
+              const actions = r.actions?.filter(a => a.name !== 'Leer') ?? []
               return (
                 <Box display="flex" gap={1}>
-                  {r.actions?.map((a, i) => (
+                  {actions.map((a, i) => (
                     <Button
                       key={a.id}
                       variant="contained"
                       color={i === 0 ? 'success' : 'error'}
                       size="small"
-                      disabled={notEnabled}
+                      disabled={notEnabled || isCurrentState(a)}
                       onClick={() => sendAction(r, a.name)}
                     >
                       {a.name}
@@ -307,11 +334,26 @@ const PumpsTable = () => {
                 </Button>
               </Box>
             )
-          },
-        }
-      ]
+      }
 
-      setColumnsTable(columns)
+      // --- Dos tablas: bombas vs comandos (osmosis / comunicación / reinicio) ---
+      const nameColumn = { header: 'Equipo', accessorKey: 'name' }
+      const statusColumn = { header: 'Estado', accessorKey: 'status', Cell: statusCell }
+      const actionsColumn = { header: 'Acciones', accessorKey: 'actions', Cell: actionsCell }
+
+      setBombColumns([
+        nameColumn,
+        statusColumn,
+        { header: 'Modo Actual', accessorKey: 'actual_mode', Cell: modeCell },
+        actionsColumn,
+      ])
+
+      setCommandColumns([
+        nameColumn,
+        { header: 'Control', accessorKey: 'control_type', Cell: controlCell },
+        statusColumn,
+        actionsColumn,
+      ])
 
     } catch (error) {
       console.error(error)
@@ -455,67 +497,83 @@ const PumpsTable = () => {
     return () => clearInterval(interval)
   }, [])
 
+  const bombs = listpumps.filter(p => !p.control_type || p.control_type === 'bomb')
+  const commands = listpumps.filter(p => p.control_type && p.control_type !== 'bomb')
+
+  const tableProps = {
+    pagination: true,
+    pageSize: 50,
+    density: 'compact',
+    header: {
+      background: 'rgb(190 190 190)',
+      fontSize: '14px',
+      fontWeight: 'bold',
+      paddingTop: 1,
+    },
+    toolbarClass: { background: 'rgb(190 190 190)' },
+    body: { backgroundColor: 'rgba(209, 213, 219, 0.31)' },
+    footer: { background: 'rgb(190 190 190)' },
+  }
+
   return (
     <div className="w-full">
       {loading ? (
         <LoaderComponent />
       ) : (
-        <CardCustom className="w-full bg-white dark:bg-gray-900 shadow-lg rounded-2xl p-4 sm:p-6 flex flex-col gap-4 transition-all">
+        <CardCustom className="w-full bg-white dark:bg-gray-900 shadow-md rounded-3xl p-3 sm:p-4 flex flex-col gap-3 transition-all">
 
-          {/* Header responsivo */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center border-b border-gray-300 dark:border-gray-700 pb-3">
-            <FormLabel className='w-full text-center !text-3xl'>
+          {/* Header */}
+          <div className="flex items-center justify-center gap-2.5 pb-1">
+            <span
+              className="inline-block h-6 w-1.5 rounded-full"
+              style={{ background: `linear-gradient(${ACCENT.bombas}, ${ACCENT.controles})` }}
+            />
+            <FormLabel className='!text-2xl !font-semibold !text-gray-800 dark:!text-gray-100 tracking-tight'>
               Bombeo de succión
             </FormLabel>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            <InfoCard
-              label="Estado"
-              value={infoSuccion.var_2}
-              color="green"
-            />
-            <InfoCard
-              label="Destino"
-              value={infoSuccion.Destino}
-              color="blue"
-            />
-            <InfoCard
-              label="Configuración"
-              value={infoSuccion.Configuracion}
-              color="indigo"
-            />
-            <InfoCard
-              label="Activaciones manuales"
-              value={infoSuccion.AcM || '-'}
-              color="orange"
-            />
-            <InfoCard
-              label="Fuera de servicio"
-              value={infoSuccion.FuS || '-'}
-              color="red"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+            <InfoCard label="Estado" value={infoSuccion.var_2} color="green" />
+            <InfoCard label="Destino" value={infoSuccion.Destino} color="blue" />
+            <InfoCard label="Configuración" value={infoSuccion.Configuracion} color="indigo" />
+            <InfoCard label="Activaciones manuales" value={infoSuccion.AcM || '-'} color="orange" />
+            <InfoCard label="Fuera de servicio" value={infoSuccion.FuS || '-'} color="red" />
           </div>
 
-          {/* Tabla responsiva */}
-          <div className="flex-1 overflow-x-auto rounded-lg shadow-md">
-            <TableCustom
-              columns={columnsTable}
-              data={listpumps.length ? listpumps : []}
-              pagination={true}
-              pageSize={30}
-              density="compact"
-              header={{
-                background: 'rgb(190 190 190)',
-                fontSize: '14px',
-                fontWeight: 'bold',
-                paddingTop: 1,
-              }}
-              toolbarClass={{ background: 'rgb(190 190 190)' }}
-              body={{ backgroundColor: 'rgba(209, 213, 219, 0.31)' }}
-              footer={{ background: 'rgb(190 190 190)' }}
-            />
-          </div>
+          {/* Desplegable — Bombas */}
+          <Accordion
+            defaultExpanded
+            disableGutters
+            sx={accordionSx}
+            className="!bg-transparent border border-gray-200 dark:border-gray-700 overflow-hidden"
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
+              <SectionTitle color={ACCENT.bombas} count={bombs.length}>Bombas</SectionTitle>
+            </AccordionSummary>
+            <AccordionDetails sx={detailsSx}>
+              <div className="rounded-xl overflow-hidden [&_.MuiButton-root]:!rounded-lg [&_.MuiButton-root]:!normal-case [&_.MuiButton-root]:!shadow-none [&_.MuiButton-root]:!font-bold">
+                <TableCustom columns={bombColumns} data={bombs} {...tableProps} />
+              </div>
+            </AccordionDetails>
+          </Accordion>
+
+          {/* Desplegable — Controles (osmosis / comunicación / reinicio) */}
+          <Accordion
+            defaultExpanded
+            disableGutters
+            sx={accordionSx}
+            className="!bg-transparent border border-gray-200 dark:border-gray-700 overflow-hidden"
+          >
+            <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
+              <SectionTitle color={ACCENT.controles} count={commands.length}>Controles</SectionTitle>
+            </AccordionSummary>
+            <AccordionDetails sx={detailsSx}>
+              <div className="rounded-xl overflow-hidden [&_.MuiButton-root]:!rounded-lg [&_.MuiButton-root]:!normal-case [&_.MuiButton-root]:!shadow-none [&_.MuiButton-root]:!font-bold">
+                <TableCustom columns={commandColumns} data={commands} {...tableProps} />
+              </div>
+            </AccordionDetails>
+          </Accordion>
         </CardCustom>
       )}
     </div>
