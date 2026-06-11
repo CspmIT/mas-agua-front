@@ -9,6 +9,14 @@ import CardCustom from '../../../components/CardCustom'
 import { useState } from 'react'
 import InfoCard from '../components/InfoCard'
 
+// Etiqueta de la columna "Control" según el tipo de control del equipo
+const CONTROL_LABELS = {
+  bomb: 'ON / OFF',
+  osmosis_onoff: 'ON / OFF',
+  comm_restart: 'Reinicio comunicación',
+  timed_reboot: 'Reinicio temporizado',
+}
+
 const PumpsTable = () => {
   const [listpumps, setListPumps] = useState([])
   const [infoSuccion, setInfoSuccion] = useState([])
@@ -30,24 +38,100 @@ const PumpsTable = () => {
 
       const columns = [
         {
-          header: 'Bomba',
+          header: 'Equipo',
           accessorKey: 'name',
+        },
+        {
+          header: 'Control',
+          accessorKey: 'control_type',
+          Cell: ({ row }) => {
+            const label = CONTROL_LABELS[row.original.control_type] || 'ON / OFF'
+
+            return (
+              <Chip
+                label={label}
+                color="primary"
+                variant="outlined"
+                sx={{ fontWeight: 'bold' }}
+              />
+            )
+          },
         },
         {
           header: 'Estado',
           accessorKey: 'status',
           Cell: ({ row }) => {
-            const status = row.original.status
+            const r = row.original
+            const { control_type } = r
 
             let label = 'Sin datos'
             let color = 'warning'
 
-            if (status === true) {
-              label = 'En Marcha'
-              color = 'success'
-            } else if (status === false) {
-              label = 'Apagada'
-              color = 'default'
+            if (control_type === 'comm_restart') {
+              if (r.comm_ok === true) {
+                label = 'Comunicación OK'
+                color = 'success'
+              } else {
+                label = 'Sin datos'
+                color = 'error'
+              }
+            } else if (control_type === 'timed_reboot') {
+              // El toggle real del reinicio automático es la fila sintética (id null).
+              // Otros equipos marcados timed_reboot (ej. pulso de limpieza) no tienen estado on/off.
+              if (r.id == null) {
+                if (r.status === 1) {
+                  label = 'Activa'
+                  color = 'success'
+                } else if (r.status === 2) {
+                  label = 'En proceso'
+                  color = 'warning'
+                } else {
+                  label = 'Apagada'
+                  color = 'default'
+                }
+              } else {
+                return <span>-</span>
+              }
+            } else if (control_type === 'osmosis_onoff') {
+              if (r.status_label) {
+                // El back manda la etiqueta del estado actual (ej. "Cisterna", "Habilitado", "Encendida")
+                label = r.status_label
+                color = r.status === true ? 'success' : 'primary'
+              } else if (r.status === true) {
+                label = 'Encendida'
+                color = 'success'
+              } else if (r.status === false) {
+                label = 'Apagada'
+                color = 'default'
+              }
+
+              return (
+                <Box display="flex" gap={1} alignItems="center">
+                  <Chip
+                    label={label}
+                    color={color}
+                    variant="filled"
+                    sx={{ fontWeight: 'bold' }}
+                  />
+                  {r.enabled === false && (
+                    <Chip
+                      label="No habilitado"
+                      color="error"
+                      variant="outlined"
+                      sx={{ fontWeight: 'bold' }}
+                    />
+                  )}
+                </Box>
+              )
+            } else {
+              // bomb
+              if (r.status === true) {
+                label = 'En Marcha'
+                color = 'success'
+              } else if (r.status === false) {
+                label = 'Apagada'
+                color = 'default'
+              }
             }
 
             return (
@@ -56,7 +140,6 @@ const PumpsTable = () => {
                 color={color}
                 variant="filled"
                 sx={{ fontWeight: 'bold' }}
-
               />
             )
           },
@@ -65,7 +148,14 @@ const PumpsTable = () => {
           header: 'Modo Actual',
           accessorKey: 'actual_mode',
           Cell: ({ row }) => {
-            const mode = row.original.actual_mode
+            const r = row.original
+
+            // Solo las bombas tienen modo de operación (Automático / forzado)
+            if (r.control_type !== 'bomb') {
+              return <span>-</span>
+            }
+
+            const mode = r.actual_mode
 
             let color = 'default'
             let label = mode || 'Sin datos'
@@ -100,23 +190,89 @@ const PumpsTable = () => {
           header: 'Acciones',
           accessorKey: 'actions',
           Cell: ({ row }) => {
-            const { id: bombId, actual_mode, actions } = row.original
-            const isWithoutData = actual_mode === 'Sin datos'
-            const isAutomatic = actual_mode === 'Automático'
+            const r = row.original
+            const { control_type } = r
 
-            const handleAction = (actionName) => {
-              const actionId = getActionIdByName(actions, actionName)
-
-              if (!actionId) {
-                Swal.fire({
-                  icon: 'warning',
-                  text: `Acción ${actionName} no disponible`,
-                })
-                return
-              }
-
-              sendBombAction({ bombId, actionId })
+            // Reinicio temporizado REAL (fila sintética OI-50, id null): toggle Iniciar/Detener
+            if (control_type === 'timed_reboot' && r.id == null) {
+              const isActive = r.status !== 0 // 0 = apagada; 1 o 2 = activa/en proceso
+              return (
+                <Box display="flex" gap={1}>
+                  <Button
+                    variant="contained"
+                    color={isActive ? 'error' : 'primary'}
+                    size="small"
+                    onClick={() => sendAction(r, isActive ? 'OFF' : 'ON')}
+                  >
+                    {isActive ? 'Detener' : 'Iniciar'}
+                  </Button>
+                </Box>
+              )
             }
+
+            // Reinicio de comunicación: único botón, habilitado solo si NO hay datos
+            if (control_type === 'comm_restart') {
+              const action = r.actions?.[0]
+              return (
+                <Box display="flex" gap={1}>
+                  <Button
+                    variant="contained"
+                    color="warning"
+                    size="small"
+                    disabled={r.comm_ok !== false || !action}
+                    onClick={() => action && sendAction(r, action.name)}
+                  >
+                    Reiniciar
+                  </Button>
+                </Box>
+              )
+            }
+
+            // Osmosis ON/OFF (toggle genérico de 2 estados): un botón por cada acción real.
+            // Cubre ON/OFF, Habilitado/Deshabilitado, Cisterna/Alcantarilla, etc.
+            if (control_type === 'osmosis_onoff') {
+              const notEnabled = r.enabled === false
+              return (
+                <Box display="flex" gap={1}>
+                  {r.actions?.map((a, i) => (
+                    <Button
+                      key={a.id}
+                      variant="contained"
+                      color={i === 0 ? 'success' : 'error'}
+                      size="small"
+                      disabled={notEnabled}
+                      onClick={() => sendAction(r, a.name)}
+                    >
+                      {a.name}
+                    </Button>
+                  ))}
+                </Box>
+              )
+            }
+
+            // Otros equipos marcados timed_reboot con acciones reales (ej. "Pulso post alarma"):
+            // se comportan como un pulso PLC normal → un botón por acción.
+            if (control_type === 'timed_reboot') {
+              return (
+                <Box display="flex" gap={1}>
+                  {r.actions?.map((a) => (
+                    <Button
+                      key={a.id}
+                      variant="contained"
+                      color="warning"
+                      size="small"
+                      onClick={() => sendAction(r, a.name)}
+                    >
+                      {a.name}
+                    </Button>
+                  ))}
+                </Box>
+              )
+            }
+
+            // bomb (comportamiento original): AUTO / ON / OFF según modo
+            const isWithoutData = r.actual_mode === 'Sin datos'
+            const isAutomatic = r.actual_mode === 'Automático'
 
             return (
               <Box display="flex" gap={1}>
@@ -125,7 +281,7 @@ const PumpsTable = () => {
                   color="warning"
                   size="small"
                   disabled={isWithoutData || isAutomatic}
-                  onClick={() => handleAction('AUTO')}
+                  onClick={() => sendAction(r, 'AUTO')}
                 >
                   AUTO
                 </Button>
@@ -135,7 +291,7 @@ const PumpsTable = () => {
                   color="success"
                   size="small"
                   disabled={isWithoutData || !isAutomatic}
-                  onClick={() => handleAction('ON')}
+                  onClick={() => sendAction(r, 'ON')}
                 >
                   ON
                 </Button>
@@ -145,7 +301,7 @@ const PumpsTable = () => {
                   color="error"
                   size="small"
                   disabled={isWithoutData || !isAutomatic}
-                  onClick={() => handleAction('OFF')}
+                  onClick={() => sendAction(r, 'OFF')}
                 >
                   OFF
                 </Button>
@@ -176,11 +332,38 @@ const PumpsTable = () => {
       const { data } = await request(`${url}/data_bombeo`, 'GET')
 
       setListPumps(prev =>
-        prev.map(bomb => ({
-          ...bomb,
-          status: data.bombas[bomb.name] ?? null,
-          actual_mode: data.modos[bomb.name] ?? null
-        }))
+        prev.map(row => {
+          switch (row.control_type) {
+            case 'comm_restart':
+              return { ...row, comm_ok: data.comm_ok ?? row.comm_ok }
+            case 'timed_reboot':
+              // Solo la fila sintética (id null) tiene estado de toggle refrescable.
+              if (row.id == null) {
+                return { ...row, status: data.timed_reboot?.status ?? row.status }
+              }
+              return row
+            case 'osmosis_onoff': {
+              // Estado por equipo, keyed por id (data_bombeo.osmosis_equipos[row.id]).
+              const eq = data.osmosis_equipos?.[row.id]
+              if (eq) {
+                return {
+                  ...row,
+                  status: eq.status,
+                  status_label: eq.status_label,
+                  enabled: eq.enabled,
+                }
+              }
+              return row
+            }
+            case 'bomb':
+            default:
+              return {
+                ...row,
+                status: data.bombas?.[row.name] ?? null,
+                actual_mode: data.modos?.[row.name] ?? null,
+              }
+          }
+        })
       )
       setInfoSuccion(data.info_succion)
     } catch (error) {
@@ -188,32 +371,66 @@ const PumpsTable = () => {
     }
   }
 
-  //FUNCION PARA ENVIAR ACCION A LA BOMBA
-  const sendBombAction = async ({ bombId, actionId }) => {
+  //FUNCION PARA ENVIAR ACCION A UN EQUIPO (rutea según el equipo)
+  const sendAction = async (row, actionName) => {
     const url = backend[import.meta.env.VITE_APP_NAME]
+
+    // El toggle del reinicio automático es la fila sintética (id null);
+    // el resto (incluido un timed_reboot con acciones reales) ejecuta vía PLC.
+    const isAutoReboot = row.control_type === 'timed_reboot' && row.id == null
+
+    // Mensaje de confirmación según el tipo de equipo
+    let title = `¿Desea ejecutar "${actionName}" en ${row.name}?`
+    if (isAutoReboot) {
+      title = actionName === 'ON'
+        ? '¿Desea activar el reinicio automático de la osmosis?'
+        : '¿Desea desactivar el reinicio automático de la osmosis?'
+    } else if (row.control_type === 'comm_restart') {
+      title = '¿Desea reiniciar la comunicación (MQTT)?'
+    } else if (row.control_type === 'bomb') {
+      title = '¿Desea cambiar el modo actual de la bomba?'
+    } else if (row.control_type === 'osmosis_onoff') {
+      title = `¿Desea cambiar "${row.name}" a "${actionName}"?`
+    }
 
     const result = await Swal.fire({
       icon: 'warning',
-      title: '¿Desea cambiar el modo actual de la bomba?',
+      title,
       showCancelButton: true,
       confirmButtonText: 'Sí, enviar',
       cancelButtonText: 'Cancelar',
       reverseButtons: true,
     })
-  
+
     if (!result.isConfirmed) return
 
     try {
-      await request(`${url}/bombs_PLC/execute`, 'POST', {
-        bombId,
-        actionId,
-      })
-      
+      if (isAutoReboot) {
+        // Reinicio temporizado: toggle persistido, NO pega a /bombs_PLC/execute
+        const status = actionName === 'ON' ? 1 : 0
+        await request(`${url}/osmosis/auto-reboot`, 'POST', { status })
+      } else {
+        // bomb / osmosis_onoff / comm_restart / pulso: comando PLC vía execute
+        const actionId = getActionIdByName(row.actions, actionName)
+
+        if (!actionId) {
+          Swal.fire({
+            icon: 'warning',
+            text: `Acción ${actionName} no disponible`,
+          })
+          return
+        }
+
+        await request(`${url}/bombs_PLC/execute`, 'POST', {
+          bombId: row.id,
+          actionId,
+        })
+      }
+
       Swal.fire({
         icon: 'success',
         title: 'Acción enviada',
         text: 'En breve verás el cambio reflejado',
-        
         timer: 1500,
         showConfirmButton: false,
       })
