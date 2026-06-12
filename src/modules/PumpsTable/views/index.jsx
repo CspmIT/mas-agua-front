@@ -447,6 +447,8 @@ const PumpsTable = () => {
     if (!result.isConfirmed) return
 
     try {
+      let executeData = null
+
       if (isAutoReboot) {
         // Reinicio temporizado: toggle persistido, NO pega a /bombs_PLC/execute
         const status = actionName === 'ON' ? 1 : 0
@@ -463,10 +465,11 @@ const PumpsTable = () => {
           return
         }
 
-        await request(`${url}/bombs_PLC/execute`, 'POST', {
+        const { data } = await request(`${url}/bombs_PLC/execute`, 'POST', {
           bombId: row.id,
           actionId,
         })
+        executeData = data
       }
 
       Swal.fire({
@@ -477,7 +480,41 @@ const PumpsTable = () => {
         showConfirmButton: false,
       })
 
-      refreshBombStatus()
+      const isBomb = row.control_type === 'bomb' || !row.control_type
+
+      // Influx se alimenta por MQTT (~1 min), así que un refresh inmediato leería
+      // el estado viejo. Reflejamos el cambio en el acto y dejamos que el poll de
+      // 30s reconcilie el status físico (sobre todo en AUTO).
+      if (executeData?.liveStatus) {
+        // Estado real confirmado por el PLC en vivo.
+        const live = executeData.liveStatus
+        setListPumps(prev =>
+          prev.map(p =>
+            p.id === row.id
+              ? {
+                  ...p,
+                  actual_mode: live.actual_mode ?? p.actual_mode,
+                  // status solo si el back lo manda (ON/OFF); en AUTO lo define Influx
+                  ...(typeof live.status === 'boolean' ? { status: live.status } : {}),
+                }
+              : p
+          )
+        )
+      } else if (isBomb) {
+        // Fallback optimista (Capa 1): el back no devolvió liveStatus
+        // (ej. equipos de Castelli o lectura del PLC fallida).
+        const optimistic = {
+          ON: { status: true, actual_mode: 'Encendido forzado' },
+          OFF: { status: false, actual_mode: 'Apagado forzado' },
+          AUTO: { actual_mode: 'Automático' }, // status lo define el PLC; no tocar
+        }[actionName] || {}
+        setListPumps(prev =>
+          prev.map(p => (p.id === row.id ? { ...p, ...optimistic } : p))
+        )
+      } else {
+        // osmosis_onoff / comm_restart / timed_reboot: comportamiento actual.
+        refreshBombStatus()
+      }
     } catch (error) {
       console.error(error)
       Swal.fire({
