@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
 import TableCustom from '../../../components/TableCustom'
@@ -57,7 +57,13 @@ const PumpsTable = () => {
   const [bombColumns, setBombColumns] = useState([])
   const [commandColumns, setCommandColumns] = useState([])
   const [loading, setLoading] = useState(true)
-  
+
+  // Ventana de gracia tras una acción: durante este lapso el poll NO pisa la fila
+  // con el dato de Influx (atrasado ~1 min). Keyed por id de equipo -> timestamp de
+  // expiración. El PLC publica a Influx ~cada 1 min, así que 90s da margen.
+  const pendingRef = useRef({})
+  const PENDING_MS = 90000
+
   const getActionIdByName = (actions, name) =>
     actions?.find(a => a.name === name)?.id
 
@@ -373,8 +379,18 @@ const PumpsTable = () => {
     try {
       const { data } = await request(`${url}/data_bombeo`, 'GET')
 
+      const now = Date.now()
+
       setListPumps(prev =>
         prev.map(row => {
+          // Ventana de gracia: la acción es reciente e Influx aún no publicó el
+          // valor nuevo. No pisamos la fila hasta que expire.
+          const until = pendingRef.current[row.id]
+          if (until != null) {
+            if (now < until) return row
+            delete pendingRef.current[row.id]
+          }
+
           switch (row.control_type) {
             case 'comm_restart':
               return { ...row, comm_ok: data.comm_ok ?? row.comm_ok }
@@ -488,6 +504,8 @@ const PumpsTable = () => {
       if (executeData?.liveStatus) {
         // Estado real confirmado por el PLC en vivo.
         const live = executeData.liveStatus
+        // Protegemos la fila del poll hasta que Influx publique el valor nuevo.
+        pendingRef.current[row.id] = Date.now() + PENDING_MS
         setListPumps(prev =>
           prev.map(p =>
             p.id === row.id
@@ -508,6 +526,8 @@ const PumpsTable = () => {
           OFF: { status: false, actual_mode: 'Apagado forzado' },
           AUTO: { actual_mode: 'Automático' }, // status lo define el PLC; no tocar
         }[actionName] || {}
+        // Protegemos la fila del poll hasta que Influx publique el valor nuevo.
+        pendingRef.current[row.id] = Date.now() + PENDING_MS
         setListPumps(prev =>
           prev.map(p => (p.id === row.id ? { ...p, ...optimistic } : p))
         )
