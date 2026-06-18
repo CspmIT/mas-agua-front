@@ -505,7 +505,7 @@ const Home = ({ targetUserId = null }) => {
                         layouts={layouts}
                         breakpoints={BREAKPOINTS}
                         cols={COLS}
-                        rowHeight={95}
+                        rowHeight={50}
                         margin={[5, 5]}
                         isDraggable={editMode}
                         isResizable={editMode}

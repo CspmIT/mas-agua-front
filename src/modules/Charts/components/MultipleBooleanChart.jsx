@@ -69,12 +69,12 @@ const LedIndicator = ({
     }
 
     return (
-        <div className="flex flex-col px-2 py-2 bg-white rounded-xl border border-slate-200 shadow-sm ">
-            <span className="text-md font-medium text-slate-700">
+        <div className="flex flex-col justify-center w-fit flex-none px-2 py-1 bg-white rounded-xl border border-slate-200 shadow-sm">
+            <span className="text-sm font-medium text-slate-700 whitespace-nowrap">
                 {label}
             </span>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 whitespace-nowrap">
                 <span
                     style={{
                         width: 20,
@@ -135,12 +135,12 @@ const MultipleBooleanChart = ({
             className="flex flex-col"
         >
             {title && (
-                <div className="p-3 bg-slate-100/75 border-b-2 border-b-[#e5e7eb] shrink-0">
+                <div className="p-1 bg-slate-100/75 border-b-2 border-b-[#e5e7eb] shrink-0">
                     <h1 className='text-xl leading-tight line-clamp-2'>{title}</h1>
                 </div>
             )}
 
-            <div className={`grid ${items.length > 6 ? 'grid-cols-3' : 'grid-cols-2'} m-2 gap-1 justify-center align-middle`}>
+            <div className="flex-1 min-h-0 overflow-auto flex flex-wrap content-stretch justify-center items-stretch gap-2 p-1">
                 {items.map(item => (
                     <LedIndicator
                         key={item.key}
