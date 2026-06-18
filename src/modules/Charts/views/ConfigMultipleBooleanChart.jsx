@@ -32,6 +32,7 @@ const emptyLed = () => ({
     colorOff: '#444444',
     idVar: null,
     isBinaryCompressed: false,
+    isCalcBinary: false,
     bits: [],
     idBit: null,
 })
@@ -73,6 +74,7 @@ const ConfigMultipleBooleanChart = () => {
 
         updated[index].idVar = variable?.id ?? null
         updated[index].isBinaryCompressed = variable?.binary_compressed ?? false
+        updated[index].isCalcBinary = variable?.calc_binary_compressed ?? false
         updated[index].bits = variable?.bits ?? []
         updated[index].idBit = null   // resetear bit al cambiar variable
 
@@ -166,7 +168,8 @@ const ConfigMultipleBooleanChart = () => {
                 return
             }
 
-            if (led.isBinaryCompressed && !led.idBit) {
+            // calc_binary también es binary_compressed pero no usa bit puntual
+            if (led.isBinaryCompressed && !led.isCalcBinary && !led.idBit) {
                 await Swal.fire('Error', 'Todos los LEDs con variable binaria comprimida deben tener un bit asignado', 'error')
                 return
             }
@@ -211,8 +214,9 @@ const ConfigMultipleBooleanChart = () => {
                     colorOff: cfg.colorOff || '#444444',
                     idVar: variable.id || null,
                     isBinaryCompressed: variable.binary_compressed ?? false,
+                    isCalcBinary: variable.calc_binary_compressed ?? false,
                     bits: variable.bits ?? [],
-                    idBit: d.id_bit ?? null,    
+                    idBit: d.id_bit ?? null,
                 }
             })
 
@@ -287,6 +291,8 @@ const ConfigMultipleBooleanChart = () => {
                                         fullWidth
                                     />
                                 </div>
+                                {/* Texto/Color ON-OFF: no aplican para calc_binary (estado y color salen del results de la variable) */}
+                                {!led.isCalcBinary && (
                                 <div className="flex gap-4 max-sm:flex-col">
                                     <div className='w-1/2 max-sm:w-full'>
                                         <div className='!bg-white mb-3'>
@@ -341,6 +347,7 @@ const ConfigMultipleBooleanChart = () => {
                                         </div>
                                     </div>
                                 </div>
+                                )}
 
                                 <div className='!bg-white'>
                                     <SelectVars
@@ -349,8 +356,8 @@ const ConfigMultipleBooleanChart = () => {
                                     />
                                 </div>
 
-                                {/* ── Selector de bit (solo si la variable es binaria comprimida) ── */}
-                                {led.isBinaryCompressed && (
+                                {/* ── Selector de bit (solo binaria comprimida no calculada) ── */}
+                                {led.isBinaryCompressed && !led.isCalcBinary && (
                                     <div className='!bg-white'>
                                         <FormControl fullWidth size="small">
                                             <InputLabel>Bit de la variable</InputLabel>
@@ -406,7 +413,10 @@ const ConfigMultipleBooleanChart = () => {
                                 title={getValues('title')}
                                 items={leds.map(l => ({
                                     ...l,
-                                    value: false,
+                                    // calc_binary: estado de ejemplo para el preview; booleano: apagado
+                                    value: l.isCalcBinary
+                                        ? { index: 0, bitValues: [], image: 'success', label: 'Estado de ejemplo' }
+                                        : false,
                                 }))}
                             />
                         </Suspense>

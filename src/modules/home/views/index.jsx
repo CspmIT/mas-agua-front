@@ -260,6 +260,7 @@ const Home = ({ targetUserId = null }) => {
                             influxVar: influx?.InfluxVars ?? null,
                             id_bit:  influx?.id_bit          ?? null,
                             varId:   influx?.InfluxVars?.id  ?? null,
+                            isCalcBinary: influx?.InfluxVars?.calc_binary_compressed ?? false,
                         }
                     })
 
