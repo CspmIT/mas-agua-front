@@ -122,6 +122,14 @@ const MultipleBooleanChart = ({
         )
     }
 
+    // Ordenamos las cards alfabéticamente por label (numeric: "Bomba 9" antes de "Bomba 10")
+    const sortedItems = [...items].sort((a, b) =>
+        String(a.title ?? '').localeCompare(String(b.title ?? ''), 'es', {
+            numeric: true,
+            sensitivity: 'base',
+        })
+    )
+
     return (
         <Card
             sx={{
@@ -141,7 +149,7 @@ const MultipleBooleanChart = ({
             )}
 
             <div className="flex-1 min-h-0 overflow-auto flex flex-wrap content-stretch justify-center items-stretch gap-2 p-1">
-                {items.map(item => (
+                {sortedItems.map(item => (
                     <LedIndicator
                         key={item.key}
                         label={item.title}
