@@ -58,7 +58,6 @@ const ConfigMultipleBooleanChart = () => {
     })
 
     const leds = watch('chartData')
-    const MAX_LEDS = 8
 
     /* =========================
        HELPERS
@@ -83,16 +82,6 @@ const ConfigMultipleBooleanChart = () => {
 
     const addLed = () => {
         const current = getValues('chartData')
-
-        if (current.length >= MAX_LEDS) {
-            Swal.fire(
-                'Límite alcanzado',
-                `Solo se permiten hasta ${MAX_LEDS} LEDs`,
-                'warning'
-            )
-            return
-        }
-
         setValue('chartData', [...current, emptyLed()])
     }
 
@@ -146,15 +135,6 @@ const ConfigMultipleBooleanChart = () => {
 
         if (!leds.length) {
             await Swal.fire('Error', 'Debe configurar al menos un LED', 'error')
-            return
-        }
-
-        if (leds.length > MAX_LEDS) {
-            await Swal.fire(
-                'Error',
-                `No se pueden guardar más de ${MAX_LEDS} LEDs`,
-                'error'
-            )
             return
         }
 
@@ -396,9 +376,8 @@ const ConfigMultipleBooleanChart = () => {
                         <Button
                             variant="outlined"
                             onClick={addLed}
-                            disabled={leds.length >= MAX_LEDS}
                         >
-                            Agregar LED ({leds.length}/{MAX_LEDS})
+                            Agregar LED ({leds.length})
                         </Button>
 
                         <Button type="submit" variant="contained">
