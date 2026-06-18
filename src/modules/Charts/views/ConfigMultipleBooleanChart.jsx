@@ -33,6 +33,7 @@ const emptyLed = () => ({
     colorOff: '#444444',
     idVar: null,
     isBinaryCompressed: false,
+    isCalcBinary: false,
     bits: [],
     idBit: null,
 })
@@ -171,7 +172,6 @@ const ConfigMultipleBooleanChart = () => {
     })
 
     const leds = watch('chartData')
-    const MAX_LEDS = 8
 
     const updateLed = (index, field, value) => {
         const updated = [...getValues('chartData')]
@@ -183,6 +183,7 @@ const ConfigMultipleBooleanChart = () => {
         const updated = [...getValues('chartData')]
         updated[index].idVar = variable?.id ?? null
         updated[index].isBinaryCompressed = variable?.binary_compressed ?? false
+        updated[index].isCalcBinary = variable?.calc_binary_compressed ?? false
         updated[index].bits = variable?.bits ?? []
         updated[index].idBit = null
         setValue('chartData', updated)
@@ -190,10 +191,6 @@ const ConfigMultipleBooleanChart = () => {
 
     const addLed = () => {
         const current = getValues('chartData')
-        if (current.length >= MAX_LEDS) {
-            Swal.fire('Límite alcanzado', `Solo se permiten hasta ${MAX_LEDS} LEDs`, 'warning')
-            return
-        }
         setValue('chartData', [...current, emptyLed()])
     }
 
@@ -235,16 +232,14 @@ const ConfigMultipleBooleanChart = () => {
             await Swal.fire('Error', 'Debe configurar al menos un LED', 'error')
             return
         }
-        if (leds.length > MAX_LEDS) {
-            await Swal.fire('Error', `No se pueden guardar más de ${MAX_LEDS} LEDs`, 'error')
-            return
-        }
+
         for (const led of leds) {
             if (!led.idVar) {
                 await Swal.fire('Error', 'Todos los LEDs deben tener una variable asignada', 'error')
                 return
             }
-            if (led.isBinaryCompressed && !led.idBit) {
+            // calc_binary también es binary_compressed pero no usa bit puntual
+            if (led.isBinaryCompressed && !led.isCalcBinary && !led.idBit) {
                 await Swal.fire('Error', 'Todos los LEDs con variable binaria comprimida deben tener un bit asignado', 'error')
                 return
             }
@@ -276,6 +271,7 @@ const ConfigMultipleBooleanChart = () => {
                     colorOff: cfg.colorOff || '#444444',
                     idVar: variable.id || null,
                     isBinaryCompressed: variable.binary_compressed ?? false,
+                    isCalcBinary: variable.calc_binary_compressed ?? false,
                     bits: variable.bits ?? [],
                     idBit: d.id_bit ?? null,
                 }
@@ -344,7 +340,7 @@ const ConfigMultipleBooleanChart = () => {
                                 <SectionTitle
                                     right={
                                         <span className='text-[11px] font-semibold text-slate-500 dark:text-gray-400'>
-                                            {leds.length} / {MAX_LEDS}
+                                            {leds.length} {leds.length === 1 ? 'LED' : 'LEDs'}
                                         </span>
                                     }
                                 >
@@ -386,58 +382,64 @@ const ConfigMultipleBooleanChart = () => {
                                                 onChange={e => updateLed(index, 'title', e.target.value)}
                                             />
 
-                                            <div className='flex flex-wrap gap-2'>
-                                                <div style={{ flex: '2 1 200px' }}>
-                                                    <TextField
-                                                        fullWidth
-                                                        size='small'
-                                                        label='Texto ON'
-                                                        value={led.textOn}
-                                                        onChange={e => updateLed(index, 'textOn', e.target.value)}
-                                                    />
-                                                </div>
-                                                <div style={{ flex: '1 1 120px' }}>
-                                                    <TextField
-                                                        fullWidth
-                                                        size='small'
-                                                        type='color'
-                                                        label='Color ON'
-                                                        value={led.colorOn}
-                                                        onChange={e => updateLed(index, 'colorOn', e.target.value)}
-                                                        InputLabelProps={{ shrink: true }}
-                                                    />
-                                                </div>
-                                            </div>
+                                            {/* Texto/Color ON-OFF: no aplican para calc_binary (estado y color salen del results de la variable) */}
+                                            {!led.isCalcBinary && (
+                                                <>
+                                                    <div className='flex flex-wrap gap-2'>
+                                                        <div style={{ flex: '2 1 200px' }}>
+                                                            <TextField
+                                                                fullWidth
+                                                                size='small'
+                                                                label='Texto ON'
+                                                                value={led.textOn}
+                                                                onChange={e => updateLed(index, 'textOn', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div style={{ flex: '1 1 120px' }}>
+                                                            <TextField
+                                                                fullWidth
+                                                                size='small'
+                                                                type='color'
+                                                                label='Color ON'
+                                                                value={led.colorOn}
+                                                                onChange={e => updateLed(index, 'colorOn', e.target.value)}
+                                                                InputLabelProps={{ shrink: true }}
+                                                            />
+                                                        </div>
+                                                    </div>
 
-                                            <div className='flex flex-wrap gap-2'>
-                                                <div style={{ flex: '2 1 200px' }}>
-                                                    <TextField
-                                                        fullWidth
-                                                        size='small'
-                                                        label='Texto OFF'
-                                                        value={led.textOff}
-                                                        onChange={e => updateLed(index, 'textOff', e.target.value)}
-                                                    />
-                                                </div>
-                                                <div style={{ flex: '1 1 120px' }}>
-                                                    <TextField
-                                                        fullWidth
-                                                        size='small'
-                                                        type='color'
-                                                        label='Color OFF'
-                                                        value={led.colorOff}
-                                                        onChange={e => updateLed(index, 'colorOff', e.target.value)}
-                                                        InputLabelProps={{ shrink: true }}
-                                                    />
-                                                </div>
-                                            </div>
+                                                    <div className='flex flex-wrap gap-2'>
+                                                        <div style={{ flex: '2 1 200px' }}>
+                                                            <TextField
+                                                                fullWidth
+                                                                size='small'
+                                                                label='Texto OFF'
+                                                                value={led.textOff}
+                                                                onChange={e => updateLed(index, 'textOff', e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div style={{ flex: '1 1 120px' }}>
+                                                            <TextField
+                                                                fullWidth
+                                                                size='small'
+                                                                type='color'
+                                                                label='Color OFF'
+                                                                value={led.colorOff}
+                                                                onChange={e => updateLed(index, 'colorOff', e.target.value)}
+                                                                InputLabelProps={{ shrink: true }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </>
+                                            )}
 
                                             <SelectVars
                                                 setValueState={v => setLedVar(index, v)}
                                                 label='Variable del LED'
                                             />
 
-                                            {led.isBinaryCompressed && (
+                                            {/* Selector de bit: solo binaria comprimida no calculada */}
+                                            {led.isBinaryCompressed && !led.isCalcBinary && (
                                                 <FormControl fullWidth size='small'>
                                                     <InputLabel>Bit de la variable</InputLabel>
                                                     <Select
@@ -465,7 +467,6 @@ const ConfigMultipleBooleanChart = () => {
                                     sx={addPillSx}
                                     startIcon={<AddCircleOutline sx={{ fontSize: 18 }} />}
                                     onClick={addLed}
-                                    disabled={leds.length >= MAX_LEDS}
                                 >
                                     Agregar LED
                                 </Button>
@@ -483,7 +484,13 @@ const ConfigMultipleBooleanChart = () => {
                                 <Suspense fallback={<div className='p-3 text-sm text-slate-500'>Cargando preview...</div>}>
                                     <MultipleBooleanChart
                                         title={getValues('title') || 'Vista previa'}
-                                        items={leds.map(l => ({ ...l, value: false }))}
+                                        items={leds.map(l => ({
+                                            ...l,
+                                            // calc_binary: estado de ejemplo para el preview; booleano: apagado
+                                            value: l.isCalcBinary
+                                                ? { index: 0, bitValues: [], image: 'success', label: 'Estado de ejemplo' }
+                                                : false,
+                                        }))}
                                     />
                                 </Suspense>
                             </Box>

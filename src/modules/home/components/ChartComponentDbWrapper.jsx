@@ -76,6 +76,7 @@ export const ChartComponentDbWrapper = ({
             return {
                 ...item,
                 value,
+                isCalcBinary: item.isCalcBinary ?? infl?.calc_binary_compressed ?? false,
             }
         })
     }

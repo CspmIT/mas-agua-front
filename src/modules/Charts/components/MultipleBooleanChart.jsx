@@ -1,5 +1,18 @@
 import { Box } from '@mui/material'
 
+/**
+ * Estado para variables calc_binary.
+ * El back devuelve un `image` (default | success | error | warning) por cada
+ * combinación de bits; acá lo traducimos a color de LED, color de texto y si el
+ * LED "pulsa" (estado activo). Debe quedar alineado con IMAGE_OPTIONS de BitCalcVarModal.
+ */
+const CALC_BINARY_STATE = {
+	default: { color: '#94a3b8', text: '#475569', active: false },
+	success: { color: '#22c55e', text: '#15803d', active: true },
+	error: { color: '#ef4444', text: '#b91c1c', active: true },
+	warning: { color: '#f59e0b', text: '#b45309', active: true },
+}
+
 const resolveBitValue = (value, id_bit) => {
 	if (Array.isArray(value)) {
 		return value.find((b) => b.id_bit === id_bit)?.value ?? 'Sin datos'
@@ -16,13 +29,33 @@ const LedIndicator = ({
 	textOff = 'Apagado',
 	colorOn = '#00ff00',
 	colorOff = '#475569',
+	isCalcBinary = false,
 }) => {
-	const resolvedValue = resolveBitValue(value, id_bit)
-	const hasValue = resolvedValue !== 'Sin datos'
-	const isOn = hasValue && Boolean(resolvedValue)
+	// calc_binary: value = { index, bitValues, image, label }. Detectamos por flag o por forma.
+	const looksCalcBinary =
+		value && typeof value === 'object' && !Array.isArray(value) &&
+		'image' in value && 'label' in value
+	const calcMode = isCalcBinary || looksCalcBinary
 
-	const statusColor = !hasValue ? '#94a3b8' : isOn ? colorOn : colorOff
-	const statusText = !hasValue ? 'Sin datos' : isOn ? textOn : textOff
+	let statusColor, statusText, statusTextColor, isActive
+
+	if (calcMode) {
+		const st = looksCalcBinary
+			? (CALC_BINARY_STATE[value.image] ?? CALC_BINARY_STATE.default)
+			: CALC_BINARY_STATE.default
+		statusColor = st.color
+		statusTextColor = looksCalcBinary ? st.text : '#94a3b8'
+		statusText = looksCalcBinary ? (value.label || 'Sin definir') : 'Sin datos'
+		isActive = looksCalcBinary && st.active
+	} else {
+		const resolvedValue = resolveBitValue(value, id_bit)
+		const hasValue = resolvedValue !== 'Sin datos'
+		const isOn = hasValue && Boolean(resolvedValue)
+		statusColor = !hasValue ? '#94a3b8' : isOn ? colorOn : colorOff
+		statusTextColor = !hasValue ? '#94a3b8' : isOn ? colorOn : '#475569'
+		statusText = !hasValue ? 'Sin datos' : isOn ? textOn : textOff
+		isActive = isOn
+	}
 
 	return (
 		<Box
@@ -32,7 +65,8 @@ const LedIndicator = ({
 				flexDirection: 'column',
 				justifyContent: 'center',
 				gap: 0.75,
-				height: '100%',
+				flex: '0 1 auto',
+				minWidth: 90,
 				px: 1.5,
 				py: 1.25,
 				borderRadius: '10px',
@@ -79,12 +113,12 @@ const LedIndicator = ({
 						height: 14,
 						borderRadius: '50%',
 						backgroundColor: statusColor,
-						boxShadow: isOn
+						boxShadow: isActive
 							? `0 0 0 2px ${statusColor}22, 0 0 8px ${statusColor}99`
 							: `0 0 0 2px ${statusColor}1a`,
 						flexShrink: 0,
 						transition: 'all 0.2s ease',
-						'&::after': isOn
+						'&::after': isActive
 							? {
 									content: '""',
 									position: 'absolute',
@@ -102,14 +136,8 @@ const LedIndicator = ({
 					}}
 				/>
 				<span
-					className='text-base font-bold tracking-tight truncate'
-					style={{
-						color: !hasValue
-							? '#94a3b8'
-							: isOn
-								? colorOn
-								: '#475569',
-					}}
+					className='text-base font-bold tracking-tight whitespace-nowrap'
+					style={{ color: statusTextColor }}
 				>
 					{statusText}
 				</span>
@@ -142,7 +170,13 @@ const MultipleBooleanChart = ({ title, items = [], columns = 2 }) => {
 		)
 	}
 
-	const gridCols = items.length > 6 ? 'grid-cols-3' : `grid-cols-${columns || 2}`
+	// Ordenamos las cards alfabéticamente por label (numeric: "Bomba 9" antes de "Bomba 10")
+	const sortedItems = [...items].sort((a, b) =>
+		String(a.title ?? '').localeCompare(String(b.title ?? ''), 'es', {
+			numeric: true,
+			sensitivity: 'base',
+		})
+	)
 
 	return (
 		<Box
@@ -181,13 +215,14 @@ const MultipleBooleanChart = ({ title, items = [], columns = 2 }) => {
 			<Box
 				sx={{
 					flex: 1,
+					minHeight: 0,
 					p: 1.25,
 					backgroundColor: '#f8fafc',
 					'body.dark &': { backgroundColor: 'rgba(15, 23, 42, 0.3)' },
 				}}
 			>
-				<div className={`grid ${gridCols} gap-1.5 h-full auto-rows-fr`}>
-					{items.map((item, i) => (
+				<div className='flex flex-wrap content-stretch items-stretch justify-center gap-1.5 h-full overflow-auto'>
+					{sortedItems.map((item, i) => (
 						<LedIndicator
 							key={item.key}
 							index={i}
@@ -198,6 +233,7 @@ const MultipleBooleanChart = ({ title, items = [], columns = 2 }) => {
 							textOff={item.textOff}
 							colorOn={item.colorOn}
 							colorOff={item.colorOff}
+							isCalcBinary={item.isCalcBinary}
 						/>
 					))}
 				</div>

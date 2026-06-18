@@ -8,7 +8,6 @@ import {
     Container,
     IconButton,
     TextField,
-    Typography,
 } from '@mui/material'
 import VarsProvider from '../../../components/DataGenerator/ProviderVars'
 import SelectVars from '../components/SelectVars'
@@ -215,42 +214,32 @@ export default function PumpControl({
                     {states.map((item) => (
                         <div
                             key={item.id}
-                            className='!bg-gray-100 border-2 border-gray-200 rounded-md relative flex justify-center items-center mb-2'
+                            className='relative flex justify-center items-center gap-2 mb-2 px-3 py-1.5 bg-slate-50/30 border-2 border-blue-200 rounded-xl'
                         >
-                            <Typography variant='h6' mx={1}>{item.name}: </Typography>
-                            <Typography variant='h6' className={`font-bold ${item.color}`}>
+                            <span className='text-sm text-slate-600'>{item.name}</span>
+                            <span className={`text-base font-bold ${item.color}`}>
                                 {item.value ?? 'Sin datos'}
-                            </Typography>
+                            </span>
                         </div>
                     ))}
-                    <div
-                        className={`grid gap-1 ${
-                            pumps.length === 1
-                                ? 'grid-cols-1 justify-items-center'
-                                : pumps.length === 2
-                                ? 'grid-cols-2'
-                                : 'grid-cols-3 sm:grid-cols-3 md:grid-cols-3'
-                        }`}
-                    >
+
+                    <div className='flex flex-wrap items-stretch justify-center gap-2'>
                         {pumps.map((pump) => (
-                            <Card
+                            <div
                                 key={pump.id}
-                                className='!relative !bg-gray-100 border-2 border-gray-200 w-full max-w-sm'
+                                className='relative flex-1 min-w-[90px] flex flex-col justify-center items-center px-3 py-2 bg-slate-50/30 border-2 border-blue-200 rounded-xl'
                             >
-                                <CardContent>
-                                    <h4 className='text-md text-center font-small'>{pump.name}</h4>
-                                    <p className='text-lg text-center font-bold text-blue-600'>
-                                        {pump.value != null ? pump.value + ' ' + pump.unit : '-'}
-                                    </p>
-                                </CardContent>
-                            </Card>
+                                <h4 className='text-sm text-center text-slate-600'>{pump.name}</h4>
+                                <p className='text-lg text-center font-bold text-blue-600'>
+                                    {pump.value != null ? pump.value + ' ' + pump.unit : '-'}
+                                </p>
+                            </div>
                         ))}
                     </div>
-                    <div className='flex justify-between items-center mt-2 text-gray-500'>
-                        <div className='flex items-center'>
-                            <AccessTime sx={{ fontSize: 18, mr: 0.75 }} />
-                            <span className='text-sm'>{new Date().toLocaleString()}</span>
-                        </div>
+
+                    <div className='flex items-center justify-center mt-2 text-slate-400'>
+                        <AccessTime sx={{ fontSize: 16, mr: 0.75 }} />
+                        <span className='text-xs'>{new Date().toLocaleString()}</span>
                     </div>
                 </CardContent>
             </Card>
