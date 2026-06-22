@@ -479,6 +479,70 @@ const Home = ({ targetUserId = null }) => {
         }
     }
 
+    // En pantallas angostas (mobile) no usamos la grilla de alto fijo: apilamos las
+    // cards en una columna y dejamos que cada una crezca según su contenido. El alto
+    // de la BD se usa sólo como mínimo, así nunca se recorta (ej: card de bombas).
+    const isNarrow = containerWidth > 0 && containerWidth < BREAKPOINTS.sm
+
+    const cardMinHeight = (chart) => {
+        const h = chart?.layout?.h ?? 0
+        return h * 50 + Math.max(0, h - 1) * 5
+    }
+
+    const renderCard = (chart, narrow) => {
+        const currentLayout = layouts[currentBreakpoint] ?? []
+        const layoutItem = currentLayout.find(l => l.i === String(chart.id))
+        const sizeKey = narrow
+            ? `${chart.id}-narrow`
+            : `${chart.id}-${layoutItem?.w ?? 0}-${layoutItem?.h ?? 0}`
+        const ChartComponentDb = chartComponents[chart.component]
+        const isMultipleBoolean = chart.component === 'MultipleBooleanChart'
+
+        return (
+            <div
+                key={String(chart.id)}
+                className={`group relative ${narrow ? 'flex flex-col' : ''}`}
+                style={narrow ? { minHeight: cardMinHeight(chart) } : undefined}
+            >
+                {editMode && (
+                    <button
+                        className='no-drag absolute top-1.5 right-1.5 z-50 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white shadow-[0_4px_12px_rgba(239,68,68,0.45)] ring-2 ring-white dark:ring-gray-900 transition-all hover:bg-red-600 hover:scale-110 hover:shadow-[0_6px_18px_rgba(239,68,68,0.6)]'
+                        style={{
+                            animation: 'removeBtnIn 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards',
+                        }}
+                        onClick={() => removeWidget(chart.id)}
+                        aria-label='Eliminar widget'
+                    >
+                        X
+                    </button>
+                )}
+                <CardCustom className={`flex flex-col rounded-2xl ${narrow ? 'flex-1' : 'h-full'} overflow-hidden border border-gray-200 dark:border-gray-700/70 !shadow-[0_1px_2px_rgba(15,42,68,0.04)] hover:!shadow-[0_8px_24px_rgba(15,42,68,0.08)] dark:hover:!shadow-[0_8px_24px_rgba(0,0,0,0.4)] transition-shadow duration-200 ${editMode ? 'ring-1 ring-primary/30 dark:ring-primary/40' : ''}`}>
+                    {!isMultipleBoolean &&
+                        <div className='px-3 py-1.5 bg-[#2c6aa0] dark:bg-[#1f4e79] border-b border-white/10'>
+                            <h2 className='text-[11px] font-semibold uppercase tracking-[0.08em] text-center text-white line-clamp-2'>
+                                {chart?.props?.title}
+                            </h2>
+                        </div>
+                    }
+                    <div className='flex-1 flex items-center justify-center'>
+                        <ChartComponentDbWrapper
+                            key={sizeKey}
+                            chartId={chart.id}
+                            ChartComponent={ChartComponentDb}
+                            initialProps={chart.props}
+                            initialData={chart.data}
+                            inflValues={inflValues}
+                        />
+                    </div>
+                </CardCustom>
+            </div>
+        )
+    }
+
+    const narrowCharts = [...charts].sort(
+        (a, b) => (a.layout.y - b.layout.y) || (a.layout.x - b.layout.x)
+    )
+
     // -------------------------
     // RENDER
     // -------------------------
@@ -510,68 +574,33 @@ const Home = ({ targetUserId = null }) => {
                 <EmptyDashboard onAddChart={handleOpenAddChart} />
             ) : (
                 <>
-                    <Responsive
-                        className="layout"
-                        width={containerWidth}
-                        layouts={layouts}
-                        breakpoints={BREAKPOINTS}
-                        cols={COLS}
-                        rowHeight={50}
-                        margin={[5, 5]}
-                        isDraggable={editMode}
-                        isResizable={editMode}
-                        draggableCancel=".no-drag"
-                        onLayoutChange={(currentLayout, allLayouts) => {
-                            if (!isLayoutReady.current) return
-                            setLayouts(allLayouts)
-                            if (editMode) saveLayout(allLayouts.lg ?? currentLayout)
-                        }}
-                        onBreakpointChange={(bp) => setCurrentBreakpoint(bp)}
-                        onResizeStop={(layout) => setLayouts(prev => ({ ...prev, [currentBreakpoint]: layout }))}
-                    >
-                        {charts.map(chart => {
-                            const currentLayout = layouts[currentBreakpoint] ?? []
-                            const layoutItem = currentLayout.find(l => l.i === String(chart.id))
-                            const sizeKey = `${chart.id}-${layoutItem?.w ?? 0}-${layoutItem?.h ?? 0}`
-                            const ChartComponentDb = chartComponents[chart.component]
-                            const isMultipleBoolean = chart.component === 'MultipleBooleanChart'
-                            return (
-                                <div key={String(chart.id)} className='group relative'>
-                                    {editMode && (
-                                        <button
-                                            className='no-drag absolute top-1.5 right-1.5 z-50 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white shadow-[0_4px_12px_rgba(239,68,68,0.45)] ring-2 ring-white dark:ring-gray-900 transition-all hover:bg-red-600 hover:scale-110 hover:shadow-[0_6px_18px_rgba(239,68,68,0.6)]'
-                                            style={{
-                                                animation: 'removeBtnIn 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards',
-                                            }}
-                                            onClick={() => removeWidget(chart.id)}
-                                            aria-label='Eliminar widget'
-                                        >
-                                            X
-                                        </button>
-                                    )}
-                                    <CardCustom className={`flex flex-col rounded-2xl h-full overflow-hidden border border-gray-200 dark:border-gray-700/70 !shadow-[0_1px_2px_rgba(15,42,68,0.04)] hover:!shadow-[0_8px_24px_rgba(15,42,68,0.08)] dark:hover:!shadow-[0_8px_24px_rgba(0,0,0,0.4)] transition-shadow duration-200 ${editMode ? 'ring-1 ring-primary/30 dark:ring-primary/40' : ''}`}>
-                                        {!isMultipleBoolean &&
-                                            <div className='px-3 py-1.5 bg-[#2c6aa0] dark:bg-[#1f4e79] border-b border-white/10'>
-                                                <h2 className='text-[11px] font-semibold uppercase tracking-[0.08em] text-center text-white line-clamp-2'>
-                                                    {chart?.props?.title}
-                                                </h2>
-                                            </div>
-                                        }
-                                        <div className='flex-1 flex items-center justify-center'>
-                                            <ChartComponentDbWrapper
-                                                key={sizeKey}
-                                                chartId={chart.id}
-                                                ChartComponent={ChartComponentDb}
-                                                initialProps={chart.props}
-                                                initialData={chart.data}
-                                                inflValues={inflValues}
-                                            />
-                                        </div>
-                                    </CardCustom>
-                                </div>
-                            )
-                        })}
-                    </Responsive>
+                    {isNarrow ? (
+                        <div className='flex flex-col gap-2.5'>
+                            {narrowCharts.map(chart => renderCard(chart, true))}
+                        </div>
+                    ) : (
+                        <Responsive
+                            className="layout"
+                            width={containerWidth}
+                            layouts={layouts}
+                            breakpoints={BREAKPOINTS}
+                            cols={COLS}
+                            rowHeight={50}
+                            margin={[5, 5]}
+                            isDraggable={editMode}
+                            isResizable={editMode}
+                            draggableCancel=".no-drag"
+                            onLayoutChange={(currentLayout, allLayouts) => {
+                                if (!isLayoutReady.current) return
+                                setLayouts(allLayouts)
+                                if (editMode) saveLayout(allLayouts.lg ?? currentLayout)
+                            }}
+                            onBreakpointChange={(bp) => setCurrentBreakpoint(bp)}
+                            onResizeStop={(layout) => setLayouts(prev => ({ ...prev, [currentBreakpoint]: layout }))}
+                        >
+                            {charts.map(chart => renderCard(chart, false))}
+                        </Responsive>
+                    )}
 
                     <div className='sticky bottom-4 z-30 flex justify-end py-2 px-1 pointer-events-none'>
                         <div className={`pointer-events-auto flex items-center gap-0.5 rounded-full border border-gray-200/80 dark:border-gray-700/60 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md shadow-lg shadow-gray-900/5 dark:shadow-black/30 p-1 transition-opacity duration-200 ${isAdminMode ? 'opacity-100' : 'opacity-30 hover:opacity-100'}`}>
