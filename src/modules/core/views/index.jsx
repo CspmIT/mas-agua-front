@@ -40,7 +40,7 @@ const MainContent = () => {
 	}, [location])
 	return (
 		<>
-			<div className={`pt-16 !min-h-screen absolute w-full bg-gray-200 dark:bg-gray-700`}>
+			<div className={`pt-16 !min-h-screen absolute w-full bg-fixed bg-[linear-gradient(to_bottom,#e5e7eb_70%,#f9fafb_100%)] dark:bg-[linear-gradient(to_bottom,#374151_0%,#434f60_100%)]`}>
 				<NavBarCustom setLoading={setLoading} />
 				{!loading ? (
 					<LoaderComponent />
