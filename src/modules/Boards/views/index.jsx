@@ -101,7 +101,7 @@ const Boards = () => {
           chartsMap[cfg['board.top.rightChartId']] || null
 
         return (
-          <Grid item xs={6} key={board.id}>
+          <Grid item xs={12} md={6} key={board.id}>
             <BoardChart
               title={board.name}
               ChartData={board.ChartData}

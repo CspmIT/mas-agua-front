@@ -317,12 +317,27 @@ const Home = ({ targetUserId = null }) => {
                 w: c.layout.w,
                 h: c.layout.h
             }))
+            // En pantallas angostas apilamos los widgets uno debajo del otro,
+            // respetando el orden de lectura (y, luego x). Si sólo forzamos x:0
+            // manteniendo el `y` original, los widgets que estaban lado a lado
+            // quedan en la misma posición y se solapan (se ven menos cards).
+            const stackVertical = (items, cols) => {
+                let cursorY = 0
+                return [...items]
+                    .sort((a, b) => (a.y - b.y) || (a.x - b.x))
+                    .map(l => {
+                        const placed = { ...l, x: 0, w: cols, y: cursorY }
+                        cursorY += l.h
+                        return placed
+                    })
+            }
+
             setLayouts({
                 lg: layoutFormatted,
                 md: layoutFormatted,
                 sm: layoutFormatted.map(l => ({ ...l, w: Math.min(l.w, 6) })),
-                xs: layoutFormatted.map(l => ({ ...l, x: 0, w: 4 })),
-                xxs: layoutFormatted.map(l => ({ ...l, x: 0, w: 2 })),
+                xs: stackVertical(layoutFormatted, 4),
+                xxs: stackVertical(layoutFormatted, 2),
             })
             isLayoutReady.current = true
 
