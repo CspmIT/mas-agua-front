@@ -3,13 +3,27 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
-  Typography,
+  Box,
 } from '@mui/material'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import FiltersChart from '../../Charts/components/FiltersChart'
 import { ChartFactory } from './ChartFactory'
 import { chartQueryBuilderMap } from '../factories/chartQueryBuilderMap'
-import CardCustom from '../../../components/CardCustom'
+
+const accordionTitlePillSx = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  px: 2.5,
+  py: 0.75,
+  borderRadius: '999px',
+  background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+  boxShadow: '0 4px 14px rgba(44, 106, 160, 0.35)',
+  transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+  '&:hover': {
+    boxShadow: '0 8px 24px rgba(44, 106, 160, 0.45)',
+    transform: 'translateY(-1px)',
+  },
+}
 
 const pickSamplingPeriod = (rangeMs) => {
   const sec = 1000
@@ -144,16 +158,16 @@ const ChartAccordion = ({ chart }) => {
       className="w-full !rounded-xl mb-2 !shadow-md"
     >
       <AccordionSummary
-        expandIcon={<ArrowDownward className="text-blue-500" />}
+        expandIcon={<ArrowDownward sx={{ color: '#2c6aa0' }} />}
         aria-controls={`panel-${chart.id}-content`}
         id={`panel-${chart.id}-header`}
         className="!border-transparent !rounded-2xl"
       >
-        <CardCustom className="w-fit bg-slate-100 rounded-2xl border-2 border-blue-400 py-1 px-4">
-          <Typography variant="h6" className="text-blue-600">
+        <Box component='span' sx={accordionTitlePillSx}>
+          <span className='text-[12px] font-semibold uppercase tracking-[0.08em] text-white leading-none'>
             {chart.name}
-          </Typography>
-        </CardCustom>
+          </span>
+        </Box>
       </AccordionSummary>
 
       <AccordionDetails className="flex flex-col items-center justify-center gap-4 h-auto !rounded-2xl !border-transparent">

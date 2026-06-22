@@ -2,14 +2,53 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Stage, Layer, Text, Line, Label, Tag, Group, Rect } from 'react-konva';
 import { uploadCanvaDb } from '../utils/js/drawActions';
-import CardCustom from '../../../components/CardCustom';
-import { IconButton, Box } from '@mui/material';
+import { Box, Button, IconButton, Tooltip } from '@mui/material';
 import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
 import RenderImage from '../components/RenderImage/RenderImage';
 import LoaderComponent from '../../../components/Loader';
-import { LuZoomOut, LuZoomIn, LuArrowLeft } from "react-icons/lu";
+import CardCustom from '../../../components/CardCustom';
+import { LuZoomOut, LuZoomIn, LuArrowLeft } from 'react-icons/lu';
 import { storage } from '../../../storage/storage';
+import { canvasAreaSx } from '../utils/js/diagramTheme';
+
+const darkPrimaryGradient = 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)';
+
+const darkIconBtnSx = {
+  width: 40,
+  height: 40,
+  borderRadius: '10px',
+  color: '#ffffff',
+  background: darkPrimaryGradient,
+  boxShadow: '0 4px 14px rgba(31, 78, 121, 0.4)',
+  transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+  '&:hover': {
+    background: darkPrimaryGradient,
+    boxShadow: '0 8px 24px rgba(31, 78, 121, 0.55)',
+    transform: 'translateY(-1px)',
+  },
+  '&:active': { transform: 'translateY(0)' },
+};
+
+const darkPillSx = {
+  borderRadius: '999px',
+  textTransform: 'none',
+  fontWeight: 500,
+  px: 2.25,
+  py: 0.75,
+  minHeight: 0,
+  fontSize: '0.82rem',
+  color: '#ffffff',
+  background: darkPrimaryGradient,
+  boxShadow: '0 4px 14px rgba(31, 78, 121, 0.4)',
+  transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+  '&:hover': {
+    background: darkPrimaryGradient,
+    boxShadow: '0 8px 24px rgba(31, 78, 121, 0.55)',
+    transform: 'translateY(-1px)',
+  },
+  '&:active': { transform: 'translateY(0)' },
+};
 
 function ViewDiagram() {
   const { id } = useParams();
@@ -284,14 +323,36 @@ function ViewDiagram() {
         if (el.type === 'line' || el.type === 'polyline') {
           const value = el.dataInflux?.value;
           const isClosed = value == 0;
-          const strokeColor = el.stroke;
-          const dash = isClosed ? [] : [20, 10];
-          const strokeLine = isClosed ? el.stroke : 'white';
           return (
             <Group key={`group-${el.type}-${el.id}`}>
-              <Line points={el.points} stroke={strokeColor} strokeWidth={el.strokeWidth + 4} />
-              <Line points={el.points} stroke={strokeLine} strokeWidth={el.strokeWidth + 2} />
-              <Line points={el.points} stroke={strokeColor} strokeWidth={el.strokeWidth} dash={dash} dashOffset={el.invertAnimation ? -dashOffset : dashOffset} />
+              {/* Borde exterior del caño */}
+              <Line
+                points={el.points}
+                stroke='#94a3b8'
+                strokeWidth={el.strokeWidth + 5}
+                lineCap='round'
+                lineJoin='round'
+              />
+              {/* Cuerpo del caño */}
+              <Line
+                points={el.points}
+                stroke='#e2e8f0'
+                strokeWidth={el.strokeWidth + 3}
+                lineCap='round'
+                lineJoin='round'
+              />
+              {/* Flujo animado — sólo cuando hay caudal */}
+              {!isClosed && (
+                <Line
+                  points={el.points}
+                  stroke={el.stroke}
+                  strokeWidth={el.strokeWidth}
+                  dash={[10, 8]}
+                  dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
+                  lineCap='round'
+                  lineJoin='round'
+                />
+              )}
             </Group>
           );
         }
@@ -320,46 +381,76 @@ function ViewDiagram() {
 
 
   return (
-    <>
-      {isLoading ? (
-        <Box className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 1000 }}>
+    <div className='w-full h-[88vh] flex flex-col'>
+      <div className='flex items-end justify-between gap-3'>
+        <div
+          className='inline-flex items-center gap-2 text-white rounded-t-md shadow-md'
+          style={{
+            padding: '4px 20px',
+            background: darkPrimaryGradient,
+            boxShadow: '0 4px 20px rgba(44, 106, 160, 0.3)',
+          }}
+        >
+          <span className='text-[9px] font-semibold uppercase tracking-[0.18em] text-white/75'>
+            Diagrama
+          </span>
+          <span className='text-white/40'>·</span>
+          <span className='text-sm font-semibold text-white truncate max-w-[50vw]'>
+            {diagramMetadata.title || 'Diagrama sin nombre'}
+          </span>
+        </div>
+
+        {usuario?.profile === 4 && (
+          <Button
+            variant='contained'
+            startIcon={<LuArrowLeft />}
+            onClick={() => navigate('/config/diagram')}
+            sx={{ ...darkPillSx, mb: 0.5 }}
+          >
+            Volver
+          </Button>
+        )}
+      </div>
+
+      <CardCustom className='rounded-xl rounded-tl-none h-auto w-auto flex-1 overflow-hidden relative'>
+        {isLoading ? (
           <LoaderComponent />
-        </Box>
-      ) : (
-        <div className="h-[85vh] w-full flex flex-col items-center mb-10">
-          <div className="w-full">
-            <div className="absolute ms-2 px-3 z-30 bg-[#2c6aa0] text-white font-semibold rounded-t-md shadow-md">
-              {diagramMetadata.title}
-            </div>
-          </div>
-
-          <CardCustom className="w-full h-full flex flex-col items-center justify-center !bg-gray-300/50 text-black relative mt-6 pt-2 rounded-md border-gray-400 border-2 !overflow-clip" >
-            <div ref={containerRef} className="flex-1 w-full h-full rounded-br-lg relative text-end">
-              <div className="absolute top-2 left-0 right-0 flex justify-between items-start px-4 z-10">
-                <div className="flex flex-col gap-2">
-                  <IconButton onClick={zoomIn} title="Acercar" className="!bg-blue-600 !text-white !shadow-lg"><LuZoomIn /></IconButton>
-                  <IconButton onClick={zoomOut} title="Alejar" className="!bg-blue-600 !text-white !shadow-lg"><LuZoomOut /></IconButton>
-                </div>
-
-                {usuario?.profile === 4 && (
-                  <IconButton title="Volver" onClick={() => navigate('/config/diagram')} className="!bg-blue-600 !text-white !shadow-sm">
-                    <LuArrowLeft />
+        ) : (
+          <Box sx={canvasAreaSx} className='w-full h-full relative rounded-lg overflow-hidden'>
+            <div ref={containerRef} className='w-full h-full relative'>
+              <div className='absolute top-2 left-2 z-10 flex flex-col gap-2'>
+                <Tooltip title='Acercar' placement='right'>
+                  <IconButton onClick={zoomIn} sx={darkIconBtnSx}>
+                    <LuZoomIn size={18} />
                   </IconButton>
-                )}
+                </Tooltip>
+                <Tooltip title='Alejar' placement='right'>
+                  <IconButton onClick={zoomOut} sx={darkIconBtnSx}>
+                    <LuZoomOut size={18} />
+                  </IconButton>
+                </Tooltip>
               </div>
 
               {dimensions.width > 0 && (
-                <Stage width={dimensions.width} height={dimensions.height} scaleX={scale} scaleY={scale} x={position.x} y={position.y} ref={stageRef} draggable onDragEnd={(e) => setPosition({ x: e.target.x(), y: e.target.y() })}>
-                  <Layer>
-                    {renderElementsAndTooltips()}
-                  </Layer>
+                <Stage
+                  width={dimensions.width}
+                  height={dimensions.height}
+                  scaleX={scale}
+                  scaleY={scale}
+                  x={position.x}
+                  y={position.y}
+                  ref={stageRef}
+                  draggable
+                  onDragEnd={(e) => setPosition({ x: e.target.x(), y: e.target.y() })}
+                >
+                  <Layer>{renderElementsAndTooltips()}</Layer>
                 </Stage>
               )}
             </div>
-          </CardCustom>
-        </div>
-      )}
-    </>
+          </Box>
+        )}
+      </CardCustom>
+    </div>
   );
 }
 

@@ -1,0 +1,17 @@
+/* Elimina el padding/fondo por defecto del Popup de maplibre para poder
+ * estilar el contenedor interno a gusto (header navy + body blanco). */
+.scada-marker-popup .maplibregl-popup-content {
+	padding: 0;
+	border-radius: 12px;
+	background: transparent;
+	box-shadow: none;
+	overflow: visible;
+}
+
+.scada-marker-popup .maplibregl-popup-tip {
+	display: none;
+}
+
+.scada-marker-popup .maplibregl-popup-close-button {
+	display: none;
+}

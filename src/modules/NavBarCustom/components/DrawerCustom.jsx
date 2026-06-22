@@ -1,23 +1,31 @@
 import { styled } from '@mui/material/styles'
 import MuiDrawer from '@mui/material/Drawer'
 const drawerWidth = 240
+
+const paperBase = {
+	background: 'transparent !important',
+	borderRight: 'none',
+	overflowX: 'hidden',
+	overflowY: 'auto',
+	display: 'flex',
+	flexDirection: 'column',
+}
+
 const openedMixin = (theme) => ({
+	...paperBase,
 	width: drawerWidth,
 	transition: theme.transitions.create('width', {
-		easing: theme.transitions.easing.sharp,
+		easing: theme.transitions.easing.easeOut,
 		duration: theme.transitions.duration.enteringScreen,
 	}),
-	background: 'transparent !important',
-	overflowX: 'hidden',
 })
 
 const closedMixin = (theme) => ({
+	...paperBase,
 	transition: theme.transitions.create('width', {
 		easing: theme.transitions.easing.sharp,
 		duration: theme.transitions.duration.leavingScreen,
 	}),
-	overflowX: 'hidden',
-	background: 'transparent !important',
 	width: `calc(${theme.spacing(7)} + 1px)`,
 	[theme.breakpoints.up('sm')]: {
 		width: `calc(${theme.spacing(8)} + 1px)`,

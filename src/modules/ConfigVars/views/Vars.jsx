@@ -1,15 +1,17 @@
-import { Box, Button, Container, FormControl, InputLabel, MenuItem, Select, Typography } from '@mui/material'
+import { Container, FormControl, InputLabel, MenuItem, Select } from '@mui/material'
 import TableCustom from '../../../components/TableCustom'
+import { ActionsRow, DeleteChip, EditChip } from '../../../components/TableActions'
+import FiltersBar from '../../../components/FiltersBar'
 import { useEffect, useState } from 'react'
 import { getVarsInflux } from '../../DrawDiagram/components/Fields/actions'
 import ModalVar from '../../../components/DataGenerator/ModalVar'
 import { backend } from '../../../utils/routes/app.routes'
 import { request } from '../../../utils/js/request'
 import Swal from 'sweetalert2'
-import CardCustom from '../../../components/CardCustom'
 import { Controller, useForm } from 'react-hook-form'
 import LoaderComponent from '../../../components/Loader'
 import BitCalcVarModal from '../../../components/DataGenerator/BitCalcVarModal'
+import PageHeader from '../../../components/PageHeader'
 
 const Vars = () => {
     const [loading, setLoading] = useState(true)
@@ -20,7 +22,12 @@ const Vars = () => {
     const [varsOriginal, setVarsOriginal] = useState([]);
     const [processList, setProcessList] = useState([]);
     const [unitList, setUnitList] = useState([]);
-    const { control, handleSubmit } = useForm({ defaultValues: { process: '', calc: '', unit: '' } });
+    const { control, handleSubmit, reset } = useForm({ defaultValues: { process: '', calc: '', unit: '' } });
+
+    const onResetFilters = () => {
+        reset({ process: '', calc: '', unit: '' });
+        setVars(varsOriginal);
+    };
     const deleteVar = async (id) => {
         const url = `${backend[import.meta.env.VITE_APP_NAME]}/deleteVar/${id}`
         const aprovationUser = await Swal.fire({
@@ -70,36 +77,22 @@ const Vars = () => {
         {
             header: 'Acciones',
             accessorKey: 'options',
-            Cell: ({ row }) => {
-                return (
-                    <div className="flex gap-2">
-                        <Button
-                            size="small"
-                            color="primary"
-                            variant="contained"
-                            onClick={() => {
-                                if (row.original.calc_binary_compressed) {
-                                    setDetailVar(row.original);
-                                    setModalBitCalc(true);
-                                } else {
-                                    setDetailVar(row.original);
-                                    setModal(true);
-                                }
-                            }}
-                        >
-                            Editar
-                        </Button>
-                        <Button
-                            size="small"
-                            color="error"
-                            variant="contained"
-                            onClick={() => deleteVar(row.original.id)}
-                        >
-                            Eliminar
-                        </Button>
-                    </div>
-                )
-            },
+            Cell: ({ row }) => (
+                <ActionsRow>
+                    <EditChip
+                        onClick={() => {
+                            if (row.original.calc_binary_compressed) {
+                                setDetailVar(row.original);
+                                setModalBitCalc(true);
+                            } else {
+                                setDetailVar(row.original);
+                                setModal(true);
+                            }
+                        }}
+                    />
+                    <DeleteChip onClick={() => deleteVar(row.original.id)} />
+                </ActionsRow>
+            ),
         },
     ])
 
@@ -154,104 +147,73 @@ const Vars = () => {
     }, [])
 
     return (
-        <Container className='w-full'>
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
-                <Typography className='w-full text-center md:!ms-40' variant="h4" align="center">
-                    Variables
-                </Typography>
-                <div className='flex justify-center sm:justify-end'>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => {
-                            setDetailVar(null)
-                            setModal(true)
-                        }}
-                        className="sm:mx-10 whitespace-nowrap"
-                    >
-                        Crear Variable
-                    </Button>
-                </div>
-            </div>
+        <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+            <PageHeader
+                title='Variables'
+                createLabel='Crear variable'
+                onCreate={() => {
+                    setDetailVar(null)
+                    setModal(true)
+                }}
+            />
 
             {!loading ? (
                 <>
-                    <CardCustom className={'p-2 my-2 rounded-md bg-grey-100'}>
-                        <form onSubmit={handleSubmit(onSubmit)} className='flex flex-wrap relative w-full justify-center items-end mt-2'>
-                            <div className='md:w-1/6 p-1 w-full'>
-                                <FormControl fullWidth size="small" className='shadow-sm'>
-                                    <InputLabel id="unit_label">Unidad</InputLabel>
-                                    <Controller
-                                        name="unit"
-                                        control={control}
-                                        size="small"
-                                        render={({ field }) => (
-                                            <Select {...field} labelId="unit_label" label="Unidad">
-                                                <MenuItem value="">Todos</MenuItem>
-                                                {unitList.map((p, i) => (
-                                                    <MenuItem key={i} value={p}>
-                                                        {p}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        )}
-                                    />
-                                </FormControl>
-                            </div>
-                            <div className='md:w-1/6 p-1 w-full'>
-                                <FormControl fullWidth size="small" className='shadow-sm'>
-                                    <InputLabel id="calc_label">Cálculo</InputLabel>
-                                    <Controller
-                                        name="calc"
-                                        control={control}
-                                        render={({ field }) => (
-                                            <Select
-                                                labelId="calc_label"
-                                                label="Cálculo"
-                                                {...field}
-                                            >
-                                                <MenuItem value="">Todas</MenuItem>
-                                                <MenuItem value="true">Sí</MenuItem>
-                                                <MenuItem value="false">No</MenuItem>
-                                            </Select>
-
-                                        )}
-                                    />
-                                </FormControl>
-                            </div>
-                            <div className='md:w-1/4 p-1 w-full'>
-                                <FormControl fullWidth size="small" className='shadow-sm'>
-                                    <InputLabel id="process_label">Proceso</InputLabel>
-                                    <Controller
-                                        name="process"
-                                        control={control}
-                                        size="small"
-                                        render={({ field }) => (
-                                            <Select {...field} labelId="process_label" label="Proceso">
-                                                <MenuItem value="">Todos</MenuItem>
-                                                {processList.map((p, i) => (
-                                                    <MenuItem key={i} value={p}>
-                                                        {p}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        )}
-                                    />
-                                </FormControl>
-                            </div>
-
-
-                            <div className='p-1 w-full justify-center flex'>
-                                <Button variant="contained" color="primary" size="small"
-                                    onClick={() => {
-                                        handleSubmit(onSubmit)()
-                                    }}
-                                >
-                                    Filtrar
-                                </Button>
-                            </div>
-                        </form>
-                    </CardCustom >
+                    <FiltersBar
+                        onFilter={handleSubmit(onSubmit)}
+                        onReset={onResetFilters}
+                    >
+                        <div className='flex-1 min-w-[180px]'>
+                            <FormControl fullWidth size='small'>
+                                <InputLabel id='unit_label'>Unidad</InputLabel>
+                                <Controller
+                                    name='unit'
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select {...field} labelId='unit_label' label='Unidad'>
+                                            <MenuItem value=''>Todos</MenuItem>
+                                            {unitList.map((p, i) => (
+                                                <MenuItem key={i} value={p}>{p}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    )}
+                                />
+                            </FormControl>
+                        </div>
+                        <div className='flex-1 min-w-[180px]'>
+                            <FormControl fullWidth size='small'>
+                                <InputLabel id='calc_label'>Cálculo</InputLabel>
+                                <Controller
+                                    name='calc'
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select {...field} labelId='calc_label' label='Cálculo'>
+                                            <MenuItem value=''>Todas</MenuItem>
+                                            <MenuItem value='true'>Sí</MenuItem>
+                                            <MenuItem value='false'>No</MenuItem>
+                                        </Select>
+                                    )}
+                                />
+                            </FormControl>
+                        </div>
+                        <div className='flex-1 min-w-[180px]'>
+                            <FormControl fullWidth size='small'>
+                                <InputLabel id='process_label'>Proceso</InputLabel>
+                                <Controller
+                                    name='process'
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select {...field} labelId='process_label' label='Proceso'>
+                                            <MenuItem value=''>Todos</MenuItem>
+                                            {processList.map((p, i) => (
+                                                <MenuItem key={i} value={p}>{p}</MenuItem>
+                                            ))}
+                                        </Select>
+                                    )}
+                                />
+                            </FormControl>
+                        </div>
+                    </FiltersBar>
                     <TableCustom
                         data={vars.length > 0 ? vars : []}
                         columns={columns}

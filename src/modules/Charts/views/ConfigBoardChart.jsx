@@ -1,15 +1,101 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import VarsProvider from '../../../components/DataGenerator/ProviderVars'
-import { Button, Card, Divider, IconButton, TextField, Typography, FormControl, InputLabel, MenuItem, Select } from '@mui/material'
-import { ArrowBack } from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  Container,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from '@mui/material'
 import { useEffect, useMemo, useState, Suspense, lazy } from 'react'
 import { useForm } from 'react-hook-form'
 import Swal from 'sweetalert2'
 import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
 import SelectVars from '../components/SelectVars.jsx'
+import HeaderForms from '../components/HeaderForms'
 
 const BoardChart = lazy(() => import('../components/BoardChart.jsx'))
+
+const shellSx = {
+  borderRadius: '16px',
+  backgroundColor: '#ffffff',
+  border: '1px solid rgba(15, 42, 68, 0.06)',
+  boxShadow:
+    '0 2px 6px rgba(15, 42, 68, 0.05), 0 12px 32px -12px rgba(15, 42, 68, 0.12)',
+  p: { xs: 2, sm: 2.5 },
+  'body.dark &': {
+    backgroundColor: 'rgba(17, 24, 39, 0.85)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+  },
+}
+
+const sectionSx = {
+  borderRadius: '14px',
+  border: '1px solid rgba(15, 42, 68, 0.06)',
+  backgroundColor: 'transparent',
+  p: { xs: 1.75, sm: 2 },
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 1.5,
+  'body.dark &': { border: '1px solid rgba(255, 255, 255, 0.06)' },
+}
+
+const subCardSx = {
+  borderRadius: '12px',
+  backgroundColor: '#ffffff',
+  border: '1px solid rgba(15, 42, 68, 0.08)',
+  borderLeft: '3px solid #2c6aa0',
+  p: 1.5,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 1,
+  'body.dark &': {
+    backgroundColor: 'rgba(17, 24, 39, 0.7)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+    borderLeft: '3px solid #2c6aa0',
+  },
+}
+
+const previewCardSx = {
+  borderRadius: '16px',
+  overflow: 'hidden',
+  border: '1px solid rgba(15, 42, 68, 0.08)',
+  boxShadow:
+    '0 2px 6px rgba(15, 42, 68, 0.05), 0 12px 32px -12px rgba(15, 42, 68, 0.14)',
+  backgroundColor: '#ffffff',
+  'body.dark &': {
+    backgroundColor: 'rgba(17, 24, 39, 0.85)',
+    border: '1px solid rgba(255, 255, 255, 0.06)',
+  },
+}
+
+const submitPillSx = {
+  borderRadius: '999px',
+  textTransform: 'none',
+  fontWeight: 500,
+  px: 3,
+  py: 1,
+  minHeight: 0,
+  background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+  boxShadow: '0 4px 14px rgba(44, 106, 160, 0.35)',
+  transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+  '&:hover': {
+    background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+    boxShadow: '0 8px 24px rgba(44, 106, 160, 0.45)',
+    transform: 'translateY(-1px)',
+  },
+}
+
+const SectionTitle = ({ children }) => (
+  <div className='text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500 dark:text-gray-400 px-1 -mt-0.5'>
+    {children}
+  </div>
+)
 
 const ConfigBoardChart = () => {
   const { id = false } = useParams()
@@ -31,7 +117,6 @@ const ConfigBoardChart = () => {
       order: '',
       topLeftChartId: '',
       topRightChartId: '',
-      // BOMBEO
       pumpingStatusLabel: 'Estado',
       pumpingRuntimeLabel: 'Tiempo de funcionamiento',
       pumpingStartsLabel: 'Cantidad de arranques',
@@ -44,7 +129,6 @@ const ConfigBoardChart = () => {
       pumpingCurrentL1VarId: null,
       pumpingCurrentL2VarId: null,
       pumpingCurrentL3VarId: null,
-      // SALA (4 items)
       roomItem0Label: 'Energia',
       roomItem0VarId: null,
       roomItem1Label: 'Conectividad',
@@ -77,23 +161,14 @@ const ConfigBoardChart = () => {
   const getLabelFromData = (dataArr, key, fallback = '') =>
     getDataItem(dataArr, key)?.label ?? fallback
 
-  const setVarField = (field, v) => {
-    setValue(field, v?.id ?? null)          // form guarda solo el id
-    setVarObjects(prev => ({ ...prev, [field]: v ?? null }))  // estado guarda el objeto
-  }
-
   const buildChartConfig = () => {
     const d = getValues()
     const cfg = []
-
-    const push = (key, value, type = 'string') =>
-      cfg.push({ key, value, type })
-    //extraer el id de la variable de influx
+    const push = (key, value, type = 'string') => cfg.push({ key, value, type })
     const getVarId = (v) => v?.id ?? v ?? null
-    // ===== CHART =====
+
     push('board.top.leftChartId', d.topLeftChartId ?? '', 'number')
     push('board.top.rightChartId', d.topRightChartId ?? '', 'number')
-    // ===== BOMBEO =====
     push('board.pumping.runtime.label', d.pumpingRuntimeLabel)
     push('board.pumping.starts.label', d.pumpingStartsLabel)
     push('board.pumping.currentL1.label', d.pumpingCurrentL1Label)
@@ -105,7 +180,6 @@ const ConfigBoardChart = () => {
     push('board.pumping.currentL1.key', getVarId(d.pumpingCurrentL1VarId))
     push('board.pumping.currentL2.key', getVarId(d.pumpingCurrentL2VarId))
     push('board.pumping.currentL3.key', getVarId(d.pumpingCurrentL3VarId))
-    // ===== SALA =====
     push('board.room.item0.label', d.roomItem0Label)
     push('board.room.item0.key', getVarId(d.roomItem0VarId))
     push('board.room.item1.label', d.roomItem1Label)
@@ -120,108 +194,26 @@ const ConfigBoardChart = () => {
 
   const previewChartData = useMemo(() => {
     const items = []
-    // ===== BOMBEO =====
-    if (watch('pumpingStatusVarId')) {
-      items.push({
-        key: 'board.pumping.status',
-        value: null,
-        InfluxVars: {
-          id: watch('pumpingStatusVarId'),
-        },
-      })
+    const maybePush = (key, varIdField, labelField) => {
+      if (watch(varIdField)) {
+        items.push({
+          key,
+          value: null,
+          label: labelField ? watch(labelField) : undefined,
+          InfluxVars: { id: watch(varIdField) },
+        })
+      }
     }
-    if (watch('pumpingRuntimeVarId')) {
-      items.push({
-        key: 'board.pumping.runtime',
-        value: null,
-        label: watch('pumpingRuntimeLabel'),
-        InfluxVars: {
-          id: watch('pumpingRuntimeVarId'),
-        },
-      })
-    }
-    if (watch('pumpingStartsVarId')) {
-      items.push({
-        key: 'board.pumping.starts',
-        value: null,
-        label: watch('pumpingStartsLabel'),
-        InfluxVars: {
-          id: watch('pumpingStartsVarId'),
-        },
-      })
-    }
-    if (watch('pumpingCurrentL1VarId')) {
-      items.push({
-        key: 'board.pumping.currentL1',
-        value: null,
-        label: watch('pumpingCurrentL1Label'),
-        InfluxVars: {
-          id: watch('pumpingCurrentL1VarId'),
-        },
-      })
-    }
-    if (watch('pumpingCurrentL2VarId')) {
-      items.push({
-        key: 'board.pumping.currentL2',
-        value: null,
-        label: watch('pumpingCurrentL2Label'),
-        InfluxVars: {
-          id: watch('pumpingCurrentL2VarId'),
-        },
-      })
-    }
-    if (watch('pumpingCurrentL3VarId')) {
-      items.push({
-        key: 'board.pumping.currentL3',
-        value: null,
-        label: watch('pumpingCurrentL3Label'),
-        InfluxVars: {
-          id: watch('pumpingCurrentL3VarId'),
-        },
-      })
-    }
-    // ===== SALA =====
-    if (watch('roomItem0VarId')) {
-      items.push({
-        key: 'board.room.item0',
-        value: null,
-        label: watch('roomItem0Label'),
-        InfluxVars: {
-          id: watch('roomItem0VarId'),
-        },
-      })
-    }
-    if (watch('roomItem1VarId')) {
-      items.push({
-        key: 'board.room.item1',
-        value: null,
-        label: watch('roomItem1Label'),
-        InfluxVars: {
-          id: watch('roomItem1VarId'),
-        },
-      })
-    }
-    if (watch('roomItem2VarId')) {
-      items.push({
-        key: 'board.room.item2',
-        value: null,
-        label: watch('roomItem2Label'),
-        InfluxVars: {
-          id: watch('roomItem2VarId'),
-        },
-      })
-    }
-    if (watch('roomItem3VarId')) {
-      items.push({
-        key: 'board.room.item3',
-        value: null,
-        label: watch('roomItem3Label'),
-        InfluxVars: {
-          id: watch('roomItem3VarId'),
-        },
-      })
-    }
-
+    maybePush('board.pumping.status', 'pumpingStatusVarId')
+    maybePush('board.pumping.runtime', 'pumpingRuntimeVarId', 'pumpingRuntimeLabel')
+    maybePush('board.pumping.starts', 'pumpingStartsVarId', 'pumpingStartsLabel')
+    maybePush('board.pumping.currentL1', 'pumpingCurrentL1VarId', 'pumpingCurrentL1Label')
+    maybePush('board.pumping.currentL2', 'pumpingCurrentL2VarId', 'pumpingCurrentL2Label')
+    maybePush('board.pumping.currentL3', 'pumpingCurrentL3VarId', 'pumpingCurrentL3Label')
+    maybePush('board.room.item0', 'roomItem0VarId', 'roomItem0Label')
+    maybePush('board.room.item1', 'roomItem1VarId', 'roomItem1Label')
+    maybePush('board.room.item2', 'roomItem2VarId', 'roomItem2Label')
+    maybePush('board.room.item3', 'roomItem3VarId', 'roomItem3Label')
     return items
   }, [watch()])
 
@@ -244,11 +236,7 @@ const ConfigBoardChart = () => {
         'POST',
         payload
       )
-      await Swal.fire(
-        'OK',
-        id ? 'Tablero editado' : 'Tablero creado',
-        'success'
-      )
+      await Swal.fire('OK', id ? 'Tablero editado' : 'Tablero creado', 'success')
       navigate('/boards')
     } catch {
       await Swal.fire('Error', 'No se pudo guardar el tablero', 'error')
@@ -257,25 +245,19 @@ const ConfigBoardChart = () => {
 
   const previewInflValues = useMemo(() => {
     const data = {}
-
     previewChartData.forEach((item) => {
       const id = item?.InfluxVars?.id
       if (!id) return
       data[id] = 'Sin Datos'
     })
-
     charts.forEach((c) => {
       c?.ChartData?.forEach((d) => {
         const id = d?.InfluxVars?.id
-        if (id && data[id] === undefined) {
-          data[id] = 'Sin Datos'
-        }
+        if (id && data[id] === undefined) data[id] = 'Sin Datos'
       })
     })
-
     return data
   }, [previewChartData, charts])
-
 
   const fetchAllCharts = async () => {
     try {
@@ -302,39 +284,35 @@ const ConfigBoardChart = () => {
       )
       const cfg = data.ChartConfig || []
       const chartData = data.ChartData || []
-  
-      // Extraer objetos completos
-      const pumpingStatus    = getVarIdFromData(chartData, 'board.pumping.status')
-      const pumpingRuntime   = getVarIdFromData(chartData, 'board.pumping.runtime')
-      const pumpingStarts    = getVarIdFromData(chartData, 'board.pumping.starts')
+
+      const pumpingStatus = getVarIdFromData(chartData, 'board.pumping.status')
+      const pumpingRuntime = getVarIdFromData(chartData, 'board.pumping.runtime')
+      const pumpingStarts = getVarIdFromData(chartData, 'board.pumping.starts')
       const pumpingCurrentL1 = getVarIdFromData(chartData, 'board.pumping.currentL1')
       const pumpingCurrentL2 = getVarIdFromData(chartData, 'board.pumping.currentL2')
       const pumpingCurrentL3 = getVarIdFromData(chartData, 'board.pumping.currentL3')
-      const roomItem0        = getVarIdFromData(chartData, 'board.room.item0')
-      const roomItem1        = getVarIdFromData(chartData, 'board.room.item1')
-      const roomItem2        = getVarIdFromData(chartData, 'board.room.item2')
-      const roomItem3        = getVarIdFromData(chartData, 'board.room.item3')
-  
+      const roomItem0 = getVarIdFromData(chartData, 'board.room.item0')
+      const roomItem1 = getVarIdFromData(chartData, 'board.room.item1')
+      const roomItem2 = getVarIdFromData(chartData, 'board.room.item2')
+      const roomItem3 = getVarIdFromData(chartData, 'board.room.item3')
+
       reset({
         title: data.name || '',
         order: data.order ?? '',
-        // ===== CHART =====
-        topLeftChartId:  getConfigValue(cfg, 'board.top.leftChartId', ''),
+        topLeftChartId: getConfigValue(cfg, 'board.top.leftChartId', ''),
         topRightChartId: getConfigValue(cfg, 'board.top.rightChartId', ''),
-        // ===== BOMBEO =====
-        pumpingStatusVarId:    pumpingStatus?.id    ?? null,
-        pumpingRuntimeVarId:   pumpingRuntime?.id   ?? null,
-        pumpingStartsVarId:    pumpingStarts?.id    ?? null,
+        pumpingStatusVarId: pumpingStatus?.id ?? null,
+        pumpingRuntimeVarId: pumpingRuntime?.id ?? null,
+        pumpingStartsVarId: pumpingStarts?.id ?? null,
         pumpingCurrentL1VarId: pumpingCurrentL1?.id ?? null,
         pumpingCurrentL2VarId: pumpingCurrentL2?.id ?? null,
         pumpingCurrentL3VarId: pumpingCurrentL3?.id ?? null,
-        pumpingStatusLabel:    getLabelFromData(chartData, 'board.pumping.status',    'Estado'),
-        pumpingRuntimeLabel:   getLabelFromData(chartData, 'board.pumping.runtime',   'Tiempo de funcionamiento'),
-        pumpingStartsLabel:    getLabelFromData(chartData, 'board.pumping.starts',    'Cantidad de arranques'),
+        pumpingStatusLabel: getLabelFromData(chartData, 'board.pumping.status', 'Estado'),
+        pumpingRuntimeLabel: getLabelFromData(chartData, 'board.pumping.runtime', 'Tiempo de funcionamiento'),
+        pumpingStartsLabel: getLabelFromData(chartData, 'board.pumping.starts', 'Cantidad de arranques'),
         pumpingCurrentL1Label: getLabelFromData(chartData, 'board.pumping.currentL1', 'I_L1'),
         pumpingCurrentL2Label: getLabelFromData(chartData, 'board.pumping.currentL2', 'I_L2'),
         pumpingCurrentL3Label: getLabelFromData(chartData, 'board.pumping.currentL3', 'I_L3'),
-        // ===== SALA =====
         roomItem0Label: getLabelFromData(chartData, 'board.room.item0', 'Normal'),
         roomItem1Label: getLabelFromData(chartData, 'board.room.item1', 'Online'),
         roomItem2Label: getLabelFromData(chartData, 'board.room.item2', '°C'),
@@ -344,11 +322,11 @@ const ConfigBoardChart = () => {
         roomItem2VarId: roomItem2?.id ?? null,
         roomItem3VarId: roomItem3?.id ?? null,
       })
-  
+
       setVarObjects({
-        pumpingStatusVarId:    pumpingStatus,
-        pumpingRuntimeVarId:   pumpingRuntime,
-        pumpingStartsVarId:    pumpingStarts,
+        pumpingStatusVarId: pumpingStatus,
+        pumpingRuntimeVarId: pumpingRuntime,
+        pumpingStartsVarId: pumpingStarts,
         pumpingCurrentL1VarId: pumpingCurrentL1,
         pumpingCurrentL2VarId: pumpingCurrentL2,
         pumpingCurrentL3VarId: pumpingCurrentL3,
@@ -357,7 +335,6 @@ const ConfigBoardChart = () => {
         roomItem2VarId: roomItem2,
         roomItem3VarId: roomItem3,
       })
-  
     } catch (e) {
       await Swal.fire('Error', 'Error al cargar el tablero', 'error')
     } finally {
@@ -373,9 +350,13 @@ const ConfigBoardChart = () => {
 
   if (loader) {
     return (
-      <div className="w-full p-5 flex justify-center">
-        <Typography variant="h5">Cargando...</Typography>
-      </div>
+      <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+        <Box sx={shellSx}>
+          <Typography variant='body1' align='center' color='textSecondary'>
+            Cargando...
+          </Typography>
+        </Box>
+      </Container>
     )
   }
 
@@ -384,294 +365,152 @@ const ConfigBoardChart = () => {
   const selectedRightChart =
     charts.find((c) => String(c.id) === String(watch('topRightChartId'))) || null
 
+  const PumpingSlot = ({ label, varField, labelField }) => (
+    <Box sx={subCardSx}>
+      <TextField
+        label={label}
+        size='small'
+        {...register(labelField)}
+        fullWidth
+      />
+      <SelectVars
+        initialVar={varObjects[varField] ?? null}
+        onSelect={(v) => setValue(varField, v?.id ?? null)}
+        label='-Seleccionar variable-'
+      />
+    </Box>
+  )
+
   return (
     <VarsProvider>
-      <div className="w-full bg-white p-5 rounded-lg shadow-md">
-        <div className="grid grid-cols-3 items-center mb-5">
-          <div />
-          <Typography variant="h4" align="center" className="justify-self-center">
-            {id ? 'Edición del Tablero' : 'Configuración del Tablero'}
-          </Typography>
-          <IconButton
-            className="justify-self-end"
-            onClick={() => navigate('/config/allGraphic')}
+      <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+        <HeaderForms
+          idChart={id}
+          chart={{ name: watch('title') }}
+          backTo='/config/graphic'
+        />
+
+        <Box sx={shellSx}>
+          <form
+            onSubmit={handleSubmit(send)}
+            className='flex flex-col lg:flex-row gap-4 w-full'
           >
-            <ArrowBack />
-          </IconButton>
-        </div>
+            <div className='flex flex-col gap-3 w-full lg:w-7/12'>
+              <Box sx={sectionSx}>
+                <SectionTitle>Información</SectionTitle>
+                <div className='flex flex-wrap gap-2'>
+                  <div style={{ flex: '2 1 260px' }}>
+                    <TextField
+                      fullWidth
+                      size='small'
+                      label='Título del tablero'
+                      {...register('title')}
+                    />
+                  </div>
+                  <div style={{ flex: '1 1 140px' }}>
+                    <TextField
+                      fullWidth
+                      size='small'
+                      label='Orden'
+                      {...register('order')}
+                    />
+                  </div>
+                </div>
+              </Box>
 
+              <Box sx={sectionSx}>
+                <SectionTitle>Gráficos superiores</SectionTitle>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
+                  <FormControl size='small' fullWidth>
+                    <InputLabel>Gráfico superior izquierdo</InputLabel>
+                    <Select
+                      label='Gráfico superior izquierdo'
+                      value={watch('topLeftChartId')}
+                      onChange={(e) => setValue('topLeftChartId', e.target.value)}
+                    >
+                      <MenuItem value=''><em>Ninguno</em></MenuItem>
+                      {charts.map((c) => (
+                        <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
 
-        <form
-          onSubmit={handleSubmit(send)}
-          className="flex gap-3 max-sm:flex-col"
-        >
-          {/* CONFIG */}
-          <Card className="w-1/2 max-sm:w-full p-3 flex flex-col gap-3 !rounded-lg shadow-lg ">
-            <TextField
-              label="Título del tablero"
-              size="small"
-              {...register('title')}
-            />
+                  <FormControl size='small' fullWidth>
+                    <InputLabel>Gráfico superior derecho</InputLabel>
+                    <Select
+                      label='Gráfico superior derecho'
+                      value={watch('topRightChartId')}
+                      onChange={(e) => setValue('topRightChartId', e.target.value)}
+                    >
+                      <MenuItem value=''><em>Ninguno</em></MenuItem>
+                      {charts.map((c) => (
+                        <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </div>
+              </Box>
 
-            <TextField
-              label="Orden en el dashboard"
-              size="small"
-              {...register('order')}
-            />
-
-            <Divider />
-
-            {/* Top charts */}
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              Gráficos
-            </Typography>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <FormControl size="small" fullWidth>
-                <InputLabel>Gráfico superior izquierdo</InputLabel>
-                <Select
-                  label="Gráfico superior izquierdo"
-                  value={watch('topLeftChartId')}
-                  onChange={(e) => setValue('topLeftChartId', e.target.value)}
-                >
-                  <MenuItem value="">
-                    <em>Ninguno</em>
-                  </MenuItem>
-
-                  {charts.map((c) => (
-                    <MenuItem key={c.id} value={c.id}>
-                      {c.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl size="small" fullWidth>
-                <InputLabel>Gráfico superior derecho</InputLabel>
-                <Select
-                  label="Gráfico superior derecho"
-                  value={watch('topRightChartId')}
-                  onChange={(e) => setValue('topRightChartId', e.target.value)}
-                >
-                  <MenuItem value="">
-                    <em>Ninguno</em>
-                  </MenuItem>
-
-                  {charts.map((c) => (
-                    <MenuItem key={c.id} value={c.id}>
-                      {c.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </div>
-
-            <Divider />
-
-            {/* BOMBEO */}
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              Bombeo
-            </Typography>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className='md:col-span-2'>
-                <div className="!bg-white">
+              <Box sx={sectionSx}>
+                <SectionTitle>Bombeo</SectionTitle>
+                <div>
                   <SelectVars
                     initialVar={varObjects.pumpingStatusVarId ?? null}
-                    onSelect={(v) => {
-                      setValue('pumpingStatusVarId', v ?? null)
-                    }}
-                    label="-Seleccionar variable-"
+                    onSelect={(v) => setValue('pumpingStatusVarId', v ?? null)}
+                    label='Variable de estado'
                   />
                 </div>
-              </div>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
+                  <PumpingSlot label='Label tiempo' varField='pumpingRuntimeVarId' labelField='pumpingRuntimeLabel' />
+                  <PumpingSlot label='Label arranques' varField='pumpingStartsVarId' labelField='pumpingStartsLabel' />
+                  <PumpingSlot label='Label I_L1' varField='pumpingCurrentL1VarId' labelField='pumpingCurrentL1Label' />
+                  <PumpingSlot label='Label I_L2' varField='pumpingCurrentL2VarId' labelField='pumpingCurrentL2Label' />
+                  <PumpingSlot label='Label I_L3' varField='pumpingCurrentL3VarId' labelField='pumpingCurrentL3Label' />
+                </div>
+              </Box>
 
-              <div className='md:col-span-1'>
-                <Card className='p-2 mb-2 border-2 !shadow-sm'>
-                  <div className="!bg-white">
+              <Box sx={sectionSx}>
+                <SectionTitle>Sala</SectionTitle>
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className='grid grid-cols-1 md:grid-cols-2 gap-2'>
                     <TextField
-                      label="Label Tiempo"
-                      size="small"
-                      {...register('pumpingRuntimeLabel')}
-                      fullWidth
-                      className='!mb-2'
+                      label={`Label item ${i + 1}`}
+                      size='small'
+                      {...register(`roomItem${i}Label`)}
                     />
                     <SelectVars
-                      initialVar={varObjects.pumpingRuntimeVarId ?? null}
-                      onSelect={(v) =>
-                        setValue('pumpingRuntimeVarId', v ?? null)
-                      }
-                      label="-Seleccionar variable-"
+                      initialVar={varObjects[`roomItem${i}VarId`] ?? null}
+                      onSelect={(v) => setValue(`roomItem${i}VarId`, v ?? null)}
+                      label='-Seleccionar variable-'
                     />
                   </div>
-                </Card>
+                ))}
+              </Box>
 
-                <Card className='p-2 border-2 !shadow-sm'>
-                  <div className="!bg-white">
-                    <TextField
-                      label="Label Arranques"
-                      size="small"
-                      {...register('pumpingStartsLabel')}
-                      fullWidth
-                      className='!mb-2'
-                    />
-                    <SelectVars
-                      initialVar={varObjects.pumpingStartsVarId ?? null}
-                      onSelect={(v) =>
-                        setValue('pumpingStartsVarId', v ?? null)
-                      }
-                      label="-Seleccionar variable-"
-                    />
-                  </div>
-                </Card>
-              </div>
-
-              <div className='col-span-1'>
-                <Card className='p-2 mb-2 border-2 !shadow-sm'>
-                  <div className="!bg-white">
-                    <TextField
-                      label="Label I_L1"
-                      size="small"
-                      {...register('pumpingCurrentL1Label')}
-                      fullWidth
-                      className='!mb-2'
-                    />
-                    <SelectVars
-                      initialVar={varObjects.pumpingCurrentL1VarId ?? null}
-                      onSelect={(v) =>
-                        setValue('pumpingCurrentL1VarId', v ?? null)
-                      }
-                      label="-Seleccionar variable-"
-                    />
-                  </div>
-                </Card>
-
-                <Card className='p-2 mb-2 border-2 !shadow-sm'>
-                  <div className="!bg-white">
-                    <TextField
-                      label="Label I_L2"
-                      size="small"
-                      {...register('pumpingCurrentL2Label')}
-                      fullWidth
-                      className='!mb-2'
-                    />
-                    <SelectVars
-                      initialVar={varObjects.pumpingCurrentL2VarId ?? null}
-                      onSelect={(v) =>
-                        setValue('pumpingCurrentL2VarId', v ?? null)
-                      }
-                      label="-Seleccionar variable-"
-                    />
-                  </div>
-                </Card>
-
-                <Card className='p-2 mb-2 border-2 !shadow-sm'>
-                  <div className="!bg-white">
-                    <TextField
-                      label="Label I_L3"
-                      size="small"
-                      {...register('pumpingCurrentL3Label')}
-                      fullWidth
-                    />
-                    <SelectVars
-                      initialVar={varObjects.pumpingCurrentL3VarId ?? null}
-                      onSelect={(v) =>
-                        setValue('pumpingCurrentL3VarId', v ?? null)
-                      }
-                      label="-Seleccionar variable-"
-                    />
-                  </div>
-                </Card>
+              <div className='flex justify-end pt-1'>
+                <Button type='submit' variant='contained' disableElevation sx={submitPillSx}>
+                  Guardar
+                </Button>
               </div>
             </div>
 
-            <Divider />
-
-            {/* SALA */}
-            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-              Sala
-            </Typography>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <TextField
-                label="Label item 1"
-                size="small"
-                {...register('roomItem0Label')}
-              />
-              <div className="!bg-white">
-                <SelectVars
-                  initialVar={varObjects.roomItem0VarId ?? null}
-                  onSelect={(v) => setValue('roomItem0VarId', v ?? null)}
-                  label="-Seleccionar variable-"
-                />
-              </div>
+            <div className='w-full lg:w-5/12'>
+              <Box sx={previewCardSx}>
+                <Suspense fallback={<div className='p-3 text-sm text-slate-500'>Cargando preview...</div>}>
+                  <BoardChart
+                    title={getValues('title') || 'Vista previa'}
+                    ChartData={previewChartData}
+                    ChartConfig={buildChartConfig()}
+                    topLeftChart={selectedLeftChart}
+                    topRightChart={selectedRightChart}
+                    inflValues={previewInflValues}
+                  />
+                </Suspense>
+              </Box>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <TextField
-                label="Label item 2"
-                size="small"
-                {...register('roomItem1Label')}
-              />
-              <div className="!bg-white">
-                <SelectVars
-                  initialVar={varObjects.roomItem1VarId ?? null}
-                  onSelect={(v) => setValue('roomItem1VarId', v ?? null)}
-                  label="-Seleccionar variable-"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <TextField
-                label="Label item 3"
-                size="small"
-                {...register('roomItem2Label')}
-              />
-              <div className="!bg-white">
-                <SelectVars
-                  initialVar={varObjects.roomItem2VarId ?? null}
-                  onSelect={(v) => setValue('roomItem2VarId', v ?? null)}
-                  label="-Seleccionar variable-"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <TextField
-                label="Label item 4"
-                size="small"
-                {...register('roomItem3Label')}
-              />
-              <div className="!bg-white">
-                <SelectVars
-                  initialVar={varObjects.roomItem3VarId ?? null}
-                  onSelect={(v) => setValue('roomItem3VarId', v ?? null)}
-                  label="-Seleccionar variable-"
-                />
-              </div>
-            </div>
-
-            <Button type="submit" variant="contained">
-              Guardar
-            </Button>
-          </Card>
-
-          {/* PREVIEW */}
-          <Card className="w-1/2 max-sm:w-full h-fit !rounded-lg">
-            <Suspense fallback={<div className="p-3">Cargando preview...</div>}>
-              <BoardChart
-                title={getValues('title')}
-                ChartData={previewChartData}
-                ChartConfig={buildChartConfig()}
-                topLeftChart={selectedLeftChart}
-                topRightChart={selectedRightChart}
-                inflValues={previewInflValues}
-              />
-            </Suspense>
-          </Card>
-        </form>
-      </div>
+          </form>
+        </Box>
+      </Container>
     </VarsProvider>
   )
 }

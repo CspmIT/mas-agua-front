@@ -1,26 +1,33 @@
 import React from 'react';
+import { Box } from '@mui/material';
+import { floatingPanelSx, panelTitleClass } from '../../utils/js/diagramTheme';
 
 const ImageSelector = ({ visible, images, onSelectImage }) => {
   if (!visible) return null;
 
   return (
-    <div className="absolute top-1 left-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 max-w-md">
-      <div className="grid grid-cols-3 gap-2 max-h-96 overflow-y-auto">
+    <Box
+      sx={floatingPanelSx}
+      className='absolute top-2 left-2 z-10 max-w-md p-3'
+    >
+      <h4 className={`${panelTitleClass} mb-2`}>Agregar imagen</h4>
+      <div className='grid grid-cols-3 gap-2 max-h-96 overflow-y-auto'>
         {images.map((img) => (
-          <div
+          <button
             key={img.name}
-            className="cursor-pointer p-1 hover:shadow-md max-h-36"
+            type='button'
             onClick={() => onSelectImage(img.src)}
+            className='cursor-pointer p-1 max-h-36 rounded-md border border-transparent hover:border-[#2c6aa0]/40 hover:shadow-md dark:hover:border-[#5ea5f0]/40 transition'
           >
             <img
               src={img.src}
               alt={img.name}
-              className="object-contain w-full h-full"
+              className='object-contain w-full h-full'
             />
-          </div>
+          </button>
         ))}
       </div>
-    </div>
+    </Box>
   );
 };
 

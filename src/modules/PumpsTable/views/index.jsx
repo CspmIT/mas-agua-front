@@ -4,11 +4,11 @@ import { backend } from '../../../utils/routes/app.routes'
 import TableCustom from '../../../components/TableCustom'
 import Swal from 'sweetalert2'
 import LoaderComponent from '../../../components/Loader'
-import { Box, Button, Chip, FormLabel, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
+import { Box, Button, Container, Accordion, AccordionSummary, AccordionDetails } from '@mui/material'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
-import CardCustom from '../../../components/CardCustom'
 import { useState } from 'react'
 import InfoCard from '../components/InfoCard'
+import PageHeader from '../../../components/PageHeader'
 
 // Etiqueta de la columna "Control" según el tipo de control del equipo
 const CONTROL_LABELS = {
@@ -21,19 +21,110 @@ const CONTROL_LABELS = {
 // Paleta del proyecto, usada como acentos por sección
 const ACCENT = { bombas: '#368bed', controles: '#d8621d' }
 
-// Estilos compartidos de los desplegables (look limpio, sin sombra/divisor de MUI)
-const accordionSx = {
-  borderRadius: '18px',
-  boxShadow: 'none',
-  '&:before': { display: 'none' },
+// --- Primitivos visuales del dashboard ---
+const STATUS_TONES = {
+  success: { bg: 'rgba(16, 185, 129, 0.14)', text: '#065f46', dot: '#10b981', dBg: 'rgba(16, 185, 129, 0.22)', dText: '#6ee7b7' },
+  neutral: { bg: 'rgba(148, 163, 184, 0.2)', text: '#334155', dot: '#64748b', dBg: 'rgba(148, 163, 184, 0.25)', dText: '#cbd5e1' },
+  warning: { bg: 'rgba(216, 98, 29, 0.14)', text: '#7c2d12', dot: '#d8621d', dBg: 'rgba(251, 146, 60, 0.22)', dText: '#fdba74' },
+  error: { bg: 'rgba(225, 29, 72, 0.14)', text: '#881337', dot: '#e11d48', dBg: 'rgba(244, 63, 94, 0.22)', dText: '#fca5a5' },
 }
-const summarySx = {
-  px: 2,
-  minHeight: 0,
-  borderRadius: '18px',
-  '& .MuiAccordionSummary-content': { my: 1.25 },
+
+const StatusChip = ({ label, tone = 'neutral', pulse = false }) => {
+  const c = STATUS_TONES[tone] || STATUS_TONES.neutral
+  return (
+    <Box
+      sx={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 0.9,
+        px: 1.5,
+        py: 0.5,
+        borderRadius: '999px',
+        fontSize: '0.78rem',
+        fontWeight: 600,
+        letterSpacing: '0.01em',
+        backgroundColor: c.bg,
+        color: c.text,
+        'body.dark &': { backgroundColor: c.dBg, color: c.dText },
+      }}
+    >
+      <Box
+        sx={{
+          position: 'relative',
+          width: 7,
+          height: 7,
+          borderRadius: '50%',
+          backgroundColor: c.dot,
+          flexShrink: 0,
+          ...(pulse && {
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              inset: 0,
+              borderRadius: '50%',
+              backgroundColor: c.dot,
+              animation: 'statusPing 1.8s cubic-bezier(0, 0, 0.2, 1) infinite',
+            },
+            '@keyframes statusPing': {
+              '0%': { transform: 'scale(1)', opacity: 0.55 },
+              '100%': { transform: 'scale(2.6)', opacity: 0 },
+            },
+          }),
+        }}
+      />
+      {label}
+    </Box>
+  )
 }
-const detailsSx = { p: { xs: 0.75, sm: 1 }, pt: 0 }
+
+const ACTION_VARIANTS = {
+  amber: { bg: '#d8621d', hover: '#b94f15', shadow: 'rgba(216, 98, 29, 0.4)' },
+  green: { bg: '#10b981', hover: '#059669', shadow: 'rgba(16, 185, 129, 0.4)' },
+  red: { bg: '#e11d48', hover: '#be123c', shadow: 'rgba(225, 29, 72, 0.4)' },
+}
+
+const ActionPill = ({ label, variant, disabled, onClick }) => {
+  const v = ACTION_VARIANTS[variant] || ACTION_VARIANTS.green
+  return (
+    <Button
+      size='small'
+      disabled={disabled}
+      onClick={onClick}
+      disableElevation
+      sx={{
+        minWidth: 54,
+        borderRadius: '999px',
+        textTransform: 'none',
+        fontWeight: 700,
+        fontSize: '0.72rem',
+        letterSpacing: '0.06em',
+        px: 1.75,
+        py: 0.6,
+        color: '#ffffff',
+        backgroundColor: v.bg,
+        boxShadow: `0 2px 8px ${v.shadow}`,
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        '&:hover': {
+          backgroundColor: v.hover,
+          transform: 'translateY(-1px)',
+          boxShadow: `0 4px 12px ${v.shadow}`,
+        },
+        '&:active': { transform: 'translateY(0)' },
+        '&.Mui-disabled': {
+          backgroundColor: 'rgba(148, 163, 184, 0.18)',
+          color: 'rgba(100, 116, 139, 0.55)',
+          boxShadow: 'none',
+        },
+        'body.dark &.Mui-disabled': {
+          backgroundColor: 'rgba(75, 85, 99, 0.3)',
+          color: 'rgba(156, 163, 175, 0.45)',
+        },
+      }}
+    >
+      {label}
+    </Button>
+  )
+}
 
 // Título de cada sección: punto de acento + nombre + contador
 const SectionTitle = ({ color, children, count }) => (
@@ -50,6 +141,20 @@ const SectionTitle = ({ color, children, count }) => (
     </span>
   </Box>
 )
+
+// Estilos compartidos de los desplegables (look limpio, sin sombra/divisor de MUI)
+const accordionSx = {
+  borderRadius: '18px',
+  boxShadow: 'none',
+  '&:before': { display: 'none' },
+}
+const summarySx = {
+  px: 2,
+  minHeight: 0,
+  borderRadius: '18px',
+  '& .MuiAccordionSummary-content': { my: 1.25 },
+}
+const detailsSx = { p: { xs: 0.75, sm: 1 }, pt: 0 }
 
 const PumpsTable = () => {
   const [listpumps, setListPumps] = useState([])
@@ -78,272 +183,190 @@ const PumpsTable = () => {
       setListPumps(data.bombs)
 
       // --- Celdas reutilizables entre ambas tablas ---
+      const nameCell = ({ row }) => (
+        <span className='font-semibold text-slate-800 dark:text-gray-100'>{row.original.name}</span>
+      )
+
       const controlCell = ({ row }) => {
         const label = CONTROL_LABELS[row.original.control_type] || 'ON / OFF'
-
-        return (
-          <Chip
-            label={label}
-            color="primary"
-            variant="outlined"
-            sx={{ fontWeight: 'bold' }}
-          />
-        )
+        return <StatusChip label={label} tone="neutral" />
       }
 
       const statusCell = ({ row }) => {
-            const r = row.original
-            const { control_type } = r
+        const r = row.original
+        const { control_type } = r
 
-            let label = 'Sin datos'
-            let color = 'warning'
+        if (control_type === 'comm_restart') {
+          return r.comm_ok === true
+            ? <StatusChip label="Comunicación OK" tone="success" pulse />
+            : <StatusChip label="Sin datos" tone="error" />
+        }
 
-            if (control_type === 'comm_restart') {
-              if (r.comm_ok === true) {
-                label = 'Comunicación OK'
-                color = 'success'
-              } else {
-                label = 'Sin datos'
-                color = 'error'
-              }
-            } else if (control_type === 'timed_reboot') {
-              // El toggle real del reinicio automático es la fila sintética (id null).
-              // Otros equipos marcados timed_reboot (ej. pulso de limpieza) no tienen estado on/off.
-              if (r.id == null) {
-                if (r.status === 1) {
-                  label = 'Activa'
-                  color = 'success'
-                } else if (r.status === 2) {
-                  label = 'En proceso'
-                  color = 'warning'
-                } else {
-                  label = 'Apagada'
-                  color = 'default'
-                }
-              } else {
-                return <span>-</span>
-              }
-            } else if (control_type === 'osmosis_onoff') {
-              if (r.status_label) {
-                // El back manda la etiqueta del estado actual (ej. "Cisterna", "Habilitado", "Encendida")
-                label = r.status_label
-                color = r.status === true ? 'success' : 'primary'
-              } else if (r.status === true) {
-                label = 'Encendida'
-                color = 'success'
-              } else if (r.status === false) {
-                label = 'Apagada'
-                color = 'default'
-              }
+        if (control_type === 'timed_reboot') {
+          // El toggle real del reinicio automático es la fila sintética (id null).
+          // Otros equipos marcados timed_reboot (ej. pulso de limpieza) no tienen estado on/off.
+          if (r.id == null) {
+            if (r.status === 1) return <StatusChip label="Activa" tone="success" pulse />
+            if (r.status === 2) return <StatusChip label="En proceso" tone="warning" />
+            return <StatusChip label="Apagada" tone="neutral" />
+          }
+          return <span>-</span>
+        }
 
-              return (
-                <Box display="flex" gap={1} alignItems="center">
-                  <Chip
-                    label={label}
-                    color={color}
-                    variant="filled"
-                    sx={{ fontWeight: 'bold' }}
-                  />
-                  {r.enabled === false && (
-                    <Chip
-                      label="No habilitado"
-                      color="error"
-                      variant="outlined"
-                      sx={{ fontWeight: 'bold' }}
-                    />
-                  )}
-                </Box>
-              )
-            } else {
-              // bomb
-              if (r.status === true) {
-                label = 'En Marcha'
-                color = 'success'
-              } else if (r.status === false) {
-                label = 'Apagada'
-                color = 'default'
-              }
-            }
+        if (control_type === 'osmosis_onoff') {
+          // El back manda la etiqueta del estado actual (ej. "Cisterna", "Habilitado", "Encendida")
+          let label = 'Sin datos'
+          let tone = 'warning'
+          if (r.status_label) {
+            label = r.status_label
+            tone = r.status === true ? 'success' : 'neutral'
+          } else if (r.status === true) {
+            label = 'Encendida'
+            tone = 'success'
+          } else if (r.status === false) {
+            label = 'Apagada'
+            tone = 'neutral'
+          }
 
-            return (
-              <Chip
-                label={label}
-                color={color}
-                variant="filled"
-                sx={{ fontWeight: 'bold' }}
-              />
-            )
+          return (
+            <Box display="flex" gap={1} alignItems="center">
+              <StatusChip label={label} tone={tone} pulse={tone === 'success'} />
+              {r.enabled === false && <StatusChip label="No habilitado" tone="error" />}
+            </Box>
+          )
+        }
+
+        // bomb
+        if (r.status === true) return <StatusChip label="En Marcha" tone="success" pulse />
+        if (r.status === false) return <StatusChip label="Apagada" tone="neutral" />
+        return <StatusChip label="Sin datos" tone="warning" />
       }
 
       const modeCell = ({ row }) => {
-            const r = row.original
+        const r = row.original
 
-            // Solo las bombas tienen modo de operación (Automático / forzado)
-            if (r.control_type !== 'bomb') {
-              return <span>-</span>
-            }
+        // Solo las bombas tienen modo de operación (Automático / forzado)
+        if (r.control_type !== 'bomb') return <span>-</span>
 
-            const mode = r.actual_mode
-
-            let color = 'default'
-            let label = mode || 'Sin datos'
-
-            switch (mode) {
-              case 'Automático':
-                color = 'warning'
-                break
-              case 'Encendido forzado':
-                color = 'success'
-                break
-              case 'Apagado forzado':
-                color = 'error'
-                break
-              default:
-                color = 'primary'
-                label = 'Sin datos'
-                break
-            }
-
-            return (
-              <Chip
-                label={label}
-                color={color}
-                variant="filled"
-                sx={{ fontWeight: 'bold' }}
-              />
-            )
+        switch (r.actual_mode) {
+          case 'Automático':
+            return <StatusChip label="Automático" tone="warning" />
+          case 'Encendido forzado':
+            return <StatusChip label="Encendido forzado" tone="success" />
+          case 'Apagado forzado':
+            return <StatusChip label="Apagado forzado" tone="error" />
+          default:
+            return <StatusChip label="Sin datos" tone="neutral" />
+        }
       }
 
       const actionsCell = ({ row }) => {
-            const r = row.original
-            const { control_type } = r
+        const r = row.original
+        const { control_type } = r
 
-            // Reinicio temporizado REAL (fila sintética OI-50, id null): toggle Iniciar/Detener
-            if (control_type === 'timed_reboot' && r.id == null) {
-              const isActive = r.status !== 0 // 0 = apagada; 1 o 2 = activa/en proceso
-              return (
-                <Box display="flex" gap={1}>
-                  <Button
-                    variant="contained"
-                    color={isActive ? 'error' : 'primary'}
-                    size="small"
-                    onClick={() => sendAction(r, isActive ? 'OFF' : 'ON')}
-                  >
-                    {isActive ? 'Detener' : 'Iniciar'}
-                  </Button>
-                </Box>
-              )
-            }
+        // Reinicio temporizado REAL (fila sintética OI-50, id null): toggle Iniciar/Detener
+        if (control_type === 'timed_reboot' && r.id == null) {
+          const isActive = r.status !== 0 // 0 = apagada; 1 o 2 = activa/en proceso
+          return (
+            <Box display="flex" gap={0.75}>
+              <ActionPill
+                label={isActive ? 'Detener' : 'Iniciar'}
+                variant={isActive ? 'red' : 'green'}
+                onClick={() => sendAction(r, isActive ? 'OFF' : 'ON')}
+              />
+            </Box>
+          )
+        }
 
-            // Reinicio de comunicación: único botón, habilitado solo si NO hay datos
-            if (control_type === 'comm_restart') {
-              const action = r.actions?.[0]
-              return (
-                <Box display="flex" gap={1}>
-                  <Button
-                    variant="contained"
-                    color="warning"
-                    size="small"
-                    disabled={r.comm_ok !== false || !action}
-                    onClick={() => action && sendAction(r, action.name)}
-                  >
-                    Reiniciar
-                  </Button>
-                </Box>
-              )
-            }
+        // Reinicio de comunicación: único botón, habilitado solo si NO hay datos
+        if (control_type === 'comm_restart') {
+          const action = r.actions?.[0]
+          return (
+            <Box display="flex" gap={0.75}>
+              <ActionPill
+                label="Reiniciar"
+                variant="amber"
+                disabled={r.comm_ok !== false || !action}
+                onClick={() => action && sendAction(r, action.name)}
+              />
+            </Box>
+          )
+        }
 
-            // Osmosis ON/OFF (toggle genérico de 2 estados): un botón por cada acción real.
-            // Cubre ON/OFF, Habilitado/Deshabilitado, Cisterna/Alcantarilla, etc.
-            if (control_type === 'osmosis_onoff') {
-              const notEnabled = r.enabled === false
-              // ¿Esta acción es el estado actual? -> se deshabilita (no tiene sentido re-enviarla)
-              const isCurrentState = (a) => {
-                if (r.status_label && a.name === r.status_label) return true // genérico (label === nombre de acción)
-                if (a.name === 'ON' && r.status === true) return true        // fallback ON/OFF osmosis
-                if (a.name === 'OFF' && r.status === false) return true
-                return false
-              }
-              const actions = r.actions?.filter(a => a.name !== 'Leer') ?? []
-              return (
-                <Box display="flex" gap={1}>
-                  {actions.map((a, i) => (
-                    <Button
-                      key={a.id}
-                      variant="contained"
-                      color={i === 0 ? 'success' : 'error'}
-                      size="small"
-                      disabled={notEnabled || isCurrentState(a)}
-                      onClick={() => sendAction(r, a.name)}
-                    >
-                      {a.name}
-                    </Button>
-                  ))}
-                </Box>
-              )
-            }
+        // Osmosis ON/OFF (toggle genérico de 2 estados): un botón por cada acción real.
+        // Cubre ON/OFF, Habilitado/Deshabilitado, Cisterna/Alcantarilla, etc.
+        if (control_type === 'osmosis_onoff') {
+          const notEnabled = r.enabled === false
+          // ¿Esta acción es el estado actual? -> se deshabilita (no tiene sentido re-enviarla)
+          const isCurrentState = (a) => {
+            if (r.status_label && a.name === r.status_label) return true // genérico (label === nombre de acción)
+            if (a.name === 'ON' && r.status === true) return true        // fallback ON/OFF osmosis
+            if (a.name === 'OFF' && r.status === false) return true
+            return false
+          }
+          const actions = r.actions?.filter(a => a.name !== 'Leer') ?? []
+          return (
+            <Box display="flex" gap={0.75}>
+              {actions.map((a, i) => (
+                <ActionPill
+                  key={a.id}
+                  label={a.name}
+                  variant={i === 0 ? 'green' : 'red'}
+                  disabled={notEnabled || isCurrentState(a)}
+                  onClick={() => sendAction(r, a.name)}
+                />
+              ))}
+            </Box>
+          )
+        }
 
-            // Otros equipos marcados timed_reboot con acciones reales (ej. "Pulso post alarma"):
-            // se comportan como un pulso PLC normal → un botón por acción.
-            if (control_type === 'timed_reboot') {
-              return (
-                <Box display="flex" gap={1}>
-                  {r.actions?.map((a) => (
-                    <Button
-                      key={a.id}
-                      variant="contained"
-                      color="warning"
-                      size="small"
-                      onClick={() => sendAction(r, a.name)}
-                    >
-                      {a.name}
-                    </Button>
-                  ))}
-                </Box>
-              )
-            }
+        // Otros equipos marcados timed_reboot con acciones reales (ej. "Pulso post alarma"):
+        // se comportan como un pulso PLC normal → un botón por acción.
+        if (control_type === 'timed_reboot') {
+          return (
+            <Box display="flex" gap={0.75}>
+              {r.actions?.map((a) => (
+                <ActionPill
+                  key={a.id}
+                  label={a.name}
+                  variant="amber"
+                  onClick={() => sendAction(r, a.name)}
+                />
+              ))}
+            </Box>
+          )
+        }
 
-            // bomb (comportamiento original): AUTO / ON / OFF según modo
-            const isWithoutData = r.actual_mode === 'Sin datos'
-            const isAutomatic = r.actual_mode === 'Automático'
+        // bomb (comportamiento original): AUTO / ON / OFF según modo
+        const isWithoutData = r.actual_mode === 'Sin datos'
+        const isAutomatic = r.actual_mode === 'Automático'
 
-            return (
-              <Box display="flex" gap={1}>
-                <Button
-                  variant="contained"
-                  color="warning"
-                  size="small"
-                  disabled={isWithoutData || isAutomatic}
-                  onClick={() => sendAction(r, 'AUTO')}
-                >
-                  AUTO
-                </Button>
-
-                <Button
-                  variant="contained"
-                  color="success"
-                  size="small"
-                  disabled={isWithoutData || !isAutomatic}
-                  onClick={() => sendAction(r, 'ON')}
-                >
-                  ON
-                </Button>
-
-                <Button
-                  variant="contained"
-                  color="error"
-                  size="small"
-                  disabled={isWithoutData || !isAutomatic}
-                  onClick={() => sendAction(r, 'OFF')}
-                >
-                  OFF
-                </Button>
-              </Box>
-            )
+        return (
+          <Box display="flex" gap={0.75}>
+            <ActionPill
+              label="AUTO"
+              variant="amber"
+              disabled={isWithoutData || isAutomatic}
+              onClick={() => sendAction(r, 'AUTO')}
+            />
+            <ActionPill
+              label="ON"
+              variant="green"
+              disabled={isWithoutData || !isAutomatic}
+              onClick={() => sendAction(r, 'ON')}
+            />
+            <ActionPill
+              label="OFF"
+              variant="red"
+              disabled={isWithoutData || !isAutomatic}
+              onClick={() => sendAction(r, 'OFF')}
+            />
+          </Box>
+        )
       }
 
       // --- Dos tablas: bombas vs comandos (osmosis / comunicación / reinicio) ---
-      const nameColumn = { header: 'Equipo', accessorKey: 'name' }
+      const nameColumn = { header: 'Equipo', accessorKey: 'name', Cell: nameCell }
       const statusColumn = { header: 'Estado', accessorKey: 'status', Cell: statusCell }
       const actionsColumn = { header: 'Acciones', accessorKey: 'actions', Cell: actionsCell }
 
@@ -561,41 +584,22 @@ const PumpsTable = () => {
     pagination: true,
     pageSize: 50,
     density: 'compact',
-    header: {
-      background: 'rgb(190 190 190)',
-      fontSize: '14px',
-      fontWeight: 'bold',
-      paddingTop: 1,
-    },
-    toolbarClass: { background: 'rgb(190 190 190)' },
-    body: { backgroundColor: 'rgba(209, 213, 219, 0.31)' },
-    footer: { background: 'rgb(190 190 190)' },
   }
 
   return (
-    <div className="w-full">
+    <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
       {loading ? (
         <LoaderComponent />
       ) : (
-        <CardCustom className="w-full bg-white dark:bg-gray-900 shadow-md rounded-3xl p-3 sm:p-4 flex flex-col gap-3 transition-all">
+        <>
+          <PageHeader title='Bombeo de succión' />
 
-          {/* Header */}
-          <div className="flex items-center justify-center gap-2.5 pb-1">
-            <span
-              className="inline-block h-6 w-1.5 rounded-full"
-              style={{ background: `linear-gradient(${ACCENT.bombas}, ${ACCENT.controles})` }}
-            />
-            <FormLabel className='!text-2xl !font-semibold !text-gray-800 dark:!text-gray-100 tracking-tight'>
-              Bombeo de succión
-            </FormLabel>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-            <InfoCard label="Estado" value={infoSuccion.var_2} color="green" />
-            <InfoCard label="Destino" value={infoSuccion.Destino} color="blue" />
-            <InfoCard label="Configuración" value={infoSuccion.Configuracion} color="indigo" />
-            <InfoCard label="Activaciones manuales" value={infoSuccion.AcM || '-'} color="orange" />
-            <InfoCard label="Fuera de servicio" value={infoSuccion.FuS || '-'} color="red" />
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-5'>
+            <InfoCard index={0} label='Estado' value={infoSuccion.var_2} color='green' />
+            <InfoCard index={1} label='Destino' value={infoSuccion.Destino} color='blue' />
+            <InfoCard index={2} label='Configuración' value={infoSuccion.Configuracion} color='indigo' />
+            <InfoCard index={3} label='Activaciones manuales' value={infoSuccion.AcM || '-'} color='orange' />
+            <InfoCard index={4} label='Fuera de servicio' value={infoSuccion.FuS || '-'} color='red' />
           </div>
 
           {/* Desplegable — Bombas */}
@@ -603,15 +607,13 @@ const PumpsTable = () => {
             defaultExpanded
             disableGutters
             sx={accordionSx}
-            className="!bg-transparent border border-gray-200 dark:border-gray-700 overflow-hidden"
+            className="!bg-transparent border border-gray-200 dark:border-gray-700 overflow-hidden mb-3"
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={summarySx}>
               <SectionTitle color={ACCENT.bombas} count={bombs.length}>Bombas</SectionTitle>
             </AccordionSummary>
             <AccordionDetails sx={detailsSx}>
-              <div className="rounded-xl overflow-hidden [&_.MuiButton-root]:!rounded-lg [&_.MuiButton-root]:!normal-case [&_.MuiButton-root]:!shadow-none [&_.MuiButton-root]:!font-bold">
-                <TableCustom columns={bombColumns} data={bombs} {...tableProps} />
-              </div>
+              <TableCustom columns={bombColumns} data={bombs} {...tableProps} />
             </AccordionDetails>
           </Accordion>
 
@@ -626,14 +628,12 @@ const PumpsTable = () => {
               <SectionTitle color={ACCENT.controles} count={commands.length}>Controles</SectionTitle>
             </AccordionSummary>
             <AccordionDetails sx={detailsSx}>
-              <div className="rounded-xl overflow-hidden [&_.MuiButton-root]:!rounded-lg [&_.MuiButton-root]:!normal-case [&_.MuiButton-root]:!shadow-none [&_.MuiButton-root]:!font-bold">
-                <TableCustom columns={commandColumns} data={commands} {...tableProps} />
-              </div>
+              <TableCustom columns={commandColumns} data={commands} {...tableProps} />
             </AccordionDetails>
           </Accordion>
-        </CardCustom>
+        </>
       )}
-    </div>
+    </Container>
   )
 }
 

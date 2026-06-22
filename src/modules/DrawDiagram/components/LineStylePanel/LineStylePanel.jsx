@@ -1,147 +1,146 @@
 import React, { useEffect } from 'react';
-import { BiSync } from "react-icons/bi";
+import { Box, Button, Slider } from '@mui/material';
+import { BiSync } from 'react-icons/bi';
+import {
+  floatingPanelSx,
+  ghostPillSx,
+  panelLabelClass,
+  panelTitleClass,
+  primaryPillSx,
+} from '../../utils/js/diagramTheme';
 
-const LineStylePanel = ({ 
-    visible, 
-    lineStyle, 
-    onChange, 
-    setElements,
-    selectedId,
-    setSelectedId,
-    elements,
-    tool,
-    setTool
+const LineStylePanel = ({
+  visible,
+  lineStyle,
+  onChange,
+  setElements,
+  selectedId,
+  setSelectedId,
+  elements,
+  tool,
+  setTool,
 }) => {
-    // Buscar elemento seleccionado
-    const selectedElement = selectedId && elements 
-        ? elements.find(el => el.id === selectedId) 
-        : null;
+  const selectedElement = selectedId && elements
+    ? elements.find((el) => el.id === selectedId)
+    : null;
 
-    const elementType = selectedElement?.type || tool;
+  const elementType = selectedElement?.type || tool;
+  const isLine = elementType === 'line' || elementType === 'simpleLine';
+  const isPolyline = elementType === 'polyline';
+  const canEdit = selectedId && (isLine || isPolyline);
 
-    // Determinar si el elemento seleccionado es una línea o polilínea
-    const isLine = elementType === 'line' || elementType === 'simpleLine';
-    const isPolyline = elementType === 'polyline';
+  useEffect(() => {
+    if (selectedId && !canEdit) {
+      setSelectedId(null);
+    }
+  }, [selectedId, canEdit, setSelectedId]);
 
-    const canEdit = selectedId && (isLine || isPolyline);
+  useEffect(() => {
+    if (canEdit && selectedElement) {
+      const newStyle = {
+        color: selectedElement.stroke,
+        strokeWidth: selectedElement.strokeWidth,
+        invertAnimation: selectedElement.invertAnimation || false,
+      };
 
-    // Deseleccionar si el elemento no es linea o polilinea
-    useEffect(() => {
-        if (selectedId && !canEdit) {
-            setSelectedId(null);
-        }
-    }, [selectedId, canEdit, setSelectedId]);
+      if (
+        newStyle.color !== lineStyle.color ||
+        newStyle.strokeWidth !== lineStyle.strokeWidth ||
+        newStyle.invertAnimation !== lineStyle.invertAnimation
+      ) {
+        onChange(newStyle);
+      }
+    }
+  }, [selectedId, elements]);
 
-    useEffect(() => {
-        if (canEdit && selectedElement) {
-            const newStyle = {
-                color: selectedElement.stroke,
-                strokeWidth: selectedElement.strokeWidth,
-                invertAnimation: selectedElement.invertAnimation || false
-            };
+  if (!visible) return null;
 
-            if (
-                newStyle.color !== lineStyle.color ||
-                newStyle.strokeWidth !== lineStyle.strokeWidth ||
-                newStyle.invertAnimation !== lineStyle.invertAnimation
-            ) {
-                onChange(newStyle);
-            }
-        }
-    }, [selectedId, elements]);
+  const title = canEdit
+    ? `Editar ${isLine ? 'línea' : 'polilínea'}`
+    : `Estilo de ${tool === 'polyline' ? 'la polilínea' : 'la línea'}`;
 
-    if (!visible) return null;
+  const handleWidthChange = (_, v) => {
+    const newWidth = Array.isArray(v) ? v[0] : v;
+    onChange({ ...lineStyle, strokeWidth: newWidth });
+    if (canEdit) {
+      setElements((prev) =>
+        prev.map((el) => (el.id === selectedId ? { ...el, strokeWidth: newWidth } : el))
+      );
+    }
+  };
 
-    return (
-        <div className="absolute top-5 left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 w-48">
-            <h4 className="text-sm font-bold mb-2">
-                {canEdit 
-                    ? `Editar ${isLine ? 'línea' : 'polilínea'}` 
-                    : `Estilo de ${tool === 'polyline' ? 'la polilínea' : 'la línea'}`
-                }
-            </h4>
+  const handleColorChange = (e) => {
+    const newColor = e.target.value;
+    onChange({ ...lineStyle, color: newColor });
+    if (canEdit) {
+      setElements((prev) =>
+        prev.map((el) => (el.id === selectedId ? { ...el, stroke: newColor } : el))
+      );
+    }
+  };
 
-            <label className="block text-sm font-medium mb-1">Color</label>
-            <input
-                type="color"
-                value={lineStyle.color}
-                onChange={(e) => {
-                    const newColor = e.target.value;
-                    onChange({ ...lineStyle, color: newColor });
-
-                    if (canEdit) {
-                        setElements((prev) =>
-                            prev.map((el) =>
-                                el.id === selectedId
-                                    ? { ...el, stroke: newColor }
-                                    : el
-                            )
-                        );
-                    }
-                }}
-                className="w-full h-8 p-0 border rounded"
-            />
-
-            <label className="block mt-2 text-sm font-medium mb-1">Ancho</label>
-            <input
-                type="range"
-                min={1}
-                max={10}
-                value={lineStyle.strokeWidth}
-                onChange={(e) => {
-                    const newWidth = parseInt(e.target.value);
-                    onChange({ ...lineStyle, strokeWidth: newWidth });
-
-                    if (canEdit) {
-                        setElements((prev) =>
-                            prev.map((el) =>
-                                el.id === selectedId
-                                    ? { ...el, strokeWidth: newWidth }
-                                    : el
-                            )
-                        );
-                    }
-                }}
-                className="w-full"
-                style={{ padding: 0 }}
-            />
-
-            {canEdit && (
-                <button
-                    onClick={() => {
-                        setElements((prev) =>
-                            prev.map((el) =>
-                                el.id === selectedId
-                                    ? { ...el, invertAnimation: !el.invertAnimation }
-                                    : el
-                            )
-                        );
-                        onChange({ 
-                            ...lineStyle, 
-                            invertAnimation: !lineStyle.invertAnimation 
-                        });
-                    }}
-                    className="mt-3 flex items-center gap-1 px-2 py-2 bg-slate-600 text-white rounded hover:bg-slate-700"
-                >               
-                    <BiSync 
-                        className={`transform transition-transform ${lineStyle.invertAnimation ? 'rotate-180' : ''}`} 
-                    />
-                    Cambiar sentido
-                </button>
-            )}
-
-            {!canEdit && (
-                <button
-                    onClick={() => 
-                        setTool(null)
-                    }
-                    className="mt-3 px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                >
-                    Cancelar
-                </button>
-            )}
-        </div>
+  const handleToggleDirection = () => {
+    setElements((prev) =>
+      prev.map((el) => (el.id === selectedId ? { ...el, invertAnimation: !el.invertAnimation } : el))
     );
+    onChange({ ...lineStyle, invertAnimation: !lineStyle.invertAnimation });
+  };
+
+  return (
+    <Box
+      sx={floatingPanelSx}
+      className='absolute top-5 left-2 z-10 w-56 p-3 flex flex-col gap-3'
+    >
+      <h4 className={panelTitleClass}>{title}</h4>
+
+      <div>
+        <label className={`${panelLabelClass} block mb-1`}>Color</label>
+        <input
+          type='color'
+          value={lineStyle.color}
+          onChange={handleColorChange}
+          className='w-full h-9 p-0 border border-slate-200 dark:border-slate-700 rounded cursor-pointer bg-transparent'
+        />
+      </div>
+
+      <div>
+        <div className='flex items-center justify-between mb-1'>
+          <label className={panelLabelClass}>Ancho</label>
+          <span className='text-xs text-slate-600 dark:text-gray-300'>{lineStyle.strokeWidth}px</span>
+        </div>
+        <Slider
+          size='small'
+          min={1}
+          max={10}
+          value={lineStyle.strokeWidth}
+          onChange={handleWidthChange}
+          sx={{ color: '#2c6aa0' }}
+        />
+      </div>
+
+      {canEdit && (
+        <Button
+          variant='contained'
+          size='small'
+          onClick={handleToggleDirection}
+          sx={primaryPillSx}
+          startIcon={
+            <BiSync
+              className={`transition-transform ${lineStyle.invertAnimation ? 'rotate-180' : ''}`}
+            />
+          }
+        >
+          Cambiar sentido
+        </Button>
+      )}
+
+      {!canEdit && (
+        <Button variant='outlined' size='small' onClick={() => setTool(null)} sx={ghostPillSx}>
+          Cancelar
+        </Button>
+      )}
+    </Box>
+  );
 };
 
 export default LineStylePanel;

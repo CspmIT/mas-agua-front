@@ -468,28 +468,24 @@ const Home = ({ targetUserId = null }) => {
     // RENDER
     // -------------------------
     return (
-        <div ref={containerRef} style={{ width: '100%', minWidth: 0 }}>
+        <div ref={containerRef} className='w-full min-w-0'>
+            <style>{`
+                @keyframes removeBtnIn {
+                    0% { opacity: 0; transform: scale(0.6); }
+                    100% { opacity: 1; transform: scale(1); }
+                }
+            `}</style>
             {/* Banner visible cuando el admin edita un usuario */}
             {isAdminMode && (
-                <div style={{
-                    background: "#fef9c3",
-                    border: "1px solid #fde047",
-                    borderRadius: 8,
-                    padding: "4px 7px",
-                    marginBottom: 2,
-                    fontSize: 13,
-                    color: "#854d0e",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8
-                }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                        <line x1="12" y1="9" x2="12" y2="13" />
-                        <line x1="12" y1="17" x2="12.01" y2="17" />
-                    </svg>
-                    Estás editando el dashboard de otro usuario.
+                <div className='mb-2 flex items-center gap-2.5 rounded-lg border border-amber-200/70 dark:border-amber-500/30 bg-amber-50/80 dark:bg-amber-950/30 backdrop-blur-sm px-3 py-1.5 text-[13px] text-amber-800 dark:text-amber-200'>
+                    <div className='flex h-5 w-5 items-center justify-center rounded-full bg-amber-200/80 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 shrink-0'>
+                        <svg width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round'>
+                            <path d='M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z' />
+                            <line x1='12' y1='9' x2='12' y2='13' />
+                            <line x1='12' y1='17' x2='12.01' y2='17' />
+                        </svg>
+                    </div>
+                    <span className='font-medium tracking-tight'>Estás editando el dashboard de otro usuario</span>
                 </div>
             )}
 
@@ -525,35 +521,28 @@ const Home = ({ targetUserId = null }) => {
                             const ChartComponentDb = chartComponents[chart.component]
                             const isMultipleBoolean = chart.component === 'MultipleBooleanChart'
                             return (
-                                <div key={String(chart.id)}>
+                                <div key={String(chart.id)} className='group relative'>
                                     {editMode && (
                                         <button
-                                            className='no-drag'
-                                            onClick={() => removeWidget(chart.id)}
+                                            className='no-drag absolute top-1.5 right-1.5 z-50 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white shadow-[0_4px_12px_rgba(239,68,68,0.45)] ring-2 ring-white dark:ring-gray-900 transition-all hover:bg-red-600 hover:scale-110 hover:shadow-[0_6px_18px_rgba(239,68,68,0.6)]'
                                             style={{
-                                                position: "absolute",
-                                                top: 6,
-                                                right: 6,
-                                                background: "#ef4444",
-                                                color: "white",
-                                                border: "none",
-                                                borderRadius: 4,
-                                                padding: "2px 6px",
-                                                zIndex: 20
+                                                animation: 'removeBtnIn 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards',
                                             }}
+                                            onClick={() => removeWidget(chart.id)}
+                                            aria-label='Eliminar widget'
                                         >
-                                            ✕
+                                            X
                                         </button>
                                     )}
-                                    <CardCustom className="flex flex-col rounded-xl h-full overflow-hidden border-[1.75px] border-gray-300">
+                                    <CardCustom className={`flex flex-col rounded-2xl h-full overflow-hidden border border-gray-200 dark:border-gray-700/70 !shadow-[0_1px_2px_rgba(15,42,68,0.04)] hover:!shadow-[0_8px_24px_rgba(15,42,68,0.08)] dark:hover:!shadow-[0_8px_24px_rgba(0,0,0,0.4)] transition-shadow duration-200 ${editMode ? 'ring-1 ring-primary/30 dark:ring-primary/40' : ''}`}>
                                         {!isMultipleBoolean &&
-                                            <div className="max-h-[5dvh] flex items-center justify-center text-center mt-2">
-                                                <h1 className="text-xl leading-tight line-clamp-2">
+                                            <div className='px-3 py-1.5 bg-[#2c6aa0] dark:bg-[#1f4e79] border-b border-white/10'>
+                                                <h2 className='text-[11px] font-semibold uppercase tracking-[0.08em] text-center text-white line-clamp-2'>
                                                     {chart?.props?.title}
-                                                </h1>
+                                                </h2>
                                             </div>
                                         }
-                                        <div className="flex-1 flex items-center justify-center">
+                                        <div className='flex-1 flex items-center justify-center'>
                                             <ChartComponentDbWrapper
                                                 key={sizeKey}
                                                 chartId={chart.id}
@@ -569,63 +558,47 @@ const Home = ({ targetUserId = null }) => {
                         })}
                     </Responsive>
 
-                    <div style={{
-                        display: "flex",
-                        justifyContent: "flex-end",
-                        alignItems: "center",
-                        gap: 8,
-                        position: "sticky",
-                        bottom: 16,
-                        zIndex: 30,
-                        padding: "8px 4px",
-                        pointerEvents: "none",
-                        opacity: isAdminMode ? 1 : 0.3,
-                        transition: "opacity 0.2s ease",
-                    }}
-                        onMouseEnter={e => e.currentTarget.style.opacity = 1}
-                        onMouseLeave={e => e.currentTarget.style.opacity = isAdminMode ? 1 : 0.3}
-                    >
-                        {editMode && (
-                            <Tooltip title="Agregar widget" placement="top">
+                    <div className='sticky bottom-4 z-30 flex justify-end py-2 px-1 pointer-events-none'>
+                        <div className={`pointer-events-auto flex items-center gap-0.5 rounded-full border border-gray-200/80 dark:border-gray-700/60 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md shadow-lg shadow-gray-900/5 dark:shadow-black/30 p-1 transition-opacity duration-200 ${isAdminMode ? 'opacity-100' : 'opacity-30 hover:opacity-100'}`}>
+                            {editMode && (
+                                <>
+                                    <Tooltip title='Agregar widget' placement='top'>
+                                        <IconButton
+                                            onClick={handleOpenAddChart}
+                                            size='small'
+                                            sx={{
+                                                color: 'rgb(75 85 99)',
+                                                '.dark &': { color: 'rgb(209 213 219)' },
+                                                '&:hover': { backgroundColor: 'rgba(0,0,0,0.04)' },
+                                                '.dark &:hover': { backgroundColor: 'rgba(255,255,255,0.06)' },
+                                            }}
+                                        >
+                                            <IconAdd />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <div className='h-5 w-px bg-gray-200/80 dark:bg-gray-700/60' />
+                                </>
+                            )}
+
+                            <Tooltip title={editMode ? 'Confirmar cambios' : 'Editar dashboard'} placement='top'>
                                 <IconButton
-                                    onClick={handleOpenAddChart}
-                                    size="small"
+                                    onClick={() => setEditMode(!editMode)}
+                                    size='small'
                                     sx={{
-                                        pointerEvents: "all",
-                                        color: "#374151",
-                                        border: "1px solid #d1d5db",
-                                        borderRadius: "8px",
-                                        background: "#fff",
-                                        "&:hover": {
-                                            background: "#f3f4f6",
-                                            borderColor: "#9ca3af"
-                                        }
+                                        color: editMode ? '#10B981' : 'rgb(75 85 99)',
+                                        '.dark &': { color: editMode ? '#10B981' : 'rgb(209 213 219)' },
+                                        '&:hover': {
+                                            backgroundColor: editMode ? 'rgba(16, 185, 129, 0.12)' : 'rgba(0,0,0,0.04)',
+                                        },
+                                        '.dark &:hover': {
+                                            backgroundColor: editMode ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.06)',
+                                        },
                                     }}
                                 >
-                                    <IconAdd />
+                                    {editMode ? <IconCheck /> : <IconEdit />}
                                 </IconButton>
                             </Tooltip>
-                        )}
-
-                        <Tooltip title={editMode ? "Confirmar cambios" : "Editar dashboard"} placement="top">
-                            <IconButton
-                                onClick={() => setEditMode(!editMode)}
-                                size="small"
-                                sx={{
-                                    pointerEvents: "all",
-                                    color: editMode ? "#16a34a" : "#374151",
-                                    border: `1px solid ${editMode ? "#86efac" : "#d1d5db"}`,
-                                    borderRadius: "8px",
-                                    background: editMode ? "#f0fdf4" : "#fff",
-                                    "&:hover": {
-                                        background: editMode ? "#dcfce7" : "#f3f4f6",
-                                        borderColor: editMode ? "#4ade80" : "#9ca3af"
-                                    }
-                                }}
-                            >
-                                {editMode ? <IconCheck /> : <IconEdit />}
-                            </IconButton>
-                        </Tooltip>
+                        </div>
                     </div>
                 </>
             )}
