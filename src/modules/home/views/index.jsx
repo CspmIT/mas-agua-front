@@ -498,11 +498,23 @@ const Home = ({ targetUserId = null }) => {
         const ChartComponentDb = chartComponents[chart.component]
         const isMultipleBoolean = chart.component === 'MultipleBooleanChart'
 
+        // Sólo las cards de bombas (MultipleBooleanChart) crecen según su contenido.
+        // El resto conserva el alto fijo de la BD, como en desktop (sino se achican).
+        const narrowGrow = narrow && isMultipleBoolean
+        const narrowFixed = narrow && !isMultipleBoolean
+        const narrowHeight = cardMinHeight(chart)
+
         return (
             <div
                 key={String(chart.id)}
                 className={`group relative ${narrow ? 'flex flex-col' : ''}`}
-                style={narrow ? { minHeight: cardMinHeight(chart) } : undefined}
+                style={
+                    narrowGrow
+                        ? { minHeight: narrowHeight }
+                        : narrowFixed
+                            ? { height: narrowHeight }
+                            : undefined
+                }
             >
                 {editMode && (
                     <button
@@ -516,7 +528,7 @@ const Home = ({ targetUserId = null }) => {
                         X
                     </button>
                 )}
-                <CardCustom className={`flex flex-col rounded-2xl ${narrow ? 'flex-1' : 'h-full'} overflow-hidden border border-gray-200 dark:border-gray-700/70 !shadow-[0_1px_2px_rgba(15,42,68,0.04)] hover:!shadow-[0_8px_24px_rgba(15,42,68,0.08)] dark:hover:!shadow-[0_8px_24px_rgba(0,0,0,0.4)] transition-shadow duration-200 ${editMode ? 'ring-1 ring-primary/30 dark:ring-primary/40' : ''}`}>
+                <CardCustom className={`flex flex-col rounded-2xl ${narrowGrow ? 'flex-1' : 'h-full'} overflow-hidden border border-gray-200 dark:border-gray-700/70 !shadow-[0_1px_2px_rgba(15,42,68,0.04)] hover:!shadow-[0_8px_24px_rgba(15,42,68,0.08)] dark:hover:!shadow-[0_8px_24px_rgba(0,0,0,0.4)] transition-shadow duration-200 ${editMode ? 'ring-1 ring-primary/30 dark:ring-primary/40' : ''}`}>
                     {!isMultipleBoolean &&
                         <div className='px-3 py-1.5 bg-[#2c6aa0] dark:bg-[#1f4e79] border-b border-white/10'>
                             <h2 className='text-[11px] font-semibold uppercase tracking-[0.08em] text-center text-white line-clamp-2'>
