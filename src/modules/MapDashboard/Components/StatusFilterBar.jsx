@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Tune, ExpandLess } from '@mui/icons-material'
 import { STATUS_COLORS, STATUS_LABELS } from '../utils/sensorDefaults'
 
-const STATUSES = ['ok', 'warn', 'crit', 'stale', 'off']
+const STATUSES = ['ok', 'warn', 'crit', 'stale', 'apagado', 'off']
 const MONO_STACK =
     'ui-monospace, "JetBrains Mono", "IBM Plex Mono", Menlo, Consolas, monospace'
 

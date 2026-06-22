@@ -21,14 +21,15 @@ import {
     BombeoPin,
 } from '../utils/sensorPins'
 
-const ALL_STATUSES = new Set(['ok', 'warn', 'crit', 'stale', 'off'])
+const ALL_STATUSES = new Set(['ok', 'warn', 'crit', 'stale', 'apagado', 'off'])
 
 const STATUS_HELP = [
-    { key: 'ok',    description: 'Lectura dentro del rango normal.' },
-    { key: 'warn',  description: 'Valor cercano al límite — requiere atención.' },
-    { key: 'crit',  description: 'Valor fuera del rango aceptable.' },
-    { key: 'stale', description: 'No se reciben lecturas hace tiempo (el pin parpadea).' },
-    { key: 'off',   description: 'El sensor no envió un valor.' },
+    { key: 'ok',      description: 'Lectura dentro del rango normal.' },
+    { key: 'warn',    description: 'Valor cercano al límite — requiere atención.' },
+    { key: 'crit',    description: 'Valor fuera del rango aceptable.' },
+    { key: 'stale',   description: 'No se reciben lecturas hace tiempo (el pin parpadea).' },
+    { key: 'apagado', description: 'Bombeo detenido (el sensor reporta apagado).' },
+    { key: 'off',     description: 'El sensor no envió un valor.' },
 ]
 
 const SENSOR_TYPE_SHAPES = {
@@ -125,7 +126,7 @@ const PressureDashboard = () => {
     const { snapshot, lastUpdate } = useSensorSnapshot(markers)
 
     const counts = useMemo(() => {
-        const c = { ok: 0, warn: 0, crit: 0, stale: 0, off: 0 }
+        const c = { ok: 0, warn: 0, crit: 0, stale: 0, apagado: 0, off: 0 }
         Object.values(snapshot).forEach((s) => {
             if (c[s.status] !== undefined) c[s.status]++
         })
@@ -321,15 +322,22 @@ const MarkerDetailCard = ({ marker, snapshot, onClose }) => {
 
     const status = snapshot?.status || 'off'
     const statusColor = STATUS_COLORS[status] || STATUS_COLORS.off
-    const statusLabel = STATUS_LABELS[status] || STATUS_LABELS.off
 
     const sensorTypeLabel =
         SENSOR_TYPE_OPTIONS.find((o) => o.value === marker.sensor_type)?.label || '—'
 
     const value = snapshot?.value
     const isBinary = snapshot?.kind === 'binary'
+    // En binaria, status 'off' = Apagado (hay dato); solo es "Sin datos" si no hay value.
     const hasValue =
-        value !== undefined && value !== null && value !== 'Sin datos' && status !== 'off'
+        value !== undefined && value !== null && value !== 'Sin datos' &&
+        (isBinary || status !== 'off')
+    const statusLabel =
+        isBinary && hasValue
+            ? Number(value) === 1
+                ? 'Encendido'
+                : 'Apagado'
+            : STATUS_LABELS[status] || STATUS_LABELS.off
 
     const hasThresholds =
         marker.crit_low != null || marker.warn_low != null ||
@@ -426,7 +434,7 @@ const MarkerDetailCard = ({ marker, snapshot, onClose }) => {
                         isBinary ? (
                             <div
                                 className='text-[18px] font-extrabold uppercase tracking-[0.06em]'
-                                style={{ color: Number(value) === 1 ? '#047857' : '#b91c1c' }}
+                                style={{ color: Number(value) === 1 ? '#047857' : '#0f172a' }}
                             >
                                 {Number(value) === 1 ? 'Encendido' : 'Apagado'}
                             </div>
