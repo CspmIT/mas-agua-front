@@ -4,8 +4,9 @@ const LABEL_BG = {
     ok:    { bg: '#f0fdf4', border: '#bbf7d0', text: '#0f172a' },
     warn:  { bg: '#fffbeb', border: '#fde68a', text: '#0f172a' },
     crit:  { bg: '#fef2f2', border: '#fecaca', text: '#0f172a' },
-    stale: { bg: '#f5f3ff', border: '#ddd6fe', text: '#0f172a' },
-    off:   { bg: '#f8fafc', border: '#e2e8f0', text: '#94a3b8' },
+    stale:   { bg: '#f5f3ff', border: '#ddd6fe', text: '#0f172a' },
+    apagado: { bg: '#f1f5f9', border: '#cbd5e1', text: '#475569' },
+    off:     { bg: '#f8fafc', border: '#e2e8f0', text: '#94a3b8' },
 }
 
 const TYPE_ICON = {
@@ -16,15 +17,17 @@ const TYPE_ICON = {
 }
 
 const renderValue = ({ kind, value, unit, status }) => {
-    if (status === 'off' || value === null || value === undefined || value === 'Sin datos') {
-        return <span style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8' }}>Sin datos</span>
-    }
-    if (kind === 'binary') {
+    // Binaria: el back manda status 'off' con value 0 para decir "Apagado" (hay dato),
+    // no "Sin datos". Por eso se resuelve antes que el corte de no-dato.
+    if (kind === 'binary' && value !== null && value !== undefined) {
         return (
             <span style={{ fontSize: 13, fontWeight: 700, color: '#0f172a' }}>
                 {Number(value) === 1 ? 'Encendido' : 'Apagado'}
             </span>
         )
+    }
+    if (status === 'off' || value === null || value === undefined || value === 'Sin datos') {
+        return <span style={{ fontSize: 13, fontWeight: 700, color: '#94a3b8' }}>Sin datos</span>
     }
     return (
         <>

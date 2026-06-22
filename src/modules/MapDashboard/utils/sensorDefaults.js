@@ -28,11 +28,12 @@ export const ANCHOR_OPTIONS = [
 ]
 
 export const STATUS_COLORS = {
-    ok:    '#22c55e',
-    warn:  '#f59e0b',
-    crit:  '#ef4444',
-    stale: '#a78bfa',
-    off:   '#94a3b8',
+    ok:      '#22c55e',
+    warn:    '#f59e0b',
+    crit:    '#ef4444',
+    stale:   '#a78bfa',
+    apagado: '#64748b',
+    off:     '#94a3b8',
 }
 
 export const STATUS_LABELS = {
@@ -40,6 +41,7 @@ export const STATUS_LABELS = {
     warn: 'Alerta',
     crit: 'Crítico',
     stale: 'Datos viejos',
+    apagado: 'Apagado',
     off: 'Sin datos',
 }
 

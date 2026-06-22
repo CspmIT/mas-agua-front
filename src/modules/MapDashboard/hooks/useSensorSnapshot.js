@@ -2,6 +2,20 @@ import { useState, useEffect, useCallback } from 'react'
 import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
 
+// El back manda status 'off' tanto para una binaria apagada (kind 'binary', value 0)
+// como para un sensor sin valor. Los separamos en 'apagado' vs 'off' (Sin datos)
+// para que contador, filtro, pin y label los traten distinto.
+const normalizeSnapshot = (data) => {
+    const out = {}
+    for (const [id, s] of Object.entries(data || {})) {
+        out[id] =
+            s && s.kind === 'binary' && s.status === 'off'
+                ? { ...s, status: 'apagado' }
+                : s
+    }
+    return out
+}
+
 export const useSensorSnapshot = (markers, { intervalMs = 15000 } = {}) => {
     const [snapshot, setSnapshot] = useState({})
     const [lastUpdate, setLastUpdate] = useState(null)
@@ -25,7 +39,7 @@ export const useSensorSnapshot = (markers, { intervalMs = 15000 } = {}) => {
                 'POST',
                 { markerIds }
             )
-            setSnapshot(body?.data || {})
+            setSnapshot(normalizeSnapshot(body?.data))
             setLastUpdate(new Date())
         } catch (err) {
             console.error('useSensorSnapshot error:', err)
