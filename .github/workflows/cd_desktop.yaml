@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'feat: Soporte de MultipleBooleanChart a variables calc_binary .'
+                  releaseBody: 'feat: nuevo diseño y modulo de mapas.'
                   prerelease: false
