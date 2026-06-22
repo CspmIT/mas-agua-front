@@ -9,6 +9,7 @@ import {
     FormControlLabel,
 } from '@mui/material'
 import { configs } from '../configs/configs'
+import { upsertEntry, removeEntry } from './chartDataUtils'
 import SelectVars from './SelectVars'
 import LiquidFillBottomInfo from '../../home/components/LiquidFillBottomInfo'
 import CardCustom from '../../../components/CardCustom/index'
@@ -91,10 +92,17 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
     }, [chartData])
 
     const upsertChartData = entry => {
-        const prev = getValues('chartData') || []
-        const filtered = prev.filter(e => e.key !== entry.key)
-        setValue('chartData', [...filtered, entry])
+        setValue('chartData', upsertEntry(getValues('chartData'), entry))
     }
+
+    // Quita la entrada del chartData del formulario (al destildar secundaria / valor inferior).
+    const removeChartData = key => {
+        setValue('chartData', removeEntry(getValues('chartData'), key))
+    }
+
+    // id de la variable original (modo edición) para restaurarla al re-tildar.
+    const originalVarId = key =>
+        chartData?.ChartData?.find(d => d.key === key)?.InfluxVars?.id
 
     useEffect(() => {
         BOTTOM_KEYS.forEach(key => {
@@ -249,11 +257,17 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                                 control={
                                                     <Checkbox
                                                         checked={secondaryEnabled}
-                                                        onChange={(e) =>
-                                                            setSecondaryEnabled(
-                                                                e.target.checked
-                                                            )
-                                                        }
+                                                        onChange={(e) => {
+                                                            const checked = e.target.checked
+                                                            setSecondaryEnabled(checked)
+                                                            if (checked) {
+                                                                const idVar = originalVarId('secondary')
+                                                                if (idVar !== undefined)
+                                                                    upsertChartData({ key: 'secondary', label: 'secondary', idVar })
+                                                            } else {
+                                                                removeChartData('secondary')
+                                                            }
+                                                        }}
                                                     />
                                                 }
                                                 label="Mostrar variable secundaria"
@@ -289,7 +303,17 @@ const ConfigSimple = ({ register, errors, id, setValue, chartData, getValues }) 
                                             control={
                                                 <Checkbox
                                                     checked={bottoms[key].enabled}
-                                                    onChange={e => setBottom(key, 'enabled', e.target.checked)}
+                                                    onChange={e => {
+                                                        const checked = e.target.checked
+                                                        setBottom(key, 'enabled', checked)
+                                                        if (checked) {
+                                                            const idVar = originalVarId(key)
+                                                            if (idVar !== undefined)
+                                                                upsertChartData({ key, label: bottoms[key].label, idVar })
+                                                        } else {
+                                                            removeChartData(key)
+                                                        }
+                                                    }}
                                                 />
                                             }
                                             label={`Mostrar valor inferior ${i + 1}`}

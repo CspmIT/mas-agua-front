@@ -9,13 +9,15 @@ import { MainContext } from '../../../context/MainContext'
 const LoginCooptech = () => {
 	const navigate = useNavigate()
 	const { token } = useParams(['token'])
-	const { setClient } = useContext(MainContext)
+	const { setClient, setUser } = useContext(MainContext)
 	const validateUserCooptech = async () => {
 		try {
 			if (token === 'null') {
 				await removeData('token')
 				storage.remove('usuario')
 				storage.remove('tokenCooptech')
+				setUser(false)
+				setClient(null)
 				navigate('/login')
 			}
 			storage.set('tokenCooptech', token)
@@ -40,12 +42,15 @@ const LoginCooptech = () => {
 			storage.set('usuario', decodedToken)
 			const client = storage.get('usuarioCooptech')
 			setClient(client?.cliente.name ?? null)
+			setUser(true)
 			navigate('/')
 		} catch (error) {
 			Swal.fire('Atencion', error.response?.data?.error || error.response?.data || error.message, 'error')
 			await removeData('token')
 			storage.remove('usuario')
 			storage.remove('tokenCooptech')
+			setUser(false)
+			setClient(null)
 			navigate('/login')
 			return false
 		}

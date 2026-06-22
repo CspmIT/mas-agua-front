@@ -11,7 +11,7 @@ import LoaderComponent from '../../../components/Loader'
 
 
 const MainContent = () => {
-	const { user, setInfoNav } = useContext(MainContext)
+	const { user, setUser, setClient, setInfoNav } = useContext(MainContext)
 	const location = useLocation()
 	const navigate = useNavigate()
 	const authUser = storage.get('usuario')
@@ -20,6 +20,8 @@ const MainContent = () => {
 		if (!authUser || !token) {
 			localStorage.clear()
 			await removeData('token')
+			setUser(false)
+			setClient(null)
 			navigate('/login')
 			return
 		}
@@ -38,13 +40,13 @@ const MainContent = () => {
 	}, [location])
 	return (
 		<>
-			<div className={`pt-16 !min-h-screen absolute w-full bg-gray-200 dark:bg-gray-700`}>
+			<div className={`pt-16 !min-h-screen absolute w-full bg-fixed bg-[linear-gradient(to_bottom,#e5e7eb_70%,#f9fafb_100%)] dark:bg-[linear-gradient(to_bottom,#374151_0%,#434f60_100%)]`}>
 				<NavBarCustom setLoading={setLoading} />
 				{!loading ? (
 					<LoaderComponent />
 				) : (
 					<>
-						<div className={`sm:pl-20 pl-4 pr-4 pb-20 z-10 flex relative ${style.boxMain}`}>
+						<div className={`sm:pl-20 pl-4 pr-4 pb-14 z-10 flex relative ${style.boxMain}`}>
 							<Outlet />
 						</div>
 						<Footer />

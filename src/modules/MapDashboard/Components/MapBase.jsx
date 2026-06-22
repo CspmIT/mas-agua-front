@@ -4,13 +4,58 @@ import Map, {
     FullscreenControl,
     Popup,
     GeolocateControl,
+    useControl,
 } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import '../Style/MarkerPopup.css'
 import Pin from './Pin'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
+
+// Suavidad del zoom. Más chico = más gradual (defaults de MapLibre: rueda 1/450, pinch 1/100)
+const WHEEL_ZOOM_RATE = 1 / 800   // rueda del mouse
+const PINCH_ZOOM_RATE = 1 / 250   // trackpad / pinch
+
+// Botones +/-: paso de zoom y duración de la animación (default nativo = paso 1, ~300ms)
+const ZOOM_STEP = 0.15      // medio nivel por click → más gradual
+const ZOOM_DURATION = 800  // ms de animación
+
+// Botones de zoom propios (look nativo de MapLibre) con animación suave en lugar del salto de 1 nivel
+function SmoothZoomControl({ position = 'top-left', step = ZOOM_STEP, duration = ZOOM_DURATION }) {
+    useControl(
+        () => ({
+            onAdd(map) {
+                const group = document.createElement('div')
+                group.className = 'maplibregl-ctrl maplibregl-ctrl-group'
+
+                const makeBtn = (cls, title, delta) => {
+                    const btn = document.createElement('button')
+                    btn.type = 'button'
+                    btn.className = cls
+                    btn.title = title
+                    btn.setAttribute('aria-label', title)
+                    btn.innerHTML = '<span class="maplibregl-ctrl-icon" aria-hidden="true"></span>'
+                    btn.addEventListener('click', () =>
+                        map.easeTo({ zoom: map.getZoom() + delta, duration })
+                    )
+                    return btn
+                }
+
+                group.appendChild(makeBtn('maplibregl-ctrl-zoom-in', 'Acercar', step))
+                group.appendChild(makeBtn('maplibregl-ctrl-zoom-out', 'Alejar', -step))
+
+                this._container = group
+                return group
+            },
+            onRemove() {
+                this._container?.parentNode?.removeChild(this._container)
+            },
+        }),
+        { position }
+    )
+    return null
+}
 
 // Offset por anchor para que el popup no se pise con el pin.
 // El pin se dibuja ~43px por encima de la coordenada y ~24px de ancho.
@@ -40,6 +85,16 @@ const MapBase = ({
     withInfo = false, // si true, hace polling a /multipleDataInflux (modo edición)
     onEditMarker = null,
 }) => {
+    const mapRef = useRef(null)
+
+    // Ajusta la suavidad del zoom una vez cargado el mapa
+    const handleMapLoad = () => {
+        const map = mapRef.current?.getMap?.()
+        if (!map) return
+        map.scrollZoom.setWheelZoomRate(WHEEL_ZOOM_RATE)
+        map.scrollZoom.setZoomRate(PINCH_ZOOM_RATE)
+    }
+
     function extractInfluxVarsFromMarkers(markers) {
         return markers.map((m) => ({
             dataInflux: m.popupInfo.data,
@@ -198,12 +253,15 @@ const MapBase = ({
     return (
         <div style={{ position: 'relative', width, height }}>
             <Map
+                ref={mapRef}
                 {...viewState}
                 style={{ width, height }}
                 mapStyle='https://api.maptiler.com/maps/streets/style.json?key=mHpRzO9eugI7vKv1drLO'
+                onLoad={handleMapLoad}
                 onMove={(e) => setViewState(e.viewState)}
             >
-                {navigationcontrol && <NavigationControl position='top-left' />}
+                {navigationcontrol && <SmoothZoomControl position='top-left' />}
+                {navigationcontrol && <NavigationControl position='top-left' showZoom={false} />}
                 {fullScreen && <FullscreenControl position='top-left' />}
                 {geolocation && <GeolocateControl position='top-left' />}
                 {markers.map((marker, index) => {

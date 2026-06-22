@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { IconButton, Tooltip } from '@mui/material'
 import { IoSendSharp } from 'react-icons/io5'
-import { HiSparkles } from 'react-icons/hi2'
 
 const MAX = 2000
 const SOFT = 1500
@@ -12,11 +11,9 @@ const MAX_ROWS = 6
  * @param {{
  *   onSend: (text: string) => void,
  *   disabled?: boolean,
- *   enableTools: boolean,
- *   onToggleTools: () => void,
  * }} props
  */
-const ChatComposer = ({ onSend, disabled = false, enableTools, onToggleTools }) => {
+const ChatComposer = ({ onSend, disabled = false }) => {
 	const [value, setValue] = useState('')
 	const ref = useRef(null)
 
@@ -41,7 +38,7 @@ const ChatComposer = ({ onSend, disabled = false, enableTools, onToggleTools }) 
 	}
 
 	const onKeyDown = (e) => {
-		if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault()
 			submit()
 		}
@@ -69,32 +66,6 @@ const ChatComposer = ({ onSend, disabled = false, enableTools, onToggleTools }) 
 
 			<div className='flex items-center justify-between px-3.5 pb-2.5 pt-0.5 gap-3'>
 				<div className='flex items-center gap-2 min-w-0'>
-					<button
-						type='button'
-						onClick={onToggleTools}
-						aria-pressed={enableTools}
-						aria-label='Datos en tiempo real'
-						className={[
-							'inline-flex items-center gap-1.5 px-3 h-7 rounded-full text-[11.5px] font-medium tracking-tight border transition-all',
-							enableTools
-								? 'bg-[#10B981]/12 border-[#10B981]/40 text-[#047857] dark:text-[#34d399]'
-								: 'bg-slate-100/70 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/10',
-						].join(' ')}
-					>
-						<span className='relative flex w-2 h-2'>
-							{enableTools && (
-								<span className='absolute inline-flex w-full h-full rounded-full bg-[#10B981]/40 animate-ping' />
-							)}
-							<span
-								className={[
-									'relative inline-flex w-2 h-2 rounded-full',
-									enableTools ? 'bg-[#10B981]' : 'bg-slate-300 dark:bg-slate-500',
-								].join(' ')}
-							/>
-						</span>
-						<HiSparkles className='text-[12px] -ml-0.5 opacity-80' />
-						Datos en tiempo real
-					</button>
 					<span
 						className={[
 							'hidden sm:inline-flex items-center px-2 h-6 rounded-full text-[10.5px] font-medium tabular-nums border',
@@ -111,16 +82,7 @@ const ChatComposer = ({ onSend, disabled = false, enableTools, onToggleTools }) 
 					</span>
 				</div>
 				<div className='flex items-center gap-2'>
-					<span className='hidden md:inline text-[10.5px] text-slate-400 dark:text-slate-500 tracking-wide'>
-						<kbd className='px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 font-mono text-[10px] bg-slate-50 dark:bg-white/5'>
-							Ctrl
-						</kbd>{' '}
-						+{' '}
-						<kbd className='px-1.5 py-0.5 rounded border border-slate-200 dark:border-white/10 font-mono text-[10px] bg-slate-50 dark:bg-white/5'>
-							Enter
-						</kbd>
-					</span>
-					<Tooltip title='Enviar (Ctrl+Enter)'>
+					<Tooltip title='Enviar (Enter)'>
 						<span>
 							<IconButton
 								onClick={submit}

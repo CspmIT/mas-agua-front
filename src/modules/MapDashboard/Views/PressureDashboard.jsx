@@ -77,6 +77,7 @@ const PressureDashboard = () => {
             setLoading(false)
             return
         }
+        setLoading(true)
         const load = async () => {
             try {
                 const { data } = await request(
@@ -154,6 +155,7 @@ const PressureDashboard = () => {
                     className='relative w-full mx-auto aspect-[9/16] max-h-[calc(100vh-180px)] sm:aspect-auto sm:h-[calc(88vh-80px)] sm:max-h-none'
                 >
                     <DashboardMap
+                        key={mapId}
                         markers={markers}
                         snapshot={snapshot}
                         activeFilters={activeFilters}
