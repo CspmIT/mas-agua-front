@@ -157,7 +157,7 @@ function NavBarCustom({ setLoading }) {
 					</IconButton>
 
 					<img onClick={() => navigate('/')} className='max-h-10 cursor-pointer' src={Logo} />
-					<Tooltip title='Asistente IA' placement='bottom'>
+					{/* <Tooltip title='Asistente IA' placement='bottom'>
 						<button
 							type='button'
 							onClick={() => navigate('/assistant')}
@@ -202,7 +202,7 @@ function NavBarCustom({ setLoading }) {
 								Asistente IA
 							</span>
 						</button>
-					</Tooltip>
+					</Tooltip> */}
 					<div className='absolute right-5 flex flex-row items-center'>
 						<span className={`inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/15 rounded-full px-3.5 py-1 mr-2 text-white/95 text-sm font-medium tracking-wide select-none ${isMobile ? 'hidden' : ''}`}>
 							{nameCoop}
