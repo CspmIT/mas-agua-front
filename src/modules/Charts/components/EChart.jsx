@@ -81,8 +81,18 @@ const EChart = ({ config, onZoomRange, onRestore }) => {
 
     window.addEventListener('resize', handleResize)
 
+    // Redimensiona también cuando cambia el tamaño del contenedor (no sólo el de la
+    // ventana). Sin esto, el gráfico conserva el tamaño del init y se desborda cuando
+    // el layout cambia (p.ej. el board pasa a ancho completo en mobile).
+    let observer
+    if (containerRef.current && typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(() => chartRef.current?.resize())
+      observer.observe(containerRef.current)
+    }
+
     return () => {
       window.removeEventListener('resize', handleResize)
+      observer?.disconnect()
     }
   }, [])
   

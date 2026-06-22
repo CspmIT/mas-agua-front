@@ -404,18 +404,18 @@ function ViewDiagram() {
     <div className='w-full h-[88vh] flex flex-col'>
       <div className='flex items-end justify-between gap-3'>
         <div
-          className='inline-flex items-center gap-2 text-white rounded-t-md shadow-md'
+          className='inline-flex items-center gap-2 text-white rounded-t-md shadow-md min-w-0'
           style={{
             padding: '4px 20px',
             background: darkPrimaryGradient,
             boxShadow: '0 4px 20px rgba(44, 106, 160, 0.3)',
           }}
         >
-          <span className='text-[9px] font-semibold uppercase tracking-[0.18em] text-white/75'>
+          <span className='hidden sm:inline text-[9px] font-semibold uppercase tracking-[0.18em] text-white/75'>
             Diagrama
           </span>
-          <span className='text-white/40'>·</span>
-          <span className='text-sm font-semibold text-white truncate max-w-[50vw]'>
+          <span className='hidden sm:inline text-white/40'>·</span>
+          <span className='text-sm font-semibold text-white truncate'>
             {diagramMetadata.title || 'Diagrama sin nombre'}
           </span>
         </div>

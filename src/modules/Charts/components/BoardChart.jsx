@@ -313,7 +313,7 @@ const BoardChart = memo(
                         {[topLeftChart, topRightChart].map((chart, idx) => (
                             <div
                                 key={idx}
-                                className='flex-1 min-h-0 rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900/40 dark:to-slate-900/10 shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-1.5 flex items-center justify-center'
+                                className='flex-1 min-h-0 min-w-0 overflow-hidden rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900/40 dark:to-slate-900/10 shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-1.5 flex items-center justify-center'
                             >
                                 {renderTopChart(chart)}
                             </div>
