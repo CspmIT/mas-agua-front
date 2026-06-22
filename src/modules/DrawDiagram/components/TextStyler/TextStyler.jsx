@@ -1,68 +1,81 @@
 import React from 'react';
+import { Box, Button, Slider } from '@mui/material';
+import {
+  floatingPanelSx,
+  ghostPillSx,
+  panelLabelClass,
+  panelTitleClass,
+  primaryPillSx,
+} from '../../utils/js/diagramTheme';
 
-const TextStyler = ({
-  visible,
-  textStyle,
-  onStyleChange,
-  onApply,
-  isEditing
-}) => {
+const styleOptions = [
+  { value: 'normal', label: 'Normal', className: '' },
+  { value: 'bold', label: 'Negrita', className: 'font-bold' },
+  { value: 'italic', label: 'Cursiva', className: 'italic' },
+];
+
+const TextStyler = ({ visible, textStyle, onStyleChange, onApply, isEditing }) => {
   if (!visible) return null;
 
   return (
-    <div className="absolute top-1 left-1 m-1 p-4 bg-white border border-gray-300 shadow-lg rounded-lg z-10 max-w-md">
-      <label className="block text-sm font-medium mb-1">Color</label>
-      <input
-        type="color"
-        value={textStyle.fill}
-        onChange={(e) => onStyleChange({ ...textStyle, fill: e.target.value })}
-        className="w-full h-8 p-0 border rounded mb-3"
-      />
+    <Box
+      sx={floatingPanelSx}
+      className='absolute top-2 left-2 z-10 w-60 p-3 flex flex-col gap-3'
+    >
+      <h4 className={panelTitleClass}>Estilo de texto</h4>
 
-      <label className="block text-sm font-medium mb-1">Tamaño</label>
-      <div className="flex items-center mb-3">
+      <div>
+        <label className={`${panelLabelClass} block mb-1`}>Color</label>
         <input
-          type="range"
+          type='color'
+          value={textStyle.fill}
+          onChange={(e) => onStyleChange({ ...textStyle, fill: e.target.value })}
+          className='w-full h-9 p-0 border border-slate-200 dark:border-slate-700 rounded cursor-pointer bg-transparent'
+        />
+      </div>
+
+      <div>
+        <div className='flex items-center justify-between mb-1'>
+          <label className={panelLabelClass}>Tamaño</label>
+          <span className='text-xs text-slate-600 dark:text-gray-300'>{textStyle.fontSize}px</span>
+        </div>
+        <Slider
+          size='small'
           min={8}
           max={72}
           value={textStyle.fontSize}
-          onChange={(e) => onStyleChange({ ...textStyle, fontSize: parseInt(e.target.value) })}
-          className="w-full mr-2"
+          onChange={(_, v) => onStyleChange({ ...textStyle, fontSize: Array.isArray(v) ? v[0] : v })}
+          sx={{ color: '#2c6aa0' }}
         />
-        <span className="text-sm">{textStyle.fontSize}px</span>
       </div>
 
-      <label className="block text-sm font-medium mb-1">Estilo</label>
-      <div className="flex gap-2">
-        <button
-          className={`px-3 py-1 rounded ${textStyle.fontStyle === 'normal' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => onStyleChange({ ...textStyle, fontStyle: 'normal' })}
-        >
-          Normal
-        </button>
-        <button
-          className={`px-3 py-1 rounded font-bold ${textStyle.fontStyle === 'bold' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => onStyleChange({ ...textStyle, fontStyle: 'bold' })}
-        >
-          Negrita
-        </button>
-        <button
-          className={`px-3 py-1 rounded italic ${textStyle.fontStyle === 'italic' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
-          onClick={() => onStyleChange({ ...textStyle, fontStyle: 'italic' })}
-        >
-          Cursiva
-        </button>
+      <div>
+        <label className={`${panelLabelClass} block mb-1`}>Estilo</label>
+        <div className='flex gap-1.5 flex-wrap'>
+          {styleOptions.map((opt) => {
+            const active = textStyle.fontStyle === opt.value;
+            return (
+              <Button
+                key={opt.value}
+                size='small'
+                variant={active ? 'contained' : 'outlined'}
+                onClick={() => onStyleChange({ ...textStyle, fontStyle: opt.value })}
+                sx={active ? primaryPillSx : ghostPillSx}
+                className={opt.className}
+              >
+                {opt.label}
+              </Button>
+            );
+          })}
+        </div>
       </div>
 
       {isEditing && (
-        <button
-          className="w-full mt-3 bg-blue-500 text-white py-1 rounded"
-          onClick={onApply}
-        >
+        <Button fullWidth variant='contained' sx={primaryPillSx} onClick={onApply}>
           Aplicar cambios
-        </button>
+        </Button>
       )}
-    </div>
+    </Box>
   );
 };
 

@@ -1,5 +1,4 @@
 import { memo, useMemo } from 'react'
-import { Card } from '@mui/material'
 import { ChartComponentDbWrapper } from '../../home/components/ChartComponentDbWrapper'
 import CirclePorcentaje from '../../Charts/components/CirclePorcentaje'
 import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
@@ -68,24 +67,100 @@ const normalizeChartProps = (chartConfig = []) => {
     }, {})
 }
 
-const LabelValueRow = ({ label, value, suffix }) => (
-    <div className="flex items-center justify-between gap-3">
-        <span className="text-md text-slate-700">{label}</span>
-        <span className="text-md font-semibold text-slate-900">
+// ── Primitivas visuales del nuevo estilo ──────────────────────────────────
+// Reutilizan los tokens del módulo Assistant: navy #1f4e79, azul #368bed,
+// verde de estado #10B981, superficies redondeadas, tipografía con tracking
+// y tabular-nums, y variantes dark.
+
+/** Etiqueta de sección: uppercase, tracking amplio, color de acento. */
+const Eyebrow = ({ children }) => (
+    <span className='text-[10.5px] font-semibold uppercase tracking-[0.18em] text-[#368bed] dark:text-[#7fb6ef]'>
+        {children}
+    </span>
+)
+
+/** Panel base con título tipo eyebrow y borde/superficie suaves. */
+const SectionPanel = ({ title, action, children, className = '' }) => (
+    <section
+        className={`rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden ${className}`}
+    >
+        <div className='flex items-center justify-between gap-2 px-3.5 py-1.5 border-b border-[#1f4e79]/8 dark:border-white/5'>
+            <div className='flex items-center gap-2 min-w-0'>
+                <span className='inline-block w-1.5 h-1.5 rounded-full bg-[#368bed]' aria-hidden />
+                <Eyebrow>{title}</Eyebrow>
+            </div>
+            {action}
+        </div>
+        {children}
+    </section>
+)
+
+/** Fila métrica: label a la izquierda, valor tabular a la derecha. */
+const MetricRow = ({ label, value, suffix }) => (
+    <div className='flex items-baseline justify-between gap-3 py-1'>
+        <span className='text-[13px] text-slate-500 dark:text-slate-400 truncate'>{label}</span>
+        <span className='text-[14px] font-semibold tabular-nums text-slate-800 dark:text-slate-100 shrink-0'>
             {formatValue(value)}
             {suffix ?? ''}
         </span>
     </div>
 )
 
-const MetricChip = ({ label, value, suffix }) => (
-    <div className="flex items-center justify-between gap-2">
-        <span className="text-md text-slate-700">{label}</span>
-        <span className="text-md font-semibold text-slate-900">
-            {formatValue(value)}
-            {suffix ?? ''}
+/** Tile compacto para los ítems de Sala. */
+const RoomTile = ({ label, value, suffix }) => {
+    const hasData = value !== null && value !== undefined && value !== 'Sin datos'
+    return (
+        <div className='rounded-xl border border-[#1f4e79]/10 dark:border-white/10 bg-slate-50/60 dark:bg-white/[0.025] px-2.5 py-2 text-center transition-colors hover:border-[#368bed]/35 hover:bg-[#368bed]/[0.04]'>
+            <div className='text-[10.5px] font-medium uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500 truncate'>
+                {label}
+            </div>
+            <div
+                className={[
+                    'mt-1 text-[18px] font-semibold tabular-nums leading-none',
+                    hasData ? 'text-slate-800 dark:text-slate-100' : 'text-slate-300 dark:text-slate-600',
+                ].join(' ')}
+            >
+                {formatValue(value)}
+                {suffix ?? ''}
+            </div>
+        </div>
+    )
+}
+
+/** Pill protagonista del estado de bombeo. */
+const StatusPill = ({ text }) => {
+    const isOn = text === 'ENCENDIDO'
+    const isOff = text === 'APAGADO'
+    const tone = isOn
+        ? 'bg-[#10B981]/12 border-[#10B981]/40 text-[#047857] dark:text-[#34d399]'
+        : isOff
+        ? 'bg-rose-500/10 border-rose-300/50 text-rose-600 dark:border-rose-500/30 dark:text-rose-300'
+        : 'bg-slate-100/70 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400'
+    const dot = isOn ? 'bg-[#10B981]' : isOff ? 'bg-rose-500' : 'bg-slate-400'
+    return (
+        <span
+            className={`inline-flex items-center gap-1.5 pl-2 pr-3 h-7 rounded-full border text-[12px] font-semibold tracking-tight ${tone}`}
+        >
+            <span className='relative flex w-2 h-2'>
+                {isOn && (
+                    <span className='absolute inline-flex w-full h-full rounded-full bg-[#10B981]/40 animate-ping' />
+                )}
+                <span className={`relative inline-flex w-2 h-2 rounded-full ${dot}`} />
+            </span>
+            {text}
         </span>
-    </div>
+    )
+}
+
+/** Indicador "en vivo" del header (refresh cada 30s). */
+const LiveBadge = () => (
+    <span className='inline-flex items-center gap-1.5 h-6 pl-2 pr-2.5 rounded-full bg-white/15 border border-white/20 text-white/90 text-[10px] font-semibold uppercase tracking-[0.14em] backdrop-blur-sm'>
+        <span className='relative flex w-1.5 h-1.5'>
+            <span className='absolute inline-flex w-full h-full rounded-full bg-white/70 animate-ping' />
+            <span className='relative inline-flex w-1.5 h-1.5 rounded-full bg-white' />
+        </span>
+        En vivo
+    </span>
 )
 
 const BoardChart = memo(
@@ -132,13 +207,6 @@ const BoardChart = memo(
                     : 'APAGADO'
                 : formatValue(pumpingStatusValue)
 
-        const pumpingStatusColor =
-            pumpingStatusText === 'ENCENDIDO'
-                ? 'text-green-600'
-                : pumpingStatusText === 'APAGADO'
-                    ? 'text-red-600'
-                    : 'text-slate-700'
-
         const pumpingStatusLabel = cfg['board.pumping.status.label'] ?? 'Estado'
 
         // Labels fallback desde config si todavía no hay ChartData
@@ -179,21 +247,27 @@ const BoardChart = memo(
 
         const renderTopChart = (chart) => {
             if (!chart) {
-                return <div className="text-sm text-slate-500">No hay gráfico seleccionado</div>
+                return (
+                    <div className='text-[12.5px] text-slate-400 dark:text-slate-500 italic'>
+                        No hay gráfico seleccionado
+                    </div>
+                )
             }
 
             const ChartComponent = chartComponents[chart.type]
             if (!ChartComponent) {
                 return (
-                    <div className="text-sm text-red-500">
+                    <div className='text-[12.5px] text-rose-500 dark:text-rose-400'>
                         Tipo no soportado: <b>{chart.type}</b>
                     </div>
                 )
             }
 
             return (
-                <div className="flex flex-col justify-center w-full h-full">
-                    <div className="text-center text-sm mb-2">{chart.name}</div>
+                <div className='flex flex-col justify-center w-full h-full'>
+                    <div className='text-center mb-1'>
+                        <Eyebrow>{chart.name}</Eyebrow>
+                    </div>
 
                     <ChartComponentDbWrapper
                         chartId={chart.id}
@@ -206,109 +280,110 @@ const BoardChart = memo(
             )
         }
 
+        // Altura bloqueada a ~una pantalla para que el tablero entre completo en 720p.
+        // El offset (~100px) cubre el navbar (pt-16 = 64px) + el gutter superior del
+        // Grid, dejando un respiro abajo. La fila de charts es flex-1 y absorbe todo el
+        // espacio restante; Bombeo/Sala conservan su alto natural. Subir/bajar el offset
+        // es el único dial: menos px = charts más grandes (con menos respiro abajo).
         return (
-            <Card
-                sx={{
-                    borderRadius: 2,
-                    backgroundColor: '#ffffff',
-                    height: '100%',
-                    width: '100%',
-                }}
-                className='!shadow-md !shadow-gray-400 pb-1'
-            >
+            <div className='w-full h-[calc(100dvh-100px)] min-h-[420px] rounded-3xl border border-[#1f4e79]/8 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-[0_2px_8px_rgba(15,42,68,0.05),0_24px_56px_-30px_rgba(15,42,68,0.28)] overflow-hidden flex flex-col'>
                 {/* HEADER */}
-                <div className="p-3 border-b bg-[#2c6aa0] border-slate-200 ">
-                    <h1 className="text-xl leading-tight line-clamp-2 text-center text-white">
-                        {title || 'Tablero'}
-                    </h1>
+                <div className='relative px-3.5 py-2.5 bg-gradient-to-br from-[#2c6aa0] to-[#1f4e79] overflow-hidden'>
+                    {/* Textura de puntos sutil */}
+                    <div
+                        className='pointer-events-none absolute inset-0 opacity-[0.12]'
+                        aria-hidden
+                        style={{
+                            backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
+                            backgroundSize: '16px 16px',
+                            maskImage: 'radial-gradient(ellipse at 100% 0%, rgba(0,0,0,0.8), transparent 70%)',
+                            WebkitMaskImage: 'radial-gradient(ellipse at 100% 0%, rgba(0,0,0,0.8), transparent 70%)',
+                        }}
+                    />
+                    <div className='relative flex items-center justify-between gap-3'>
+                        <h1 className='text-[16px] font-medium tracking-tight leading-tight line-clamp-2 text-white'>
+                            {title || 'Tablero'}
+                        </h1>
+                    </div>
                 </div>
 
-                <div className="p-2 flex flex-col gap-2">
-                    {/* TOP */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <div className="bg-white border-2 rounded-md p-1 h-[35dvh] flex items-center justify-center shadow-sm">
-                            {renderTopChart(topLeftChart)}
-                        </div>
-                        <div className="bg-white border-2 rounded-md p-1 h-[35dvh] flex items-center justify-center shadow-sm">
-                            {renderTopChart(topRightChart)}
-                        </div>
+                <div className='p-2.5 flex flex-col gap-2 flex-1 min-h-0'>
+                    {/* TOP — gráficos (absorben el espacio vertical sobrante) */}
+                    <div className='flex flex-col md:flex-row gap-2 flex-1 min-h-0'>
+                        {[topLeftChart, topRightChart].map((chart, idx) => (
+                            <div
+                                key={idx}
+                                className='flex-1 min-h-0 rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900/40 dark:to-slate-900/10 shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-1.5 flex items-center justify-center'
+                            >
+                                {renderTopChart(chart)}
+                            </div>
+                        ))}
                     </div>
 
                     {/* BOMBEO */}
-                    <div className="bg-white rounded-lg">
-                        <div className="px-3 py-1 !rounded-t-md bg-blue-200">
-                            <span className="text-sm font-semibold">Bombeo</span>
-                        </div>
-
-                        <div className='border-x-2 border-b-2 rounded-b-lg pt-2'>
-                            <div className="flex justify-center gap-2">
-                                <span>{pumpingStatusLabel}:</span>
-                                <span className={`font-bold ${pumpingStatusColor}`}>
-                                    {pumpingStatusText}
+                    <SectionPanel
+                        title='Bombeo'
+                        action={
+                            <div className='flex items-center gap-2 min-w-0'>
+                                <span className='hidden sm:inline text-[11px] font-medium text-slate-400 dark:text-slate-500 truncate'>
+                                    {pumpingStatusLabel}
                                 </span>
+                                <StatusPill text={pumpingStatusText} />
+                            </div>
+                        }
+                    >
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-2.5 p-3'>
+                            <div className='rounded-xl border border-[#1f4e79]/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] px-3.5 py-1 divide-y divide-[#1f4e79]/8 dark:divide-white/5'>
+                                <MetricRow
+                                    label={pumpingRuntimeLabel}
+                                    value={resolveValue(pumpingRuntimeItem, inflValues)}
+                                    suffix={formatUnit(pumpingRuntimeItem)}
+                                />
+                                <MetricRow
+                                    label={pumpingStartsLabel}
+                                    value={resolveValue(pumpingStartsItem, inflValues)}
+                                    suffix={formatUnit(pumpingStartsItem)}
+                                />
                             </div>
 
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pb-2 pt-1 px-3">
-                                <div className="border rounded-lg p-3 shadow-sm">
-                                    <LabelValueRow
-                                        label={pumpingRuntimeLabel}
-                                        value={resolveValue(pumpingRuntimeItem, inflValues)}
-                                        suffix={formatUnit(pumpingRuntimeItem)}
-                                    />
-                                    <LabelValueRow
-                                        label={pumpingStartsLabel}
-                                        value={resolveValue(pumpingStartsItem, inflValues)}
-                                        suffix={formatUnit(pumpingStartsItem)}
-                                    />
-                                </div>
-
-                                <div className="border rounded-lg px-3 py-1 shadow-sm">
-                                    <MetricChip
-                                        label={pumpingL1Label}
-                                        value={resolveValue(pumpingL1Item, inflValues)}
-                                        suffix={formatUnit(pumpingL1Item)}
-                                    />
-                                    <MetricChip
-                                        label={pumpingL2Label}
-                                        value={resolveValue(pumpingL2Item, inflValues)}
-                                        suffix={formatUnit(pumpingL2Item)}
-                                    />
-                                    <MetricChip
-                                        label={pumpingL3Label}
-                                        value={resolveValue(pumpingL3Item, inflValues)}
-                                        suffix={formatUnit(pumpingL3Item)}
-                                    />
-                                </div>
+                            <div className='rounded-xl border border-[#1f4e79]/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] px-3.5 py-1 divide-y divide-[#1f4e79]/8 dark:divide-white/5'>
+                                <MetricRow
+                                    label={pumpingL1Label}
+                                    value={resolveValue(pumpingL1Item, inflValues)}
+                                    suffix={formatUnit(pumpingL1Item)}
+                                />
+                                <MetricRow
+                                    label={pumpingL2Label}
+                                    value={resolveValue(pumpingL2Item, inflValues)}
+                                    suffix={formatUnit(pumpingL2Item)}
+                                />
+                                <MetricRow
+                                    label={pumpingL3Label}
+                                    value={resolveValue(pumpingL3Item, inflValues)}
+                                    suffix={formatUnit(pumpingL3Item)}
+                                />
                             </div>
                         </div>
-                    </div>
+                    </SectionPanel>
 
                     {/* SALA */}
-                    <div className="bg-white rounded-lg">
-                        <div className="px-3 py-1 rounded-t-md bg-blue-200">
-                            <span className="text-sm font-semibold">Sala</span>
+                    <SectionPanel title='Sala'>
+                        <div className='p-2.5 grid grid-cols-2 md:grid-cols-4 gap-2'>
+                            {roomItems.map((item, idx) => {
+                                const value = resolveValue(item, inflValues)
+                                return (
+                                    <RoomTile
+                                        key={idx}
+                                        label={item.label}
+                                        value={value}
+                                        suffix={formatUnit(item, value)}
+                                    />
+                                )
+                            })}
                         </div>
-
-                        <div className='border-x-2 border-b-2 rounded-b-lg'>
-                            <div className="p-2 grid grid-cols-2 md:grid-cols-4 gap-2">
-                                {roomItems.map((item, idx) => {
-                                    const value = resolveValue(item, inflValues)
-                                    return (
-                                        <div key={idx} className="border rounded-lg p-2 text-center">
-                                            <div className="text-xs text-slate-600">{item.label}</div>
-                                            <div className="text-base font-semibold">
-                                                {formatValue(value)}
-                                                {formatUnit(item, value)}
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    </div>
+                    </SectionPanel>
                 </div>
-            </Card>
+            </div>
         )
     }
 )

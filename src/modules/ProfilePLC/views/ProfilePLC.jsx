@@ -1,11 +1,8 @@
 import {
     Backdrop,
-    Box,
-    Button,
     CircularProgress,
     Container,
     Switch,
-    Typography,
 } from '@mui/material'
 import TableCustom from '../../../components/TableCustom'
 import ModalVarPLC from '../../ConfigVars/components/ModalVarPLC'
@@ -16,6 +13,8 @@ import { FiUpload } from 'react-icons/fi'
 import { FaPencilAlt, FaTrash } from 'react-icons/fa'
 import Swal from 'sweetalert2'
 import LoaderComponent from '../../../components/Loader'
+import PageHeader from '../../../components/PageHeader'
+import { ActionsRow, DeleteChip, EditChip, ToneChip } from '../../../components/TableActions'
 
 const ProfilePLC = () => {
     const [loading, setLoading] = useState(true)
@@ -157,67 +156,56 @@ const ProfilePLC = () => {
             header: 'Acciones',
             accessorKey: 'actions',
             Cell: ({ row }) => {
-                const statusBtnVariant =
-                    row.original.status == 2 ? 'success' : 'error'
+                const isUpload = row.original.status === 2
+                const handleSecondary = async () => {
+                    if (row.original.status === 1) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Atencion',
+                            text: 'Primero debe desactivar el perfil para poder eliminarlo.',
+                        })
+                        return
+                    }
+                    if (row.original.status === 2) {
+                        editPLC(row.original.id)
+                        setModalPLC(true)
+                        return
+                    }
+                    if (row.original.status === 0) {
+                        const value = await Swal.fire({
+                            icon: 'warning',
+                            title: 'Atencion',
+                            html: '<h5>Esta por eliminar los archivos del perfil del servidor.</h5><p>¿Esta seguro ejecutar esta funcion?</p>',
+                            confirmButtonText: 'Si, eliminar',
+                            cancelButtonText: 'Cancelar',
+                            showCancelButton: true,
+                        })
+                        if (value.isConfirmed) deleteFilePLC(row.original.id)
+                    }
+                }
+
                 return (
-                    <div className="flex gap-2">
-                        <Button
-                            size="small"
-                            color="primary"
-                            variant="contained"
+                    <ActionsRow>
+                        <EditChip
                             disabled={row.original.status === 2}
                             onClick={() => {
                                 editPLC(row.original.id)
                                 setModalPLC(true)
                             }}
                         >
-                            <FaPencilAlt className="me-2" /> Editar
-                        </Button>
-                        <Button
-                            size="small"
-                            color={statusBtnVariant}
-                            variant="contained"
-                            onClick={async () => {
-                                if (row.original.status === 1) {
-                                    Swal.fire({
-                                        icon: 'error',
-                                        title: 'Atencion',
-                                        text: 'Primero debe desactivar el perfil para poder eliminarlo.',
-                                    })
-                                    return false
-                                }
-                                if (row.original.status === 2) {
-                                    editPLC(row.original.id)
-                                }
-                                if (row.original.status === 0) {
-                                    const value = await Swal.fire({
-                                        icon: 'warning',
-                                        title: 'Atencion',
-                                        html: '<h5>Esta por eliminar los archivos del perfil del servidor.</h5><p>¿Esta seguro ejecutar esta funcion?</p>',
-                                        confirmButtonText: 'Si, eliminar',
-                                        cancelButtonText: 'Cancelar',
-                                        showCancelButton: true,
-                                    })
-                                    if (value.isConfirmed) {
-                                        deleteFilePLC(row.original.id)
-                                    }
-                                    return false
-                                }
-                                setModalPLC(true)
-                            }}
-                        >
-                            {row.original.status === 2 ? (
-                                <>
-                                    <FiUpload className="me-1" /> {'Subir'}
-                                </>
-                            ) : (
-                                <>
-                                    <FaTrash className="me-1" />
-                                    {' Eliminar'}
-                                </>
-                            )}
-                        </Button>
-                    </div>
+                            <FaPencilAlt className='me-2' /> Editar
+                        </EditChip>
+
+                        {isUpload ? (
+                            <ToneChip tone='success' onClick={handleSecondary}>
+                                <FiUpload className='me-1' /> Subir
+                            </ToneChip>
+                        ) : (
+                            <DeleteChip onClick={handleSecondary}>
+                                <FaTrash className='me-1' /> Eliminar
+                            </DeleteChip>
+                        )}
+                    </ActionsRow>
                 )
             },
         },
@@ -247,25 +235,15 @@ const ProfilePLC = () => {
                 <CircularProgress color="inherit" />
             </Backdrop>
 
-            <Container className='w-full'>
-                <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center mb-4">
-                    <Typography className='w-full text-center md:!ms-40' variant="h4" align="center">
-                        Perfil PLC
-                    </Typography>
-                    <div className='flex justify-center sm:justify-end'>
-                        <Button
-                            variant="contained"
-                            color="primary"
-                            onClick={() => {
-                                setModalData(false)
-                                setModalPLC(true)
-                            }}
-                            className="sm:mx-10 whitespace-nowrap"
-                        >
-                            Crear Perfil de PLC
-                        </Button>
-                    </div>
-                </div>
+            <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+                <PageHeader
+                    title='Perfil PLC'
+                    createLabel='Crear perfil de PLC'
+                    onCreate={() => {
+                        setModalData(false)
+                        setModalPLC(true)
+                    }}
+                />
 
                 {!loading ? (
                     <TableCustom

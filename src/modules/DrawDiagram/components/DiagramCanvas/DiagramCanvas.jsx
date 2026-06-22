@@ -135,17 +135,35 @@ const DiagramCanvas = ({
                         );
                       }}
                     >
-                      {/* Fondo, borde blanco y línea principal */}
-                      <Line key={`${el.id}-bg`} points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
-                      <Line key={`${el.id}-white`} points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
+                      {/* Borde exterior (caño) */}
+                      <Line
+                        key={`${el.id}-border`}
+                        points={el.points}
+                        stroke='#94a3b8'
+                        strokeWidth={el.strokeWidth + 5}
+                        lineCap='round'
+                        lineJoin='round'
+                      />
+                      {/* Cuerpo del caño */}
+                      <Line
+                        key={`${el.id}-body`}
+                        points={el.points}
+                        stroke='#e2e8f0'
+                        strokeWidth={el.strokeWidth + 3}
+                        lineCap='round'
+                        lineJoin='round'
+                      />
+                      {/* Flujo animado dentro del caño */}
                       <Line
                         id={String(el.id)}
                         key={`${el.id}-main`}
                         points={el.points}
                         stroke={el.stroke}
                         strokeWidth={el.strokeWidth}
-                        dash={[25, 10]}
+                        dash={[10, 8]}
                         dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
+                        lineCap='round'
+                        lineJoin='round'
                       />
 
                       {/* Label para mostrar la variable asignada a la linea */}
@@ -473,17 +491,35 @@ const DiagramCanvas = ({
                         }
                       }}
                     >
-                      {/* Fondo, borde blanco y línea principal para polilíneas */}
-                      <Line key={`${el.id}--bg`} points={el.points} stroke={el.stroke} strokeWidth={el.strokeWidth + 4} />
-                      <Line key={`${el.id}--white`} points={el.points} stroke="white" strokeWidth={el.strokeWidth + 2} />
+                      {/* Borde exterior (caño) */}
+                      <Line
+                        key={`${el.id}--border`}
+                        points={el.points}
+                        stroke='#94a3b8'
+                        strokeWidth={el.strokeWidth + 5}
+                        lineCap='round'
+                        lineJoin='round'
+                      />
+                      {/* Cuerpo del caño */}
+                      <Line
+                        key={`${el.id}--body`}
+                        points={el.points}
+                        stroke='#e2e8f0'
+                        strokeWidth={el.strokeWidth + 3}
+                        lineCap='round'
+                        lineJoin='round'
+                      />
+                      {/* Flujo animado dentro del caño */}
                       <Line
                         id={String(el.id)}
                         key={`${el.id}--main`}
                         points={el.points}
                         stroke={el.stroke}
                         strokeWidth={el.strokeWidth}
-                        dash={[25, 15]}
+                        dash={[10, 8]}
                         dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
+                        lineCap='round'
+                        lineJoin='round'
                       />
 
                       {/* Label para mostrar la variable asignada a la polilinea */}
@@ -618,7 +654,10 @@ const DiagramCanvas = ({
               points={tempLine.points}
               stroke={tempLine.stroke}
               strokeWidth={tempLine.strokeWidth}
-              dash={[15, 15]}
+              dash={[10, 8]}
+              lineCap='round'
+              lineJoin='round'
+              opacity={0.7}
             />
           )}
         </Layer>

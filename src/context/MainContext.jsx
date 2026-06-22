@@ -7,7 +7,7 @@ const MainContext = createContext()
 
 function MainProvider({ children }) {
 	const [darkMode, setDarkMode] = useState(false)
-	const [user, setUser] = useState(false)
+	const [user, setUser] = useState(() => !!storage.get('usuario'))
 	const [infoNav, setInfoNav] = useState('')
 	const [tabActive, setTabActive] = useState(0)
 	const [tabs, setTabs] = useState([])
@@ -30,12 +30,12 @@ function MainProvider({ children }) {
 	}
 
 	useEffect(() => {
-		if (!client) return 
+		if (!user || !client) return
 
 		fetchUnreadCount()
 		const interval = setInterval(fetchUnreadCount, 15000)
 		return () => clearInterval(interval)
-	}, [client])
+	}, [user, client])
 
 	useEffect(() => {
 		if (tabs.length) {

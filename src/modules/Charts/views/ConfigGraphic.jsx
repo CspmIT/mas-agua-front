@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Button, IconButton, Typography } from '@mui/material'
+import { Box, Button, Container, Typography } from '@mui/material'
 import { useForm } from 'react-hook-form'
 import { useNavigate, useParams } from 'react-router-dom'
 import VarsProvider from '../../../components/DataGenerator/ProviderVars'
@@ -8,9 +8,40 @@ import ConfigSimple from '../components/ConfigSimple'
 import Swal from 'sweetalert2'
 import { backend } from '../../../utils/routes/app.routes'
 import { request } from '../../../utils/js/request'
-import { ArrowBack } from '@mui/icons-material'
 import ConfigMultiple from './ConfigMultiple'
 import HeaderForms from '../components/HeaderForms'
+
+const submitPillSx = {
+    borderRadius: '999px',
+    textTransform: 'none',
+    fontWeight: 500,
+    letterSpacing: '0.01em',
+    px: 3,
+    py: 1,
+    minHeight: 0,
+    background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+    boxShadow: '0 4px 14px rgba(44, 106, 160, 0.35)',
+    transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+    '&:hover': {
+        background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+        boxShadow: '0 8px 24px rgba(44, 106, 160, 0.45)',
+        transform: 'translateY(-1px)',
+    },
+    '&:active': { transform: 'translateY(0)' },
+}
+
+const cardShellSx = {
+    borderRadius: '16px',
+    backgroundColor: '#ffffff',
+    border: '1px solid rgba(15, 42, 68, 0.06)',
+    boxShadow:
+        '0 2px 6px rgba(15, 42, 68, 0.05), 0 12px 32px -12px rgba(15, 42, 68, 0.12)',
+    p: { xs: 2, sm: 2.5 },
+    'body.dark &': {
+        backgroundColor: 'rgba(17, 24, 39, 0.85)',
+        border: '1px solid rgba(255, 255, 255, 0.06)',
+    },
+}
 
 const ConfigGraphic = () => {
     const { id, idChart = false } = useParams()
@@ -281,53 +312,55 @@ const ConfigGraphic = () => {
 
     return (
         <VarsProvider>
-            <div className="w-full bg-white p-3 rounded-lg shadow-md h-fit">
-                <HeaderForms idChart={idChart} chartName={idChart ? chart : false}/>
+            <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+                <HeaderForms idChart={idChart} chartName={idChart ? chart : false} />
 
-                <form
-                    onSubmit={handleSubmit(onSubmit, onError)}
-                    className="flex flex-col gap-4 items-center"
-                >
-                    <input
-                        type="hidden"
-                        {...register('type')}
-                        value={configs[id].typeGraph}
-                    />
-                    {!configs[id].singleValue ? (
-                        <ConfigMultiple
-                            id={id}
-                            setValue={setValue}
-                            chartData={idChart ? chart : false} // Pasar los datos del gráfico si está en modo edición
+                <Box sx={cardShellSx}>
+                    <form
+                        onSubmit={handleSubmit(onSubmit, onError)}
+                        className='flex flex-col gap-4 items-center'
+                    >
+                        <input
+                            type='hidden'
+                            {...register('type')}
+                            value={configs[id].typeGraph}
                         />
-                    ) : (
-                        // Muestra ConfigSimple solo si no está cargando o no hay idChart
-                        (!idChart || !loading) && (
-                            <ConfigSimple
-                                getValues={getValues}
-                                setValue={setValue}
-                                register={register}
-                                errors={errors}
+                        {!configs[id].singleValue ? (
+                            <ConfigMultiple
                                 id={id}
-                                chartData={idChart ? chart : null} // Pasar los datos del gráfico si está en modo edición
+                                setValue={setValue}
+                                chartData={idChart ? chart : false}
                             />
-                        )
-                    )}
-                    {loading && idChart && (
-                        <Typography variant="body1" color="textSecondary">
-                            Cargando datos del gráfico...
-                        </Typography>
-                    )}
-                    <div className="flex justify-center">
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                        >
-                            Guardar
-                        </Button>
-                    </div>
-                </form>
-            </div>
+                        ) : (
+                            (!idChart || !loading) && (
+                                <ConfigSimple
+                                    getValues={getValues}
+                                    setValue={setValue}
+                                    register={register}
+                                    errors={errors}
+                                    id={id}
+                                    chartData={idChart ? chart : null}
+                                />
+                            )
+                        )}
+                        {loading && idChart && (
+                            <Typography variant='body2' color='textSecondary'>
+                                Cargando datos del gráfico...
+                            </Typography>
+                        )}
+                        <div className='flex justify-center pt-2'>
+                            <Button
+                                type='submit'
+                                variant='contained'
+                                disableElevation
+                                sx={submitPillSx}
+                            >
+                                Guardar
+                            </Button>
+                        </div>
+                    </form>
+                </Box>
+            </Container>
         </VarsProvider>
     )
 }

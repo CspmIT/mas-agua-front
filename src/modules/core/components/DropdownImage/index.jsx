@@ -8,7 +8,7 @@ import { MainContext } from '../../../../context/MainContext'
 import logo from '../../../../assets/img/Logo/Iso_Cooptech.png'
 
 const DropdownImage = () => {
-	const { setInfoNav, setTabs, setTabCurrent, setTabActive } = useContext(MainContext)
+	const { setInfoNav, setTabs, setTabCurrent, setTabActive, setUser, setClient } = useContext(MainContext)
 	const [isDropdownOpen, setDropdownOpen] = useState(false)
 	const dropdownRef = useRef(null) // Referencia al dropdown
 	const navigator = useNavigate()
@@ -22,6 +22,8 @@ const DropdownImage = () => {
 		setTabs([])
 		setTabActive(0)
 		setTabCurrent(0)
+		setUser(false)
+		setClient(null)
 		await removeData('token')
 		navigator('/')
 	}
@@ -32,6 +34,8 @@ const DropdownImage = () => {
 		setTabs([])
 		setTabActive(0)
 		setTabCurrent(0)
+		setUser(false)
+		setClient(null)
 		await removeData('token')
 	}
 

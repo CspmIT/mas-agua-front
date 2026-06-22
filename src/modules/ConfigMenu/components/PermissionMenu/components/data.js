@@ -235,4 +235,33 @@ export const list_menu = [
 		createdAt: '2024-11-29T06:34:05.000Z',
 		updatedAt: '2024-11-29T06:34:05.000Z',
 	},
+	// TODO: en producción, estas entradas las debe seedear el backend en la
+	// tabla `menu` y los permisos por perfil en `permisos_menu` (ver getPermissionDb).
+	// Acá quedan replicadas en el fallback offline (VITE_WIFI=sin).
+	{
+		id: 12,
+		name: 'Asistente IA',
+		link: 'assistant',
+		icon: 'HiSparkles',
+		level: 1,
+		group_menu: 8,
+		sub_menu: null,
+		status: true,
+		order: 13,
+		createdAt: '2026-04-27T00:00:00.000Z',
+		updatedAt: '2026-04-27T00:00:00.000Z',
+	},
+	{
+		id: 13,
+		name: 'Documentos IA',
+		link: 'assistant/docs',
+		icon: 'FaFile',
+		level: 2,
+		group_menu: 8,
+		sub_menu: 12,
+		status: true,
+		order: 14,
+		createdAt: '2026-04-27T00:00:00.000Z',
+		updatedAt: '2026-04-27T00:00:00.000Z',
+	},
 ]
