@@ -260,6 +260,7 @@ const Home = ({ targetUserId = null }) => {
                             influxVar: influx?.InfluxVars ?? null,
                             id_bit:  influx?.id_bit          ?? null,
                             varId:   influx?.InfluxVars?.id  ?? null,
+                            isCalcBinary: influx?.InfluxVars?.calc_binary_compressed ?? false,
                         }
                     })
 
@@ -504,7 +505,7 @@ const Home = ({ targetUserId = null }) => {
                         layouts={layouts}
                         breakpoints={BREAKPOINTS}
                         cols={COLS}
-                        rowHeight={95}
+                        rowHeight={50}
                         margin={[5, 5]}
                         isDraggable={editMode}
                         isResizable={editMode}
