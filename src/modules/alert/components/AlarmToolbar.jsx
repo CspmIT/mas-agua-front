@@ -67,7 +67,7 @@ const AlarmToolbar = ({ stats, filter, onFilterChange, search, onSearchChange, l
 
 			<div className='flex flex-col sm:flex-row sm:items-center gap-2'>
 				<div
-					className='inline-flex items-center gap-0.5 p-1 rounded-full self-start'
+					className='flex w-full sm:inline-flex sm:w-auto items-center gap-0.5 p-1 rounded-full self-stretch sm:self-start'
 					style={{
 						backgroundColor: '#ffffff',
 						boxShadow: '0 1px 2px rgba(15,42,68,0.05)',
@@ -82,23 +82,23 @@ const AlarmToolbar = ({ stats, filter, onFilterChange, search, onSearchChange, l
 								type='button'
 								onClick={() => onFilterChange(key)}
 								className={[
-									'inline-flex items-center gap-1.5 rounded-full text-[12.5px] font-medium transition-colors duration-150 select-none',
+									'inline-flex items-center justify-center gap-1.5 rounded-full text-[12.5px] font-medium transition-colors duration-150 select-none',
+									'flex-1 sm:flex-none min-w-0 px-2 py-1.5 sm:px-3',
 									active ? 'text-[#1f4e79]' : 'text-slate-500 hover:text-slate-800',
 								].join(' ')}
 								style={
 									active
 										? {
-												padding: '6px 12px',
 												background:
 													'linear-gradient(180deg, rgba(54,139,237,0.18) 0%, rgba(54,139,237,0.08) 100%)',
 												border: '1px solid rgba(54,139,237,0.22)',
 												boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.55)',
 										  }
-										: { padding: '6px 12px', border: 'none', background: 'transparent' }
+										: { border: 'none', background: 'transparent' }
 								}
 							>
-								<Icon size={13} />
-								<span>{label}</span>
+								<Icon size={13} className='shrink-0' />
+								<span className='truncate'>{label}</span>
 								<span
 									className='ml-0.5 tabular-nums text-[10.5px] font-semibold rounded-full px-2 py-[1px]'
 									style={

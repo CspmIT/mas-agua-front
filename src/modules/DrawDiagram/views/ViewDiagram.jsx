@@ -60,6 +60,7 @@ function ViewDiagram() {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const [scale, setScale] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [circles, setCircles] = useState([]);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -296,9 +297,28 @@ function ViewDiagram() {
     const maxY = Math.max(...elementsParam.map(el => (el.y + (el.height || 0))));
     const diagramWidth = maxX - minX;
     const diagramHeight = maxY - minY;
+    if (diagramWidth === 0 || diagramHeight === 0) return;
     const padding = 32;
     const availableWidth = dimensions.width - padding * 2;
     const availableHeight = dimensions.height - padding * 2;
+
+    // Si el diagrama es horizontal pero el contenedor es vertical (mobile),
+    // lo rotamos 90° para aprovechar el alto de la pantalla.
+    const diagramIsLandscape = diagramWidth >= diagramHeight;
+    const containerIsPortrait = dimensions.height > dimensions.width;
+    const shouldRotate = diagramIsLandscape && containerIsPortrait;
+    setRotation(shouldRotate ? 90 : 0);
+
+    if (shouldRotate) {
+      // Rotado 90°: el ancho del diagrama ocupa el alto del contenedor y viceversa.
+      const newScale = Math.min(availableWidth / diagramHeight, availableHeight / diagramWidth);
+      setScale(newScale);
+      setPosition({
+        x: dimensions.width / 2 + (newScale * (minY + maxY)) / 2,
+        y: dimensions.height / 2 - (newScale * (minX + maxX)) / 2,
+      });
+      return;
+    }
 
     const newScale = Math.min(availableWidth / diagramWidth, availableHeight / diagramHeight);
     const offsetX = (dimensions.width - diagramWidth * newScale) / 2;
@@ -437,6 +457,7 @@ function ViewDiagram() {
                   height={dimensions.height}
                   scaleX={scale}
                   scaleY={scale}
+                  rotation={rotation}
                   x={position.x}
                   y={position.y}
                   ref={stageRef}
