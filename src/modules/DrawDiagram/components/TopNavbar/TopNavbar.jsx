@@ -1,115 +1,124 @@
 import React from 'react';
-import { PiBroomBold } from "react-icons/pi";
-import { FaSave } from "react-icons/fa";
-import { IoArrowUndo, IoCaretBackOutline } from "react-icons/io5";
-import { MdOutlineMoveDown, MdOutlineMoveUp } from "react-icons/md";
+import { Box, Divider, IconButton, Tooltip } from '@mui/material';
+import { PiBroomBold } from 'react-icons/pi';
+import { FaSave } from 'react-icons/fa';
+import { IoArrowUndo, IoCaretBackOutline } from 'react-icons/io5';
+import { MdOutlineMoveDown, MdOutlineMoveUp } from 'react-icons/md';
+import { IoMdMove } from 'react-icons/io';
+import { LuZoomIn, LuZoomOut } from 'react-icons/lu';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { IoMdMove } from "react-icons/io";
+import {
+  iconButtonDangerSx,
+  iconButtonOnDarkSx,
+  iconButtonOnDarkToggledSx,
+  iconButtonSaveSx,
+  navbarShellSx,
+  toolbarDividerOnDarkSx,
+} from '../../utils/js/diagramTheme';
 
+const TopNavbar = ({
+  onClear,
+  onSaveDiagram,
+  onUndo,
+  elements = [],
+  selectedId,
+  onSendToBack,
+  onBringToFront,
+  onZoomIn,
+  onZoomOut,
+  isPanning,
+  setIsPanning,
+}) => {
+  const navigate = useNavigate();
 
-const TopNavbar = ({ 
-    onClear, 
-    onSaveDiagram, 
-    onUndo, 
-    elements = [],
-    selectedId,
-    onSendToBack,
-    onBringToFront,
-    onZoomIn,      
-    onZoomOut,
-    isPanning,
-    setIsPanning,
-    }) => {
-    const navigate = useNavigate()
+  const listDiagram = async () => {
+    if (elements.length > 0) {
+      const result = await Swal.fire({
+        title: '¿Deseás salir?',
+        text: 'Hay elementos en el lienzo. Si salís podrías perder cambios.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, salir',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+      });
 
-    const listDiagram = async () => {
-        if (elements.length > 0) {
-            const result = await Swal.fire({
-                title: '¿Deseás salir?',
-                text: 'Hay elementos en el lienzo. Si salís podrías perder cambios.',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, salir',
-                cancelButtonText: 'Cancelar',
-                confirmButtonColor: '#d33',
-                cancelButtonColor: '#3085d6',
-            });
+      if (!result.isConfirmed) return;
+    }
 
-            if (!result.isConfirmed) return;
-        }
+    navigate('/config/diagram');
+  };
 
-        navigate(`/config/diagram`);
-    };
-    
-    return (
-        <div className="w-full flex-1 bg-slate-400 rounded-t-lg">
-            <div className="flex items-center justify-between px-4 py-2">
-                <div className="flex items-center gap-2 ps-16">
-                    <button
-                        onClick={onSaveDiagram}
-                        className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-800 rounded text-sm text-white"
-                    >
-                        <FaSave className="text-lg" />
-                        Guardar
-                    </button>
-                    <button
-                        onClick={onClear}
-                        className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-800 rounded text-sm text-white"
-                    >
-                        <PiBroomBold className="text-lg" />
-                        Limpiar
-                    </button>
-                    <button
-                        onClick={onUndo}
-                        className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-800 rounded text-sm text-white"
-                    >
-                        <IoArrowUndo className="text-lg" />
-                        Deshacer
-                    </button>                  
+  return (
+    <Box sx={navbarShellSx} className='w-full'>
+      <div className='flex items-center justify-between px-3 py-2 gap-2 flex-wrap'>
+        <div className='flex items-center gap-1.5 flex-wrap'>
+          <Tooltip title='Guardar diagrama'>
+            <IconButton onClick={onSaveDiagram} sx={iconButtonSaveSx}>
+              <FaSave size={16} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title='Limpiar lienzo'>
+            <IconButton onClick={onClear} sx={iconButtonDangerSx}>
+              <PiBroomBold size={18} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title='Deshacer'>
+            <IconButton onClick={onUndo} sx={iconButtonOnDarkSx}>
+              <IoArrowUndo size={18} />
+            </IconButton>
+          </Tooltip>
 
-                    <button
-                        onClick={() => setIsPanning((prev) => !prev)}
-                        title="Mover diagrama"
-                        className={`flex items-center gap-2 px-3 py-2 rounded text-sm text-white ${isPanning ? 'bg-blue-700' : 'bg-slate-600 hover:bg-slate-800'}`}
-                        >
-                        <IoMdMove className="text-lg" />
-                    </button>
+          <Divider orientation='vertical' flexItem sx={toolbarDividerOnDarkSx} />
 
-                    {selectedId && (
-                        <>
-                            <button
-                            onClick={onSendToBack}
-                            title="Mover al fondo"
-                            className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-800 rounded text-sm text-white"
-                            >
-                            <MdOutlineMoveDown className="text-lg" />
-                            </button>
-                            <button
-                            onClick={onBringToFront}
-                            title="Mover al frente"
-                            className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-800 rounded text-sm text-white"
-                            >
-                            <MdOutlineMoveUp className="text-lg" />
-                            </button>
-                        </>
-                        )}
-                </div>
+          <Tooltip title='Acercar'>
+            <IconButton onClick={onZoomIn} sx={iconButtonOnDarkSx}>
+              <LuZoomIn size={18} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title='Alejar'>
+            <IconButton onClick={onZoomOut} sx={iconButtonOnDarkSx}>
+              <LuZoomOut size={18} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title={isPanning ? 'Modo mover activo' : 'Mover diagrama'}>
+            <IconButton
+              onClick={() => setIsPanning((prev) => !prev)}
+              sx={isPanning ? iconButtonOnDarkToggledSx : iconButtonOnDarkSx}
+            >
+              <IoMdMove size={18} />
+            </IconButton>
+          </Tooltip>
 
-                <div className="flex items-center gap-4">
-                    <button
-                        title="Volver al listado"
-                        onClick={listDiagram}
-                        className="flex items-center gap-2 px-3 py-2 bg-slate-600 hover:bg-slate-800 rounded text-sm text-white"
-                    >
-                        <IoCaretBackOutline className="text-lg" />
-                       
-                    </button>
-                </div>
-            </div>
+          {selectedId && (
+            <>
+              <Divider orientation='vertical' flexItem sx={toolbarDividerOnDarkSx} />
+              <Tooltip title='Enviar al fondo'>
+                <IconButton onClick={onSendToBack} sx={iconButtonOnDarkSx}>
+                  <MdOutlineMoveDown size={18} />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title='Traer al frente'>
+                <IconButton onClick={onBringToFront} sx={iconButtonOnDarkSx}>
+                  <MdOutlineMoveUp size={18} />
+                </IconButton>
+              </Tooltip>
+            </>
+          )}
         </div>
 
-    );
+        <div className='flex items-center gap-1.5'>
+          <Tooltip title='Volver al listado'>
+            <IconButton onClick={listDiagram} sx={iconButtonOnDarkSx}>
+              <IoCaretBackOutline size={18} />
+            </IconButton>
+          </Tooltip>
+        </div>
+      </div>
+    </Box>
+  );
 };
 
 export default TopNavbar;

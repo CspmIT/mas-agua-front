@@ -3,7 +3,6 @@ import ChartsDashboard from '../modules/dashBoard/views/ChartsDashboard'
 import TabDinamic from '../modules/tabs/views'
 import ConfigSecurity from '../modules/configSecurity/views'
 import ConfigMenu from '../modules/ConfigMenu/view'
-import Notification from '../modules/Notification'
 import Profile from '../modules/profile/views'
 import Notifications from '../modules/ConfigNotifications/views/index'
 import ListDrawDiagram from '../modules/DrawDiagram/views/ListDrawDiagram'
@@ -18,8 +17,8 @@ import ConfigGraphic from '../modules/Charts/views/ConfigGraphic'
 import ChartsTable from '../modules/Charts/views/ChartsTable'
 import ConfigMultipleBooleanChart from '../modules/Charts/views/ConfigMultipleBooleanChart'
 import ConfigBoardChart from '../modules/Charts/views/ConfigBoardChart'
-import MapView from '../modules/Map/Views/MapView'
-import Maps from '../modules/Map/Views/Maps'
+import MapView from '../modules/MapDashboard/Views/MapView'
+import Maps from '../modules/MapDashboard/Views/Maps'
 import Vars from '../modules/ConfigVars/views/Vars'
 import ProfilePLC from '../modules/ProfilePLC/views/ProfilePLC'
 import Alert from '../modules/alert/views'
@@ -28,6 +27,9 @@ import ExternalUser from '../modules/ExternalUsers/views/index'
 import PumpsTable from '../modules/PumpsTable/views/index'
 import Boards from '../modules/Boards/views'
 import AdminDashboardPage from '../modules/home/components/AdminDashboardPage'
+import AssistantPage from '../modules/Assistant/views/AssistantPage'
+import AssistantDocsPage from '../modules/Assistant/views/AssistantDocsPage'
+import PressureDashboard from '../modules/MapDashboard/Views/PressureDashboard'
 
 export const userRoutes = [
 	{ path: '/', element: <Home /> },
@@ -37,7 +39,6 @@ export const userRoutes = [
 	{ path: '/tabs', element: <TabDinamic /> },
 	{ path: '/config/security', element: <ConfigSecurity /> },
 	{ path: '/config/accesses', element: <ConfigMenu /> },
-	{ path: '/notificaciones', element: <Notification /> },
 	{ path: '/profile', element: <Profile /> },
 	{ path: '/config/notifications', element: <Notifications /> },
 	{ path: '/config/diagram', element: <ListDrawDiagram /> },
@@ -58,7 +59,7 @@ export const userRoutes = [
 	{ path: '/config/graphic/multipleBoolean/:id', element: <ConfigMultipleBooleanChart /> },
 	{ path: '/config/graphic/board', element: <ConfigBoardChart /> },
 	{ path: '/config/graphic/board/:id', element: <ConfigBoardChart /> },
-	{ path: '/map', element: <MapView /> },
+	{ path: '/map', element: <PressureDashboard /> },
 	{ path: '/maps', element: <Maps /> },
 	{ path: '/map/create', element: <MapView create={true} /> },
 	{ path: '/map/edit', element: <MapView create={true} search={true} /> },
@@ -70,4 +71,7 @@ export const userRoutes = [
 	{ path: '/list/pumps', element: <PumpsTable /> },
 	{ path: '/boards', element: <Boards /> },
 	{ path: '/config/dashboard', element: <AdminDashboardPage />},
+	{ path: '/assistant', element: <AssistantPage /> },
+	{ path: '/assistant/docs', element: <AssistantDocsPage /> },
+	{ path: '/dashboard/pressure', element: <PressureDashboard /> },
 ]
