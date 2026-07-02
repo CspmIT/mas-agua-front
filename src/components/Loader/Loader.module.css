@@ -1,99 +1,78 @@
-.wrapper {
-  width: 200px;
-  height: 60px;
-  position: relative;
-  z-index: 1;
-}
-
-.circle {
-  width: 20px;
-  height: 20px;
-  position: absolute;
-  border-radius: 50%;
-  background-color: #54b4a9;
-  left: 15%;
-  transform-origin: 50%;
-  animation: circle7124 0.5s alternate infinite ease;
-}
-
-@keyframes circle7124 {
-  0% {
-    top: 60px;
-    height: 5px;
-    border-radius: 50px 50px 25px 25px;
-    transform: scaleX(1.7);
-  }
-
-  40% {
-    height: 20px;
-    border-radius: 50%;
-    transform: scaleX(1);
-  }
-
-  100% {
-    top: 0%;
-  }
-}
-
-.circle:nth-child(2) {
-  left: 45%;
-  animation-delay: 0.2s;
-  background-color: #243e90;
-}
-
-.circle:nth-child(3) {
-  left: auto;
-  right: 15%;
-  background-color: #ec871f;
-  animation-delay: 0.3s;
-}
-
-.shadow {
-  width: 20px;
-  height: 4px;
-  border-radius: 50%;
-  background-color: rgba(0, 0, 0, 0.9);
-  position: absolute;
-  top: 62px;
-  transform-origin: 50%;
-  z-index: -1;
-  left: 15%;
-  filter: blur(1px);
-  animation: shadow046 0.5s alternate infinite ease;
-}
-
-@keyframes shadow046 {
-  0% {
-    transform: scaleX(1.5);
-  }
-
-  40% {
-    transform: scaleX(1);
-    opacity: 0.7;
-  }
-
-  100% {
-    transform: scaleX(0.2);
-    opacity: 0.4;
-  }
-}
-
-.shadow:nth-child(4) {
-  left: 45%;
-  animation-delay: 0.2s;
-}
-
-.shadow:nth-child(5) {
-  left: auto;
-  right: 15%;
-  animation-delay: 0.3s;
-}
-
-.boxLoader {
-  height: 100px;
-}
 .container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 100%;
+}
+
+.logo {
+	width: 12rem;
+	height: auto;
+	animation: breathe 2.4s ease-in-out infinite;
+}
+
+@keyframes breathe {
+	0%,
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.55;
+		transform: scale(0.97);
+	}
+}
+
+/* Barra indeterminada con el degradé de la marca */
+.track {
+	position: relative;
+	width: 16rem;
+	height: 6px;
+	margin-top: 1.25rem;
+	border-radius: 999px;
+	background: rgba(36, 62, 144, 0.12);
+	overflow: hidden;
+}
+
+.bar {
+	position: absolute;
+	top: 0;
+	height: 100%;
+	width: 45%;
+	border-radius: 999px;
+	background: linear-gradient(90deg, #54b4a9, #243e90, #ec871f);
+	animation: slide 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes slide {
+	0% {
+		left: -45%;
+	}
+	100% {
+		left: 100%;
+	}
+}
+
+/* Anillo con gradiente cónico para el modo sin logo */
+.ring {
+	width: 3rem;
+	height: 3rem;
+	border-radius: 50%;
+	background: conic-gradient(
+		from 0deg,
+		transparent 0%,
+		#54b4a9 35%,
+		#243e90 70%,
+		#ec871f 100%
+	);
+	-webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+	mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px));
+	animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
 }

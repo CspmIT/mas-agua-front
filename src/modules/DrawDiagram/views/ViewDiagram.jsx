@@ -60,6 +60,7 @@ function ViewDiagram() {
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const [scale, setScale] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [circles, setCircles] = useState([]);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -296,9 +297,28 @@ function ViewDiagram() {
     const maxY = Math.max(...elementsParam.map(el => (el.y + (el.height || 0))));
     const diagramWidth = maxX - minX;
     const diagramHeight = maxY - minY;
+    if (diagramWidth === 0 || diagramHeight === 0) return;
     const padding = 32;
     const availableWidth = dimensions.width - padding * 2;
     const availableHeight = dimensions.height - padding * 2;
+
+    // Si el diagrama es horizontal pero el contenedor es vertical (mobile),
+    // lo rotamos 90° para aprovechar el alto de la pantalla.
+    const diagramIsLandscape = diagramWidth >= diagramHeight;
+    const containerIsPortrait = dimensions.height > dimensions.width;
+    const shouldRotate = diagramIsLandscape && containerIsPortrait;
+    setRotation(shouldRotate ? 90 : 0);
+
+    if (shouldRotate) {
+      // Rotado 90°: el ancho del diagrama ocupa el alto del contenedor y viceversa.
+      const newScale = Math.min(availableWidth / diagramHeight, availableHeight / diagramWidth);
+      setScale(newScale);
+      setPosition({
+        x: dimensions.width / 2 + (newScale * (minY + maxY)) / 2,
+        y: dimensions.height / 2 - (newScale * (minX + maxX)) / 2,
+      });
+      return;
+    }
 
     const newScale = Math.min(availableWidth / diagramWidth, availableHeight / diagramHeight);
     const offsetX = (dimensions.width - diagramWidth * newScale) / 2;
@@ -384,18 +404,18 @@ function ViewDiagram() {
     <div className='w-full h-[88vh] flex flex-col'>
       <div className='flex items-end justify-between gap-3'>
         <div
-          className='inline-flex items-center gap-2 text-white rounded-t-md shadow-md'
+          className='inline-flex items-center gap-2 text-white rounded-t-md shadow-md min-w-0'
           style={{
             padding: '4px 20px',
             background: darkPrimaryGradient,
             boxShadow: '0 4px 20px rgba(44, 106, 160, 0.3)',
           }}
         >
-          <span className='text-[9px] font-semibold uppercase tracking-[0.18em] text-white/75'>
+          <span className='hidden sm:inline text-[9px] font-semibold uppercase tracking-[0.18em] text-white/75'>
             Diagrama
           </span>
-          <span className='text-white/40'>·</span>
-          <span className='text-sm font-semibold text-white truncate max-w-[50vw]'>
+          <span className='hidden sm:inline text-white/40'>·</span>
+          <span className='text-sm font-semibold text-white truncate'>
             {diagramMetadata.title || 'Diagrama sin nombre'}
           </span>
         </div>
@@ -437,6 +457,7 @@ function ViewDiagram() {
                   height={dimensions.height}
                   scaleX={scale}
                   scaleY={scale}
+                  rotation={rotation}
                   x={position.x}
                   y={position.y}
                   ref={stageRef}

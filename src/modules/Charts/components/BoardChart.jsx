@@ -286,7 +286,7 @@ const BoardChart = memo(
         // espacio restante; Bombeo/Sala conservan su alto natural. Subir/bajar el offset
         // es el único dial: menos px = charts más grandes (con menos respiro abajo).
         return (
-            <div className='w-full h-[calc(100dvh-100px)] min-h-[420px] rounded-3xl border border-[#1f4e79]/8 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-[0_2px_8px_rgba(15,42,68,0.05),0_24px_56px_-30px_rgba(15,42,68,0.28)] overflow-hidden flex flex-col'>
+            <div className='w-full md:h-[calc(100dvh-100px)] min-h-[420px] rounded-3xl border border-[#1f4e79]/8 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-[0_2px_8px_rgba(15,42,68,0.05),0_24px_56px_-30px_rgba(15,42,68,0.28)] overflow-hidden flex flex-col'>
                 {/* HEADER */}
                 <div className='relative px-3.5 py-2.5 bg-gradient-to-br from-[#2c6aa0] to-[#1f4e79] overflow-hidden'>
                     {/* Textura de puntos sutil */}
@@ -307,13 +307,13 @@ const BoardChart = memo(
                     </div>
                 </div>
 
-                <div className='p-2.5 flex flex-col gap-2 flex-1 min-h-0'>
+                <div className='p-2.5 flex flex-col gap-2 md:flex-1 md:min-h-0'>
                     {/* TOP — gráficos (absorben el espacio vertical sobrante) */}
-                    <div className='flex flex-col md:flex-row gap-2 flex-1 min-h-0'>
+                    <div className='flex flex-col md:flex-row gap-2 md:flex-1 md:min-h-0'>
                         {[topLeftChart, topRightChart].map((chart, idx) => (
                             <div
                                 key={idx}
-                                className='flex-1 min-h-0 rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900/40 dark:to-slate-900/10 shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-1.5 flex items-center justify-center'
+                                className='h-[220px] md:h-auto md:flex-1 min-w-0 md:min-h-0 overflow-hidden rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900/40 dark:to-slate-900/10 shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-1.5 flex items-center justify-center'
                             >
                                 {renderTopChart(chart)}
                             </div>
