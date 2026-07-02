@@ -39,15 +39,29 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 					justifyContent: !isMobile && openSideBar ? 'initial' : 'center',
 					padding: !isMobile ? '1rem' : '0.2rem',
 					py: 1.2,
+					transition: 'background-color 180ms ease',
+					backgroundColor: hasActiveChild ? 'rgba(54, 139, 237, 0.08)' : 'transparent',
+					'&:hover': {
+						backgroundColor: hasActiveChild
+							? 'rgba(54, 139, 237, 0.12)'
+							: 'rgba(54, 139, 237, 0.05)',
+					},
 				}}
 			>
 				<ListItemIcon
 					className={`${!isMobile && openSideBar ? '!mr-3' : ''} ${
-						hasActiveChild ? ' !text-blue-500 dark:!text-blue-500' : ''
+						hasActiveChild
+							? ' !text-blue-500 dark:!text-blue-400'
+							: ' !text-slate-500 dark:!text-slate-400'
 					}`}
 					sx={{
 						minWidth: 0,
 						justifyContent: 'center',
+						transition: 'color 180ms ease, filter 180ms ease',
+						'& svg': { fontSize: 24 },
+						filter: hasActiveChild
+							? 'drop-shadow(0 2px 5px rgba(54, 139, 237, 0.35))'
+							: 'none',
 						...(isMobile && {
 							margin: -2,
 							minWidth: 'auto !important',
@@ -58,10 +72,13 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 				</ListItemIcon>
 				<ListItemText
 					sx={{
-						opacity: !isMobile && openSideBar ? 1 : 0,
-						display: isMobile ? 'none !important' : 'block',
+						display: !isMobile && openSideBar ? 'block' : 'none',
 					}}
-					className={`${hasActiveChild ? ' !text-blue-500 dark:!text-blue-500' : ''}`}
+					primaryTypographyProps={{
+						fontSize: '0.95rem',
+						fontWeight: hasActiveChild ? 600 : 500,
+					}}
+					className={`${hasActiveChild ? ' !text-blue-500 dark:!text-blue-400' : ''}`}
 					primary={item.name}
 				/>
 			</ListItemButton>
@@ -91,7 +108,7 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 										<ListItemIcon
 											sx={{
 												minWidth: 0,
-												'& svg': { fontSize: '1.5rem' },
+												'& svg': { fontSize: 20 },
 											}}
 											className={`${isActive ? '!text-blue-500 dark:!text-blue-400' : '!text-slate-500 dark:!text-slate-400'}`}
 										>
@@ -99,8 +116,8 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 										</ListItemIcon>
 										<ListItemText
 											primaryTypographyProps={{
-												fontSize: '1rem',
-												fontWeight: isActive ? 600 : 400,
+												fontSize: '0.9rem',
+												fontWeight: isActive ? 600 : 500,
 												sx: { lineHeight: 1.2 },
 											}}
 											className={`${isActive ? '!text-blue-500 dark:!text-blue-400' : ''}`}
@@ -164,6 +181,9 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 								'&::-webkit-scrollbar-track': { backgroundColor: 'transparent' },
 							}}
 						>
+							<div className='px-3 pt-2.5 pb-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#368bed]/90 dark:text-[#60a5fa]/90'>
+								{item.name}
+							</div>
 							<div className='p-1.5'>
 								{item.subMenus?.map((item2, index) => {
 									const isActive = buttonActive?.includes(item2.link)
@@ -175,13 +195,14 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 												handleClose()
 											}}
 											sx={{
-												gap: 1.5,
-												py: 1,
+												gap: 1.25,
+												py: 0.75,
 												px: 1.5,
 												my: 0.25,
 												borderRadius: '10px',
 												fontSize: '0.9rem',
 												fontWeight: isActive ? 600 : 500,
+												'& .submenu-icon svg': { fontSize: 20 },
 												color: isActive ? '#368bed' : 'inherit',
 												backgroundColor: isActive ? 'rgba(54, 139, 237, 0.10)' : 'transparent',
 												transition: 'background-color 150ms ease, color 150ms ease',
