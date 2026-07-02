@@ -59,7 +59,7 @@ const AlarmToolbar = ({ stats, filter, onFilterChange, search, onSearchChange, l
 				border: '1px solid rgba(15,42,68,0.4)',
 			}}
 		>
-			<div className='flex flex-col sm:flex-row gap-2 mb-2'>
+			<div className='hidden sm:flex gap-2 mb-2'>
 				<Kpi label='Total' value={stats.total} tone='default' />
 				<Kpi label='Nuevas' value={stats.unread} tone={stats.unread > 0 ? 'primary' : 'default'} />
 				<Kpi label='Última' value={lastAlarmLabel || '—'} tone='warning' />
