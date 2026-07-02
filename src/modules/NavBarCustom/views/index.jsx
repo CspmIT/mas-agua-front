@@ -225,24 +225,25 @@ function NavBarCustom({ setLoading }) {
 				sx={{
 					...(isMobile && {
 						position: 'fixed',
-						bottom: 0,
-						width: '100%',
-						height: 64,
+						bottom: 'calc(12px + env(safe-area-inset-bottom))',
+						left: 12,
+						right: 12,
+						width: 'auto',
+						height: 60,
 						zIndex: 1200,
 						'& .MuiDrawer-paper': {
 							position: 'absolute',
-							bottom: 0,
+							inset: 0,
 							width: '100%',
-							height: 64,
+							height: '100%',
 							display: 'flex',
 							flexDirection: 'row',
 							justifyContent: 'space-around',
 							padding: 0,
-							paddingBottom: 'env(safe-area-inset-bottom)',
-							borderRadius: '18px 18px 0 0',
+							borderRadius: '999px',
 							overflow: 'hidden',
-							boxShadow: '0 -8px 24px -12px rgba(15, 42, 68, 0.28)',
-							borderTop: '1px solid rgba(15, 42, 68, 0.06)',
+							border: '1px solid rgba(15, 42, 68, 0.06)',
+							boxShadow: 'none',
 						},
 					}),
 				}}
@@ -322,13 +323,16 @@ function NavBarCustom({ setLoading }) {
 													padding: !isMobile ? '1rem' : '0.2rem',
 													py: 1.2,
 													transition: 'background-color 180ms ease',
-													backgroundColor: isActive
-														? 'rgba(54, 139, 237, 0.08)'
-														: 'transparent',
+													backgroundColor:
+														!isMobile && isActive
+															? 'rgba(54, 139, 237, 0.08)'
+															: 'transparent',
 													'&:hover': {
-														backgroundColor: isActive
-															? 'rgba(54, 139, 237, 0.12)'
-															: 'rgba(54, 139, 237, 0.05)',
+														backgroundColor: !isMobile
+															? isActive
+																? 'rgba(54, 139, 237, 0.12)'
+																: 'rgba(54, 139, 237, 0.05)'
+															: 'transparent',
 													},
 													...(!isMobile &&
 														isActive && {
@@ -346,8 +350,8 @@ function NavBarCustom({ setLoading }) {
 															},
 														}),
 													...(isMobile && {
-														borderRadius: '10px',
-														mx: 0.5,
+														borderRadius: '999px',
+														mx: 0.75,
 													}),
 												}}
 												className={`!w-full ${item.link === '/Alert' && newEvent ? styles.backgroundAlert : ''
@@ -363,11 +367,8 @@ function NavBarCustom({ setLoading }) {
 														minWidth: 0,
 														justifyContent: 'center',
 														color: isActive ? '#368bed' : '#64748b',
-														transition: 'color 180ms ease, filter 180ms ease',
+														transition: 'color 180ms ease',
 														'& svg': { fontSize: 24 },
-														filter: isActive
-															? 'drop-shadow(0 2px 5px rgba(54, 139, 237, 0.35))'
-															: 'none',
 														'body.dark &': {
 															color: isActive ? '#60a5fa' : '#94a3b8',
 														},

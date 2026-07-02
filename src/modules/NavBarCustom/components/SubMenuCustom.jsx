@@ -40,11 +40,14 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 					padding: !isMobile ? '1rem' : '0.2rem',
 					py: 1.2,
 					transition: 'background-color 180ms ease',
-					backgroundColor: hasActiveChild ? 'rgba(54, 139, 237, 0.08)' : 'transparent',
+					backgroundColor:
+						!isMobile && hasActiveChild ? 'rgba(54, 139, 237, 0.08)' : 'transparent',
 					'&:hover': {
-						backgroundColor: hasActiveChild
-							? 'rgba(54, 139, 237, 0.12)'
-							: 'rgba(54, 139, 237, 0.05)',
+						backgroundColor: !isMobile
+							? hasActiveChild
+								? 'rgba(54, 139, 237, 0.12)'
+								: 'rgba(54, 139, 237, 0.05)'
+							: 'transparent',
 					},
 				}}
 			>
@@ -57,11 +60,8 @@ const SubMenuCustom = ({ item, openSideBar, activeButton, buttonActive }) => {
 					sx={{
 						minWidth: 0,
 						justifyContent: 'center',
-						transition: 'color 180ms ease, filter 180ms ease',
+						transition: 'color 180ms ease',
 						'& svg': { fontSize: 24 },
-						filter: hasActiveChild
-							? 'drop-shadow(0 2px 5px rgba(54, 139, 237, 0.35))'
-							: 'none',
 						...(isMobile && {
 							margin: -2,
 							minWidth: 'auto !important',

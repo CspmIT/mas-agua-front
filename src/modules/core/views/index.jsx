@@ -46,7 +46,7 @@ const MainContent = () => {
 					<LoaderComponent />
 				) : (
 					<>
-						<div className={`sm:pl-[4rem] pl-4 pr-4 sm:pr-2 pb-20 sm:pb-12 z-10 flex relative ${style.boxMain}`}>
+						<div className={`sm:pl-[4rem] pl-4 pr-4 sm:pr-2 pb-24 sm:pb-12 z-10 flex relative ${style.boxMain}`}>
 							<Outlet />
 						</div>
 						<Footer />
