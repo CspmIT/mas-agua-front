@@ -29,7 +29,7 @@ const relativeSamplingMap = {
   '-1y': '1h',  
 }
 
-const FiltersChart = ({ id_chart, setFilters }) => {
+const FiltersChart = ({ id_chart, setFilters, actions }) => {
   const [mode, setMode] = useState('relative')
   const [dateRange, setDateRange] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -189,13 +189,19 @@ const FiltersChart = ({ id_chart, setFilters }) => {
             )}
           </TextField>
 
-          <div className="flex gap-3 items-center justify-center">
+          <div className="flex gap-3 items-center justify-center flex-wrap">
             <Button size="small" variant="contained" color="primary" onClick={applyFilters}>
               Aplicar
             </Button>
             <Button size="small" variant="outlined" color="primary" onClick={clearFilters}>
               Limpiar
             </Button>
+            {actions && (
+              <>
+                <div className="h-6 w-px bg-slate-300" />
+                {actions}
+              </>
+            )}
           </div>
         </div>
       </CardCustom>
