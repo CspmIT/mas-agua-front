@@ -3,10 +3,10 @@ import EChart from './EChart'
 
 const TIMEZONE = 'America/Argentina/Buenos_Aires'
 
-const isEmptyValue = (v) =>
+export const isEmptyValue = (v) =>
   v === null || v === undefined || v === '-' || Number.isNaN(v)
 
-const formatMsToDateTime = (ms) => {
+export const formatMsToDateTime = (ms) => {
   if (!Number.isFinite(ms)) return '-'
   return new Date(ms).toLocaleString('es-AR', {
     timeZone: TIMEZONE,
