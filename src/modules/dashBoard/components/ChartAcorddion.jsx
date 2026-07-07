@@ -1,14 +1,24 @@
-import { ArrowDownward } from '@mui/icons-material'
+import { ArrowDownward, FileDownloadOutlined } from '@mui/icons-material'
 import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
   Box,
+  IconButton,
+  Menu,
+  MenuItem,
+  Tooltip,
 } from '@mui/material'
 import { useEffect, useRef, useState, useCallback } from 'react'
 import FiltersChart from '../../Charts/components/FiltersChart'
 import { ChartFactory } from './ChartFactory'
 import { chartQueryBuilderMap } from '../factories/chartQueryBuilderMap'
+import {
+  exportChartToCsv,
+  exportChartToMd,
+  exportChartToXlsx,
+  hasExportableData,
+} from '../utils/exportChartData'
 
 const accordionTitlePillSx = {
   display: 'inline-flex',
@@ -58,6 +68,7 @@ const ChartAccordion = ({ chart }) => {
   const [filters, setFilters] = useState({})
   const [chartData, setChartData] = useState(undefined)
   const [expanded, setExpanded] = useState(false)
+  const [exportAnchor, setExportAnchor] = useState(null)
 
   const zoomTimeoutRef = useRef(null)
 
@@ -82,6 +93,12 @@ const ChartAccordion = ({ chart }) => {
 
   const handleAccordionChange = (event, isExpanded) => {
     setExpanded(isExpanded)
+  }
+
+  const handleExport = (exportFn) => {
+    setExportAnchor(null)
+    if (!hasExportableData(chartData)) return
+    exportFn(chartData, chart.name)
   }
 
   //ZOOM: recalculamos filtros y re-consultamos
@@ -172,7 +189,46 @@ const ChartAccordion = ({ chart }) => {
 
       <AccordionDetails className="flex flex-col items-center justify-center gap-4 h-auto !rounded-2xl !border-transparent">
         {chart.type === 'LineChart' && (
-          <FiltersChart id_chart={chart.id} setFilters={setFilters} />
+          <>
+            <FiltersChart
+              id_chart={chart.id}
+              setFilters={setFilters}
+              actions={
+                <Tooltip title="Exportar datos">
+                  <span>
+                    <IconButton
+                      size="small"
+                      disabled={loader || !hasExportableData(chartData)}
+                      onClick={(e) => setExportAnchor(e.currentTarget)}
+                      sx={{
+                        color: '#2c6aa0',
+                        '&:hover': {
+                          backgroundColor: 'rgba(44, 106, 160, 0.08)',
+                        },
+                      }}
+                    >
+                      <FileDownloadOutlined />
+                    </IconButton>
+                  </span>
+                </Tooltip>
+              }
+            />
+            <Menu
+              anchorEl={exportAnchor}
+              open={Boolean(exportAnchor)}
+              onClose={() => setExportAnchor(null)}
+            >
+              <MenuItem onClick={() => handleExport(exportChartToXlsx)}>
+                Excel (.xlsx)
+              </MenuItem>
+              <MenuItem onClick={() => handleExport(exportChartToCsv)}>
+                CSV (.csv)
+              </MenuItem>
+              <MenuItem onClick={() => handleExport(exportChartToMd)}>
+                Markdown (.md)
+              </MenuItem>
+            </Menu>
+          </>
         )}
 
         <ChartFactory
