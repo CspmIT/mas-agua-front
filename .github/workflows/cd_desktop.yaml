@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'feat(menu): reordenamiento drag & drop y posicion al crear menus'
+                  releaseBody: 'feat(charts): exportación de datos de gráficos a Excel, CSV y Markdown'
                   prerelease: false
