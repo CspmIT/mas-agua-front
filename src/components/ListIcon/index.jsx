@@ -8,7 +8,8 @@ import {
     FaProjectDiagram,
     FaChartBar,
     FaMicrochip,
-    FaBell, 
+    FaBell,
+    FaWater,
 } from 'react-icons/fa'
 import { FaTable } from "react-icons/fa6";
 import { HiVariable, HiSparkles } from 'react-icons/hi2'
@@ -104,7 +105,12 @@ const ListIcon = () => [
         title: 'Asistente IA',
         name: 'HiSparkles',
         icon: <HiSparkles className=' text-3xl' />,
-    }
+    },
+    {
+        title: 'Simulación',
+        name: 'FaWater',
+        icon: <FaWater className=' text-3xl' />,
+    },
 ]
 
 export default ListIcon
