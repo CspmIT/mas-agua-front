@@ -4,9 +4,11 @@ import {
 	Checkbox,
 	FormControlLabel,
 	CircularProgress,
+	MenuItem,
+	TextField,
 } from '@mui/material'
 import { Save } from '@mui/icons-material'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { request } from '../../../../../utils/js/request'
 import { backend } from '../../../../../utils/routes/app.routes'
 import Swal from 'sweetalert2'
@@ -91,12 +93,22 @@ export default function MenuDialog({
 	menu,
 	parentMenu,
 	profiles,
+	menus = [],
 	mode = 'create',
 	onSaved,
 }) {
 	const [form, setForm] = useState(initialFormState)
 	const [selectedProfiles, setSelectedProfiles] = useState([])
+	const [position, setPosition] = useState('end')
 	const [loading, setLoading] = useState(false)
+
+	// Hermanos del menú a crear: raíces si es menú, hijos del padre si es submenú
+	const siblings = useMemo(() => {
+		const parentId = parentMenu ? parentMenu.id : null
+		return menus
+			.filter((m) => (m.sub_menu || null) === parentId)
+			.sort((a, b) => a.order - b.order)
+	}, [menus, parentMenu])
 
 	const titleMap = {
 		menu: { edit: 'Editar menú', create: 'Nuevo menú' },
@@ -160,6 +172,7 @@ export default function MenuDialog({
 	const resetForm = () => {
 		setForm(initialFormState)
 		setSelectedProfiles([])
+		setPosition('end')
 	}
 
 	const handleClose = () => {
@@ -176,10 +189,17 @@ export default function MenuDialog({
 		try {
 			setLoading(true)
 
+			const payload = { ...form, id: mode === 'edit' ? form.id : 0 }
+
+			if (mode === 'create' && position !== 'end') {
+				const target = siblings.find((s) => s.id === position)
+				if (target) payload.insert_before_order = target.order
+			}
+
 			const res = await request(
 				`${backend[import.meta.env.VITE_APP_NAME]}/saveMenu`,
 				'POST',
-				{ ...form, id: mode === 'edit' ? form.id : 0 }
+				payload
 			)
 
 			if (!res || res.error) throw new Error(res?.message || 'Error al guardar menú')
@@ -260,6 +280,30 @@ export default function MenuDialog({
 						hint='Link manual o seleccionable desde diagramas / mapas'
 					/>
 					<FormMenu value={form} onChange={setForm} />
+
+					{!isEdit && siblings.length > 0 && (
+						<TextField
+							label='Posición'
+							select
+							size='small'
+							fullWidth
+							value={position}
+							onChange={(e) => setPosition(e.target.value)}
+							helperText={
+								isSubmenu
+									? 'Dónde se ubica dentro de su menú'
+									: 'Dónde se ubica en la barra de navegación'
+							}
+							sx={{ mt: 2 }}
+						>
+							<MenuItem value='end'>Al final</MenuItem>
+							{siblings.map((s) => (
+								<MenuItem key={s.id} value={s.id}>
+									Antes de «{s.name}»
+								</MenuItem>
+							))}
+						</TextField>
+					)}
 				</Box>
 
 				{/* PERMISOS */}
