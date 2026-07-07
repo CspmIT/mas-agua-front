@@ -186,7 +186,7 @@ const NetworksList = () => {
     return (
         <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
             <PageHeader
-                title='Redes de distribución'
+                title='Simulador'
                 action={
                     <div className='flex flex-wrap gap-2 w-full justify-center sm:w-auto sm:justify-end'>
                         <Button
