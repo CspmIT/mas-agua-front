@@ -30,6 +30,9 @@ import AdminDashboardPage from '../modules/home/components/AdminDashboardPage'
 import AssistantPage from '../modules/Assistant/views/AssistantPage'
 import AssistantDocsPage from '../modules/Assistant/views/AssistantDocsPage'
 import PressureDashboard from '../modules/MapDashboard/Views/PressureDashboard'
+import Simulation from '../modules/Simulation/views'
+import InpSimulator from '../modules/Simulation/views/InpSimulator'
+import NetworkEditor from '../modules/Simulation/views/NetworkEditor'
 
 export const userRoutes = [
 	{ path: '/', element: <Home /> },
@@ -74,4 +77,8 @@ export const userRoutes = [
 	{ path: '/assistant', element: <AssistantPage /> },
 	{ path: '/assistant/docs', element: <AssistantDocsPage /> },
 	{ path: '/dashboard/pressure', element: <PressureDashboard /> },
+	{ path: '/simulation', element: <Simulation /> },
+	{ path: '/simulation/inp', element: <InpSimulator /> },
+	{ path: '/simulation/editor', element: <NetworkEditor /> },
+	{ path: '/simulation/editor/:id', element: <NetworkEditor /> },
 ]
