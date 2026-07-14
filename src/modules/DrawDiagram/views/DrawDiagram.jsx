@@ -10,6 +10,7 @@ import Sidebar from '../components/Sidebar/Sidebar';
 import DiagramCanvas from '../components/DiagramCanvas/DiagramCanvas';
 import PanelEditor from '../components/PanelEditor/PanelEditor';
 import LinkDiagramPanel from '../components/LinkDiagramPanel/LinkDiagramPanel';
+import SymbolSelector from '../components/SymbolSelector/SymbolSelector';
 import TopNavbar from '../components/TopNavbar/TopNavbar';
 import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -69,6 +70,7 @@ const DrawDiagram = () => {
   const [dragStartPos, setDragStartPos] = useState(null);
   const [showTooltipPositionPanel, setShowTooltipPositionPanel] = useState(false);
   const [panelRowForVariable, setPanelRowForVariable] = useState(null);
+  const [showSymbolSelector, setShowSymbolSelector] = useState(false);
 
   const {
     elements,
@@ -81,6 +83,48 @@ const DrawDiagram = () => {
     moveElementToBack,
     moveElementToFront
   } = useDiagramState();
+
+  //GUARDAR UN SIMBOLO CAPTURADO EN EL CATALOGO
+  const handleSymbolCaptured = async (capturedElements) => {
+    if (!capturedElements.length) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Sin elementos',
+        text: 'No hay elementos completos dentro del área marcada.',
+        confirmButtonColor: '#3085d6',
+      });
+      return;
+    }
+
+    const { value: name } = await Swal.fire({
+      title: 'Guardar símbolo',
+      input: 'text',
+      inputLabel: `${capturedElements.length} elemento(s) capturado(s). Nombre del símbolo:`,
+      showCancelButton: true,
+      confirmButtonText: 'Guardar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      inputValidator: (value) => (!value.trim() ? '¡Debes ingresar un nombre!' : null),
+    });
+    if (!name) return;
+
+    try {
+      await request(`${backend[import.meta.env.VITE_APP_NAME]}/saveDiagramSymbol`, 'POST', {
+        name,
+        elements: capturedElements,
+      });
+      Swal.fire({
+        icon: 'success',
+        title: 'Símbolo guardado',
+        text: 'Ya está disponible en el catálogo de símbolos.',
+        timer: 1800,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error('Error guardando el símbolo:', error);
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar el símbolo.' });
+    }
+  };
 
   const {
     lineStart,
@@ -97,8 +141,11 @@ const DrawDiagram = () => {
     setPolylinePoints,
     setIsDrawingPolyline,
     handleSelect,
-    handleTransformEnd
-  } = useDrawingTools({ 
+    handleTransformEnd,
+    captureRect,
+    setCaptureRect,
+    setSymbolCaptureStart
+  } = useDrawingTools({
     tool, setTool, 
     lineStyle, 
     elements, setElements, 
@@ -115,7 +162,8 @@ const DrawDiagram = () => {
     setEditingTextId,
     setTextStyle,
     setShowTextStyler,
-    setLineStyle
+    setLineStyle,
+    onSymbolCaptured: handleSymbolCaptured
   });
 
   const { handleShowTooltip, handleHideTooltip, handleChangeTooltipPosition, handleSetMaxValue, handleBooleanColorChange, handleSetBinaryBit } = useTooltipManager({ selectedId, elements, setElements });
@@ -225,6 +273,30 @@ const DrawDiagram = () => {
 
     setSelectedId(clone.id);
     return clone.id;
+  };
+
+  //INSERTAR UN SIMBOLO DEL CATALOGO EN EL CENTRO VISIBLE DEL CANVAS
+  const insertSymbol = (symbol) => {
+    const stage = stageRef.current;
+    const baseId = Date.now();
+    const baseX = (stage.width() / 2 - stagePosition.x) / stageScale;
+    const baseY = (stage.height() / 2 - stagePosition.y) / stageScale;
+
+    const newElements = (symbol.elements || []).map((el, index) => ({
+      ...structuredClone(el),
+      id: String(baseId + index),
+      x: baseX + (el.x || 0),
+      y: baseY + (el.y || 0),
+      draggable: true,
+    }));
+
+    if (!newElements.length) return;
+
+    setElements((prev) => [...prev, ...newElements]);
+    setNewElementsIds((prev) => [...prev, ...newElements.map((el) => el.id)]);
+    setCircles((prev) => [...prev, ...rebuildCircles(newElements)]);
+    setShowSymbolSelector(false);
+    setSelectedId(null);
   };
 
   //ACTUALIZAR UN PANEL DE INFORMACION DESDE SU EDITOR
@@ -498,6 +570,8 @@ const DrawDiagram = () => {
         setShowLineStyleSelector(false);
         setLineStart(null);
         setTool('');
+        setCaptureRect(null);
+        setSymbolCaptureStart(null);
         if (textPosition) {
           setTextPosition(null);
           setTextInput('');
@@ -665,6 +739,8 @@ const DrawDiagram = () => {
                 setTextInput={setTextInput}
                 handleDeleteElement={handleDeleteElement}
                 handleDuplicateElement={duplicateElement}
+                showSymbolSelector={showSymbolSelector}
+                setShowSymbolSelector={setShowSymbolSelector}
               />
               {/* Contenido principal (canvas + overlays) */}
               <Box sx={canvasAreaSx} className='flex-1 relative'>
@@ -760,6 +836,7 @@ const DrawDiagram = () => {
                   elements={elements}
                   circles={circles}
                   tempLine={tempLine}
+                  captureRect={captureRect}
                   dashOffset={dashOffset}
                   selectedId={selectedId}
                   stageRef={stageRef}
@@ -787,6 +864,25 @@ const DrawDiagram = () => {
                   dragStartPos={dragStartPos}
                   setDragStartPos={setDragStartPos}
                 />
+                {/* Selector de símbolos */}
+                {showSymbolSelector && (
+                  <SymbolSelector
+                    onInsert={insertSymbol}
+                    onClose={() => setShowSymbolSelector(false)}
+                  />
+                )}
+                {/* Ayuda para la captura de símbolos */}
+                {tool === 'captureSymbol' && (
+                  <div className='absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none'>
+                    <div className='flex items-center gap-4 rounded-full bg-slate-800/90 text-white text-xs px-4 py-2 shadow-lg whitespace-nowrap'>
+                      <span>Arrastrá un recuadro alrededor de los elementos del símbolo</span>
+                      <span>
+                        <kbd className='px-1.5 py-0.5 rounded bg-white/15 border border-white/25 font-semibold mr-1'>Esc</kbd>
+                        cancelar
+                      </span>
+                    </div>
+                  </div>
+                )}
                 {/* Ayuda de atajos para el dibujo de lineas y polilineas */}
                 {['simpleLine', 'polyline'].includes(tool) && (
                   <div className='absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none'>

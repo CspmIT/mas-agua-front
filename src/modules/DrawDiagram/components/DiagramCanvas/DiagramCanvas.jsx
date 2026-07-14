@@ -28,6 +28,7 @@ const DiagramCanvas = ({
   elements,
   circles,
   tempLine,
+  captureRect,
   dashOffset,
   selectedId,
   stageRef,
@@ -185,10 +186,12 @@ const DiagramCanvas = ({
           setStagePosition(newPos);
         }}
         style={{
-          cursor: isPanning ? 'grab' : ['simpleLine', 'polyline', 'panel'].includes(tool) ? 'crosshair' : 'default',
+          cursor: isPanning ? 'grab' : ['simpleLine', 'polyline', 'panel', 'captureSymbol'].includes(tool) ? 'crosshair' : 'default',
         }}
       >
         <Layer onDragMove={handleLayerDragMove} onDragEnd={handleLayerDragEnd}>
+          {/* Durante la captura de simbolo los elementos no reciben eventos */}
+          <Group listening={tool !== 'captureSymbol'}>
           {
             elements.map((el) => {
               if (el.type === 'line') {
@@ -747,6 +750,7 @@ const DiagramCanvas = ({
 
               return null;
             })}
+          </Group>
 
           {selectedId && (() => {
             // El tanque y el boton se pueden estirar libremente; el resto mantiene proporcion
@@ -829,6 +833,21 @@ const DiagramCanvas = ({
               lineCap='round'
               lineJoin='round'
               opacity={0.7}
+            />
+          )}
+
+          {/* Recuadro de captura de simbolo */}
+          {captureRect && (
+            <Rect
+              x={captureRect.x}
+              y={captureRect.y}
+              width={captureRect.width}
+              height={captureRect.height}
+              fill='rgba(54, 139, 237, 0.08)'
+              stroke='#368bed'
+              strokeWidth={1 / stageScale}
+              dash={[6, 4]}
+              listening={false}
             />
           )}
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Divider, IconButton, Tooltip } from '@mui/material';
 import { RiImageAddFill } from 'react-icons/ri';
 import { MdContentCopy, MdDelete, MdPolyline } from 'react-icons/md';
-import { LuCircleDot, LuDatabase, LuExternalLink, LuPanelTop } from 'react-icons/lu';
+import { LuBoxSelect, LuCircleDot, LuDatabase, LuExternalLink, LuPanelTop, LuShapes } from 'react-icons/lu';
 import { FaArrowRightLong } from 'react-icons/fa6';
 import { HiOutlineVariable } from 'react-icons/hi';
 import {
@@ -33,6 +33,8 @@ const Sidebar = ({
   setTextInput,
   handleDeleteElement,
   handleDuplicateElement,
+  showSymbolSelector,
+  setShowSymbolSelector,
 }) => {
   const toggleImage = () => {
     if (tool === 'imageSelector') {
@@ -197,6 +199,41 @@ const Sidebar = ({
       <Tooltip title='Agregar botón de navegación' placement='right'>
         <IconButton onClick={() => toggleWidget('linkButton')} sx={toolButtonSx(tool === 'linkButton')}>
           <LuExternalLink size={20} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Insertar símbolo del catálogo' placement='right'>
+        <IconButton
+          onClick={() => {
+            setShowSymbolSelector((prev) => !prev);
+            setShowImageSelector(false);
+            setShowLineStyleSelector(false);
+            setShowTextStyler(false);
+            setShowListField(false);
+          }}
+          sx={toolButtonSx(showSymbolSelector)}
+        >
+          <LuShapes size={20} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Guardar elementos como símbolo (marcá un área)' placement='right'>
+        <IconButton
+          onClick={() => {
+            if (tool === 'captureSymbol') {
+              setTool(null);
+            } else {
+              setTool('captureSymbol');
+              setShowSymbolSelector(false);
+              setShowImageSelector(false);
+              setShowLineStyleSelector(false);
+              setShowTextStyler(false);
+              setShowListField(false);
+            }
+          }}
+          sx={toolButtonSx(tool === 'captureSymbol')}
+        >
+          <LuBoxSelect size={20} />
         </IconButton>
       </Tooltip>
 
