@@ -123,6 +123,48 @@ const DrawDiagram = () => {
 
   const selectedElement = elements.find((el) => String(el.id) === String(selectedId));
 
+  const copiedElementIdRef = useRef(null);
+
+  //DUPLICAR UN ELEMENTO CON UN PEQUEÑO CORRIMIENTO
+  const duplicateElement = (id) => {
+    const source = elements.find((el) => String(el.id) === String(id));
+    if (!source) return null;
+
+    const clone = structuredClone(source);
+    clone.id = String(Date.now());
+    clone.x = (source.x || 0) + 20;
+    clone.y = (source.y || 0) + 20;
+
+    setElements((prev) => [...prev, clone]);
+    setNewElementsIds((prev) => [...prev, clone.id]);
+
+    // Circulos de edicion para lineas y polilineas
+    if (clone.type === 'line') {
+      const [x1, y1, x2, y2] = clone.points;
+      setCircles((prev) => [
+        ...prev,
+        { id: `${clone.id}-start`, x: clone.x + x1, y: clone.y + y1, lineId: clone.id, fill: 'blue', visible: false },
+        { id: `${clone.id}-end`, x: clone.x + x2, y: clone.y + y2, lineId: clone.id, fill: 'red', visible: false },
+      ]);
+    } else if (clone.type === 'polyline') {
+      const newCircles = [];
+      for (let i = 0; i < clone.points.length; i += 2) {
+        newCircles.push({
+          id: `${clone.id}-point-${i / 2}`,
+          x: clone.x + clone.points[i],
+          y: clone.y + clone.points[i + 1],
+          lineId: clone.id,
+          fill: i === 0 ? 'blue' : i === clone.points.length - 2 ? 'red' : 'green',
+          visible: false,
+        });
+      }
+      setCircles((prev) => [...prev, ...newCircles]);
+    }
+
+    setSelectedId(clone.id);
+    return clone.id;
+  };
+
   //ACTUALIZAR UN PANEL DE INFORMACION DESDE SU EDITOR
   const handlePanelChange = (updatedPanel) => {
     setElements((prev) =>
@@ -368,6 +410,12 @@ const DrawDiagram = () => {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Si el usuario esta escribiendo en un input, no disparar atajos del canvas
+      const isTyping =
+        e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'TEXTAREA' ||
+        e.target.isContentEditable;
+
       if (e.key === 'Escape') {
         setShowLineStyleSelector(false);
         setLineStart(null);
@@ -386,17 +434,34 @@ const DrawDiagram = () => {
       if (e.key === 'Enter' && isDrawingPolyline) {
         finishPolyline();
       }
-      if (e.key === 'Delete' && selectedId) {
+      if (e.key === 'Delete' && selectedId && !isTyping) {
         handleDeleteElement(selectedId);
         setTool('');
         setSelectedId(null);
         setShowLineStyleSelector(false);
         setShowTextStyler(false);
       }
+
+      // Copiar / pegar / duplicar elementos
+      if ((e.ctrlKey || e.metaKey) && !isTyping) {
+        const key = e.key.toLowerCase();
+        if (key === 'c' && selectedId) {
+          copiedElementIdRef.current = selectedId;
+        }
+        if (key === 'v' && copiedElementIdRef.current) {
+          // El pegado en cadena duplica desde la ultima copia para ir escalonando
+          const newId = duplicateElement(copiedElementIdRef.current);
+          if (newId) copiedElementIdRef.current = newId;
+        }
+        if (key === 'd' && selectedId) {
+          e.preventDefault();
+          duplicateElement(selectedId);
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedId, lineStart, textPosition, isDrawingPolyline, polylinePoints]);
+  }, [selectedId, lineStart, textPosition, isDrawingPolyline, polylinePoints, elements]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -511,6 +576,7 @@ const DrawDiagram = () => {
                 setTextPosition={setTextPosition}
                 setTextInput={setTextInput}
                 handleDeleteElement={handleDeleteElement}
+                handleDuplicateElement={duplicateElement}
               />
               {/* Contenido principal (canvas + overlays) */}
               <Box sx={canvasAreaSx} className='flex-1 relative'>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Divider, IconButton, Tooltip } from '@mui/material';
 import { RiImageAddFill } from 'react-icons/ri';
-import { MdDelete, MdPolyline } from 'react-icons/md';
+import { MdContentCopy, MdDelete, MdPolyline } from 'react-icons/md';
 import { LuPanelTop } from 'react-icons/lu';
 import { FaArrowRightLong } from 'react-icons/fa6';
 import { HiOutlineVariable } from 'react-icons/hi';
@@ -32,6 +32,7 @@ const Sidebar = ({
   setTextPosition,
   setTextInput,
   handleDeleteElement,
+  handleDuplicateElement,
 }) => {
   const toggleImage = () => {
     if (tool === 'imageSelector') {
@@ -192,6 +193,11 @@ const Sidebar = ({
           <Tooltip title='Asignar variable' placement='right'>
             <IconButton onClick={toggleFields} sx={toolButtonSx(tool === 'fields')}>
               <HiOutlineVariable size={20} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title='Duplicar elemento (Ctrl+C / Ctrl+V)' placement='right'>
+            <IconButton onClick={() => handleDuplicateElement(selectedId)} sx={toolButtonSx(false)}>
+              <MdContentCopy size={18} />
             </IconButton>
           </Tooltip>
           <Tooltip title='Borrar elemento' placement='right'>
