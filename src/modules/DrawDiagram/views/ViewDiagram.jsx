@@ -10,6 +10,7 @@ import PanelElement from '../components/PanelElement/PanelElement';
 import TankElement from '../components/WidgetElements/TankElement';
 import LedElement from '../components/WidgetElements/LedElement';
 import LinkButtonElement from '../components/WidgetElements/LinkButtonElement';
+import VariableHistoryPopup from '../components/VariableHistoryPopup/VariableHistoryPopup';
 import LoaderComponent from '../../../components/Loader';
 import CardCustom from '../../../components/CardCustom';
 import { LuZoomOut, LuZoomIn, LuArrowLeft, LuDownload } from 'react-icons/lu';
@@ -71,6 +72,7 @@ function ViewDiagram() {
   const usuario = storage.get('usuario');
   const containerRef = useRef(null);
   const location = useLocation();
+  const [historyPopup, setHistoryPopup] = useState(null);
 
   useEffect(() => { elementsRef.current = elements; }, [elements]);
 
@@ -453,6 +455,32 @@ function ViewDiagram() {
         );
       }
 
+      // Elementos con variable numerica: clic abre la historia reciente
+      const canShowHistory =
+        el.dataInflux?.id &&
+        el.type !== 'panel' &&
+        !el.dataInflux.binary_compressed &&
+        !el.dataInflux.calc_binary_compressed;
+
+      if (canShowHistory) {
+        return (
+          <Group
+            key={`frag-${el.id}`}
+            onClick={() => setHistoryPopup(el.dataInflux)}
+            onTap={() => setHistoryPopup(el.dataInflux)}
+            onMouseEnter={(e) => {
+              e.target.getStage().container().style.cursor = 'pointer';
+            }}
+            onMouseLeave={(e) => {
+              e.target.getStage().container().style.cursor = 'default';
+            }}
+          >
+            {elementRender}
+            {tooltip}
+          </Group>
+        );
+      }
+
       return (
         <React.Fragment key={`frag-${el.id}`}>
           {elementRender}
@@ -532,6 +560,13 @@ function ViewDiagram() {
                   </Tooltip>
                 )}
               </div>
+
+              {historyPopup && (
+                <VariableHistoryPopup
+                  dataInflux={historyPopup}
+                  onClose={() => setHistoryPopup(null)}
+                />
+              )}
 
               {dimensions.width > 0 && (
                 <Stage
