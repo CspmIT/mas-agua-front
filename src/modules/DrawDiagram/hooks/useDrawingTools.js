@@ -1,6 +1,21 @@
 import { useCallback, useState, useRef } from 'react';
 import { createDefaultPanel } from '../components/PanelElement/PanelElement';
 
+// Con Shift presionado, proyecta el punto sobre el angulo multiplo de 45° mas cercano
+const snapToAngle = (origin, pos, shiftKey) => {
+  if (!shiftKey || !origin) return pos;
+
+  const dx = pos.x - origin.x;
+  const dy = pos.y - origin.y;
+  const step = Math.PI / 4;
+  const angle = Math.round(Math.atan2(dy, dx) / step) * step;
+  const ux = Math.cos(angle);
+  const uy = Math.sin(angle);
+  const projection = dx * ux + dy * uy;
+
+  return { x: origin.x + ux * projection, y: origin.y + uy * projection };
+};
+
 export const useDrawingTools = ({
   tool,
   setTool,
@@ -175,18 +190,19 @@ export const useDrawingTools = ({
           strokeWidth: lineStyle.strokeWidth,
         });
       } else {
-        const isSamePoint = pos.x === lineStart.x && pos.y === lineStart.y;
+        const endPos = snapToAngle(lineStart, pos, e.evt?.shiftKey);
+        const isSamePoint = endPos.x === lineStart.x && endPos.y === lineStart.y;
         if (isSamePoint) return;
 
         const id = String(Date.now());
-        const x = Math.min(lineStart.x, pos.x);
-        const y = Math.min(lineStart.y, pos.y);
+        const x = Math.min(lineStart.x, endPos.x);
+        const y = Math.min(lineStart.y, endPos.y);
 
         const relativePoints = [
           lineStart.x - x,
           lineStart.y - y,
-          pos.x - x,
-          pos.y - y,
+          endPos.x - x,
+          endPos.y - y,
         ];
 
         const newLine = {
@@ -212,8 +228,8 @@ export const useDrawingTools = ({
           },
           {
             id: `${id}-end`,
-            x: pos.x,
-            y: pos.y,
+            x: endPos.x,
+            y: endPos.y,
             lineId: id,
             fill: 'red',
             visible: false,
@@ -246,7 +262,9 @@ export const useDrawingTools = ({
         });
       } else {
         setPolylinePoints((prev) => {
-          const updated = [...prev, pos.x, pos.y];
+          const origin = { x: prev[prev.length - 2], y: prev[prev.length - 1] };
+          const snapped = snapToAngle(origin, pos, e.evt?.shiftKey);
+          const updated = [...prev, snapped.x, snapped.y];
           setTempLine({
             points: updated,
             stroke: lineStyle.color,
@@ -290,15 +308,21 @@ export const useDrawingTools = ({
     if (!pos) return;
 
     if (tool === 'simpleLine' && lineStart) {
+      const snapped = snapToAngle(lineStart, pos, e.evt?.shiftKey);
       setTempLine({
-        points: [lineStart.x, lineStart.y, pos.x, pos.y],
+        points: [lineStart.x, lineStart.y, snapped.x, snapped.y],
         stroke: lineStyle.color,
         strokeWidth: lineStyle.strokeWidth,
       });
     }
 
     if (tool === 'polyline' && isDrawingPolyline && polylinePoints.length > 0) {
-      const updatedPoints = [...polylinePoints, pos.x, pos.y];
+      const origin = {
+        x: polylinePoints[polylinePoints.length - 2],
+        y: polylinePoints[polylinePoints.length - 1],
+      };
+      const snapped = snapToAngle(origin, pos, e.evt?.shiftKey);
+      const updatedPoints = [...polylinePoints, snapped.x, snapped.y];
       setTempLine({
         points: updatedPoints,
         stroke: lineStyle.color,

@@ -691,6 +691,27 @@ const DrawDiagram = () => {
                   dragStartPos={dragStartPos}
                   setDragStartPos={setDragStartPos}
                 />
+                {/* Ayuda de atajos para el dibujo de lineas y polilineas */}
+                {['simpleLine', 'polyline'].includes(tool) && (
+                  <div className='absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none'>
+                    <div className='flex items-center gap-4 rounded-full bg-slate-800/90 text-white text-xs px-4 py-2 shadow-lg whitespace-nowrap'>
+                      <span>
+                        <kbd className='px-1.5 py-0.5 rounded bg-white/15 border border-white/25 font-semibold mr-1'>Shift</kbd>
+                        tramo recto (90°/45°)
+                      </span>
+                      {tool === 'polyline' && (
+                        <span>
+                          <kbd className='px-1.5 py-0.5 rounded bg-white/15 border border-white/25 font-semibold mr-1'>Enter</kbd>
+                          o clic derecho: finalizar
+                        </span>
+                      )}
+                      <span>
+                        <kbd className='px-1.5 py-0.5 rounded bg-white/15 border border-white/25 font-semibold mr-1'>Esc</kbd>
+                        cancelar
+                      </span>
+                    </div>
+                  </div>
+                )}
                 {/* Editor de texto */}
                 <TextEditor
                   textPosition={textPosition}
