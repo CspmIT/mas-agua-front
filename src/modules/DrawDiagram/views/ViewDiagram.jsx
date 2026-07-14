@@ -7,6 +7,8 @@ import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
 import RenderImage from '../components/RenderImage/RenderImage';
 import PanelElement from '../components/PanelElement/PanelElement';
+import TankElement from '../components/WidgetElements/TankElement';
+import LedElement from '../components/WidgetElements/LedElement';
 import LoaderComponent from '../../../components/Loader';
 import CardCustom from '../../../components/CardCustom';
 import { LuZoomOut, LuZoomIn, LuArrowLeft } from 'react-icons/lu';
@@ -404,10 +406,17 @@ function ViewDiagram() {
         if (el.type === 'panel') {
           return <PanelElement key={el.id} el={el} />;
         }
+        if (el.type === 'tank') {
+          return <TankElement key={el.id} el={el} />;
+        }
+        if (el.type === 'led') {
+          return <LedElement key={el.id} el={el} />;
+        }
         return null;
       })();
 
-      const tooltip = el.dataInflux?.name ? renderTooltipLabel(el) : null;
+      // El tanque ya muestra su porcentaje adentro: no duplicar con el tooltip
+      const tooltip = el.dataInflux?.name && el.type !== 'tank' ? renderTooltipLabel(el) : null;
 
       return (
         <React.Fragment key={`frag-${el.id}`}>

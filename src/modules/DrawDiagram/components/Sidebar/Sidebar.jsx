@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Divider, IconButton, Tooltip } from '@mui/material';
 import { RiImageAddFill } from 'react-icons/ri';
 import { MdContentCopy, MdDelete, MdPolyline } from 'react-icons/md';
-import { LuPanelTop } from 'react-icons/lu';
+import { LuCircleDot, LuDatabase, LuPanelTop } from 'react-icons/lu';
 import { FaArrowRightLong } from 'react-icons/fa6';
 import { HiOutlineVariable } from 'react-icons/hi';
 import {
@@ -100,6 +100,18 @@ const Sidebar = ({
     }
   };
 
+  const toggleWidget = (widgetTool) => {
+    if (tool === widgetTool) {
+      setTool(null);
+    } else {
+      setTool(widgetTool);
+      setShowImageSelector(false);
+      setShowLineStyleSelector(false);
+      setShowTextStyler(false);
+      setShowListField(false);
+    }
+  };
+
   const toggleFloatingVariable = () => {
     if (tool === 'floatingVariable') {
       setTool(null);
@@ -167,6 +179,18 @@ const Sidebar = ({
       <Tooltip title='Agregar panel de información' placement='right'>
         <IconButton onClick={togglePanel} sx={toolButtonSx(tool === 'panel')}>
           <LuPanelTop size={20} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Agregar tanque de nivel' placement='right'>
+        <IconButton onClick={() => toggleWidget('tank')} sx={toolButtonSx(tool === 'tank')}>
+          <LuDatabase size={20} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Agregar LED de estado' placement='right'>
+        <IconButton onClick={() => toggleWidget('led')} sx={toolButtonSx(tool === 'led')}>
+          <LuCircleDot size={20} />
         </IconButton>
       </Tooltip>
 

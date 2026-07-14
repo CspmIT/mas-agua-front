@@ -2,6 +2,8 @@ import React, { Fragment, useMemo, useState } from 'react';
 import { Stage, Layer, Line, Text, Transformer, Circle, Group, Rect, Label, Tag } from 'react-konva';
 import ImageElement from '../ImageElement/ImageElement';
 import PanelElement from '../PanelElement/PanelElement';
+import TankElement from '../WidgetElements/TankElement';
+import LedElement from '../WidgetElements/LedElement';
 
 // Funcion para calcular puntos a la hora de hacer la polilinea
 const distToSegment = (p, v, w) => {
@@ -459,6 +461,73 @@ const DiagramCanvas = ({
               }
 
 
+              if (el.type === 'tank' || el.type === 'led') {
+                const WidgetComponent = el.type === 'tank' ? TankElement : LedElement;
+                const offset = 5;
+                let labelX = el.x + (el.width || 0) / 2;
+                let labelY = el.y + (el.height || 0) / 2;
+                let pointerDir = 'down';
+                switch (el.dataInflux?.position) {
+                  case 'Arriba':
+                    labelY = el.y - offset;
+                    pointerDir = 'down';
+                    break;
+                  case 'Abajo':
+                    labelY = el.y + (el.height || 0) + offset;
+                    pointerDir = 'up';
+                    break;
+                  case 'Izquierda':
+                    labelX = el.x - offset;
+                    pointerDir = 'right';
+                    break;
+                  case 'Derecha':
+                    labelX = el.x + (el.width || 0) + offset;
+                    pointerDir = 'left';
+                    break;
+                  default:
+                    break;
+                }
+
+                return (
+                  <Fragment key={el.id}>
+                    <WidgetComponent
+                      el={el}
+                      isSelected={String(selectedId) === String(el.id)}
+                      onSelect={(e) => {
+                        e.cancelBubble = true;
+                        handleSelect(e, String(el.id));
+                      }}
+                      onDragEnd={(e) => {
+                        const { x, y } = e.target.position();
+                        setElements((prev) =>
+                          prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
+                        );
+                      }}
+                      onTransformEnd={(e) => handleTransformEnd(el.id, e.target)}
+                    />
+                    {el.dataInflux && el.dataInflux.name && (
+                      <Label x={labelX} y={labelY} opacity={el.dataInflux.show ? 1 : 0.5}>
+                        <Tag
+                          fill="white"
+                          pointerDirection={pointerDir}
+                          pointerWidth={10}
+                          pointerHeight={10}
+                          lineJoin="round"
+                          cornerRadius={5}
+                        />
+                        <Text
+                          text={el.dataInflux.name}
+                          fontFamily="arial"
+                          fontSize={14}
+                          padding={8}
+                          fill="black"
+                        />
+                      </Label>
+                    )}
+                  </Fragment>
+                );
+              }
+
               if (el.type === 'panel') {
                 return (
                   <PanelElement
@@ -676,13 +745,22 @@ const DiagramCanvas = ({
               return null;
             })}
 
-          {selectedId && (
-            <Transformer
-              ref={transformerRef}
-              keepRatio={true}
-              enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
-            />
-          )}
+          {selectedId && (() => {
+            // El tanque se puede estirar libremente; el resto mantiene proporcion
+            const selectedEl = elements.find((el) => String(el.id) === String(selectedId));
+            const isTank = selectedEl?.type === 'tank';
+            return (
+              <Transformer
+                ref={transformerRef}
+                keepRatio={!isTank}
+                enabledAnchors={
+                  isTank
+                    ? ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right', 'top-center', 'bottom-center']
+                    : ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+                }
+              />
+            );
+          })()}
 
           {circles.map((circle) => (
             <Circle

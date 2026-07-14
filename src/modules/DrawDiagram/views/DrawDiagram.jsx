@@ -361,6 +361,7 @@ const DrawDiagram = () => {
       images: [],
       polylines: [],
       panels: [],
+      widgets: [],
     });
   };
 

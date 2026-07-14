@@ -48,7 +48,7 @@ const TooltipPositionPanel = ({
   onSetBooleanColors,
   onSetBinaryBit,
 }) => {
-  if (!selectedElement?.dataInflux || selectedElement.type !== 'image') return null;
+  if (!selectedElement?.dataInflux || !['image', 'tank', 'led'].includes(selectedElement.type)) return null;
 
   const isTooltipShow = selectedElement.dataInflux.show;
   const [localMaxValue, setLocalMaxValue] = useState(selectedElement.dataInflux.max_value_var || '');

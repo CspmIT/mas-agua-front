@@ -217,6 +217,45 @@ export const uploadCanvaDb = async (id, {
 			elements.push(panelElement);
 		}
 
+		// === WIDGETS (tanques, leds) ===
+		for (const widget of objectDiagram?.widgets || []) {
+			let dataInflux = null;
+			if (widget.variable?.varsInflux) {
+				dataInflux = {
+					id: widget.id_influxvars,
+					name: widget.variable.name,
+					unit: widget.variable.unit,
+					type: widget.variable.type,
+					calc: widget.variable.calc,
+					varsInflux: widget.variable.varsInflux,
+					equation: widget.variable.equation,
+					status: widget.variable.status,
+					binary_compressed: widget.variable.binary_compressed,
+					calc_binary_compressed: widget.variable.calc_binary_compressed,
+					id_bit: widget.id_bit,
+					bit_name: widget.bit?.name || null,
+					show: widget.show_var ?? true,
+					position: widget.position_var || 'Centro',
+					max_value_var: widget.max_value_var,
+					calculatePercentage: widget.max_value_var ? true : false,
+					boolean_colors: widget.boolean_colors || {},
+				};
+				influxVarsToRequest.push({ dataInflux: dataInflux });
+			}
+
+			elements.push({
+				id: `widget-${widget.id}`,
+				type: widget.type,
+				x: widget.left,
+				y: widget.top,
+				width: parseFloat(widget.width) || 0,
+				height: parseFloat(widget.height) || 0,
+				draggable: true,
+				config: widget.config || {},
+				dataInflux,
+			});
+		}
+
 		// === VALORES INFLUX ===
 		let finalElements = elements;
 
@@ -289,6 +328,7 @@ export const saveDiagramKonva = async ({
 			lines: [],
 			polylines: [],
 			panels: [],
+			widgets: [],
 			deleted,
 		};
 
@@ -375,6 +415,26 @@ export const saveDiagramKonva = async ({
 						colorText: el.fill,
 						backgroundText: '',
 						id_influxvars: el.dataInflux?.id || null,
+					});
+					break;
+
+				case 'tank':
+				case 'led':
+					saveObjects.widgets.push({
+						...(el.id ? { id: getNumericId(el.id) } : {}),
+						type: el.type,
+						left: el.x,
+						top: el.y,
+						width: el.width,
+						height: el.height,
+						id_influxvars: el.dataInflux?.id || null,
+						id_bit: el.dataInflux?.id_bit || null,
+						show_var: el.dataInflux?.show ?? true,
+						position_var: el.dataInflux?.position || 'Centro',
+						max_value_var: el.dataInflux?.max_value_var || null,
+						boolean_colors: el.dataInflux?.boolean_colors || null,
+						config: el.config || {},
+						status: 1,
 					});
 					break;
 
