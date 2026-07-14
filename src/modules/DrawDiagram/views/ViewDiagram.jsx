@@ -6,6 +6,7 @@ import { Box, Button, IconButton, Tooltip } from '@mui/material';
 import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
 import RenderImage from '../components/RenderImage/RenderImage';
+import PanelElement from '../components/PanelElement/PanelElement';
 import LoaderComponent from '../../../components/Loader';
 import CardCustom from '../../../components/CardCustom';
 import { LuZoomOut, LuZoomIn, LuArrowLeft } from 'react-icons/lu';
@@ -109,20 +110,41 @@ function ViewDiagram() {
   useEffect(() => {
     const updateInflux = async () => {
       const currentElements = elementsRef.current;
-      const influxPayload = currentElements
-        .filter(el => el.dataInflux)
-        .map(el => ({ id: el.dataInflux.id, dataInflux: el.dataInflux }));
+      const influxPayload = [];
+
+      currentElements.forEach(el => {
+        if (el.dataInflux) {
+          influxPayload.push({ id: el.dataInflux.id, dataInflux: el.dataInflux });
+        }
+        if (el.type === 'panel') {
+          el.rows?.forEach(row => {
+            if (row.dataInflux) {
+              influxPayload.push({ id: row.dataInflux.id, dataInflux: row.dataInflux });
+            }
+          });
+        }
+      });
       if (!influxPayload.length) return;
 
       try {
         const response = await request(`${backend['Mas Agua']}/multipleDataInflux`, 'POST', influxPayload);
         const result = response.data;
         setElements(prev =>
-          prev.map(el =>
-            el.dataInflux?.id && result[el.dataInflux.id] !== undefined
+          prev.map(el => {
+            if (el.type === 'panel') {
+              return {
+                ...el,
+                rows: el.rows.map(row =>
+                  row.dataInflux?.id && result[row.dataInflux.id] !== undefined
+                    ? { ...row, dataInflux: { ...row.dataInflux, value: result[row.dataInflux.id] } }
+                    : row
+                ),
+              };
+            }
+            return el.dataInflux?.id && result[el.dataInflux.id] !== undefined
               ? { ...el, dataInflux: { ...el.dataInflux, value: result[el.dataInflux.id] } }
-              : el
-          )
+              : el;
+          })
         );
       } catch (err) {
         console.error('Error actualizando datos desde Influx:', err);
@@ -378,6 +400,9 @@ function ViewDiagram() {
         }
         if (el.type === 'image') {
           return <RenderImage key={el.id} el={el} />;
+        }
+        if (el.type === 'panel') {
+          return <PanelElement key={el.id} el={el} />;
         }
         return null;
       })();

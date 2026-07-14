@@ -3,7 +3,7 @@ import { useState, useCallback } from 'react';
 export const useDiagramState = () => {
   const [elements, setElements] = useState([]);
   const [selectedId, setSelectedId] = useState(null);
-  const [deletedItems, setDeletedItems] = useState({ lines: [], texts: [], images: [], polylines: [] });
+  const [deletedItems, setDeletedItems] = useState({ lines: [], texts: [], images: [], polylines: [], panels: [] });
 
   //ELIMINAR ELEMENTO Y GUARDAR SU ID PARA PASARLO AL BACKEND
   const handleDeleteElement = useCallback((id) => {
@@ -12,7 +12,7 @@ export const useDiagramState = () => {
       const idStr = String(id);
       const numericId = parseInt(idStr.split('-').pop(), 10);
       if (!isNaN(numericId)) {
-        const typeKey = idStr.includes('text') ? 'texts' : idStr.includes('image') ? 'images' : idStr.includes('poly') ? 'polylines' : 'lines';
+        const typeKey = idStr.includes('text') ? 'texts' : idStr.includes('image') ? 'images' : idStr.includes('poly') ? 'polylines' : idStr.includes('panel') ? 'panels' : 'lines';
         setDeletedItems(prev => ({
           ...prev,
           [typeKey]: [...(prev[typeKey] || []), numericId]

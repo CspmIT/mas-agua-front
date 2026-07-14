@@ -1,4 +1,5 @@
 import { useCallback, useState, useRef } from 'react';
+import { createDefaultPanel } from '../components/PanelElement/PanelElement';
 
 export const useDrawingTools = ({
   tool,
@@ -85,6 +86,14 @@ export const useDrawingTools = ({
       setLineStart(null);
       setTempLine(null);
 
+    } else if (selectedElement?.type === 'panel') {
+      // En la fase del editor de paneles, aca se abre el PanelEditor
+      setTool(null);
+      setShowLineStyleSelector(false);
+      setShowTextStyler(false);
+      setLineStart(null);
+      setTempLine(null);
+
     } else if (selectedElement?.type === 'text') {
       setTool('text');
       setShowLineStyleSelector(false);
@@ -138,6 +147,16 @@ export const useDrawingTools = ({
       setTextPosition(pos);
       setTextInput('');
       setEditingTextId(null);
+      return;
+    }
+
+    // Panel de información
+    if (tool === 'panel' && clickedOnEmpty) {
+      const newPanel = createDefaultPanel(pos);
+      setElements((prev) => [...prev, newPanel]);
+      setNewElementsIds((prev) => [...prev, newPanel.id]);
+      setSelectedId(newPanel.id);
+      setTool(null);
       return;
     }
 

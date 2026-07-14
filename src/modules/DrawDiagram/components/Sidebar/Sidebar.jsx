@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Divider, IconButton, Tooltip } from '@mui/material';
 import { RiImageAddFill } from 'react-icons/ri';
 import { MdDelete, MdPolyline } from 'react-icons/md';
+import { LuPanelTop } from 'react-icons/lu';
 import { FaArrowRightLong } from 'react-icons/fa6';
 import { HiOutlineVariable } from 'react-icons/hi';
 import {
@@ -86,6 +87,18 @@ const Sidebar = ({
     }
   };
 
+  const togglePanel = () => {
+    if (tool === 'panel') {
+      setTool(null);
+    } else {
+      setTool('panel');
+      setShowImageSelector(false);
+      setShowLineStyleSelector(false);
+      setShowTextStyler(false);
+      setShowListField(false);
+    }
+  };
+
   const toggleFloatingVariable = () => {
     if (tool === 'floatingVariable') {
       setTool(null);
@@ -147,6 +160,12 @@ const Sidebar = ({
       <Tooltip title='Agregar polilínea' placement='right'>
         <IconButton onClick={togglePolyline} sx={toolButtonSx(tool === 'polyline')}>
           <MdPolyline size={20} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Agregar panel de información' placement='right'>
+        <IconButton onClick={togglePanel} sx={toolButtonSx(tool === 'panel')}>
+          <LuPanelTop size={20} />
         </IconButton>
       </Tooltip>
 

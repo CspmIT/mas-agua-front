@@ -1,6 +1,7 @@
 import Swal from 'sweetalert2'
 import { request, } from '../../../../utils/js/request'
 import { backend } from '../../../../utils/routes/app.routes'
+import { getPanelHeight } from '../../components/PanelElement/PanelElement';
 import { data } from 'autoprefixer';
 
 
@@ -170,6 +171,52 @@ export const uploadCanvaDb = async (id, {
 		}
 
 
+		// === PANELES DE INFORMACION ===
+		for (const panel of objectDiagram?.panels || []) {
+			let styles = panel.styles || {};
+			if (typeof styles === 'string') {
+				try { styles = JSON.parse(styles); } catch { styles = {}; }
+			}
+
+			const rows = (panel.rows || []).map((row, index) => {
+				let dataInflux = null;
+				if (row.kind === 'variable' && row.variable?.varsInflux) {
+					dataInflux = {
+						id: row.id_influxvars,
+						name: row.variable.name,
+						unit: row.variable.unit,
+						varsInflux: row.variable.varsInflux,
+						show: row.show_var ?? true,
+					};
+					influxVarsToRequest.push({ dataInflux: dataInflux });
+				}
+
+				return {
+					id: row.id ?? index + 1,
+					label: row.label || '',
+					kind: dataInflux ? 'variable' : 'static',
+					value: row.value || '',
+					dataInflux,
+				};
+			});
+
+			const panelElement = {
+				id: `panel-${panel.id}`,
+				type: 'panel',
+				x: panel.left,
+				y: panel.top,
+				width: parseFloat(panel.width) || 230,
+				title: panel.title || '',
+				styles,
+				rows,
+				draggable: true,
+			};
+
+			// height solo se usa para el auto-ajuste de la vista; el render la recalcula
+			panelElement.height = getPanelHeight(panelElement);
+			elements.push(panelElement);
+		}
+
 		// === VALORES INFLUX ===
 		let finalElements = elements;
 
@@ -182,6 +229,16 @@ export const uploadCanvaDb = async (id, {
 			const valuesResponse = response.data;
 
 			finalElements = elements.map((el) => {
+				if (el.type === 'panel') {
+					return {
+						...el,
+						rows: el.rows.map((row) =>
+							row.dataInflux && valuesResponse?.[row.dataInflux.id] !== undefined
+								? { ...row, dataInflux: { ...row.dataInflux, value: valuesResponse[row.dataInflux.id] } }
+								: row
+						),
+					};
+				}
 				if (el.dataInflux && valuesResponse?.[el.dataInflux.id] !== undefined) {
 					return {
 						...el,
@@ -231,6 +288,7 @@ export const saveDiagramKonva = async ({
 			texts: [],
 			lines: [],
 			polylines: [],
+			panels: [],
 			deleted,
 		};
 
@@ -317,6 +375,29 @@ export const saveDiagramKonva = async ({
 						colorText: el.fill,
 						backgroundText: '',
 						id_influxvars: el.dataInflux?.id || null,
+					});
+					break;
+
+				case 'panel':
+					saveObjects.panels.push({
+						...(el.id ? { id: getNumericId(el.id) } : {}),
+						title: el.title || '',
+						left: el.x,
+						top: el.y,
+						width: el.width,
+						styles: el.styles || {},
+						status: 1,
+						rows: (el.rows || []).map((row, index) => {
+							const isVariable = row.kind === 'variable' && row.dataInflux?.id;
+							return {
+								order: index,
+								label: row.label || '',
+								kind: isVariable ? 'variable' : 'static',
+								value: isVariable ? '' : (row.value ?? ''),
+								id_influxvars: isVariable ? row.dataInflux.id : null,
+								show_var: row.dataInflux?.show ?? true,
+							};
+						}),
 					});
 					break;
 

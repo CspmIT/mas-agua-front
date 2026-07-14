@@ -8,6 +8,7 @@ import TextStyler from '../components/TextStyler/TextStyler';
 import TextEditor from '../components/TextEditor/TextEditor';
 import Sidebar from '../components/Sidebar/Sidebar';
 import DiagramCanvas from '../components/DiagramCanvas/DiagramCanvas';
+import PanelEditor from '../components/PanelEditor/PanelEditor';
 import TopNavbar from '../components/TopNavbar/TopNavbar';
 import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -15,6 +16,8 @@ import { Box, Container } from '@mui/material';
 import LoaderComponent from '../../../components/Loader';
 import TooltipPositionPanel from '../components/TooltipPositionPanel/TooltipPositionPanel';
 import { useDrawingTools } from '../hooks/useDrawingTools';
+import { request } from '../../../utils/js/request';
+import { backend } from '../../../utils/routes/app.routes';
 import { useTooltipManager } from '../hooks/useTooltipManager';
 import { useDiagramState } from '../hooks/useDiagramState';
 import { useTextTools } from '../hooks/useTextTools';
@@ -64,6 +67,7 @@ const DrawDiagram = () => {
   const [isDraggingStage, setIsDraggingStage] = useState(false);
   const [dragStartPos, setDragStartPos] = useState(null);
   const [showTooltipPositionPanel, setShowTooltipPositionPanel] = useState(false);
+  const [panelRowForVariable, setPanelRowForVariable] = useState(null);
 
   const {
     elements,
@@ -117,6 +121,49 @@ const DrawDiagram = () => {
 
   const { saveText } = useTextTools({ elements, setElements, textStyle, setTextInput, setTextPosition, setEditingTextId, setNewElementsIds });
 
+  const selectedElement = elements.find((el) => String(el.id) === String(selectedId));
+
+  //ACTUALIZAR UN PANEL DE INFORMACION DESDE SU EDITOR
+  const handlePanelChange = (updatedPanel) => {
+    setElements((prev) =>
+      prev.map((el) => (String(el.id) === String(updatedPanel.id) ? updatedPanel : el))
+    );
+  };
+
+  //ABRIR EL SELECTOR DE VARIABLES PARA UNA FILA DEL PANEL
+  const handlePanelRowVariableRequest = (rowId) => {
+    setPanelRowForVariable(rowId);
+    setShowListField(true);
+  };
+
+  //BUSCAR EL VALOR ACTUAL DE LA VARIABLE RECIEN ASIGNADA A UNA FILA
+  const fetchPanelRowValue = async (panelId, rowId, dataInflux) => {
+    try {
+      const response = await request(
+        `${backend[import.meta.env.VITE_APP_NAME]}/multipleDataInflux`,
+        'POST',
+        [{ dataInflux }]
+      );
+      const value = response?.data?.[dataInflux.id];
+      if (value === undefined) return;
+
+      setElements((prev) =>
+        prev.map((el) =>
+          String(el.id) === String(panelId) && el.type === 'panel'
+            ? {
+              ...el,
+              rows: el.rows.map((r) =>
+                r.id === rowId ? { ...r, dataInflux: { ...r.dataInflux, value } } : r
+              ),
+            }
+            : el
+        )
+      );
+    } catch (error) {
+      console.error('Error obteniendo el valor de la variable:', error);
+    }
+  };
+
   const handleAssignVariable = (dataInflux) => {
     if (tool === 'floatingVariable') {
       const img = new window.Image();
@@ -146,6 +193,31 @@ const DrawDiagram = () => {
     }
 
     if (!selectedId) return;
+
+    // Paneles: la variable va a la fila que pidio la asignacion, no al elemento
+    if (selectedElement?.type === 'panel') {
+      if (panelRowForVariable == null) return;
+
+      const rowId = panelRowForVariable;
+      const rowDataInflux = { ...dataInflux, show: true };
+
+      setElements((prev) =>
+        prev.map((el) =>
+          String(el.id) === String(selectedElement.id)
+            ? {
+              ...el,
+              rows: el.rows.map((r) =>
+                r.id === rowId ? { ...r, kind: 'variable', dataInflux: rowDataInflux } : r
+              ),
+            }
+            : el
+        )
+      );
+      setPanelRowForVariable(null);
+      setShowListField(false);
+      fetchPanelRowValue(selectedElement.id, rowId, rowDataInflux);
+      return;
+    }
 
     setElements((prev) =>
       prev.map((el) =>
@@ -246,6 +318,7 @@ const DrawDiagram = () => {
       texts: [],
       images: [],
       polylines: [],
+      panels: [],
     });
   };
 
@@ -276,13 +349,22 @@ const DrawDiagram = () => {
   useEffect(() => {
     if (transformerRef.current && selectedId) {
       const stage = stageRef.current;
+      const selectedElement = elements.find((el) => String(el.id) === String(selectedId));
+
+      // Los paneles tienen alto calculado por sus filas: escalarlos los deformaria
+      if (selectedElement?.type === 'panel') {
+        transformerRef.current.nodes([]);
+        transformerRef.current.getLayer()?.batchDraw();
+        return;
+      }
+
       const selectedNode = stage.findOne(`#${selectedId}`);
       if (selectedNode) {
         transformerRef.current.nodes([selectedNode]);
         transformerRef.current.getLayer().batchDraw();
       }
     }
-  }, [selectedId]);
+  }, [selectedId, elements]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -484,9 +566,20 @@ const DrawDiagram = () => {
                   <div className='absolute left-2 top-2 z-20 max-w-md w-80'>
                     <ListField
                       onSelectVariable={handleAssignVariable}
-                      onClose={() => setShowListField(false)}
+                      onClose={() => {
+                        setShowListField(false);
+                        setPanelRowForVariable(null);
+                      }}
                     />
                   </div>
+                )}
+                {/* Editor de paneles de información */}
+                {selectedElement?.type === 'panel' && (
+                  <PanelEditor
+                    panel={selectedElement}
+                    onChange={handlePanelChange}
+                    onAssignVariableRequest={handlePanelRowVariableRequest}
+                  />
                 )}
                 {/* Panel posicion de variables */}
                 {showTooltipPositionPanel && (

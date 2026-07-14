@@ -1,6 +1,7 @@
 import React, { Fragment } from 'react';
 import { Stage, Layer, Line, Text, Transformer, Circle, Group, Rect, Label, Tag } from 'react-konva';
 import ImageElement from '../ImageElement/ImageElement';
+import PanelElement from '../PanelElement/PanelElement';
 
 // Funcion para calcular puntos a la hora de hacer la polilinea
 const distToSegment = (p, v, w) => {
@@ -110,7 +111,7 @@ const DiagramCanvas = ({
           setStagePosition(newPos);
         }}
         style={{
-          cursor: isPanning ? 'grab' : ['simpleLine', 'polyline'].includes(tool) ? 'crosshair' : 'default',
+          cursor: isPanning ? 'grab' : ['simpleLine', 'polyline', 'panel'].includes(tool) ? 'crosshair' : 'default',
         }}
       >
         <Layer>
@@ -388,6 +389,26 @@ const DiagramCanvas = ({
                 );
               }
 
+
+              if (el.type === 'panel') {
+                return (
+                  <PanelElement
+                    key={el.id}
+                    el={el}
+                    isSelected={String(selectedId) === String(el.id)}
+                    onSelect={(e) => {
+                      e.cancelBubble = true;
+                      handleSelect(e, String(el.id));
+                    }}
+                    onDragEnd={(e) => {
+                      const { x, y } = e.target.position();
+                      setElements((prev) =>
+                        prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
+                      );
+                    }}
+                  />
+                );
+              }
 
               if (el.type === 'polyline') {
                 return (
