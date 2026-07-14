@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Stage, Layer, Text, Line, Label, Tag, Group, Rect } from 'react-konva';
 import { uploadCanvaDb } from '../utils/js/drawActions';
 import { Box, Button, IconButton, Tooltip } from '@mui/material';
@@ -9,6 +9,7 @@ import RenderImage from '../components/RenderImage/RenderImage';
 import PanelElement from '../components/PanelElement/PanelElement';
 import TankElement from '../components/WidgetElements/TankElement';
 import LedElement from '../components/WidgetElements/LedElement';
+import LinkButtonElement from '../components/WidgetElements/LinkButtonElement';
 import LoaderComponent from '../../../components/Loader';
 import CardCustom from '../../../components/CardCustom';
 import { LuZoomOut, LuZoomIn, LuArrowLeft, LuDownload } from 'react-icons/lu';
@@ -69,6 +70,7 @@ function ViewDiagram() {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const usuario = storage.get('usuario');
   const containerRef = useRef(null);
+  const location = useLocation();
 
   useEffect(() => { elementsRef.current = elements; }, [elements]);
 
@@ -422,11 +424,34 @@ function ViewDiagram() {
         if (el.type === 'led') {
           return <LedElement key={el.id} el={el} />;
         }
+        if (el.type === 'linkButton') {
+          return <LinkButtonElement key={el.id} el={el} />;
+        }
         return null;
       })();
 
       // El tanque ya muestra su porcentaje adentro: no duplicar con el tooltip
       const tooltip = el.dataInflux?.name && el.type !== 'tank' ? renderTooltipLabel(el) : null;
+
+      // Elementos vinculados: clic navega al otro diagrama (drill-down)
+      if (el.linkDiagram) {
+        return (
+          <Group
+            key={`frag-${el.id}`}
+            onClick={() => navigate(`/viewDiagram/${el.linkDiagram}`, { state: { drill: true } })}
+            onTap={() => navigate(`/viewDiagram/${el.linkDiagram}`, { state: { drill: true } })}
+            onMouseEnter={(e) => {
+              e.target.getStage().container().style.cursor = 'pointer';
+            }}
+            onMouseLeave={(e) => {
+              e.target.getStage().container().style.cursor = 'default';
+            }}
+          >
+            {elementRender}
+            {tooltip}
+          </Group>
+        );
+      }
 
       return (
         <React.Fragment key={`frag-${el.id}`}>
@@ -441,7 +466,8 @@ function ViewDiagram() {
     if (elements.length && dimensions.width > 0) {
       autoFitDiagram(elements);
     }
-  }, [dimensions, autoFitDiagram]);
+    // "id" re-encuadra al navegar entre diagramas vinculados
+  }, [dimensions, autoFitDiagram, id, elements.length]);
 
 
   return (
@@ -498,6 +524,13 @@ function ViewDiagram() {
                     <LuDownload size={18} />
                   </IconButton>
                 </Tooltip>
+                {location.state?.drill && (
+                  <Tooltip title='Volver al diagrama anterior' placement='right'>
+                    <IconButton onClick={() => navigate(-1)} sx={darkIconBtnSx}>
+                      <LuArrowLeft size={18} />
+                    </IconButton>
+                  </Tooltip>
+                )}
               </div>
 
               {dimensions.width > 0 && (

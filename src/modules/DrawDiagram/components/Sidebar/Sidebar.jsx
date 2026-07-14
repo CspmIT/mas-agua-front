@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Divider, IconButton, Tooltip } from '@mui/material';
 import { RiImageAddFill } from 'react-icons/ri';
 import { MdContentCopy, MdDelete, MdPolyline } from 'react-icons/md';
-import { LuCircleDot, LuDatabase, LuPanelTop } from 'react-icons/lu';
+import { LuCircleDot, LuDatabase, LuExternalLink, LuPanelTop } from 'react-icons/lu';
 import { FaArrowRightLong } from 'react-icons/fa6';
 import { HiOutlineVariable } from 'react-icons/hi';
 import {
@@ -191,6 +191,12 @@ const Sidebar = ({
       <Tooltip title='Agregar LED de estado' placement='right'>
         <IconButton onClick={() => toggleWidget('led')} sx={toolButtonSx(tool === 'led')}>
           <LuCircleDot size={20} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Agregar botón de navegación' placement='right'>
+        <IconButton onClick={() => toggleWidget('linkButton')} sx={toolButtonSx(tool === 'linkButton')}>
+          <LuExternalLink size={20} />
         </IconButton>
       </Tooltip>
 

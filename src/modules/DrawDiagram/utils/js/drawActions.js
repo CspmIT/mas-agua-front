@@ -252,6 +252,7 @@ export const uploadCanvaDb = async (id, {
 				height: parseFloat(widget.height) || 0,
 				draggable: true,
 				config: widget.config || {},
+				linkDiagram: widget.id_link_diagram || null,
 				dataInflux,
 			});
 		}
@@ -420,9 +421,11 @@ export const saveDiagramKonva = async ({
 
 				case 'tank':
 				case 'led':
+				case 'linkButton':
 					saveObjects.widgets.push({
 						...(el.id ? { id: getNumericId(el.id) } : {}),
 						type: el.type,
+						id_link_diagram: el.linkDiagram || null,
 						left: el.x,
 						top: el.y,
 						width: el.width,

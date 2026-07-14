@@ -4,6 +4,9 @@ import ImageElement from '../ImageElement/ImageElement';
 import PanelElement from '../PanelElement/PanelElement';
 import TankElement from '../WidgetElements/TankElement';
 import LedElement from '../WidgetElements/LedElement';
+import LinkButtonElement from '../WidgetElements/LinkButtonElement';
+
+const WIDGET_COMPONENTS = { tank: TankElement, led: LedElement, linkButton: LinkButtonElement };
 
 // Funcion para calcular puntos a la hora de hacer la polilinea
 const distToSegment = (p, v, w) => {
@@ -461,8 +464,8 @@ const DiagramCanvas = ({
               }
 
 
-              if (el.type === 'tank' || el.type === 'led') {
-                const WidgetComponent = el.type === 'tank' ? TankElement : LedElement;
+              if (WIDGET_COMPONENTS[el.type]) {
+                const WidgetComponent = WIDGET_COMPONENTS[el.type];
                 const offset = 5;
                 let labelX = el.x + (el.width || 0) / 2;
                 let labelY = el.y + (el.height || 0) / 2;
@@ -746,9 +749,9 @@ const DiagramCanvas = ({
             })}
 
           {selectedId && (() => {
-            // El tanque se puede estirar libremente; el resto mantiene proporcion
+            // El tanque y el boton se pueden estirar libremente; el resto mantiene proporcion
             const selectedEl = elements.find((el) => String(el.id) === String(selectedId));
-            const isTank = selectedEl?.type === 'tank';
+            const isTank = ['tank', 'linkButton'].includes(selectedEl?.type);
             return (
               <Transformer
                 ref={transformerRef}

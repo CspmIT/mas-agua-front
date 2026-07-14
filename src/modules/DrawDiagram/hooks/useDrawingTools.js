@@ -2,6 +2,7 @@ import { useCallback, useState, useRef } from 'react';
 import { createDefaultPanel } from '../components/PanelElement/PanelElement';
 import { createDefaultTank } from '../components/WidgetElements/TankElement';
 import { createDefaultLed } from '../components/WidgetElements/LedElement';
+import { createDefaultLinkButton } from '../components/WidgetElements/LinkButtonElement';
 
 // Con Shift presionado, proyecta el punto sobre el angulo multiplo de 45° mas cercano
 const snapToAngle = (origin, pos, shiftKey) => {
@@ -177,9 +178,10 @@ export const useDrawingTools = ({
       return;
     }
 
-    // Widgets tanque y LED
-    if ((tool === 'tank' || tool === 'led') && clickedOnEmpty) {
-      const newWidget = tool === 'tank' ? createDefaultTank(pos) : createDefaultLed(pos);
+    // Widgets tanque, LED y botón de navegación
+    if (['tank', 'led', 'linkButton'].includes(tool) && clickedOnEmpty) {
+      const factories = { tank: createDefaultTank, led: createDefaultLed, linkButton: createDefaultLinkButton };
+      const newWidget = factories[tool](pos);
       setElements((prev) => [...prev, newWidget]);
       setNewElementsIds((prev) => [...prev, newWidget.id]);
       setSelectedId(newWidget.id);

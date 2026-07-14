@@ -9,6 +9,7 @@ import TextEditor from '../components/TextEditor/TextEditor';
 import Sidebar from '../components/Sidebar/Sidebar';
 import DiagramCanvas from '../components/DiagramCanvas/DiagramCanvas';
 import PanelEditor from '../components/PanelEditor/PanelEditor';
+import LinkDiagramPanel from '../components/LinkDiagramPanel/LinkDiagramPanel';
 import TopNavbar from '../components/TopNavbar/TopNavbar';
 import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -725,6 +726,14 @@ const DrawDiagram = () => {
                       }}
                     />
                   </div>
+                )}
+                {/* Editor del botón de navegación */}
+                {selectedElement?.type === 'linkButton' && (
+                  <LinkDiagramPanel
+                    button={selectedElement}
+                    currentDiagramId={diagramMetadata.id}
+                    onChange={handlePanelChange}
+                  />
                 )}
                 {/* Editor de paneles de información */}
                 {selectedElement?.type === 'panel' && (
