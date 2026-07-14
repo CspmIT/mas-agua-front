@@ -2,7 +2,8 @@ import React from 'react';
 import { Box, Divider, IconButton, Tooltip } from '@mui/material';
 import { PiBroomBold } from 'react-icons/pi';
 import { FaSave } from 'react-icons/fa';
-import { IoArrowUndo, IoCaretBackOutline } from 'react-icons/io5';
+import { IoArrowRedo, IoArrowUndo, IoCaretBackOutline } from 'react-icons/io5';
+import { LuDownload } from 'react-icons/lu';
 import { MdOutlineMoveDown, MdOutlineMoveUp } from 'react-icons/md';
 import { IoMdMove } from 'react-icons/io';
 import { LuZoomIn, LuZoomOut } from 'react-icons/lu';
@@ -21,6 +22,8 @@ const TopNavbar = ({
   onClear,
   onSaveDiagram,
   onUndo,
+  onRedo,
+  onExportPng,
   elements = [],
   selectedId,
   onSendToBack,
@@ -65,9 +68,19 @@ const TopNavbar = ({
               <PiBroomBold size={18} />
             </IconButton>
           </Tooltip>
-          <Tooltip title='Deshacer'>
+          <Tooltip title='Deshacer (Ctrl+Z)'>
             <IconButton onClick={onUndo} sx={iconButtonOnDarkSx}>
               <IoArrowUndo size={18} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title='Rehacer (Ctrl+Y)'>
+            <IconButton onClick={onRedo} sx={iconButtonOnDarkSx}>
+              <IoArrowRedo size={18} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title='Exportar como imagen PNG'>
+            <IconButton onClick={onExportPng} sx={iconButtonOnDarkSx}>
+              <LuDownload size={18} />
             </IconButton>
           </Tooltip>
 

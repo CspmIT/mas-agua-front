@@ -125,6 +125,67 @@ const DrawDiagram = () => {
 
   const copiedElementIdRef = useRef(null);
 
+  // ===== Historial para deshacer/rehacer =====
+  const historyRef = useRef({ stack: [], index: -1 });
+  const isRestoringRef = useRef(false);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (isRestoringRef.current) {
+      isRestoringRef.current = false;
+      return;
+    }
+
+    // Debounce: agrupa cambios rapidos (ej. arrastrar puntos) en un solo snapshot
+    const timer = setTimeout(() => {
+      const history = historyRef.current;
+      const snapshot = JSON.stringify(elements);
+      if (history.stack[history.index] === snapshot) return;
+
+      history.stack = history.stack.slice(0, history.index + 1);
+      history.stack.push(snapshot);
+      if (history.stack.length > 50) history.stack.shift();
+      history.index = history.stack.length - 1;
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [elements, isLoading]);
+
+  //RECONSTRUYE LOS CIRCULOS DE EDICION A PARTIR DE LOS ELEMENTOS
+  const rebuildCircles = (els) => {
+    const circles = [];
+    els.forEach((el) => {
+      if (el.type === 'line') {
+        const [x1, y1, x2, y2] = el.points;
+        circles.push({ id: `${el.id}-start`, x: el.x + x1, y: el.y + y1, lineId: el.id, fill: 'blue', visible: false });
+        circles.push({ id: `${el.id}-end`, x: el.x + x2, y: el.y + y2, lineId: el.id, fill: 'red', visible: false });
+      } else if (el.type === 'polyline') {
+        for (let i = 0; i < el.points.length; i += 2) {
+          circles.push({
+            id: `${el.id}-point-${i / 2}`,
+            x: el.x + el.points[i],
+            y: el.y + el.points[i + 1],
+            lineId: el.id,
+            fill: i === 0 ? 'blue' : i === el.points.length - 2 ? 'red' : 'green',
+            visible: false,
+          });
+        }
+      }
+    });
+    return circles;
+  };
+
+  const restoreSnapshot = (snapshot) => {
+    isRestoringRef.current = true;
+    const restored = JSON.parse(snapshot);
+    setElements(restored);
+    setCircles(rebuildCircles(restored));
+    setSelectedId(null);
+    setShowLineStyleSelector(false);
+    setShowTextStyler(false);
+    setShowTooltipPositionPanel(false);
+  };
+
   //DUPLICAR UN ELEMENTO CON UN PEQUEÑO CORRIMIENTO
   const duplicateElement = (id) => {
     const source = elements.find((el) => String(el.id) === String(id));
@@ -366,17 +427,32 @@ const DrawDiagram = () => {
   };
 
   const handleUndo = () => {
-    if (elements.length === 0) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Nada para deshacer',
-        text: 'No hay elementos en el diagrama.',
-        confirmButtonColor: '#3085d6',
-      });
-      return;
-    }
+    const history = historyRef.current;
+    if (history.index <= 0) return;
+    history.index -= 1;
+    restoreSnapshot(history.stack[history.index]);
+  };
 
-    setElements((prev) => prev.slice(0, -1));
+  const handleRedo = () => {
+    const history = historyRef.current;
+    if (history.index >= history.stack.length - 1) return;
+    history.index += 1;
+    restoreSnapshot(history.stack[history.index]);
+  };
+
+  //EXPORTA EL AREA VISIBLE DEL CANVAS COMO IMAGEN PNG
+  const handleExportPng = () => {
+    setSelectedId(null);
+    setCircles((prev) => prev.map((c) => ({ ...c, visible: false })));
+
+    // Esperar el re-render para que no salgan el transformer ni los circulos
+    setTimeout(() => {
+      const uri = stageRef.current.toDataURL({ pixelRatio: 2 });
+      const link = document.createElement('a');
+      link.download = `${diagramMetadata.title || 'diagrama'}.png`;
+      link.href = uri;
+      link.click();
+    }, 100);
   };
 
   const handleZoomIn = () => {
@@ -457,6 +533,14 @@ const DrawDiagram = () => {
         if (key === 'd' && selectedId) {
           e.preventDefault();
           duplicateElement(selectedId);
+        }
+        if (key === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          handleUndo();
+        }
+        if (key === 'y' || (key === 'z' && e.shiftKey)) {
+          e.preventDefault();
+          handleRedo();
         }
       }
     };
@@ -552,6 +636,8 @@ const DrawDiagram = () => {
               onClear={handleClearCanvas}
               onSaveDiagram={() => handleSaveDiagram(navigate)}
               onUndo={handleUndo}
+              onRedo={handleRedo}
+              onExportPng={handleExportPng}
               elements={elements}
               selectedId={selectedId}
               onSendToBack={moveElementToBack}

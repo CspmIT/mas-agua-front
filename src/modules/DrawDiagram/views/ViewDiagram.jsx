@@ -11,7 +11,7 @@ import TankElement from '../components/WidgetElements/TankElement';
 import LedElement from '../components/WidgetElements/LedElement';
 import LoaderComponent from '../../../components/Loader';
 import CardCustom from '../../../components/CardCustom';
-import { LuZoomOut, LuZoomIn, LuArrowLeft } from 'react-icons/lu';
+import { LuZoomOut, LuZoomIn, LuArrowLeft, LuDownload } from 'react-icons/lu';
 import { storage } from '../../../storage/storage';
 import { canvasAreaSx } from '../utils/js/diagramTheme';
 
@@ -177,6 +177,16 @@ function ViewDiagram() {
     setScale(newScale);
     setPosition(newPos);
   }, [scale, position, dimensions]);
+
+  //EXPORTA EL AREA VISIBLE DEL DIAGRAMA COMO IMAGEN PNG
+  const exportPng = () => {
+    if (!stageRef.current) return;
+    const uri = stageRef.current.toDataURL({ pixelRatio: 2 });
+    const link = document.createElement('a');
+    link.download = `${diagramMetadata.title || 'diagrama'}.png`;
+    link.href = uri;
+    link.click();
+  };
 
   const renderTooltipLabel = useCallback((el) => {
     if (!el.dataInflux?.show) return null;
@@ -481,6 +491,11 @@ function ViewDiagram() {
                 <Tooltip title='Alejar' placement='right'>
                   <IconButton onClick={zoomOut} sx={darkIconBtnSx}>
                     <LuZoomOut size={18} />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title='Descargar como imagen' placement='right'>
+                  <IconButton onClick={exportPng} sx={darkIconBtnSx}>
+                    <LuDownload size={18} />
                   </IconButton>
                 </Tooltip>
               </div>
