@@ -1,7 +1,7 @@
 import React, { Fragment, useMemo, useState } from 'react';
 import { Stage, Layer, Line, Text, Transformer, Circle, Group, Rect, Label, Tag } from 'react-konva';
 import ImageElement from '../ImageElement/ImageElement';
-import PanelElement from '../PanelElement/PanelElement';
+import PanelElement, { getPanelHeight, PANEL_PADDING, PANEL_TITLE_HEIGHT } from '../PanelElement/PanelElement';
 import { getFlowAnimation } from '../../utils/js/flowAnimation';
 import TankElement from '../WidgetElements/TankElement';
 import LedElement from '../WidgetElements/LedElement';
@@ -555,6 +555,28 @@ const DiagramCanvas = ({
                         prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
                       );
                     }}
+                    onTransformEnd={(e) => {
+                      // Resize libre: el estiramiento pasa a ancho/alto reales y la
+                      // tipografia queda fija (se maneja desde el editor del panel)
+                      const node = e.target;
+                      const sx = node.scaleX();
+                      const sy = node.scaleY();
+                      node.scaleX(1);
+                      node.scaleY(1);
+
+                      const minHeight =
+                        PANEL_TITLE_HEIGHT + (el.rows?.length || 0) * 16 + PANEL_PADDING;
+                      const newWidth = Math.max(120, Math.min((el.width || 230) * sx, 800));
+                      const newHeight = Math.max(minHeight, Math.min(getPanelHeight(el) * sy, 1200));
+
+                      setElements((prev) =>
+                        prev.map((item) =>
+                          item.id === el.id
+                            ? { ...item, x: node.x(), y: node.y(), width: newWidth, height: newHeight }
+                            : item
+                        )
+                      );
+                    }}
                   />
                 );
               }
@@ -762,15 +784,18 @@ const DiagramCanvas = ({
           </Group>
 
           {selectedId && (() => {
-            // El tanque y el boton se pueden estirar libremente; el resto mantiene proporcion
+            // Tanque, boton y panel: estiramiento libre en ancho y alto
+            // (en el panel lo horizontal ajusta el layout y lo vertical la escala)
             const selectedEl = elements.find((el) => String(el.id) === String(selectedId));
-            const isTank = ['tank', 'linkButton'].includes(selectedEl?.type);
+            const isPanel = selectedEl?.type === 'panel';
+            const isFreeResize = isPanel || ['tank', 'linkButton'].includes(selectedEl?.type);
             return (
               <Transformer
                 ref={transformerRef}
-                keepRatio={!isTank}
+                keepRatio={!isFreeResize}
+                rotateEnabled={!isPanel}
                 enabledAnchors={
-                  isTank
+                  isFreeResize
                     ? ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right', 'top-center', 'bottom-center']
                     : ['top-left', 'top-right', 'bottom-left', 'bottom-right']
                 }

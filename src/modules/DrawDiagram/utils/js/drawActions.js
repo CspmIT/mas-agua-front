@@ -1,7 +1,6 @@
 import Swal from 'sweetalert2'
 import { request, } from '../../../../utils/js/request'
 import { backend } from '../../../../utils/routes/app.routes'
-import { getPanelHeight } from '../../components/PanelElement/PanelElement';
 import { data } from 'autoprefixer';
 
 
@@ -214,10 +213,10 @@ export const uploadCanvaDb = async (id, {
 				styles,
 				rows,
 				draggable: true,
+				// el alto del resize viaja dentro del JSON de estilos
+				height: parseFloat(styles.height) || null,
 			};
 
-			// height solo se usa para el auto-ajuste de la vista; el render la recalcula
-			panelElement.height = getPanelHeight(panelElement);
 			elements.push(panelElement);
 		}
 
@@ -453,7 +452,7 @@ export const saveDiagramKonva = async ({
 						left: el.x,
 						top: el.y,
 						width: el.width,
-						styles: el.styles || {},
+						styles: { ...(el.styles || {}), height: el.height || null },
 						status: 1,
 						rows: (el.rows || []).map((row, index) => {
 							const isVariable = row.kind === 'variable' && row.dataInflux?.id;

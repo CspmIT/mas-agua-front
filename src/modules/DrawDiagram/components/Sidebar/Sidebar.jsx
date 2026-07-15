@@ -1,12 +1,11 @@
 import React from 'react';
-import { Box, Divider, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import { RiImageAddFill } from 'react-icons/ri';
-import { MdContentCopy, MdDelete, MdPolyline } from 'react-icons/md';
+import { MdPolyline } from 'react-icons/md';
 import { LuBoxSelect, LuCircleDot, LuDatabase, LuExternalLink, LuPanelTop, LuShapes } from 'react-icons/lu';
 import { FaArrowRightLong } from 'react-icons/fa6';
 import { HiOutlineVariable } from 'react-icons/hi';
 import {
-  iconButtonDangerSx,
   iconButtonOnDarkPrimarySx,
   iconButtonOnDarkSx,
   sidebarShellSx,
@@ -26,13 +25,8 @@ const Sidebar = ({
   setShowLineStyleSelector,
   setShowTextStyler,
   setShowListField,
-  setElements,
-  setCircles,
-  setSelectedId,
   setTextPosition,
   setTextInput,
-  handleDeleteElement,
-  handleDuplicateElement,
   showSymbolSelector,
   setShowSymbolSelector,
 }) => {
@@ -127,31 +121,6 @@ const Sidebar = ({
     }
   };
 
-  const toggleFields = () => {
-    if (tool === 'fields') {
-      setTool(null);
-      setShowListField(false);
-    } else {
-      setTool('fields');
-      setShowListField(true);
-      setShowImageSelector(false);
-      setShowLineStyleSelector(false);
-      setShowTextStyler(false);
-    }
-  };
-
-  const handleDelete = () => {
-    setElements((prev) => prev.filter((el) => String(el.id) !== String(selectedId)));
-    setCircles((prev) => prev.filter((c) => String(c.lineId) !== String(selectedId)));
-    handleDeleteElement(selectedId);
-    setTool(null);
-    setSelectedId(null);
-    setShowImageSelector(false);
-    setShowLineStyleSelector(false);
-    setShowTextStyler(false);
-    setTextPosition(null);
-  };
-
   return (
     <Box sx={sidebarShellSx} className='w-16 py-3 px-2 flex flex-col items-center gap-1.5'>
       <Tooltip title='Agregar imagen' placement='right'>
@@ -243,36 +212,6 @@ const Sidebar = ({
             <HiOutlineVariable size={20} />
           </IconButton>
         </Tooltip>
-      )}
-
-      {selectedId && (
-        <>
-          <Divider
-            flexItem
-            sx={{
-              my: 1,
-              border: 'none',
-              height: '1px',
-              background:
-                'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%)',
-            }}
-          />
-          <Tooltip title='Asignar variable' placement='right'>
-            <IconButton onClick={toggleFields} sx={toolButtonSx(tool === 'fields')}>
-              <HiOutlineVariable size={20} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title='Duplicar elemento (Ctrl+C / Ctrl+V)' placement='right'>
-            <IconButton onClick={() => handleDuplicateElement(selectedId)} sx={toolButtonSx(false)}>
-              <MdContentCopy size={18} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title='Borrar elemento' placement='right'>
-            <IconButton onClick={handleDelete} sx={{ ...iconButtonDangerSx, width: 44, height: 44 }}>
-              <MdDelete size={20} />
-            </IconButton>
-          </Tooltip>
-        </>
       )}
     </Box>
   );

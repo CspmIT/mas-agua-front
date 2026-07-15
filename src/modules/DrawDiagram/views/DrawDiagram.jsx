@@ -11,6 +11,7 @@ import DiagramCanvas from '../components/DiagramCanvas/DiagramCanvas';
 import PanelEditor from '../components/PanelEditor/PanelEditor';
 import LinkDiagramPanel from '../components/LinkDiagramPanel/LinkDiagramPanel';
 import SymbolSelector from '../components/SymbolSelector/SymbolSelector';
+import SelectionToolbar from '../components/SelectionToolbar/SelectionToolbar';
 import TopNavbar from '../components/TopNavbar/TopNavbar';
 import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -273,6 +274,34 @@ const DrawDiagram = () => {
 
     setSelectedId(clone.id);
     return clone.id;
+  };
+
+  //TOGGLE DEL SELECTOR DE VARIABLES PARA EL ELEMENTO SELECCIONADO
+  const handleToggleAssignVariable = () => {
+    if (tool === 'fields') {
+      setTool(null);
+      setShowListField(false);
+    } else {
+      setTool('fields');
+      setShowListField(true);
+      setShowImageSelector(false);
+      setShowLineStyleSelector(false);
+      setShowTextStyler(false);
+      setShowSymbolSelector(false);
+    }
+  };
+
+  //BORRAR EL ELEMENTO SELECCIONADO
+  const handleDeleteSelected = () => {
+    setElements((prev) => prev.filter((el) => String(el.id) !== String(selectedId)));
+    setCircles((prev) => prev.filter((c) => String(c.lineId) !== String(selectedId)));
+    handleDeleteElement(selectedId);
+    setTool(null);
+    setSelectedId(null);
+    setShowImageSelector(false);
+    setShowLineStyleSelector(false);
+    setShowTextStyler(false);
+    setTextPosition(null);
   };
 
   //INSERTAR UN SIMBOLO DEL CATALOGO EN EL CENTRO VISIBLE DEL CANVAS
@@ -542,15 +571,6 @@ const DrawDiagram = () => {
   useEffect(() => {
     if (transformerRef.current && selectedId) {
       const stage = stageRef.current;
-      const selectedElement = elements.find((el) => String(el.id) === String(selectedId));
-
-      // Los paneles tienen alto calculado por sus filas: escalarlos los deformaria
-      if (selectedElement?.type === 'panel') {
-        transformerRef.current.nodes([]);
-        transformerRef.current.getLayer()?.batchDraw();
-        return;
-      }
-
       const selectedNode = stage.findOne(`#${selectedId}`);
       if (selectedNode) {
         transformerRef.current.nodes([selectedNode]);
@@ -733,13 +753,8 @@ const DrawDiagram = () => {
                 setShowLineStyleSelector={setShowLineStyleSelector}
                 setShowTextStyler={setShowTextStyler}
                 setShowListField={setShowListField}
-                setElements={setElements}
-                setCircles={setCircles}
-                setSelectedId={setSelectedId}
                 setTextPosition={setTextPosition}
                 setTextInput={setTextInput}
-                handleDeleteElement={handleDeleteElement}
-                handleDuplicateElement={duplicateElement}
                 showSymbolSelector={showSymbolSelector}
                 setShowSymbolSelector={setShowSymbolSelector}
               />
@@ -865,6 +880,15 @@ const DrawDiagram = () => {
                   dragStartPos={dragStartPos}
                   setDragStartPos={setDragStartPos}
                 />
+                {/* Acciones del elemento seleccionado */}
+                {selectedId && (
+                  <SelectionToolbar
+                    isAssigningVariable={tool === 'fields'}
+                    onAssignVariable={handleToggleAssignVariable}
+                    onDuplicate={() => duplicateElement(selectedId)}
+                    onDelete={handleDeleteSelected}
+                  />
+                )}
                 {/* Selector de símbolos */}
                 {showSymbolSelector && (
                   <SymbolSelector
