@@ -8,6 +8,9 @@ import TextStyler from '../components/TextStyler/TextStyler';
 import TextEditor from '../components/TextEditor/TextEditor';
 import Sidebar from '../components/Sidebar/Sidebar';
 import DiagramCanvas from '../components/DiagramCanvas/DiagramCanvas';
+import PanelEditor from '../components/PanelEditor/PanelEditor';
+import LinkDiagramPanel from '../components/LinkDiagramPanel/LinkDiagramPanel';
+import SymbolSelector from '../components/SymbolSelector/SymbolSelector';
 import TopNavbar from '../components/TopNavbar/TopNavbar';
 import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -15,6 +18,8 @@ import { Box, Container } from '@mui/material';
 import LoaderComponent from '../../../components/Loader';
 import TooltipPositionPanel from '../components/TooltipPositionPanel/TooltipPositionPanel';
 import { useDrawingTools } from '../hooks/useDrawingTools';
+import { request } from '../../../utils/js/request';
+import { backend } from '../../../utils/routes/app.routes';
 import { useTooltipManager } from '../hooks/useTooltipManager';
 import { useDiagramState } from '../hooks/useDiagramState';
 import { useTextTools } from '../hooks/useTextTools';
@@ -64,6 +69,8 @@ const DrawDiagram = () => {
   const [isDraggingStage, setIsDraggingStage] = useState(false);
   const [dragStartPos, setDragStartPos] = useState(null);
   const [showTooltipPositionPanel, setShowTooltipPositionPanel] = useState(false);
+  const [panelRowForVariable, setPanelRowForVariable] = useState(null);
+  const [showSymbolSelector, setShowSymbolSelector] = useState(false);
 
   const {
     elements,
@@ -76,6 +83,48 @@ const DrawDiagram = () => {
     moveElementToBack,
     moveElementToFront
   } = useDiagramState();
+
+  //GUARDAR UN SIMBOLO CAPTURADO EN EL CATALOGO
+  const handleSymbolCaptured = async (capturedElements) => {
+    if (!capturedElements.length) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Sin elementos',
+        text: 'No hay elementos completos dentro del área marcada.',
+        confirmButtonColor: '#3085d6',
+      });
+      return;
+    }
+
+    const { value: name } = await Swal.fire({
+      title: 'Guardar símbolo',
+      input: 'text',
+      inputLabel: `${capturedElements.length} elemento(s) capturado(s). Nombre del símbolo:`,
+      showCancelButton: true,
+      confirmButtonText: 'Guardar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      inputValidator: (value) => (!value.trim() ? '¡Debes ingresar un nombre!' : null),
+    });
+    if (!name) return;
+
+    try {
+      await request(`${backend[import.meta.env.VITE_APP_NAME]}/saveDiagramSymbol`, 'POST', {
+        name,
+        elements: capturedElements,
+      });
+      Swal.fire({
+        icon: 'success',
+        title: 'Símbolo guardado',
+        text: 'Ya está disponible en el catálogo de símbolos.',
+        timer: 1800,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error('Error guardando el símbolo:', error);
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo guardar el símbolo.' });
+    }
+  };
 
   const {
     lineStart,
@@ -92,8 +141,11 @@ const DrawDiagram = () => {
     setPolylinePoints,
     setIsDrawingPolyline,
     handleSelect,
-    handleTransformEnd
-  } = useDrawingTools({ 
+    handleTransformEnd,
+    captureRect,
+    setCaptureRect,
+    setSymbolCaptureStart
+  } = useDrawingTools({
     tool, setTool, 
     lineStyle, 
     elements, setElements, 
@@ -110,12 +162,183 @@ const DrawDiagram = () => {
     setEditingTextId,
     setTextStyle,
     setShowTextStyler,
-    setLineStyle
+    setLineStyle,
+    onSymbolCaptured: handleSymbolCaptured
   });
 
   const { handleShowTooltip, handleHideTooltip, handleChangeTooltipPosition, handleSetMaxValue, handleBooleanColorChange, handleSetBinaryBit } = useTooltipManager({ selectedId, elements, setElements });
 
   const { saveText } = useTextTools({ elements, setElements, textStyle, setTextInput, setTextPosition, setEditingTextId, setNewElementsIds });
+
+  const selectedElement = elements.find((el) => String(el.id) === String(selectedId));
+
+  const copiedElementIdRef = useRef(null);
+
+  // ===== Historial para deshacer/rehacer =====
+  const historyRef = useRef({ stack: [], index: -1 });
+  const isRestoringRef = useRef(false);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (isRestoringRef.current) {
+      isRestoringRef.current = false;
+      return;
+    }
+
+    // Debounce: agrupa cambios rapidos (ej. arrastrar puntos) en un solo snapshot
+    const timer = setTimeout(() => {
+      const history = historyRef.current;
+      const snapshot = JSON.stringify(elements);
+      if (history.stack[history.index] === snapshot) return;
+
+      history.stack = history.stack.slice(0, history.index + 1);
+      history.stack.push(snapshot);
+      if (history.stack.length > 50) history.stack.shift();
+      history.index = history.stack.length - 1;
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [elements, isLoading]);
+
+  //RECONSTRUYE LOS CIRCULOS DE EDICION A PARTIR DE LOS ELEMENTOS
+  const rebuildCircles = (els) => {
+    const circles = [];
+    els.forEach((el) => {
+      if (el.type === 'line') {
+        const [x1, y1, x2, y2] = el.points;
+        circles.push({ id: `${el.id}-start`, x: el.x + x1, y: el.y + y1, lineId: el.id, fill: 'blue', visible: false });
+        circles.push({ id: `${el.id}-end`, x: el.x + x2, y: el.y + y2, lineId: el.id, fill: 'red', visible: false });
+      } else if (el.type === 'polyline') {
+        for (let i = 0; i < el.points.length; i += 2) {
+          circles.push({
+            id: `${el.id}-point-${i / 2}`,
+            x: el.x + el.points[i],
+            y: el.y + el.points[i + 1],
+            lineId: el.id,
+            fill: i === 0 ? 'blue' : i === el.points.length - 2 ? 'red' : 'green',
+            visible: false,
+          });
+        }
+      }
+    });
+    return circles;
+  };
+
+  const restoreSnapshot = (snapshot) => {
+    isRestoringRef.current = true;
+    const restored = JSON.parse(snapshot);
+    setElements(restored);
+    setCircles(rebuildCircles(restored));
+    setSelectedId(null);
+    setShowLineStyleSelector(false);
+    setShowTextStyler(false);
+    setShowTooltipPositionPanel(false);
+  };
+
+  //DUPLICAR UN ELEMENTO CON UN PEQUEÑO CORRIMIENTO
+  const duplicateElement = (id) => {
+    const source = elements.find((el) => String(el.id) === String(id));
+    if (!source) return null;
+
+    const clone = structuredClone(source);
+    clone.id = String(Date.now());
+    clone.x = (source.x || 0) + 20;
+    clone.y = (source.y || 0) + 20;
+
+    setElements((prev) => [...prev, clone]);
+    setNewElementsIds((prev) => [...prev, clone.id]);
+
+    // Circulos de edicion para lineas y polilineas
+    if (clone.type === 'line') {
+      const [x1, y1, x2, y2] = clone.points;
+      setCircles((prev) => [
+        ...prev,
+        { id: `${clone.id}-start`, x: clone.x + x1, y: clone.y + y1, lineId: clone.id, fill: 'blue', visible: false },
+        { id: `${clone.id}-end`, x: clone.x + x2, y: clone.y + y2, lineId: clone.id, fill: 'red', visible: false },
+      ]);
+    } else if (clone.type === 'polyline') {
+      const newCircles = [];
+      for (let i = 0; i < clone.points.length; i += 2) {
+        newCircles.push({
+          id: `${clone.id}-point-${i / 2}`,
+          x: clone.x + clone.points[i],
+          y: clone.y + clone.points[i + 1],
+          lineId: clone.id,
+          fill: i === 0 ? 'blue' : i === clone.points.length - 2 ? 'red' : 'green',
+          visible: false,
+        });
+      }
+      setCircles((prev) => [...prev, ...newCircles]);
+    }
+
+    setSelectedId(clone.id);
+    return clone.id;
+  };
+
+  //INSERTAR UN SIMBOLO DEL CATALOGO EN EL CENTRO VISIBLE DEL CANVAS
+  const insertSymbol = (symbol) => {
+    const stage = stageRef.current;
+    const baseId = Date.now();
+    const baseX = (stage.width() / 2 - stagePosition.x) / stageScale;
+    const baseY = (stage.height() / 2 - stagePosition.y) / stageScale;
+
+    const newElements = (symbol.elements || []).map((el, index) => ({
+      ...structuredClone(el),
+      id: String(baseId + index),
+      x: baseX + (el.x || 0),
+      y: baseY + (el.y || 0),
+      draggable: true,
+    }));
+
+    if (!newElements.length) return;
+
+    setElements((prev) => [...prev, ...newElements]);
+    setNewElementsIds((prev) => [...prev, ...newElements.map((el) => el.id)]);
+    setCircles((prev) => [...prev, ...rebuildCircles(newElements)]);
+    setShowSymbolSelector(false);
+    setSelectedId(null);
+  };
+
+  //ACTUALIZAR UN PANEL DE INFORMACION DESDE SU EDITOR
+  const handlePanelChange = (updatedPanel) => {
+    setElements((prev) =>
+      prev.map((el) => (String(el.id) === String(updatedPanel.id) ? updatedPanel : el))
+    );
+  };
+
+  //ABRIR EL SELECTOR DE VARIABLES PARA UNA FILA DEL PANEL
+  const handlePanelRowVariableRequest = (rowId) => {
+    setPanelRowForVariable(rowId);
+    setShowListField(true);
+  };
+
+  //BUSCAR EL VALOR ACTUAL DE LA VARIABLE RECIEN ASIGNADA A UNA FILA
+  const fetchPanelRowValue = async (panelId, rowId, dataInflux) => {
+    try {
+      const response = await request(
+        `${backend[import.meta.env.VITE_APP_NAME]}/multipleDataInflux`,
+        'POST',
+        [{ dataInflux }]
+      );
+      const value = response?.data?.[dataInflux.id];
+      if (value === undefined) return;
+
+      setElements((prev) =>
+        prev.map((el) =>
+          String(el.id) === String(panelId) && el.type === 'panel'
+            ? {
+              ...el,
+              rows: el.rows.map((r) =>
+                r.id === rowId ? { ...r, dataInflux: { ...r.dataInflux, value } } : r
+              ),
+            }
+            : el
+        )
+      );
+    } catch (error) {
+      console.error('Error obteniendo el valor de la variable:', error);
+    }
+  };
 
   const handleAssignVariable = (dataInflux) => {
     if (tool === 'floatingVariable') {
@@ -147,13 +370,39 @@ const DrawDiagram = () => {
 
     if (!selectedId) return;
 
+    // Paneles: la variable va a la fila que pidio la asignacion, no al elemento
+    if (selectedElement?.type === 'panel') {
+      if (panelRowForVariable == null) return;
+
+      const rowId = panelRowForVariable;
+      const rowDataInflux = { ...dataInflux, show: true };
+
+      setElements((prev) =>
+        prev.map((el) =>
+          String(el.id) === String(selectedElement.id)
+            ? {
+              ...el,
+              rows: el.rows.map((r) =>
+                r.id === rowId ? { ...r, kind: 'variable', dataInflux: rowDataInflux } : r
+              ),
+            }
+            : el
+        )
+      );
+      setPanelRowForVariable(null);
+      setShowListField(false);
+      fetchPanelRowValue(selectedElement.id, rowId, rowDataInflux);
+      return;
+    }
+
     setElements((prev) =>
       prev.map((el) =>
         String(el.id) === String(selectedId) ? {
           ...el, dataInflux: {
             ...dataInflux,
             position: 'Centro',
-            show: true,
+            // En lineas y polilineas el tooltip nace oculto
+            show: !['line', 'polyline'].includes(el.type),
           }
         } : el
       )
@@ -246,21 +495,38 @@ const DrawDiagram = () => {
       texts: [],
       images: [],
       polylines: [],
+      panels: [],
+      widgets: [],
     });
   };
 
   const handleUndo = () => {
-    if (elements.length === 0) {
-      Swal.fire({
-        icon: 'info',
-        title: 'Nada para deshacer',
-        text: 'No hay elementos en el diagrama.',
-        confirmButtonColor: '#3085d6',
-      });
-      return;
-    }
+    const history = historyRef.current;
+    if (history.index <= 0) return;
+    history.index -= 1;
+    restoreSnapshot(history.stack[history.index]);
+  };
 
-    setElements((prev) => prev.slice(0, -1));
+  const handleRedo = () => {
+    const history = historyRef.current;
+    if (history.index >= history.stack.length - 1) return;
+    history.index += 1;
+    restoreSnapshot(history.stack[history.index]);
+  };
+
+  //EXPORTA EL AREA VISIBLE DEL CANVAS COMO IMAGEN PNG
+  const handleExportPng = () => {
+    setSelectedId(null);
+    setCircles((prev) => prev.map((c) => ({ ...c, visible: false })));
+
+    // Esperar el re-render para que no salgan el transformer ni los circulos
+    setTimeout(() => {
+      const uri = stageRef.current.toDataURL({ pixelRatio: 2 });
+      const link = document.createElement('a');
+      link.download = `${diagramMetadata.title || 'diagrama'}.png`;
+      link.href = uri;
+      link.click();
+    }, 100);
   };
 
   const handleZoomIn = () => {
@@ -276,20 +542,37 @@ const DrawDiagram = () => {
   useEffect(() => {
     if (transformerRef.current && selectedId) {
       const stage = stageRef.current;
+      const selectedElement = elements.find((el) => String(el.id) === String(selectedId));
+
+      // Los paneles tienen alto calculado por sus filas: escalarlos los deformaria
+      if (selectedElement?.type === 'panel') {
+        transformerRef.current.nodes([]);
+        transformerRef.current.getLayer()?.batchDraw();
+        return;
+      }
+
       const selectedNode = stage.findOne(`#${selectedId}`);
       if (selectedNode) {
         transformerRef.current.nodes([selectedNode]);
         transformerRef.current.getLayer().batchDraw();
       }
     }
-  }, [selectedId]);
+  }, [selectedId, elements]);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Si el usuario esta escribiendo en un input, no disparar atajos del canvas
+      const isTyping =
+        e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'TEXTAREA' ||
+        e.target.isContentEditable;
+
       if (e.key === 'Escape') {
         setShowLineStyleSelector(false);
         setLineStart(null);
         setTool('');
+        setCaptureRect(null);
+        setSymbolCaptureStart(null);
         if (textPosition) {
           setTextPosition(null);
           setTextInput('');
@@ -304,17 +587,42 @@ const DrawDiagram = () => {
       if (e.key === 'Enter' && isDrawingPolyline) {
         finishPolyline();
       }
-      if (e.key === 'Delete' && selectedId) {
+      if (e.key === 'Delete' && selectedId && !isTyping) {
         handleDeleteElement(selectedId);
         setTool('');
         setSelectedId(null);
         setShowLineStyleSelector(false);
         setShowTextStyler(false);
       }
+
+      // Copiar / pegar / duplicar elementos
+      if ((e.ctrlKey || e.metaKey) && !isTyping) {
+        const key = e.key.toLowerCase();
+        if (key === 'c' && selectedId) {
+          copiedElementIdRef.current = selectedId;
+        }
+        if (key === 'v' && copiedElementIdRef.current) {
+          // El pegado en cadena duplica desde la ultima copia para ir escalonando
+          const newId = duplicateElement(copiedElementIdRef.current);
+          if (newId) copiedElementIdRef.current = newId;
+        }
+        if (key === 'd' && selectedId) {
+          e.preventDefault();
+          duplicateElement(selectedId);
+        }
+        if (key === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          handleUndo();
+        }
+        if (key === 'y' || (key === 'z' && e.shiftKey)) {
+          e.preventDefault();
+          handleRedo();
+        }
+      }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedId, lineStart, textPosition, isDrawingPolyline, polylinePoints]);
+  }, [selectedId, lineStart, textPosition, isDrawingPolyline, polylinePoints, elements]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -404,6 +712,8 @@ const DrawDiagram = () => {
               onClear={handleClearCanvas}
               onSaveDiagram={() => handleSaveDiagram(navigate)}
               onUndo={handleUndo}
+              onRedo={handleRedo}
+              onExportPng={handleExportPng}
               elements={elements}
               selectedId={selectedId}
               onSendToBack={moveElementToBack}
@@ -429,6 +739,9 @@ const DrawDiagram = () => {
                 setTextPosition={setTextPosition}
                 setTextInput={setTextInput}
                 handleDeleteElement={handleDeleteElement}
+                handleDuplicateElement={duplicateElement}
+                showSymbolSelector={showSymbolSelector}
+                setShowSymbolSelector={setShowSymbolSelector}
               />
               {/* Contenido principal (canvas + overlays) */}
               <Box sx={canvasAreaSx} className='flex-1 relative'>
@@ -484,9 +797,28 @@ const DrawDiagram = () => {
                   <div className='absolute left-2 top-2 z-20 max-w-md w-80'>
                     <ListField
                       onSelectVariable={handleAssignVariable}
-                      onClose={() => setShowListField(false)}
+                      onClose={() => {
+                        setShowListField(false);
+                        setPanelRowForVariable(null);
+                      }}
                     />
                   </div>
+                )}
+                {/* Editor del botón de navegación */}
+                {selectedElement?.type === 'linkButton' && (
+                  <LinkDiagramPanel
+                    button={selectedElement}
+                    currentDiagramId={diagramMetadata.id}
+                    onChange={handlePanelChange}
+                  />
+                )}
+                {/* Editor de paneles de información */}
+                {selectedElement?.type === 'panel' && (
+                  <PanelEditor
+                    panel={selectedElement}
+                    onChange={handlePanelChange}
+                    onAssignVariableRequest={handlePanelRowVariableRequest}
+                  />
                 )}
                 {/* Panel posicion de variables */}
                 {showTooltipPositionPanel && (
@@ -505,6 +837,7 @@ const DrawDiagram = () => {
                   elements={elements}
                   circles={circles}
                   tempLine={tempLine}
+                  captureRect={captureRect}
                   dashOffset={dashOffset}
                   selectedId={selectedId}
                   stageRef={stageRef}
@@ -532,6 +865,46 @@ const DrawDiagram = () => {
                   dragStartPos={dragStartPos}
                   setDragStartPos={setDragStartPos}
                 />
+                {/* Selector de símbolos */}
+                {showSymbolSelector && (
+                  <SymbolSelector
+                    onInsert={insertSymbol}
+                    onClose={() => setShowSymbolSelector(false)}
+                  />
+                )}
+                {/* Ayuda para la captura de símbolos */}
+                {tool === 'captureSymbol' && (
+                  <div className='absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none'>
+                    <div className='flex items-center gap-4 rounded-full bg-slate-800/90 text-white text-xs px-4 py-2 shadow-lg whitespace-nowrap'>
+                      <span>Arrastrá un recuadro alrededor de los elementos del símbolo</span>
+                      <span>
+                        <kbd className='px-1.5 py-0.5 rounded bg-white/15 border border-white/25 font-semibold mr-1'>Esc</kbd>
+                        cancelar
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {/* Ayuda de atajos para el dibujo de lineas y polilineas */}
+                {['simpleLine', 'polyline'].includes(tool) && (
+                  <div className='absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none'>
+                    <div className='flex items-center gap-4 rounded-full bg-slate-800/90 text-white text-xs px-4 py-2 shadow-lg whitespace-nowrap'>
+                      <span>
+                        <kbd className='px-1.5 py-0.5 rounded bg-white/15 border border-white/25 font-semibold mr-1'>Shift</kbd>
+                        tramo recto (90°/45°)
+                      </span>
+                      {tool === 'polyline' && (
+                        <span>
+                          <kbd className='px-1.5 py-0.5 rounded bg-white/15 border border-white/25 font-semibold mr-1'>Enter</kbd>
+                          o clic derecho: finalizar
+                        </span>
+                      )}
+                      <span>
+                        <kbd className='px-1.5 py-0.5 rounded bg-white/15 border border-white/25 font-semibold mr-1'>Esc</kbd>
+                        cancelar
+                      </span>
+                    </div>
+                  </div>
+                )}
                 {/* Editor de texto */}
                 <TextEditor
                   textPosition={textPosition}

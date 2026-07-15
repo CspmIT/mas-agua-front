@@ -1,6 +1,13 @@
-import React, { Fragment } from 'react';
+import React, { Fragment, useMemo, useState } from 'react';
 import { Stage, Layer, Line, Text, Transformer, Circle, Group, Rect, Label, Tag } from 'react-konva';
 import ImageElement from '../ImageElement/ImageElement';
+import PanelElement from '../PanelElement/PanelElement';
+import { getFlowAnimation } from '../../utils/js/flowAnimation';
+import TankElement from '../WidgetElements/TankElement';
+import LedElement from '../WidgetElements/LedElement';
+import LinkButtonElement from '../WidgetElements/LinkButtonElement';
+
+const WIDGET_COMPONENTS = { tank: TankElement, led: LedElement, linkButton: LinkButtonElement };
 
 // Funcion para calcular puntos a la hora de hacer la polilinea
 const distToSegment = (p, v, w) => {
@@ -22,6 +29,7 @@ const DiagramCanvas = ({
   elements,
   circles,
   tempLine,
+  captureRect,
   dashOffset,
   selectedId,
   stageRef,
@@ -48,6 +56,75 @@ const DiagramCanvas = ({
   dragStartPos,
   setDragStartPos,
 }) => {
+  // ===== Guias de alineacion (snapping) =====
+  const GUIDELINE_OFFSET = 5; // umbral en pixeles de pantalla
+  const [guides, setGuides] = useState([]);
+  const elementIdSet = useMemo(() => new Set(elements.map((el) => String(el.id))), [elements]);
+
+  const handleLayerDragMove = (e) => {
+    const node = e.target;
+    const nodeId = node.getAttr('id');
+    // Solo elementos del diagrama (excluye circulos de edicion, transformer, etc.)
+    if (!nodeId || !elementIdSet.has(String(nodeId))) return;
+
+    // Bordes y centros del resto de los elementos, en coordenadas de pantalla
+    const stopsV = [];
+    const stopsH = [];
+    node.getLayer().getChildren().forEach((child) => {
+      const childId = child.getAttr('id');
+      if (!childId || String(childId) === String(nodeId) || !elementIdSet.has(String(childId))) return;
+      const box = child.getClientRect();
+      stopsV.push(box.x, box.x + box.width / 2, box.x + box.width);
+      stopsH.push(box.y, box.y + box.height / 2, box.y + box.height);
+    });
+
+    // Bordes y centro del elemento arrastrado, con su offset respecto de la posicion absoluta
+    const box = node.getClientRect();
+    const absPos = node.absolutePosition();
+    const edgesV = [
+      { guide: box.x, offset: absPos.x - box.x },
+      { guide: box.x + box.width / 2, offset: absPos.x - (box.x + box.width / 2) },
+      { guide: box.x + box.width, offset: absPos.x - (box.x + box.width) },
+    ];
+    const edgesH = [
+      { guide: box.y, offset: absPos.y - box.y },
+      { guide: box.y + box.height / 2, offset: absPos.y - (box.y + box.height / 2) },
+      { guide: box.y + box.height, offset: absPos.y - (box.y + box.height) },
+    ];
+
+    let bestV = null;
+    let bestH = null;
+    stopsV.forEach((stop) => {
+      edgesV.forEach((edge) => {
+        const diff = Math.abs(stop - edge.guide);
+        if (diff < GUIDELINE_OFFSET && (!bestV || diff < bestV.diff)) bestV = { stop, offset: edge.offset, diff };
+      });
+    });
+    stopsH.forEach((stop) => {
+      edgesH.forEach((edge) => {
+        const diff = Math.abs(stop - edge.guide);
+        if (diff < GUIDELINE_OFFSET && (!bestH || diff < bestH.diff)) bestH = { stop, offset: edge.offset, diff };
+      });
+    });
+
+    const newGuides = [];
+    const newPos = node.absolutePosition();
+    if (bestV) {
+      newPos.x = bestV.stop + bestV.offset;
+      newGuides.push({ orientation: 'V', stop: bestV.stop });
+    }
+    if (bestH) {
+      newPos.y = bestH.stop + bestH.offset;
+      newGuides.push({ orientation: 'H', stop: bestH.stop });
+    }
+    node.absolutePosition(newPos);
+    setGuides(newGuides);
+  };
+
+  const handleLayerDragEnd = () => {
+    setGuides((prev) => (prev.length ? [] : prev));
+  };
+
   return (
     <>
       <Stage
@@ -110,10 +187,12 @@ const DiagramCanvas = ({
           setStagePosition(newPos);
         }}
         style={{
-          cursor: isPanning ? 'grab' : ['simpleLine', 'polyline'].includes(tool) ? 'crosshair' : 'default',
+          cursor: isPanning ? 'grab' : ['simpleLine', 'polyline', 'panel', 'captureSymbol'].includes(tool) ? 'crosshair' : 'default',
         }}
       >
-        <Layer>
+        <Layer onDragMove={handleLayerDragMove} onDragEnd={handleLayerDragEnd}>
+          {/* Durante la captura de simbolo los elementos no reciben eventos */}
+          <Group listening={tool !== 'captureSymbol'}>
           {
             elements.map((el) => {
               if (el.type === 'line') {
@@ -161,7 +240,11 @@ const DiagramCanvas = ({
                         stroke={el.stroke}
                         strokeWidth={el.strokeWidth}
                         dash={[10, 8]}
-                        dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
+                        dashOffset={(() => {
+                          // En el editor los trazos quedan estaticos sin caudal
+                          const { isClosed, speedFactor } = getFlowAnimation(el.dataInflux);
+                          return isClosed ? 0 : (el.invertAnimation ? -dashOffset : dashOffset) * speedFactor;
+                        })()}
                         lineCap='round'
                         lineJoin='round'
                       />
@@ -389,6 +472,93 @@ const DiagramCanvas = ({
               }
 
 
+              if (WIDGET_COMPONENTS[el.type]) {
+                const WidgetComponent = WIDGET_COMPONENTS[el.type];
+                const offset = 5;
+                let labelX = el.x + (el.width || 0) / 2;
+                let labelY = el.y + (el.height || 0) / 2;
+                let pointerDir = 'down';
+                switch (el.dataInflux?.position) {
+                  case 'Arriba':
+                    labelY = el.y - offset;
+                    pointerDir = 'down';
+                    break;
+                  case 'Abajo':
+                    labelY = el.y + (el.height || 0) + offset;
+                    pointerDir = 'up';
+                    break;
+                  case 'Izquierda':
+                    labelX = el.x - offset;
+                    pointerDir = 'right';
+                    break;
+                  case 'Derecha':
+                    labelX = el.x + (el.width || 0) + offset;
+                    pointerDir = 'left';
+                    break;
+                  default:
+                    break;
+                }
+
+                return (
+                  <Fragment key={el.id}>
+                    <WidgetComponent
+                      el={el}
+                      isSelected={String(selectedId) === String(el.id)}
+                      onSelect={(e) => {
+                        e.cancelBubble = true;
+                        handleSelect(e, String(el.id));
+                      }}
+                      onDragEnd={(e) => {
+                        const { x, y } = e.target.position();
+                        setElements((prev) =>
+                          prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
+                        );
+                      }}
+                      onTransformEnd={(e) => handleTransformEnd(el.id, e.target)}
+                    />
+                    {el.dataInflux && el.dataInflux.name && (
+                      <Label x={labelX} y={labelY} opacity={el.dataInflux.show ? 1 : 0.5}>
+                        <Tag
+                          fill="white"
+                          pointerDirection={pointerDir}
+                          pointerWidth={10}
+                          pointerHeight={10}
+                          lineJoin="round"
+                          cornerRadius={5}
+                        />
+                        <Text
+                          text={el.dataInflux.name}
+                          fontFamily="arial"
+                          fontSize={14}
+                          padding={8}
+                          fill="black"
+                        />
+                      </Label>
+                    )}
+                  </Fragment>
+                );
+              }
+
+              if (el.type === 'panel') {
+                return (
+                  <PanelElement
+                    key={el.id}
+                    el={el}
+                    isSelected={String(selectedId) === String(el.id)}
+                    onSelect={(e) => {
+                      e.cancelBubble = true;
+                      handleSelect(e, String(el.id));
+                    }}
+                    onDragEnd={(e) => {
+                      const { x, y } = e.target.position();
+                      setElements((prev) =>
+                        prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
+                      );
+                    }}
+                  />
+                );
+              }
+
               if (el.type === 'polyline') {
                 return (
                   <Fragment key={el.id}>
@@ -517,7 +687,11 @@ const DiagramCanvas = ({
                         stroke={el.stroke}
                         strokeWidth={el.strokeWidth}
                         dash={[10, 8]}
-                        dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
+                        dashOffset={(() => {
+                          // En el editor los trazos quedan estaticos sin caudal
+                          const { isClosed, speedFactor } = getFlowAnimation(el.dataInflux);
+                          return isClosed ? 0 : (el.invertAnimation ? -dashOffset : dashOffset) * speedFactor;
+                        })()}
                         lineCap='round'
                         lineJoin='round'
                       />
@@ -585,14 +759,24 @@ const DiagramCanvas = ({
 
               return null;
             })}
+          </Group>
 
-          {selectedId && (
-            <Transformer
-              ref={transformerRef}
-              keepRatio={true}
-              enabledAnchors={['top-left', 'top-right', 'bottom-left', 'bottom-right']}
-            />
-          )}
+          {selectedId && (() => {
+            // El tanque y el boton se pueden estirar libremente; el resto mantiene proporcion
+            const selectedEl = elements.find((el) => String(el.id) === String(selectedId));
+            const isTank = ['tank', 'linkButton'].includes(selectedEl?.type);
+            return (
+              <Transformer
+                ref={transformerRef}
+                keepRatio={!isTank}
+                enabledAnchors={
+                  isTank
+                    ? ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'middle-left', 'middle-right', 'top-center', 'bottom-center']
+                    : ['top-left', 'top-right', 'bottom-left', 'bottom-right']
+                }
+              />
+            );
+          })()}
 
           {circles.map((circle) => (
             <Circle
@@ -660,6 +844,41 @@ const DiagramCanvas = ({
               opacity={0.7}
             />
           )}
+
+          {/* Recuadro de captura de simbolo */}
+          {captureRect && (
+            <Rect
+              x={captureRect.x}
+              y={captureRect.y}
+              width={captureRect.width}
+              height={captureRect.height}
+              fill='rgba(54, 139, 237, 0.08)'
+              stroke='#368bed'
+              strokeWidth={1 / stageScale}
+              dash={[6, 4]}
+              listening={false}
+            />
+          )}
+
+          {/* Lineas guia de alineacion (los stops estan en coordenadas de pantalla) */}
+          {guides.map((g, i) => {
+            const pos = g.orientation === 'V'
+              ? (g.stop - stagePosition.x) / stageScale
+              : (g.stop - stagePosition.y) / stageScale;
+            const points = g.orientation === 'V'
+              ? [pos, -10000, pos, 10000]
+              : [-10000, pos, 10000, pos];
+            return (
+              <Line
+                key={`guide-${i}`}
+                points={points}
+                stroke='#f43f5e'
+                strokeWidth={1 / stageScale}
+                dash={[4, 6]}
+                listening={false}
+              />
+            );
+          })}
         </Layer>
       </Stage>
     </>
