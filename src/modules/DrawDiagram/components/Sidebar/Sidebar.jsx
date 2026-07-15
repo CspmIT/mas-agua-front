@@ -1,11 +1,11 @@
 import React from 'react';
-import { Box, Divider, IconButton, Tooltip } from '@mui/material';
+import { Box, IconButton, Tooltip } from '@mui/material';
 import { RiImageAddFill } from 'react-icons/ri';
-import { MdDelete, MdPolyline } from 'react-icons/md';
+import { MdPolyline } from 'react-icons/md';
+import { LuBoxSelect, LuCircleDot, LuDatabase, LuExternalLink, LuPanelTop, LuShapes } from 'react-icons/lu';
 import { FaArrowRightLong } from 'react-icons/fa6';
 import { HiOutlineVariable } from 'react-icons/hi';
 import {
-  iconButtonDangerSx,
   iconButtonOnDarkPrimarySx,
   iconButtonOnDarkSx,
   sidebarShellSx,
@@ -25,12 +25,10 @@ const Sidebar = ({
   setShowLineStyleSelector,
   setShowTextStyler,
   setShowListField,
-  setElements,
-  setCircles,
-  setSelectedId,
   setTextPosition,
   setTextInput,
-  handleDeleteElement,
+  showSymbolSelector,
+  setShowSymbolSelector,
 }) => {
   const toggleImage = () => {
     if (tool === 'imageSelector') {
@@ -86,6 +84,30 @@ const Sidebar = ({
     }
   };
 
+  const togglePanel = () => {
+    if (tool === 'panel') {
+      setTool(null);
+    } else {
+      setTool('panel');
+      setShowImageSelector(false);
+      setShowLineStyleSelector(false);
+      setShowTextStyler(false);
+      setShowListField(false);
+    }
+  };
+
+  const toggleWidget = (widgetTool) => {
+    if (tool === widgetTool) {
+      setTool(null);
+    } else {
+      setTool(widgetTool);
+      setShowImageSelector(false);
+      setShowLineStyleSelector(false);
+      setShowTextStyler(false);
+      setShowListField(false);
+    }
+  };
+
   const toggleFloatingVariable = () => {
     if (tool === 'floatingVariable') {
       setTool(null);
@@ -97,31 +119,6 @@ const Sidebar = ({
       setShowLineStyleSelector(false);
       setShowTextStyler(false);
     }
-  };
-
-  const toggleFields = () => {
-    if (tool === 'fields') {
-      setTool(null);
-      setShowListField(false);
-    } else {
-      setTool('fields');
-      setShowListField(true);
-      setShowImageSelector(false);
-      setShowLineStyleSelector(false);
-      setShowTextStyler(false);
-    }
-  };
-
-  const handleDelete = () => {
-    setElements((prev) => prev.filter((el) => String(el.id) !== String(selectedId)));
-    setCircles((prev) => prev.filter((c) => String(c.lineId) !== String(selectedId)));
-    handleDeleteElement(selectedId);
-    setTool(null);
-    setSelectedId(null);
-    setShowImageSelector(false);
-    setShowLineStyleSelector(false);
-    setShowTextStyler(false);
-    setTextPosition(null);
   };
 
   return (
@@ -150,37 +147,71 @@ const Sidebar = ({
         </IconButton>
       </Tooltip>
 
+      <Tooltip title='Agregar panel de información' placement='right'>
+        <IconButton onClick={togglePanel} sx={toolButtonSx(tool === 'panel')}>
+          <LuPanelTop size={20} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Agregar tanque de nivel' placement='right'>
+        <IconButton onClick={() => toggleWidget('tank')} sx={toolButtonSx(tool === 'tank')}>
+          <LuDatabase size={20} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Agregar LED de estado' placement='right'>
+        <IconButton onClick={() => toggleWidget('led')} sx={toolButtonSx(tool === 'led')}>
+          <LuCircleDot size={20} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Agregar botón de navegación' placement='right'>
+        <IconButton onClick={() => toggleWidget('linkButton')} sx={toolButtonSx(tool === 'linkButton')}>
+          <LuExternalLink size={20} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Insertar símbolo del catálogo' placement='right'>
+        <IconButton
+          onClick={() => {
+            setShowSymbolSelector((prev) => !prev);
+            setShowImageSelector(false);
+            setShowLineStyleSelector(false);
+            setShowTextStyler(false);
+            setShowListField(false);
+          }}
+          sx={toolButtonSx(showSymbolSelector)}
+        >
+          <LuShapes size={20} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Guardar elementos como símbolo (marcá un área)' placement='right'>
+        <IconButton
+          onClick={() => {
+            if (tool === 'captureSymbol') {
+              setTool(null);
+            } else {
+              setTool('captureSymbol');
+              setShowSymbolSelector(false);
+              setShowImageSelector(false);
+              setShowLineStyleSelector(false);
+              setShowTextStyler(false);
+              setShowListField(false);
+            }
+          }}
+          sx={toolButtonSx(tool === 'captureSymbol')}
+        >
+          <LuBoxSelect size={20} />
+        </IconButton>
+      </Tooltip>
+
       {!selectedId && (
         <Tooltip title='Asignar variable' placement='right'>
           <IconButton onClick={toggleFloatingVariable} sx={toolButtonSx(tool === 'floatingVariable')}>
             <HiOutlineVariable size={20} />
           </IconButton>
         </Tooltip>
-      )}
-
-      {selectedId && (
-        <>
-          <Divider
-            flexItem
-            sx={{
-              my: 1,
-              border: 'none',
-              height: '1px',
-              background:
-                'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%)',
-            }}
-          />
-          <Tooltip title='Asignar variable' placement='right'>
-            <IconButton onClick={toggleFields} sx={toolButtonSx(tool === 'fields')}>
-              <HiOutlineVariable size={20} />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title='Borrar elemento' placement='right'>
-            <IconButton onClick={handleDelete} sx={{ ...iconButtonDangerSx, width: 44, height: 44 }}>
-              <MdDelete size={20} />
-            </IconButton>
-          </Tooltip>
-        </>
       )}
     </Box>
   );

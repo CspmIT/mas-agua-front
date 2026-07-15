@@ -39,14 +39,16 @@ export const uploadCanvaDb = async (id, {
 
 			let dataInflux = null;
 			if (line.variable?.varsInflux) {
-				
+
 				dataInflux = {
 					id: line.id_influxvars,
 					name: line.variable.name,
 					unit: line.variable.unit,
 					varsInflux: line.variable.varsInflux,
 					position: line.variable.position || 'Centro',
-					show: line.variable.show_var || true
+					// En las cañerias el tooltip queda oculto por defecto
+					show: false,
+					max_value_var: line.max_value_var || null
 				};
 				influxVarsToRequest.push({ dataInflux: dataInflux });
 			}
@@ -71,14 +73,16 @@ export const uploadCanvaDb = async (id, {
 
 			let dataInflux = null;
 			if (poly.variable?.varsInflux) {
-				
+
 				dataInflux = {
 					id: poly.id_influxvars,
 					name: poly.variable.name,
 					unit: poly.variable.unit,
 					varsInflux: poly.variable.varsInflux,
 					position: poly.variable.position || 'Centro',
-					show: poly.variable.show_var || true
+					// En las cañerias el tooltip queda oculto por defecto
+					show: false,
+					max_value_var: poly.max_value_var || null
 				};
 				influxVarsToRequest.push({ dataInflux: dataInflux });
 			}
@@ -170,6 +174,92 @@ export const uploadCanvaDb = async (id, {
 		}
 
 
+		// === PANELES DE INFORMACION ===
+		for (const panel of objectDiagram?.panels || []) {
+			let styles = panel.styles || {};
+			if (typeof styles === 'string') {
+				try { styles = JSON.parse(styles); } catch { styles = {}; }
+			}
+
+			const rows = (panel.rows || []).map((row, index) => {
+				let dataInflux = null;
+				if (row.kind === 'variable' && row.variable?.varsInflux) {
+					dataInflux = {
+						id: row.id_influxvars,
+						name: row.variable.name,
+						unit: row.variable.unit,
+						varsInflux: row.variable.varsInflux,
+						show: row.show_var ?? true,
+					};
+					influxVarsToRequest.push({ dataInflux: dataInflux });
+				}
+
+				return {
+					id: row.id ?? index + 1,
+					label: row.label || '',
+					kind: dataInflux ? 'variable' : 'static',
+					value: row.value || '',
+					dataInflux,
+				};
+			});
+
+			const panelElement = {
+				id: `panel-${panel.id}`,
+				type: 'panel',
+				x: panel.left,
+				y: panel.top,
+				width: parseFloat(panel.width) || 230,
+				title: panel.title || '',
+				styles,
+				rows,
+				draggable: true,
+				// el alto del resize viaja dentro del JSON de estilos
+				height: parseFloat(styles.height) || null,
+			};
+
+			elements.push(panelElement);
+		}
+
+		// === WIDGETS (tanques, leds) ===
+		for (const widget of objectDiagram?.widgets || []) {
+			let dataInflux = null;
+			if (widget.variable?.varsInflux) {
+				dataInflux = {
+					id: widget.id_influxvars,
+					name: widget.variable.name,
+					unit: widget.variable.unit,
+					type: widget.variable.type,
+					calc: widget.variable.calc,
+					varsInflux: widget.variable.varsInflux,
+					equation: widget.variable.equation,
+					status: widget.variable.status,
+					binary_compressed: widget.variable.binary_compressed,
+					calc_binary_compressed: widget.variable.calc_binary_compressed,
+					id_bit: widget.id_bit,
+					bit_name: widget.bit?.name || null,
+					show: widget.show_var ?? true,
+					position: widget.position_var || 'Centro',
+					max_value_var: widget.max_value_var,
+					calculatePercentage: widget.max_value_var ? true : false,
+					boolean_colors: widget.boolean_colors || {},
+				};
+				influxVarsToRequest.push({ dataInflux: dataInflux });
+			}
+
+			elements.push({
+				id: `widget-${widget.id}`,
+				type: widget.type,
+				x: widget.left,
+				y: widget.top,
+				width: parseFloat(widget.width) || 0,
+				height: parseFloat(widget.height) || 0,
+				draggable: true,
+				config: widget.config || {},
+				linkDiagram: widget.id_link_diagram || null,
+				dataInflux,
+			});
+		}
+
 		// === VALORES INFLUX ===
 		let finalElements = elements;
 
@@ -182,6 +272,16 @@ export const uploadCanvaDb = async (id, {
 			const valuesResponse = response.data;
 
 			finalElements = elements.map((el) => {
+				if (el.type === 'panel') {
+					return {
+						...el,
+						rows: el.rows.map((row) =>
+							row.dataInflux && valuesResponse?.[row.dataInflux.id] !== undefined
+								? { ...row, dataInflux: { ...row.dataInflux, value: valuesResponse[row.dataInflux.id] } }
+								: row
+						),
+					};
+				}
 				if (el.dataInflux && valuesResponse?.[el.dataInflux.id] !== undefined) {
 					return {
 						...el,
@@ -231,6 +331,8 @@ export const saveDiagramKonva = async ({
 			texts: [],
 			lines: [],
 			polylines: [],
+			panels: [],
+			widgets: [],
 			deleted,
 		};
 
@@ -278,6 +380,7 @@ export const saveDiagramKonva = async ({
 					saveObjects.polylines.push({
 						...(el.id ? { id: getNumericId(el.id) } : {}),
 						id_influxvars: el.dataInflux?.id || null,
+						max_value_var: el.dataInflux?.max_value_var || null,
 						points: polylinePoints,
 						stroke: el.stroke,
 						strokeWidth: el.strokeWidth,
@@ -320,6 +423,51 @@ export const saveDiagramKonva = async ({
 					});
 					break;
 
+				case 'tank':
+				case 'led':
+				case 'linkButton':
+					saveObjects.widgets.push({
+						...(el.id ? { id: getNumericId(el.id) } : {}),
+						type: el.type,
+						id_link_diagram: el.linkDiagram || null,
+						left: el.x,
+						top: el.y,
+						width: el.width,
+						height: el.height,
+						id_influxvars: el.dataInflux?.id || null,
+						id_bit: el.dataInflux?.id_bit || null,
+						show_var: el.dataInflux?.show ?? true,
+						position_var: el.dataInflux?.position || 'Centro',
+						max_value_var: el.dataInflux?.max_value_var || null,
+						boolean_colors: el.dataInflux?.boolean_colors || null,
+						config: el.config || {},
+						status: 1,
+					});
+					break;
+
+				case 'panel':
+					saveObjects.panels.push({
+						...(el.id ? { id: getNumericId(el.id) } : {}),
+						title: el.title || '',
+						left: el.x,
+						top: el.y,
+						width: el.width,
+						styles: { ...(el.styles || {}), height: el.height || null },
+						status: 1,
+						rows: (el.rows || []).map((row, index) => {
+							const isVariable = row.kind === 'variable' && row.dataInflux?.id;
+							return {
+								order: index,
+								label: row.label || '',
+								kind: isVariable ? 'variable' : 'static',
+								value: isVariable ? '' : (row.value ?? ''),
+								id_influxvars: isVariable ? row.dataInflux.id : null,
+								show_var: row.dataInflux?.show ?? true,
+							};
+						}),
+					});
+					break;
+
 				case 'line':
 					const absPoints = {
 						start: {
@@ -335,6 +483,7 @@ export const saveDiagramKonva = async ({
 					saveObjects.lines.push({
 						...(el.id ? { id: getNumericId(el.id) } : {}),
 						id_influxvars: el.dataInflux?.id || null,
+						max_value_var: el.dataInflux?.max_value_var || null,
 						points: absPoints,
 						stroke: el.stroke,
 						strokeWidth: el.strokeWidth,

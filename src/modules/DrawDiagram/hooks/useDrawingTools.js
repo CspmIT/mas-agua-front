@@ -1,4 +1,47 @@
 import { useCallback, useState, useRef } from 'react';
+import { createDefaultPanel, getPanelHeight } from '../components/PanelElement/PanelElement';
+import { createDefaultTank } from '../components/WidgetElements/TankElement';
+import { createDefaultLed } from '../components/WidgetElements/LedElement';
+import { createDefaultLinkButton } from '../components/WidgetElements/LinkButtonElement';
+
+//CAJA CONTENEDORA APROXIMADA DE UN ELEMENTO EN COORDENADAS DEL CANVAS
+export const getElementBBox = (el) => {
+  if (el.type === 'line' || el.type === 'polyline') {
+    const xs = el.points.filter((_, i) => i % 2 === 0);
+    const ys = el.points.filter((_, i) => i % 2 === 1);
+    const minX = Math.min(...xs);
+    const minY = Math.min(...ys);
+    return {
+      x: (el.x || 0) + minX,
+      y: (el.y || 0) + minY,
+      width: Math.max(...xs) - minX,
+      height: Math.max(...ys) - minY,
+    };
+  }
+  if (el.type === 'text') {
+    const fontSize = el.fontSize || 16;
+    return { x: el.x, y: el.y, width: (el.text?.length || 4) * fontSize * 0.6, height: fontSize };
+  }
+  if (el.type === 'panel') {
+    return { x: el.x, y: el.y, width: el.width || 0, height: getPanelHeight(el) };
+  }
+  return { x: el.x, y: el.y, width: el.width || 0, height: el.height || 0 };
+};
+
+// Con Shift presionado, proyecta el punto sobre el angulo multiplo de 45° mas cercano
+const snapToAngle = (origin, pos, shiftKey) => {
+  if (!shiftKey || !origin) return pos;
+
+  const dx = pos.x - origin.x;
+  const dy = pos.y - origin.y;
+  const step = Math.PI / 4;
+  const angle = Math.round(Math.atan2(dy, dx) / step) * step;
+  const ux = Math.cos(angle);
+  const uy = Math.sin(angle);
+  const projection = dx * ux + dy * uy;
+
+  return { x: origin.x + ux * projection, y: origin.y + uy * projection };
+};
 
 export const useDrawingTools = ({
   tool,
@@ -20,12 +63,15 @@ export const useDrawingTools = ({
   editingTextId,
   setEditingTextId,
   setTextStyle,
-  setShowTextStyler
+  setShowTextStyler,
+  onSymbolCaptured
 }) => {
   const [lineStart, setLineStart] = useState(null);
   const [tempLine, setTempLine] = useState(null);
   const [polylinePoints, setPolylinePoints] = useState([]);
   const [isDrawingPolyline, setIsDrawingPolyline] = useState(false);
+  const [symbolCaptureStart, setSymbolCaptureStart] = useState(null);
+  const [captureRect, setCaptureRect] = useState(null);
 
   const getTransformedPointerPosition = (stageRef, stagePosition, stageScale) => {
     const stage = stageRef.current;
@@ -85,6 +131,14 @@ export const useDrawingTools = ({
       setLineStart(null);
       setTempLine(null);
 
+    } else if (selectedElement?.type === 'panel') {
+      // En la fase del editor de paneles, aca se abre el PanelEditor
+      setTool(null);
+      setShowLineStyleSelector(false);
+      setShowTextStyler(false);
+      setLineStart(null);
+      setTempLine(null);
+
     } else if (selectedElement?.type === 'text') {
       setTool('text');
       setShowLineStyleSelector(false);
@@ -120,6 +174,14 @@ export const useDrawingTools = ({
 
     const clickedOnEmpty = e.target === e.target.getStage();
 
+    // Captura de símbolo: arrastrar un recuadro alrededor de los elementos
+    if (tool === 'captureSymbol') {
+      setSelectedId(null);
+      setSymbolCaptureStart(pos);
+      setCaptureRect({ x: pos.x, y: pos.y, width: 0, height: 0 });
+      return;
+    }
+
     // Limpieza de selección
     if (tool !== 'polyline' || !isDrawingPolyline) {
       if (clickedOnEmpty) {
@@ -141,6 +203,27 @@ export const useDrawingTools = ({
       return;
     }
 
+    // Panel de información
+    if (tool === 'panel' && clickedOnEmpty) {
+      const newPanel = createDefaultPanel(pos);
+      setElements((prev) => [...prev, newPanel]);
+      setNewElementsIds((prev) => [...prev, newPanel.id]);
+      setSelectedId(newPanel.id);
+      setTool(null);
+      return;
+    }
+
+    // Widgets tanque, LED y botón de navegación
+    if (['tank', 'led', 'linkButton'].includes(tool) && clickedOnEmpty) {
+      const factories = { tank: createDefaultTank, led: createDefaultLed, linkButton: createDefaultLinkButton };
+      const newWidget = factories[tool](pos);
+      setElements((prev) => [...prev, newWidget]);
+      setNewElementsIds((prev) => [...prev, newWidget.id]);
+      setSelectedId(newWidget.id);
+      setTool(null);
+      return;
+    }
+
     // Línea simple
     if (tool === 'simpleLine') {
       if (selectedId) return;
@@ -156,18 +239,19 @@ export const useDrawingTools = ({
           strokeWidth: lineStyle.strokeWidth,
         });
       } else {
-        const isSamePoint = pos.x === lineStart.x && pos.y === lineStart.y;
+        const endPos = snapToAngle(lineStart, pos, e.evt?.shiftKey);
+        const isSamePoint = endPos.x === lineStart.x && endPos.y === lineStart.y;
         if (isSamePoint) return;
 
         const id = String(Date.now());
-        const x = Math.min(lineStart.x, pos.x);
-        const y = Math.min(lineStart.y, pos.y);
+        const x = Math.min(lineStart.x, endPos.x);
+        const y = Math.min(lineStart.y, endPos.y);
 
         const relativePoints = [
           lineStart.x - x,
           lineStart.y - y,
-          pos.x - x,
-          pos.y - y,
+          endPos.x - x,
+          endPos.y - y,
         ];
 
         const newLine = {
@@ -193,8 +277,8 @@ export const useDrawingTools = ({
           },
           {
             id: `${id}-end`,
-            x: pos.x,
-            y: pos.y,
+            x: endPos.x,
+            y: endPos.y,
             lineId: id,
             fill: 'red',
             visible: false,
@@ -227,7 +311,9 @@ export const useDrawingTools = ({
         });
       } else {
         setPolylinePoints((prev) => {
-          const updated = [...prev, pos.x, pos.y];
+          const origin = { x: prev[prev.length - 2], y: prev[prev.length - 1] };
+          const snapped = snapToAngle(origin, pos, e.evt?.shiftKey);
+          const updated = [...prev, snapped.x, snapped.y];
           setTempLine({
             points: updated,
             stroke: lineStyle.color,
@@ -270,27 +356,80 @@ export const useDrawingTools = ({
     const pos = getTransformedPointerPosition(stageRef, stagePosition, stageScale);
     if (!pos) return;
 
+    if (tool === 'captureSymbol' && symbolCaptureStart) {
+      setCaptureRect({
+        x: Math.min(symbolCaptureStart.x, pos.x),
+        y: Math.min(symbolCaptureStart.y, pos.y),
+        width: Math.abs(pos.x - symbolCaptureStart.x),
+        height: Math.abs(pos.y - symbolCaptureStart.y),
+      });
+    }
+
     if (tool === 'simpleLine' && lineStart) {
+      const snapped = snapToAngle(lineStart, pos, e.evt?.shiftKey);
       setTempLine({
-        points: [lineStart.x, lineStart.y, pos.x, pos.y],
+        points: [lineStart.x, lineStart.y, snapped.x, snapped.y],
         stroke: lineStyle.color,
         strokeWidth: lineStyle.strokeWidth,
       });
     }
 
     if (tool === 'polyline' && isDrawingPolyline && polylinePoints.length > 0) {
-      const updatedPoints = [...polylinePoints, pos.x, pos.y];
+      const origin = {
+        x: polylinePoints[polylinePoints.length - 2],
+        y: polylinePoints[polylinePoints.length - 1],
+      };
+      const snapped = snapToAngle(origin, pos, e.evt?.shiftKey);
+      const updatedPoints = [...polylinePoints, snapped.x, snapped.y];
       setTempLine({
         points: updatedPoints,
         stroke: lineStyle.color,
         strokeWidth: lineStyle.strokeWidth,
       });
     }
-  }, [tool, lineStart, isDrawingPolyline, polylinePoints, lineStyle]);
+  }, [tool, lineStart, isDrawingPolyline, polylinePoints, lineStyle, symbolCaptureStart]);
 
   const handleMouseUp = useCallback(() => {
     isDrawing.current = false;
-  }, [isDrawing]);
+
+    // Fin de la captura de símbolo: juntar los elementos dentro del recuadro
+    if (tool === 'captureSymbol' && symbolCaptureStart && captureRect) {
+      const rect = captureRect;
+      setSymbolCaptureStart(null);
+      setCaptureRect(null);
+      setTool(null);
+
+      if (rect.width < 5 || rect.height < 5) return;
+
+      const captured = elements.filter((el) => {
+        const box = getElementBBox(el);
+        return (
+          box.x >= rect.x &&
+          box.y >= rect.y &&
+          box.x + box.width <= rect.x + rect.width &&
+          box.y + box.height <= rect.y + rect.height
+        );
+      });
+
+      if (!captured.length) {
+        onSymbolCaptured?.([]);
+        return;
+      }
+
+      // Normalizar posiciones al origen para poder insertarlo en cualquier lado
+      const minX = Math.min(...captured.map((el) => getElementBBox(el).x));
+      const minY = Math.min(...captured.map((el) => getElementBBox(el).y));
+      const normalized = captured.map((el) => {
+        const clone = structuredClone(el);
+        delete clone.id;
+        clone.x = (el.x || 0) - minX;
+        clone.y = (el.y || 0) - minY;
+        return clone;
+      });
+
+      onSymbolCaptured?.(normalized);
+    }
+  }, [isDrawing, tool, symbolCaptureStart, captureRect, elements, onSymbolCaptured]);
 
   //FUNCION PARA FINALIZAR LA POLILINEA
   const finishPolyline = useCallback(() => {
@@ -428,6 +567,9 @@ export const useDrawingTools = ({
     setLineStart,
     setPolylinePoints,
     setIsDrawingPolyline,
-    setShowLineStyleSelector
+    setShowLineStyleSelector,
+    captureRect,
+    setCaptureRect,
+    setSymbolCaptureStart
   };
 };

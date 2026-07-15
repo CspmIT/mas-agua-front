@@ -1,14 +1,21 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Stage, Layer, Text, Line, Label, Tag, Group, Rect } from 'react-konva';
 import { uploadCanvaDb } from '../utils/js/drawActions';
+import { getFlowAnimation } from '../utils/js/flowAnimation';
+import { getElementBBox } from '../hooks/useDrawingTools';
 import { Box, Button, IconButton, Tooltip } from '@mui/material';
 import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
 import RenderImage from '../components/RenderImage/RenderImage';
+import PanelElement from '../components/PanelElement/PanelElement';
+import TankElement from '../components/WidgetElements/TankElement';
+import LedElement from '../components/WidgetElements/LedElement';
+import LinkButtonElement from '../components/WidgetElements/LinkButtonElement';
+import VariableHistoryPopup from '../components/VariableHistoryPopup/VariableHistoryPopup';
 import LoaderComponent from '../../../components/Loader';
 import CardCustom from '../../../components/CardCustom';
-import { LuZoomOut, LuZoomIn, LuArrowLeft } from 'react-icons/lu';
+import { LuZoomOut, LuZoomIn, LuArrowLeft, LuDownload } from 'react-icons/lu';
 import { storage } from '../../../storage/storage';
 import { canvasAreaSx } from '../utils/js/diagramTheme';
 
@@ -66,6 +73,8 @@ function ViewDiagram() {
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const usuario = storage.get('usuario');
   const containerRef = useRef(null);
+  const location = useLocation();
+  const [historyPopup, setHistoryPopup] = useState(null);
 
   useEffect(() => { elementsRef.current = elements; }, [elements]);
 
@@ -109,20 +118,41 @@ function ViewDiagram() {
   useEffect(() => {
     const updateInflux = async () => {
       const currentElements = elementsRef.current;
-      const influxPayload = currentElements
-        .filter(el => el.dataInflux)
-        .map(el => ({ id: el.dataInflux.id, dataInflux: el.dataInflux }));
+      const influxPayload = [];
+
+      currentElements.forEach(el => {
+        if (el.dataInflux) {
+          influxPayload.push({ id: el.dataInflux.id, dataInflux: el.dataInflux });
+        }
+        if (el.type === 'panel') {
+          el.rows?.forEach(row => {
+            if (row.dataInflux) {
+              influxPayload.push({ id: row.dataInflux.id, dataInflux: row.dataInflux });
+            }
+          });
+        }
+      });
       if (!influxPayload.length) return;
 
       try {
         const response = await request(`${backend['Mas Agua']}/multipleDataInflux`, 'POST', influxPayload);
         const result = response.data;
         setElements(prev =>
-          prev.map(el =>
-            el.dataInflux?.id && result[el.dataInflux.id] !== undefined
+          prev.map(el => {
+            if (el.type === 'panel') {
+              return {
+                ...el,
+                rows: el.rows.map(row =>
+                  row.dataInflux?.id && result[row.dataInflux.id] !== undefined
+                    ? { ...row, dataInflux: { ...row.dataInflux, value: result[row.dataInflux.id] } }
+                    : row
+                ),
+              };
+            }
+            return el.dataInflux?.id && result[el.dataInflux.id] !== undefined
               ? { ...el, dataInflux: { ...el.dataInflux, value: result[el.dataInflux.id] } }
-              : el
-          )
+              : el;
+          })
         );
       } catch (err) {
         console.error('Error actualizando datos desde Influx:', err);
@@ -153,6 +183,16 @@ function ViewDiagram() {
     setScale(newScale);
     setPosition(newPos);
   }, [scale, position, dimensions]);
+
+  //EXPORTA EL AREA VISIBLE DEL DIAGRAMA COMO IMAGEN PNG
+  const exportPng = () => {
+    if (!stageRef.current) return;
+    const uri = stageRef.current.toDataURL({ pixelRatio: 2 });
+    const link = document.createElement('a');
+    link.download = `${diagramMetadata.title || 'diagrama'}.png`;
+    link.href = uri;
+    link.click();
+  };
 
   const renderTooltipLabel = useCallback((el) => {
     if (!el.dataInflux?.show) return null;
@@ -291,10 +331,13 @@ function ViewDiagram() {
   const autoFitDiagram = useCallback((elementsParam) => {
     if (!elementsParam?.length) return;
     if (dimensions.width === 0 || dimensions.height === 0) return;
-    const minX = Math.min(...elementsParam.map(el => el.x));
-    const minY = Math.min(...elementsParam.map(el => el.y));
-    const maxX = Math.max(...elementsParam.map(el => (el.x + (el.width || 0))));
-    const maxY = Math.max(...elementsParam.map(el => (el.y + (el.height || 0))));
+    // Cajas reales de cada elemento (las lineas tienen x=0 y puntos absolutos:
+    // usar el.x directo rompia el encuadre)
+    const boxes = elementsParam.map(getElementBBox);
+    const minX = Math.min(...boxes.map(b => b.x));
+    const minY = Math.min(...boxes.map(b => b.y));
+    const maxX = Math.max(...boxes.map(b => b.x + b.width));
+    const maxY = Math.max(...boxes.map(b => b.y + b.height));
     const diagramWidth = maxX - minX;
     const diagramHeight = maxY - minY;
     if (diagramWidth === 0 || diagramHeight === 0) return;
@@ -341,8 +384,9 @@ function ViewDiagram() {
           );
         }
         if (el.type === 'line' || el.type === 'polyline') {
-          const value = el.dataInflux?.value;
-          const isClosed = value == 0;
+          // Animacion segun el caudal: sin caudal se detiene, y con caudal de
+          // referencia la velocidad acompaña al valor
+          const { isClosed, speedFactor } = getFlowAnimation(el.dataInflux);
           return (
             <Group key={`group-${el.type}-${el.id}`}>
               {/* Borde exterior del caño */}
@@ -368,7 +412,7 @@ function ViewDiagram() {
                   stroke={el.stroke}
                   strokeWidth={el.strokeWidth}
                   dash={[10, 8]}
-                  dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
+                  dashOffset={(el.invertAnimation ? -dashOffset : dashOffset) * speedFactor}
                   lineCap='round'
                   lineJoin='round'
                 />
@@ -379,10 +423,73 @@ function ViewDiagram() {
         if (el.type === 'image') {
           return <RenderImage key={el.id} el={el} />;
         }
+        if (el.type === 'panel') {
+          return <PanelElement key={el.id} el={el} />;
+        }
+        if (el.type === 'tank') {
+          return <TankElement key={el.id} el={el} />;
+        }
+        if (el.type === 'led') {
+          return <LedElement key={el.id} el={el} />;
+        }
+        if (el.type === 'linkButton') {
+          return <LinkButtonElement key={el.id} el={el} />;
+        }
         return null;
       })();
 
-      const tooltip = el.dataInflux?.name ? renderTooltipLabel(el) : null;
+      // El tanque ya muestra su porcentaje adentro, y en las cañerias el flujo
+      // animado ya cuenta la historia: sin tooltip para esos tipos
+      const tooltip =
+        el.dataInflux?.name && !['tank', 'line', 'polyline'].includes(el.type)
+          ? renderTooltipLabel(el)
+          : null;
+
+      // Elementos vinculados: clic navega al otro diagrama (drill-down)
+      if (el.linkDiagram) {
+        return (
+          <Group
+            key={`frag-${el.id}`}
+            onClick={() => navigate(`/viewDiagram/${el.linkDiagram}`, { state: { drill: true } })}
+            onTap={() => navigate(`/viewDiagram/${el.linkDiagram}`, { state: { drill: true } })}
+            onMouseEnter={(e) => {
+              e.target.getStage().container().style.cursor = 'pointer';
+            }}
+            onMouseLeave={(e) => {
+              e.target.getStage().container().style.cursor = 'default';
+            }}
+          >
+            {elementRender}
+            {tooltip}
+          </Group>
+        );
+      }
+
+      // Elementos con variable numerica: clic abre la historia reciente
+      const canShowHistory =
+        el.dataInflux?.id &&
+        el.type !== 'panel' &&
+        !el.dataInflux.binary_compressed &&
+        !el.dataInflux.calc_binary_compressed;
+
+      if (canShowHistory) {
+        return (
+          <Group
+            key={`frag-${el.id}`}
+            onClick={() => setHistoryPopup(el.dataInflux)}
+            onTap={() => setHistoryPopup(el.dataInflux)}
+            onMouseEnter={(e) => {
+              e.target.getStage().container().style.cursor = 'pointer';
+            }}
+            onMouseLeave={(e) => {
+              e.target.getStage().container().style.cursor = 'default';
+            }}
+          >
+            {elementRender}
+            {tooltip}
+          </Group>
+        );
+      }
 
       return (
         <React.Fragment key={`frag-${el.id}`}>
@@ -397,7 +504,8 @@ function ViewDiagram() {
     if (elements.length && dimensions.width > 0) {
       autoFitDiagram(elements);
     }
-  }, [dimensions, autoFitDiagram]);
+    // "id" re-encuadra al navegar entre diagramas vinculados
+  }, [dimensions, autoFitDiagram, id, elements.length]);
 
 
   return (
@@ -449,7 +557,26 @@ function ViewDiagram() {
                     <LuZoomOut size={18} />
                   </IconButton>
                 </Tooltip>
+                <Tooltip title='Descargar como imagen' placement='right'>
+                  <IconButton onClick={exportPng} sx={darkIconBtnSx}>
+                    <LuDownload size={18} />
+                  </IconButton>
+                </Tooltip>
+                {location.state?.drill && (
+                  <Tooltip title='Volver al diagrama anterior' placement='right'>
+                    <IconButton onClick={() => navigate(-1)} sx={darkIconBtnSx}>
+                      <LuArrowLeft size={18} />
+                    </IconButton>
+                  </Tooltip>
+                )}
               </div>
+
+              {historyPopup && (
+                <VariableHistoryPopup
+                  dataInflux={historyPopup}
+                  onClose={() => setHistoryPopup(null)}
+                />
+              )}
 
               {dimensions.width > 0 && (
                 <Stage
