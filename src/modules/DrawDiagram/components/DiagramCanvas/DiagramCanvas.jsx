@@ -2,6 +2,7 @@ import React, { Fragment, useMemo, useState } from 'react';
 import { Stage, Layer, Line, Text, Transformer, Circle, Group, Rect, Label, Tag } from 'react-konva';
 import ImageElement from '../ImageElement/ImageElement';
 import PanelElement from '../PanelElement/PanelElement';
+import { getFlowAnimation } from '../../utils/js/flowAnimation';
 import TankElement from '../WidgetElements/TankElement';
 import LedElement from '../WidgetElements/LedElement';
 import LinkButtonElement from '../WidgetElements/LinkButtonElement';
@@ -239,7 +240,11 @@ const DiagramCanvas = ({
                         stroke={el.stroke}
                         strokeWidth={el.strokeWidth}
                         dash={[10, 8]}
-                        dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
+                        dashOffset={(() => {
+                          // En el editor los trazos quedan estaticos sin caudal
+                          const { isClosed, speedFactor } = getFlowAnimation(el.dataInflux);
+                          return isClosed ? 0 : (el.invertAnimation ? -dashOffset : dashOffset) * speedFactor;
+                        })()}
                         lineCap='round'
                         lineJoin='round'
                       />
@@ -682,7 +687,11 @@ const DiagramCanvas = ({
                         stroke={el.stroke}
                         strokeWidth={el.strokeWidth}
                         dash={[10, 8]}
-                        dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
+                        dashOffset={(() => {
+                          // En el editor los trazos quedan estaticos sin caudal
+                          const { isClosed, speedFactor } = getFlowAnimation(el.dataInflux);
+                          return isClosed ? 0 : (el.invertAnimation ? -dashOffset : dashOffset) * speedFactor;
+                        })()}
                         lineCap='round'
                         lineJoin='round'
                       />

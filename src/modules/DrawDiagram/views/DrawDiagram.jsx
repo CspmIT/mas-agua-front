@@ -401,7 +401,8 @@ const DrawDiagram = () => {
           ...el, dataInflux: {
             ...dataInflux,
             position: 'Centro',
-            show: true,
+            // En lineas y polilineas el tooltip nace oculto
+            show: !['line', 'polyline'].includes(el.type),
           }
         } : el
       )

@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Stage, Layer, Text, Line, Label, Tag, Group, Rect } from 'react-konva';
 import { uploadCanvaDb } from '../utils/js/drawActions';
+import { getFlowAnimation } from '../utils/js/flowAnimation';
+import { getElementBBox } from '../hooks/useDrawingTools';
 import { Box, Button, IconButton, Tooltip } from '@mui/material';
 import { request } from '../../../utils/js/request';
 import { backend } from '../../../utils/routes/app.routes';
@@ -329,10 +331,13 @@ function ViewDiagram() {
   const autoFitDiagram = useCallback((elementsParam) => {
     if (!elementsParam?.length) return;
     if (dimensions.width === 0 || dimensions.height === 0) return;
-    const minX = Math.min(...elementsParam.map(el => el.x));
-    const minY = Math.min(...elementsParam.map(el => el.y));
-    const maxX = Math.max(...elementsParam.map(el => (el.x + (el.width || 0))));
-    const maxY = Math.max(...elementsParam.map(el => (el.y + (el.height || 0))));
+    // Cajas reales de cada elemento (las lineas tienen x=0 y puntos absolutos:
+    // usar el.x directo rompia el encuadre)
+    const boxes = elementsParam.map(getElementBBox);
+    const minX = Math.min(...boxes.map(b => b.x));
+    const minY = Math.min(...boxes.map(b => b.y));
+    const maxX = Math.max(...boxes.map(b => b.x + b.width));
+    const maxY = Math.max(...boxes.map(b => b.y + b.height));
     const diagramWidth = maxX - minX;
     const diagramHeight = maxY - minY;
     if (diagramWidth === 0 || diagramHeight === 0) return;
@@ -379,8 +384,9 @@ function ViewDiagram() {
           );
         }
         if (el.type === 'line' || el.type === 'polyline') {
-          const value = el.dataInflux?.value;
-          const isClosed = value == 0;
+          // Animacion segun el caudal: sin caudal se detiene, y con caudal de
+          // referencia la velocidad acompaña al valor
+          const { isClosed, speedFactor } = getFlowAnimation(el.dataInflux);
           return (
             <Group key={`group-${el.type}-${el.id}`}>
               {/* Borde exterior del caño */}
@@ -406,7 +412,7 @@ function ViewDiagram() {
                   stroke={el.stroke}
                   strokeWidth={el.strokeWidth}
                   dash={[10, 8]}
-                  dashOffset={el.invertAnimation ? -dashOffset : dashOffset}
+                  dashOffset={(el.invertAnimation ? -dashOffset : dashOffset) * speedFactor}
                   lineCap='round'
                   lineJoin='round'
                 />
@@ -432,8 +438,12 @@ function ViewDiagram() {
         return null;
       })();
 
-      // El tanque ya muestra su porcentaje adentro: no duplicar con el tooltip
-      const tooltip = el.dataInflux?.name && el.type !== 'tank' ? renderTooltipLabel(el) : null;
+      // El tanque ya muestra su porcentaje adentro, y en las cañerias el flujo
+      // animado ya cuenta la historia: sin tooltip para esos tipos
+      const tooltip =
+        el.dataInflux?.name && !['tank', 'line', 'polyline'].includes(el.type)
+          ? renderTooltipLabel(el)
+          : null;
 
       // Elementos vinculados: clic navega al otro diagrama (drill-down)
       if (el.linkDiagram) {

@@ -40,14 +40,16 @@ export const uploadCanvaDb = async (id, {
 
 			let dataInflux = null;
 			if (line.variable?.varsInflux) {
-				
+
 				dataInflux = {
 					id: line.id_influxvars,
 					name: line.variable.name,
 					unit: line.variable.unit,
 					varsInflux: line.variable.varsInflux,
 					position: line.variable.position || 'Centro',
-					show: line.variable.show_var || true
+					// En las cañerias el tooltip queda oculto por defecto
+					show: false,
+					max_value_var: line.max_value_var || null
 				};
 				influxVarsToRequest.push({ dataInflux: dataInflux });
 			}
@@ -72,14 +74,16 @@ export const uploadCanvaDb = async (id, {
 
 			let dataInflux = null;
 			if (poly.variable?.varsInflux) {
-				
+
 				dataInflux = {
 					id: poly.id_influxvars,
 					name: poly.variable.name,
 					unit: poly.variable.unit,
 					varsInflux: poly.variable.varsInflux,
 					position: poly.variable.position || 'Centro',
-					show: poly.variable.show_var || true
+					// En las cañerias el tooltip queda oculto por defecto
+					show: false,
+					max_value_var: poly.max_value_var || null
 				};
 				influxVarsToRequest.push({ dataInflux: dataInflux });
 			}
@@ -377,6 +381,7 @@ export const saveDiagramKonva = async ({
 					saveObjects.polylines.push({
 						...(el.id ? { id: getNumericId(el.id) } : {}),
 						id_influxvars: el.dataInflux?.id || null,
+						max_value_var: el.dataInflux?.max_value_var || null,
 						points: polylinePoints,
 						stroke: el.stroke,
 						strokeWidth: el.strokeWidth,
@@ -479,6 +484,7 @@ export const saveDiagramKonva = async ({
 					saveObjects.lines.push({
 						...(el.id ? { id: getNumericId(el.id) } : {}),
 						id_influxvars: el.dataInflux?.id || null,
+						max_value_var: el.dataInflux?.max_value_var || null,
 						points: absPoints,
 						stroke: el.stroke,
 						strokeWidth: el.strokeWidth,
