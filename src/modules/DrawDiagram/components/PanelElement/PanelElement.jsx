@@ -14,8 +14,12 @@ export const DEFAULT_PANEL_STYLES = {
   cornerRadius: 6,
 };
 
-export const getPanelHeight = (el) =>
-  PANEL_TITLE_HEIGHT + (el.rows?.length || 0) * PANEL_ROW_HEIGHT + PANEL_PADDING;
+//ALTO DEL PANEL: el definido por el usuario (resize) o el calculado por filas
+export const getPanelHeight = (el) => {
+  const custom = Number(el.height);
+  if (custom > 0) return custom;
+  return PANEL_TITLE_HEIGHT + (el.rows?.length || 0) * PANEL_ROW_HEIGHT + PANEL_PADDING;
+};
 
 //FABRICA DE UN PANEL NUEVO CON VALORES POR DEFECTO
 export const createDefaultPanel = (pos) => ({
@@ -44,10 +48,15 @@ const formatRowValue = (row) => {
   return String(value);
 };
 
-const PanelElement = ({ el, isSelected = false, onSelect, onDragEnd }) => {
+const PanelElement = ({ el, isSelected = false, onSelect, onDragEnd, onTransformEnd }) => {
   const styles = { ...DEFAULT_PANEL_STYLES, ...el.styles };
   const height = getPanelHeight(el);
   const radius = styles.cornerRadius;
+
+  // Las filas se reparten el alto disponible; la tipografia queda fija
+  const rowHeight = el.rows?.length
+    ? Math.max((height - PANEL_TITLE_HEIGHT - PANEL_PADDING) / el.rows.length, 16)
+    : PANEL_ROW_HEIGHT;
 
   const valueColX = el.width * 0.42;
   const valueColWidth = el.width * 0.52;
@@ -61,6 +70,7 @@ const PanelElement = ({ el, isSelected = false, onSelect, onDragEnd }) => {
       onClick={onSelect}
       onTap={onSelect}
       onDragEnd={onDragEnd}
+      onTransformEnd={onTransformEnd}
     >
       {/* Fondo y borde del panel */}
       <Rect
@@ -96,14 +106,16 @@ const PanelElement = ({ el, isSelected = false, onSelect, onDragEnd }) => {
       />
       {/* Filas etiqueta: valor */}
       {(el.rows || []).map((row, i) => {
-        const rowY = PANEL_TITLE_HEIGHT + i * PANEL_ROW_HEIGHT;
+        const rowY = PANEL_TITLE_HEIGHT + i * rowHeight;
+        const chipHeight = Math.min(rowHeight - 6, styles.fontSize + 14);
+        const chipY = (rowHeight - chipHeight) / 2;
         return (
           <Group key={row.id} y={rowY}>
             <Text
               text={`${row.label}:`}
               x={PANEL_PADDING}
               width={valueColX - PANEL_PADDING * 2}
-              height={PANEL_ROW_HEIGHT}
+              height={rowHeight}
               verticalAlign='middle'
               fontSize={styles.fontSize}
               fontFamily='arial'
@@ -114,9 +126,9 @@ const PanelElement = ({ el, isSelected = false, onSelect, onDragEnd }) => {
             {/* Chip de fondo del valor, como los recuadros del diagrama de referencia */}
             <Rect
               x={valueColX}
-              y={3}
+              y={chipY}
               width={valueColWidth}
-              height={PANEL_ROW_HEIGHT - 6}
+              height={chipHeight}
               fill='#f3f4f6'
               stroke='#d1d5db'
               strokeWidth={1}
@@ -126,7 +138,7 @@ const PanelElement = ({ el, isSelected = false, onSelect, onDragEnd }) => {
               text={formatRowValue(row)}
               x={valueColX}
               width={valueColWidth}
-              height={PANEL_ROW_HEIGHT}
+              height={rowHeight}
               align='center'
               verticalAlign='middle'
               fontSize={styles.fontSize}
