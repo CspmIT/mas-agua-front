@@ -3,6 +3,7 @@ import { createDefaultPanel, getPanelHeight } from '../components/PanelElement/P
 import { createDefaultTank } from '../components/WidgetElements/TankElement';
 import { createDefaultLed } from '../components/WidgetElements/LedElement';
 import { createDefaultLinkButton } from '../components/WidgetElements/LinkButtonElement';
+import { createDefaultVarCard } from '../components/WidgetElements/VarCardElement';
 
 //CAJA CONTENEDORA APROXIMADA DE UN ELEMENTO EN COORDENADAS DEL CANVAS
 export const getElementBBox = (el) => {
@@ -21,6 +22,11 @@ export const getElementBBox = (el) => {
   if (el.type === 'text') {
     const fontSize = el.fontSize || 16;
     return { x: el.x, y: el.y, width: (el.text?.length || 4) * fontSize * 0.6, height: fontSize };
+  }
+  if (el.type === 'varCard') {
+    const fontSize = el.config?.fontSize || 14;
+    const textLength = String(el.dataInflux?.value ?? el.dataInflux?.name ?? 'Sin variable').length;
+    return { x: el.x, y: el.y, width: textLength * fontSize * 0.62 + 24, height: fontSize + 16 };
   }
   if (el.type === 'panel') {
     return { x: el.x, y: el.y, width: el.width || 0, height: getPanelHeight(el) };
@@ -325,30 +331,13 @@ export const useDrawingTools = ({
       return;
     }
 
-    // Variable flotante
+    // Variable flotante: card con el valor de la variable
     if (tool === 'floatingVariable') {
-      const img = new window.Image();
-      img.src = '/assets/img/Diagram/newDiagram/img_sinfondo.PNG';
-      img.onload = () => {
-        const width = 100;
-        const height = (img.height / img.width) * width;
-
-        const newImage = {
-          id: String(Date.now()),
-          type: 'image',
-          src: img.src,
-          x: pos.x,
-          y: pos.y,
-          width,
-          height,
-          draggable: true,
-          dataInflux: null,
-        };
-
-        setElements((prev) => [...prev, newImage]);
-        setNewElementsIds((prev) => [...prev, newImage.id]);
-        setTool(null);
-      };
+      const newCard = createDefaultVarCard(pos);
+      setElements((prev) => [...prev, newCard]);
+      setNewElementsIds((prev) => [...prev, newCard.id]);
+      setSelectedId(newCard.id);
+      setTool(null);
     }
   }, [tool, isDrawingPolyline, lineStart, lineStyle, selectedId]);
 

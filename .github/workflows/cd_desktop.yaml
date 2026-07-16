@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'feat(dashboard): soporte LineChart en el dashboard de usuario'
+                  releaseBody: 'feat(diagram): control de bombas PLC y cards de variables flotantes'
                   prerelease: false
