@@ -169,6 +169,8 @@ export const uploadCanvaDb = async (id, {
 				height: parseFloat(image.height) || 0,
 				draggable: true,
 				rotation: parseFloat(image.angle) || 0,
+				idBomb: image.id_bomb || null,
+				bombName: image.bomb?.name || null,
 				dataInflux,
 			});
 		}
@@ -346,6 +348,7 @@ export const saveDiagramKonva = async ({
 				case 'image':
 					saveObjects.images.push({
 						...(el.id ? { id: getNumericId(el.id) } : {}),
+						id_bomb: el.idBomb || null,
 						name: el.name || '',
 						src: el.src,
 						left: el.x,
@@ -426,6 +429,7 @@ export const saveDiagramKonva = async ({
 				case 'tank':
 				case 'led':
 				case 'linkButton':
+				case 'varCard':
 					saveObjects.widgets.push({
 						...(el.id ? { id: getNumericId(el.id) } : {}),
 						type: el.type,

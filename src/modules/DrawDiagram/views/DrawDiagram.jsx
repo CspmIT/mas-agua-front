@@ -12,6 +12,8 @@ import PanelEditor from '../components/PanelEditor/PanelEditor';
 import LinkDiagramPanel from '../components/LinkDiagramPanel/LinkDiagramPanel';
 import SymbolSelector from '../components/SymbolSelector/SymbolSelector';
 import SelectionToolbar from '../components/SelectionToolbar/SelectionToolbar';
+import BombSelector from '../components/BombControl/BombSelector';
+import { createDefaultVarCard } from '../components/WidgetElements/VarCardElement';
 import TopNavbar from '../components/TopNavbar/TopNavbar';
 import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -72,6 +74,7 @@ const DrawDiagram = () => {
   const [showTooltipPositionPanel, setShowTooltipPositionPanel] = useState(false);
   const [panelRowForVariable, setPanelRowForVariable] = useState(null);
   const [showSymbolSelector, setShowSymbolSelector] = useState(false);
+  const [showBombSelector, setShowBombSelector] = useState(false);
 
   const {
     elements,
@@ -172,6 +175,15 @@ const DrawDiagram = () => {
   const { saveText } = useTextTools({ elements, setElements, textStyle, setTextInput, setTextPosition, setEditingTextId, setNewElementsIds });
 
   const selectedElement = elements.find((el) => String(el.id) === String(selectedId));
+
+  // Solo las bombas sumergibles (id 13 de ListImg) pueden tener bomba PLC asignada
+  const isBombImage =
+    selectedElement?.type === 'image' && selectedElement?.src?.includes('Bomba_sumergible.png');
+
+  // Cerrar el selector de bombas al cambiar la seleccion
+  useEffect(() => {
+    setShowBombSelector(false);
+  }, [selectedId]);
 
   const copiedElementIdRef = useRef(null);
 
@@ -369,31 +381,42 @@ const DrawDiagram = () => {
     }
   };
 
+  //BUSCAR EL VALOR ACTUAL DE UNA VARIABLE RECIEN ASIGNADA A UN ELEMENTO
+  const fetchElementValue = async (elementId, dataInflux) => {
+    try {
+      const response = await request(
+        `${backend[import.meta.env.VITE_APP_NAME]}/multipleDataInflux`,
+        'POST',
+        [{ dataInflux }]
+      );
+      const value = response?.data?.[dataInflux.id];
+      if (value === undefined) return;
+
+      setElements((prev) =>
+        prev.map((el) =>
+          String(el.id) === String(elementId) && el.dataInflux
+            ? { ...el, dataInflux: { ...el.dataInflux, value } }
+            : el
+        )
+      );
+    } catch (error) {
+      console.error('Error obteniendo el valor de la variable:', error);
+    }
+  };
+
   const handleAssignVariable = (dataInflux) => {
     if (tool === 'floatingVariable') {
-      const img = new window.Image();
-      img.src = '/assets/img/Diagram/newDiagram/img_sinfondo.PNG';
-      img.onload = () => {
-        const width = 100;
-        const height = (img.height / img.width) * width;
-
-        const newImage = {
-          id: String(Date.now()),
-          type: 'image',
-          src: img.src,
-          x: 150,
-          y: 150,
-          width,
-          height,
-          draggable: true,
-          dataInflux: dataInflux,
-        };
-
-        setElements((prev) => [...prev, newImage]);
-        setNewElementsIds((prev) => [...prev, newImage.id]);
-        setTool(null);
-        setShowListField(false);
+      const newCard = {
+        ...createDefaultVarCard({ x: 150, y: 150 }),
+        // La card ya muestra el valor: el tooltip del nombre nace oculto
+        dataInflux: { ...dataInflux, position: 'Arriba', show: false },
       };
+
+      setElements((prev) => [...prev, newCard]);
+      setNewElementsIds((prev) => [...prev, newCard.id]);
+      setTool(null);
+      setShowListField(false);
+      fetchElementValue(newCard.id, newCard.dataInflux);
       return;
     }
 
@@ -430,12 +453,13 @@ const DrawDiagram = () => {
           ...el, dataInflux: {
             ...dataInflux,
             position: 'Centro',
-            // En lineas y polilineas el tooltip nace oculto
-            show: !['line', 'polyline'].includes(el.type),
+            // En lineas, polilineas y cards de variable el tooltip nace oculto
+            show: !['line', 'polyline', 'varCard'].includes(el.type),
           }
         } : el
       )
     );
+    fetchElementValue(selectedId, dataInflux);
   };
 
   const handleClearCanvas = () => {
@@ -887,7 +911,18 @@ const DrawDiagram = () => {
                     onAssignVariable={handleToggleAssignVariable}
                     onDuplicate={() => duplicateElement(selectedId)}
                     onDelete={handleDeleteSelected}
+                    canAssignBomb={isBombImage}
+                    isBombPanelOpen={showBombSelector}
+                    hasBomb={Boolean(selectedElement?.idBomb)}
+                    onAssignBomb={() => {
+                      setShowBombSelector((prev) => !prev);
+                      setShowListField(false);
+                    }}
                   />
+                )}
+                {/* Selector de bombas PLC */}
+                {showBombSelector && isBombImage && (
+                  <BombSelector image={selectedElement} onChange={handlePanelChange} />
                 )}
                 {/* Selector de símbolos */}
                 {showSymbolSelector && (
