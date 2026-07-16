@@ -12,7 +12,9 @@ import PanelElement from '../components/PanelElement/PanelElement';
 import TankElement from '../components/WidgetElements/TankElement';
 import LedElement from '../components/WidgetElements/LedElement';
 import LinkButtonElement from '../components/WidgetElements/LinkButtonElement';
+import VarCardElement from '../components/WidgetElements/VarCardElement';
 import VariableHistoryPopup from '../components/VariableHistoryPopup/VariableHistoryPopup';
+import BombControlPopup from '../components/BombControl/BombControlPopup';
 import LoaderComponent from '../../../components/Loader';
 import CardCustom from '../../../components/CardCustom';
 import { LuZoomOut, LuZoomIn, LuArrowLeft, LuDownload } from 'react-icons/lu';
@@ -75,6 +77,7 @@ function ViewDiagram() {
   const containerRef = useRef(null);
   const location = useLocation();
   const [historyPopup, setHistoryPopup] = useState(null);
+  const [bombPopup, setBombPopup] = useState(null);
 
   useEffect(() => { elementsRef.current = elements; }, [elements]);
 
@@ -435,13 +438,16 @@ function ViewDiagram() {
         if (el.type === 'linkButton') {
           return <LinkButtonElement key={el.id} el={el} />;
         }
+        if (el.type === 'varCard') {
+          return <VarCardElement key={el.id} el={el} />;
+        }
         return null;
       })();
 
-      // El tanque ya muestra su porcentaje adentro, y en las cañerias el flujo
-      // animado ya cuenta la historia: sin tooltip para esos tipos
+      // El tanque y la card de variable ya muestran su valor adentro, y en las
+      // cañerias el flujo animado cuenta la historia: sin tooltip para esos tipos
       const tooltip =
-        el.dataInflux?.name && !['tank', 'line', 'polyline'].includes(el.type)
+        el.dataInflux?.name && !['tank', 'line', 'polyline', 'varCard'].includes(el.type)
           ? renderTooltipLabel(el)
           : null;
 
@@ -452,6 +458,32 @@ function ViewDiagram() {
             key={`frag-${el.id}`}
             onClick={() => navigate(`/viewDiagram/${el.linkDiagram}`, { state: { drill: true } })}
             onTap={() => navigate(`/viewDiagram/${el.linkDiagram}`, { state: { drill: true } })}
+            onMouseEnter={(e) => {
+              e.target.getStage().container().style.cursor = 'pointer';
+            }}
+            onMouseLeave={(e) => {
+              e.target.getStage().container().style.cursor = 'default';
+            }}
+          >
+            {elementRender}
+            {tooltip}
+          </Group>
+        );
+      }
+
+      // Imagenes con bomba asignada: clic abre el control PLC (prioridad sobre la historia)
+      if (el.idBomb) {
+        return (
+          <Group
+            key={`frag-${el.id}`}
+            onClick={() => {
+              setHistoryPopup(null);
+              setBombPopup(el.idBomb);
+            }}
+            onTap={() => {
+              setHistoryPopup(null);
+              setBombPopup(el.idBomb);
+            }}
             onMouseEnter={(e) => {
               e.target.getStage().container().style.cursor = 'pointer';
             }}
@@ -476,8 +508,14 @@ function ViewDiagram() {
         return (
           <Group
             key={`frag-${el.id}`}
-            onClick={() => setHistoryPopup(el.dataInflux)}
-            onTap={() => setHistoryPopup(el.dataInflux)}
+            onClick={() => {
+              setBombPopup(null);
+              setHistoryPopup(el.dataInflux);
+            }}
+            onTap={() => {
+              setBombPopup(null);
+              setHistoryPopup(el.dataInflux);
+            }}
             onMouseEnter={(e) => {
               e.target.getStage().container().style.cursor = 'pointer';
             }}
@@ -575,6 +613,13 @@ function ViewDiagram() {
                 <VariableHistoryPopup
                   dataInflux={historyPopup}
                   onClose={() => setHistoryPopup(null)}
+                />
+              )}
+
+              {bombPopup && (
+                <BombControlPopup
+                  idBomb={bombPopup}
+                  onClose={() => setBombPopup(null)}
                 />
               )}
 

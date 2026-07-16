@@ -6,8 +6,9 @@ import { getFlowAnimation } from '../../utils/js/flowAnimation';
 import TankElement from '../WidgetElements/TankElement';
 import LedElement from '../WidgetElements/LedElement';
 import LinkButtonElement from '../WidgetElements/LinkButtonElement';
+import VarCardElement from '../WidgetElements/VarCardElement';
 
-const WIDGET_COMPONENTS = { tank: TankElement, led: LedElement, linkButton: LinkButtonElement };
+const WIDGET_COMPONENTS = { tank: TankElement, led: LedElement, linkButton: LinkButtonElement, varCard: VarCardElement };
 
 // Funcion para calcular puntos a la hora de hacer la polilinea
 const distToSegment = (p, v, w) => {
@@ -68,9 +69,13 @@ const DiagramCanvas = ({
     if (!nodeId || !elementIdSet.has(String(nodeId))) return;
 
     // Bordes y centros del resto de los elementos, en coordenadas de pantalla
+    // (los elementos viven dentro del grupo contenedor "elementsRoot")
+    const elementsRoot = node.getLayer().findOne('.elementsRoot');
+    if (!elementsRoot) return;
+
     const stopsV = [];
     const stopsH = [];
-    node.getLayer().getChildren().forEach((child) => {
+    elementsRoot.getChildren().forEach((child) => {
       const childId = child.getAttr('id');
       if (!childId || String(childId) === String(nodeId) || !elementIdSet.has(String(childId))) return;
       const box = child.getClientRect();
@@ -192,7 +197,7 @@ const DiagramCanvas = ({
       >
         <Layer onDragMove={handleLayerDragMove} onDragEnd={handleLayerDragEnd}>
           {/* Durante la captura de simbolo los elementos no reciben eventos */}
-          <Group listening={tool !== 'captureSymbol'}>
+          <Group name='elementsRoot' listening={tool !== 'captureSymbol'}>
           {
             elements.map((el) => {
               if (el.type === 'line') {
@@ -467,6 +472,27 @@ const DiagramCanvas = ({
                         />
                       </Label>
                     )}
+
+                    {/* Indicador de bomba PLC asignada (solo en el editor) */}
+                    {el.idBomb && (
+                      <Label x={el.x + (el.width || 0) / 2} y={el.y - 4} opacity={0.95}>
+                        <Tag
+                          fill='#1f4e79'
+                          pointerDirection='down'
+                          pointerWidth={8}
+                          pointerHeight={6}
+                          lineJoin='round'
+                          cornerRadius={4}
+                        />
+                        <Text
+                          text={`⏻ ${el.bombName || 'Bomba PLC'}`}
+                          fontFamily='arial'
+                          fontSize={12}
+                          padding={5}
+                          fill='#ffffff'
+                        />
+                      </Label>
+                    )}
                   </Fragment>
                 );
               }
@@ -514,9 +540,31 @@ const DiagramCanvas = ({
                           prev.map((item) => (item.id === el.id ? { ...item, x, y } : item))
                         );
                       }}
-                      onTransformEnd={(e) => handleTransformEnd(el.id, e.target)}
+                      onTransformEnd={(e) => {
+                        // La card de variable se auto-ajusta al contenido: el resize
+                        // escala la tipografia en vez del ancho/alto
+                        if (el.type === 'varCard') {
+                          const node = e.target;
+                          const newFontSize = Math.max(
+                            9,
+                            Math.min((el.config?.fontSize || 14) * node.scaleY(), 40)
+                          );
+                          node.scaleX(1);
+                          node.scaleY(1);
+                          setElements((prev) =>
+                            prev.map((item) =>
+                              item.id === el.id
+                                ? { ...item, x: node.x(), y: node.y(), config: { ...item.config, fontSize: newFontSize } }
+                                : item
+                            )
+                          );
+                          return;
+                        }
+                        handleTransformEnd(el.id, e.target);
+                      }}
                     />
-                    {el.dataInflux && el.dataInflux.name && (
+                    {/* La card de variable solo muestra el nombre si el usuario lo activa */}
+                    {el.dataInflux && el.dataInflux.name && (el.type !== 'varCard' || el.dataInflux.show) && (
                       <Label x={labelX} y={labelY} opacity={el.dataInflux.show ? 1 : 0.5}>
                         <Tag
                           fill="white"
