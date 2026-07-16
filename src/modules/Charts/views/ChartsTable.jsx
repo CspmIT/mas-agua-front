@@ -18,7 +18,7 @@ import PageHeader from '../../../components/PageHeader'
 import FiltersBar from '../../../components/FiltersBar'
 import { ActionsRow, EditChip, StatusPill, StatusToggleChip, ToneChip } from '../../../components/TableActions'
 
-const EXCLUDED_DASHBOARD_TYPES = ['TotalizadoPeriodo', 'LineChart', 'BoardChart']
+const EXCLUDED_DASHBOARD_TYPES = ['TotalizadoPeriodo', 'BoardChart']
 
 const primaryActionSx = {
   borderRadius: '999px',
