@@ -82,6 +82,18 @@ const ChartPreviews = {
             <text x="40" y="62" textAnchor="middle" fontSize="9" fill="#64748b">Encendido</text>
         </svg>
     ),
+    LineChart: () => (
+        <svg viewBox="0 0 80 80" fill="none">
+            <line x1="10" y1="70" x2="74" y2="70" stroke="#cbd5e1" strokeWidth="1.5" />
+            <line x1="10" y1="70" x2="10" y2="8" stroke="#cbd5e1" strokeWidth="1.5" />
+            <polyline points="10,58 24,42 38,50 52,26 66,34 74,18"
+                stroke="#363f9c" strokeWidth="2.5" fill="none"
+                strokeLinejoin="round" strokeLinecap="round" />
+            <polyline points="10,64 24,56 38,60 52,46 66,52 74,40"
+                stroke="#93c5fd" strokeWidth="2" fill="none"
+                strokeLinejoin="round" strokeLinecap="round" />
+        </svg>
+    ),
     MultipleBooleanChart: () => (
         <svg viewBox="0 0 80 80" fill="none">
             {[
@@ -113,6 +125,7 @@ const CHART_LABELS = {
     GaugeSpeed: { label: "Velocímetro" },
     BooleanChart: { label: "Booleano" },
     MultipleBooleanChart: { label: "Multi-booleano" },
+    LineChart: { label: "Líneas (histórico)", isNew: true },
 }
 
 export default function AddChartDialog({ open, onClose, availableCharts, onAdd }) {
@@ -185,8 +198,26 @@ export default function AddChartDialog({ open, onClose, availableCharts, onAdd }
                                     </div>
                                 )}
                                 <div>
-                                    <div style={{ color: "#0f172a" }}>
+                                    <div style={{
+                                        color: "#0f172a",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 8
+                                    }}>
                                         {meta.label}
+                                        {meta.isNew && (
+                                            <span style={{
+                                                fontSize: 10,
+                                                fontWeight: 600,
+                                                letterSpacing: "0.06em",
+                                                color: "#059669",
+                                                background: "#d1fae5",
+                                                padding: "2px 8px",
+                                                borderRadius: 999
+                                            }}>
+                                                NUEVO
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

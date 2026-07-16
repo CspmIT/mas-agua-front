@@ -13,6 +13,7 @@ import GaugeSpeed from '../../Charts/components/GaugeSpeed'
 import BooleanChart from '../../Charts/components/BooleanChart'
 import MultipleBooleanChart from '../../Charts/components/MultipleBooleanChart'
 import { ChartComponentDbWrapper } from '../components/ChartComponentDbWrapper'
+import LineChartHomeWidget from '../components/LineChartHomeWidget'
 import AddChartDialog from '../components/AddChartDialog'
 import EmptyDashboard from '../components/EmptyDashboard'
 import LoaderComponent from '../../../components/Loader'
@@ -51,8 +52,15 @@ const chartComponents = {
     PumpControl,
     GaugeSpeed,
     BooleanChart,
-    MultipleBooleanChart
+    MultipleBooleanChart,
+    LineChart: LineChartHomeWidget
 }
+
+// Tamaño mínimo en la grilla para que la serie histórica sea legible
+const LINE_CHART_MIN_SIZE = { minW: 4, minH: 5 }
+
+// Flag versionado por feature: cambiar la key para anunciar la próxima novedad
+const ANNOUNCE_KEY = 'announce_linechart_v1'
 
 const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }
 const COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }
@@ -72,6 +80,17 @@ const Home = ({ targetUserId = null }) => {
     const [currentBreakpoint, setCurrentBreakpoint] = useState('lg')
     const isAdminMode = targetUserId !== null
     const userId = storage.get('usuario')?.sub
+
+    // Globito one-shot que anuncia los gráficos históricos sobre el botón de editar
+    const [showAnnouncement, setShowAnnouncement] = useState(
+        () => !isAdminMode && !storage.get(ANNOUNCE_KEY)
+    )
+
+    const dismissAnnouncement = () => {
+        if (!showAnnouncement) return
+        storage.set(ANNOUNCE_KEY, true)
+        setShowAnnouncement(false)
+    }
 
     const dashboardUrl = isAdminMode
         ? `${backend['Mas Agua']}/admin/dashboard/${targetUserId}`
@@ -110,6 +129,10 @@ const Home = ({ targetUserId = null }) => {
         const vars = []
 
         chartsData.forEach((chart) => {
+            // Los LineChart consultan series históricas por su cuenta
+            // (useLineChartData), no entran en el batch de últimos valores.
+            if (chart.component === 'LineChart') return
+
             if (chart.component === 'PumpControl') {
                 const normalizePumpVar = (item) => ({
                     dataInflux: {
@@ -196,6 +219,24 @@ const Home = ({ targetUserId = null }) => {
                     }
 
                 }, {})
+
+                if (type === 'LineChart') {
+                    // Se guarda el chart crudo: el widget arma la query con
+                    // ChartSeriesData + ChartConfig (igual que el dashboard general)
+                    return {
+                        id: layoutItem.id,
+                        component: type,
+                        props: { title: chart.name },
+                        data: {},
+                        rawChart: chart,
+                        layout: {
+                            x: layoutItem.x,
+                            y: layoutItem.y,
+                            w: layoutItem.w,
+                            h: layoutItem.h
+                        }
+                    }
+                }
 
                 if (type === 'PumpControl') {
 
@@ -315,7 +356,8 @@ const Home = ({ targetUserId = null }) => {
                 x: c.layout.x,
                 y: c.layout.y,
                 w: c.layout.w,
-                h: c.layout.h
+                h: c.layout.h,
+                ...(c.component === 'LineChart' && LINE_CHART_MIN_SIZE)
             }))
             // En pantallas angostas apilamos los widgets uno debajo del otro,
             // respetando el orden de lectura (y, luego x). Si sólo forzamos x:0
@@ -497,6 +539,7 @@ const Home = ({ targetUserId = null }) => {
             : `${chart.id}-${layoutItem?.w ?? 0}-${layoutItem?.h ?? 0}`
         const ChartComponentDb = chartComponents[chart.component]
         const isMultipleBoolean = chart.component === 'MultipleBooleanChart'
+        const isLineChart = chart.component === 'LineChart'
 
         // Sólo las cards de bombas (MultipleBooleanChart) crecen según su contenido.
         // El resto conserva el alto fijo de la BD, como en desktop (sino se achican).
@@ -536,15 +579,24 @@ const Home = ({ targetUserId = null }) => {
                             </h2>
                         </div>
                     }
-                    <div className='flex-1 flex items-center justify-center'>
-                        <ChartComponentDbWrapper
-                            key={sizeKey}
-                            chartId={chart.id}
-                            ChartComponent={ChartComponentDb}
-                            initialProps={chart.props}
-                            initialData={chart.data}
-                            inflValues={inflValues}
-                        />
+                    <div className={`flex-1 flex items-center justify-center ${isLineChart ? 'min-h-0' : ''}`}>
+                        {isLineChart ? (
+                            // Sin key por tamaño: EChart se redimensiona solo
+                            // (ResizeObserver) y un remount refetcharía las series
+                            <LineChartHomeWidget
+                                chart={chart.rawChart}
+                                editMode={editMode}
+                            />
+                        ) : (
+                            <ChartComponentDbWrapper
+                                key={sizeKey}
+                                chartId={chart.id}
+                                ChartComponent={ChartComponentDb}
+                                initialProps={chart.props}
+                                initialData={chart.data}
+                                inflValues={inflValues}
+                            />
+                        )}
                     </div>
                 </CardCustom>
             </div>
@@ -564,6 +616,10 @@ const Home = ({ targetUserId = null }) => {
                 @keyframes removeBtnIn {
                     0% { opacity: 0; transform: scale(0.6); }
                     100% { opacity: 1; transform: scale(1); }
+                }
+                @keyframes calloutIn {
+                    0% { opacity: 0; transform: translateY(8px) scale(0.95); }
+                    100% { opacity: 1; transform: translateY(0) scale(1); }
                 }
             `}</style>
             {/* Banner visible cuando el admin edita un usuario */}
@@ -615,7 +671,27 @@ const Home = ({ targetUserId = null }) => {
                     )}
 
                     <div className='sticky bottom-4 z-30 flex justify-end py-2 px-1 pointer-events-none'>
-                        <div className={`pointer-events-auto flex items-center gap-0.5 rounded-full border border-gray-200/80 dark:border-gray-700/60 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md shadow-lg shadow-gray-900/5 dark:shadow-black/30 p-1 transition-opacity duration-200 ${isAdminMode ? 'opacity-100' : 'opacity-30 hover:opacity-100'}`}>
+                        <div className={`pointer-events-auto relative flex items-center gap-0.5 rounded-full border border-gray-200/80 dark:border-gray-700/60 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md shadow-lg shadow-gray-900/5 dark:shadow-black/30 p-1 transition-opacity duration-200 ${isAdminMode || showAnnouncement ? 'opacity-100' : 'opacity-30 hover:opacity-100'}`}>
+                            {showAnnouncement && (
+                                <div
+                                    className='absolute bottom-full right-0 mb-3 w-64 rounded-xl bg-[#2c6aa0] dark:bg-[#1f4e79] text-white shadow-xl shadow-[#2c6aa0]/30 px-3.5 py-3'
+                                    style={{ animation: 'calloutIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards' }}
+                                >
+                                    <button
+                                        className='absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-transparent border-0 p-0 text-white/70 hover:text-white hover:bg-white/10 text-[11px] leading-none cursor-pointer'
+                                        onClick={dismissAnnouncement}
+                                        aria-label='Cerrar aviso'
+                                    >
+                                        ✕
+                                    </button>
+                                    <p className='text-[13px] leading-snug pr-4 m-0'>
+                                        ✨ <span className='font-semibold'>Nuevo:</span> ahora
+                                        podés agregar gráficos históricos a tu dashboard
+                                    </p>
+                                    {/* Flechita apuntando al botón de editar */}
+                                    <div className='absolute -bottom-1 right-4 h-2.5 w-2.5 rotate-45 bg-[#2c6aa0] dark:bg-[#1f4e79]' />
+                                </div>
+                            )}
                             {editMode && (
                                 <>
                                     <Tooltip title='Agregar widget' placement='top'>
@@ -638,7 +714,10 @@ const Home = ({ targetUserId = null }) => {
 
                             <Tooltip title={editMode ? 'Confirmar cambios' : 'Editar dashboard'} placement='top'>
                                 <IconButton
-                                    onClick={() => setEditMode(!editMode)}
+                                    onClick={() => {
+                                        dismissAnnouncement()
+                                        setEditMode(!editMode)
+                                    }}
                                     size='small'
                                     sx={{
                                         color: editMode ? '#10B981' : 'rgb(75 85 99)',
