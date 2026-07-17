@@ -18,6 +18,9 @@ import {
   toolbarDividerOnDarkSx,
 } from '../../utils/js/diagramTheme';
 
+// Mismo tamaño que los botones del sidebar de herramientas
+const navBtnSx = (base) => ({ ...base, width: 38, height: 38, borderRadius: '9px' });
+
 const TopNavbar = ({
   onClear,
   onSaveDiagram,
@@ -59,27 +62,27 @@ const TopNavbar = ({
       <div className='flex items-center justify-between px-3 py-2 gap-2 flex-wrap'>
         <div className='flex items-center gap-1.5 flex-wrap'>
           <Tooltip title='Guardar diagrama'>
-            <IconButton onClick={onSaveDiagram} sx={iconButtonSaveSx}>
+            <IconButton onClick={onSaveDiagram} sx={navBtnSx(iconButtonSaveSx)}>
               <FaSave size={16} />
             </IconButton>
           </Tooltip>
           <Tooltip title='Limpiar lienzo'>
-            <IconButton onClick={onClear} sx={iconButtonDangerSx}>
+            <IconButton onClick={onClear} sx={navBtnSx(iconButtonDangerSx)}>
               <PiBroomBold size={18} />
             </IconButton>
           </Tooltip>
           <Tooltip title='Deshacer (Ctrl+Z)'>
-            <IconButton onClick={onUndo} sx={iconButtonOnDarkSx}>
+            <IconButton onClick={onUndo} sx={navBtnSx(iconButtonOnDarkSx)}>
               <IoArrowUndo size={18} />
             </IconButton>
           </Tooltip>
           <Tooltip title='Rehacer (Ctrl+Y)'>
-            <IconButton onClick={onRedo} sx={iconButtonOnDarkSx}>
+            <IconButton onClick={onRedo} sx={navBtnSx(iconButtonOnDarkSx)}>
               <IoArrowRedo size={18} />
             </IconButton>
           </Tooltip>
           <Tooltip title='Exportar como imagen PNG'>
-            <IconButton onClick={onExportPng} sx={iconButtonOnDarkSx}>
+            <IconButton onClick={onExportPng} sx={navBtnSx(iconButtonOnDarkSx)}>
               <LuDownload size={18} />
             </IconButton>
           </Tooltip>
@@ -87,19 +90,19 @@ const TopNavbar = ({
           <Divider orientation='vertical' flexItem sx={toolbarDividerOnDarkSx} />
 
           <Tooltip title='Acercar'>
-            <IconButton onClick={onZoomIn} sx={iconButtonOnDarkSx}>
+            <IconButton onClick={onZoomIn} sx={navBtnSx(iconButtonOnDarkSx)}>
               <LuZoomIn size={18} />
             </IconButton>
           </Tooltip>
           <Tooltip title='Alejar'>
-            <IconButton onClick={onZoomOut} sx={iconButtonOnDarkSx}>
+            <IconButton onClick={onZoomOut} sx={navBtnSx(iconButtonOnDarkSx)}>
               <LuZoomOut size={18} />
             </IconButton>
           </Tooltip>
           <Tooltip title={isPanning ? 'Modo mover activo' : 'Mover diagrama'}>
             <IconButton
               onClick={() => setIsPanning((prev) => !prev)}
-              sx={isPanning ? iconButtonOnDarkToggledSx : iconButtonOnDarkSx}
+              sx={navBtnSx(isPanning ? iconButtonOnDarkToggledSx : iconButtonOnDarkSx)}
             >
               <IoMdMove size={18} />
             </IconButton>
@@ -109,12 +112,12 @@ const TopNavbar = ({
             <>
               <Divider orientation='vertical' flexItem sx={toolbarDividerOnDarkSx} />
               <Tooltip title='Enviar al fondo'>
-                <IconButton onClick={onSendToBack} sx={iconButtonOnDarkSx}>
+                <IconButton onClick={onSendToBack} sx={navBtnSx(iconButtonOnDarkSx)}>
                   <MdOutlineMoveDown size={18} />
                 </IconButton>
               </Tooltip>
               <Tooltip title='Traer al frente'>
-                <IconButton onClick={onBringToFront} sx={iconButtonOnDarkSx}>
+                <IconButton onClick={onBringToFront} sx={navBtnSx(iconButtonOnDarkSx)}>
                   <MdOutlineMoveUp size={18} />
                 </IconButton>
               </Tooltip>
@@ -124,7 +127,7 @@ const TopNavbar = ({
 
         <div className='flex items-center gap-1.5'>
           <Tooltip title='Volver al listado'>
-            <IconButton onClick={listDiagram} sx={iconButtonOnDarkSx}>
+            <IconButton onClick={listDiagram} sx={navBtnSx(iconButtonOnDarkSx)}>
               <IoCaretBackOutline size={18} />
             </IconButton>
           </Tooltip>

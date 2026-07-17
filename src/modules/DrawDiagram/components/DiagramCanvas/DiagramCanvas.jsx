@@ -7,8 +7,9 @@ import TankElement from '../WidgetElements/TankElement';
 import LedElement from '../WidgetElements/LedElement';
 import LinkButtonElement from '../WidgetElements/LinkButtonElement';
 import VarCardElement from '../WidgetElements/VarCardElement';
+import ActionButtonElement from '../WidgetElements/ActionButtonElement';
 
-const WIDGET_COMPONENTS = { tank: TankElement, led: LedElement, linkButton: LinkButtonElement, varCard: VarCardElement };
+const WIDGET_COMPONENTS = { tank: TankElement, led: LedElement, linkButton: LinkButtonElement, varCard: VarCardElement, actionButton: ActionButtonElement };
 
 // Funcion para calcular puntos a la hora de hacer la polilinea
 const distToSegment = (p, v, w) => {
@@ -836,7 +837,7 @@ const DiagramCanvas = ({
             // (en el panel lo horizontal ajusta el layout y lo vertical la escala)
             const selectedEl = elements.find((el) => String(el.id) === String(selectedId));
             const isPanel = selectedEl?.type === 'panel';
-            const isFreeResize = isPanel || ['tank', 'linkButton'].includes(selectedEl?.type);
+            const isFreeResize = isPanel || ['tank', 'linkButton', 'actionButton'].includes(selectedEl?.type);
             return (
               <Transformer
                 ref={transformerRef}
