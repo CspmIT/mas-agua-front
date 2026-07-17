@@ -13,6 +13,7 @@ import LinkDiagramPanel from '../components/LinkDiagramPanel/LinkDiagramPanel';
 import SymbolSelector from '../components/SymbolSelector/SymbolSelector';
 import SelectionToolbar from '../components/SelectionToolbar/SelectionToolbar';
 import BombSelector from '../components/BombControl/BombSelector';
+import ActionButtonPanel from '../components/BombControl/ActionButtonPanel';
 import { createDefaultVarCard } from '../components/WidgetElements/VarCardElement';
 import TopNavbar from '../components/TopNavbar/TopNavbar';
 import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
@@ -842,6 +843,13 @@ const DrawDiagram = () => {
                       }}
                     />
                   </div>
+                )}
+                {/* Editor del botón de acción PLC */}
+                {selectedElement?.type === 'actionButton' && (
+                  <ActionButtonPanel
+                    button={selectedElement}
+                    onChange={handlePanelChange}
+                  />
                 )}
                 {/* Editor del botón de navegación */}
                 {selectedElement?.type === 'linkButton' && (

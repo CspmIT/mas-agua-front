@@ -4,6 +4,7 @@ import { createDefaultTank } from '../components/WidgetElements/TankElement';
 import { createDefaultLed } from '../components/WidgetElements/LedElement';
 import { createDefaultLinkButton } from '../components/WidgetElements/LinkButtonElement';
 import { createDefaultVarCard } from '../components/WidgetElements/VarCardElement';
+import { createDefaultActionButton } from '../components/WidgetElements/ActionButtonElement';
 
 //CAJA CONTENEDORA APROXIMADA DE UN ELEMENTO EN COORDENADAS DEL CANVAS
 export const getElementBBox = (el) => {
@@ -219,9 +220,14 @@ export const useDrawingTools = ({
       return;
     }
 
-    // Widgets tanque, LED y botón de navegación
-    if (['tank', 'led', 'linkButton'].includes(tool) && clickedOnEmpty) {
-      const factories = { tank: createDefaultTank, led: createDefaultLed, linkButton: createDefaultLinkButton };
+    // Widgets tanque, LED, botón de navegación y botón de acción PLC
+    if (['tank', 'led', 'linkButton', 'actionButton'].includes(tool) && clickedOnEmpty) {
+      const factories = {
+        tank: createDefaultTank,
+        led: createDefaultLed,
+        linkButton: createDefaultLinkButton,
+        actionButton: createDefaultActionButton,
+      };
       const newWidget = factories[tool](pos);
       setElements((prev) => [...prev, newWidget]);
       setNewElementsIds((prev) => [...prev, newWidget.id]);

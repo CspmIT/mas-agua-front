@@ -15,6 +15,8 @@ import LinkButtonElement from '../components/WidgetElements/LinkButtonElement';
 import VarCardElement from '../components/WidgetElements/VarCardElement';
 import VariableHistoryPopup from '../components/VariableHistoryPopup/VariableHistoryPopup';
 import BombControlPopup from '../components/BombControl/BombControlPopup';
+import ActionButtonElement from '../components/WidgetElements/ActionButtonElement';
+import Swal from 'sweetalert2';
 import LoaderComponent from '../../../components/Loader';
 import CardCustom from '../../../components/CardCustom';
 import { LuZoomOut, LuZoomIn, LuArrowLeft, LuDownload } from 'react-icons/lu';
@@ -78,6 +80,164 @@ function ViewDiagram() {
   const location = useLocation();
   const [historyPopup, setHistoryPopup] = useState(null);
   const [bombPopup, setBombPopup] = useState(null);
+
+  // ===== Botones de accion PLC =====
+  const [plcState, setPlcState] = useState({ bombs: null, live: null });
+  const actionLockRef = useRef({}); // candado anti doble envio por boton (90s)
+  const canOperatePlc = [1, 2, 4].includes(Number(usuario?.profile));
+  const hasActionButtons = elements.some((el) => el.type === 'actionButton');
+
+  const fetchPlcLive = useCallback(async () => {
+    try {
+      const response = await request(`${backend['Mas Agua']}/data_bombeo`, 'GET');
+      setPlcState((prev) => ({ ...prev, live: response?.data || null }));
+    } catch (error) {
+      console.error('Error consultando el estado PLC:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!hasActionButtons || !canOperatePlc) return;
+
+    const fetchBombs = async () => {
+      try {
+        const response = await request(`${backend['Mas Agua']}/bombs_PLC`, 'GET');
+        setPlcState((prev) => ({ ...prev, bombs: response?.data?.bombs || [] }));
+      } catch (error) {
+        console.error('Error consultando los equipos PLC:', error);
+      }
+    };
+
+    fetchBombs();
+    fetchPlcLive();
+    const interval = setInterval(fetchPlcLive, 30000);
+    return () => clearInterval(interval);
+  }, [hasActionButtons, canOperatePlc, fetchPlcLive]);
+
+  //ESTADO DEL BOTON PLC: visibilidad, color y accion a enviar (reglas del sistema anterior)
+  const getPlcButtonState = (el) => {
+    const live = plcState.live;
+    const bomb = (plcState.bombs || []).find((b) => String(b.id) === String(el.idBomb));
+    const showWhen = el.config?.showWhen || 'always';
+
+    let visible = true;
+    if (showWhen === 'comm_down') visible = live?.comm_ok === false;
+    if (showWhen === 'not_enabled') visible = live?.osmosis?.enabled === false;
+
+    // Automatizacion de reinicio (OI-50): toggle persistido, no es un equipo PLC
+    if (el.config?.timedReboot) {
+      const lockedReboot = (actionLockRef.current[el.id] || 0) > Date.now();
+      const isActive = (live?.timed_reboot?.status ?? 0) !== 0;
+      return {
+        visible,
+        timedReboot: true,
+        isActive,
+        bomb: null,
+        action: null,
+        disabled: lockedReboot,
+        variant: lockedReboot ? 'disabled' : isActive ? 'red' : 'green',
+      };
+    }
+
+    if (!bomb) return { visible, bomb: null, action: null, disabled: true, variant: 'disabled' };
+
+    const locked = (actionLockRef.current[el.id] || 0) > Date.now();
+    const actions = (bomb.actions || []).filter((a) => a.comando !== 'leer');
+
+    // ON/OFF segun estado actual: apagada -> primera accion (verde), encendida -> segunda (rojo)
+    if (bomb.control_type === 'osmosis_onoff') {
+      const equipo = live?.osmosis_equipos?.[bomb.id];
+      const isOn = equipo?.status === true;
+      const enabled = equipo?.enabled !== false;
+      const sorted = [...actions].sort((a, b) => (a.estado ?? 0) - (b.estado ?? 0));
+      const action = isOn ? sorted[sorted.length - 1] : sorted[0];
+      const disabled = !enabled || locked || !action;
+      return { visible, bomb, action, disabled, variant: disabled ? 'disabled' : isOn ? 'red' : 'green' };
+    }
+
+    // Accion directa (reinicios, pulsos)
+    const action = actions[0] || null;
+    const disabled = locked || !action;
+    return { visible, bomb, action, disabled, variant: disabled ? 'disabled' : 'amber' };
+  };
+
+  const handlePlcButtonClick = async (el) => {
+    const state = getPlcButtonState(el);
+    if (state.disabled) return;
+
+    // Toggle de la automatizacion de reinicio: endpoint propio
+    if (state.timedReboot) {
+      const verb = state.isActive ? 'Detener' : 'Iniciar';
+      const result = await Swal.fire({
+        title: `¿${verb} la automatización de reinicio?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: `Sí, ${verb.toLowerCase()}`,
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+      });
+      if (!result.isConfirmed) return;
+
+      try {
+        Swal.fire({ title: 'Enviando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        await request(`${backend['Mas Agua']}/osmosis/auto-reboot`, 'POST', {
+          status: state.isActive ? 0 : 1,
+        });
+
+        actionLockRef.current[el.id] = Date.now() + 90000;
+        setPlcState((prev) => ({ ...prev }));
+        Swal.fire({
+          icon: 'success',
+          title: 'Listo',
+          text: `Automatización de reinicio: ${verb.toLowerCase()}.`,
+          timer: 1800,
+          showConfirmButton: false,
+        });
+        fetchPlcLive();
+      } catch (error) {
+        console.error('Error cambiando la automatización de reinicio:', error);
+        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cambiar la automatización.' });
+      }
+      return;
+    }
+
+    if (!state.action || !state.bomb) return;
+
+    const result = await Swal.fire({
+      title: `¿Enviar "${state.action.name}"?`,
+      text: `Se enviará el comando a ${state.bomb.name}.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, enviar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+    });
+    if (!result.isConfirmed) return;
+
+    try {
+      Swal.fire({ title: 'Enviando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      await request(`${backend['Mas Agua']}/bombs_PLC/execute`, 'POST', {
+        bombId: state.bomb.id,
+        actionId: state.action.id,
+      });
+
+      actionLockRef.current[el.id] = Date.now() + 90000;
+      setPlcState((prev) => ({ ...prev })); // re-render para reflejar el candado
+      Swal.fire({
+        icon: 'success',
+        title: 'Comando enviado',
+        text: `"${state.action.name}" enviado a ${state.bomb.name}.`,
+        timer: 1800,
+        showConfirmButton: false,
+      });
+      fetchPlcLive();
+    } catch (error) {
+      console.error('Error enviando el comando PLC:', error);
+      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo enviar el comando al equipo.' });
+    }
+  };
 
   useEffect(() => { elementsRef.current = elements; }, [elements]);
 
@@ -378,6 +538,28 @@ function ViewDiagram() {
 
   const renderElementsAndTooltips = () => {
     return elements.map((el) => {
+      // Botones de accion PLC: solo para perfiles operativos y segun su regla de visibilidad
+      if (el.type === 'actionButton') {
+        if (!canOperatePlc) return null;
+        const state = getPlcButtonState(el);
+        if (!state.visible) return null;
+        return (
+          <Group
+            key={`frag-${el.id}`}
+            onClick={() => handlePlcButtonClick(el)}
+            onTap={() => handlePlcButtonClick(el)}
+            onMouseEnter={(e) => {
+              if (!state.disabled) e.target.getStage().container().style.cursor = 'pointer';
+            }}
+            onMouseLeave={(e) => {
+              e.target.getStage().container().style.cursor = 'default';
+            }}
+          >
+            <ActionButtonElement el={el} variant={state.variant} />
+          </Group>
+        );
+      }
+
       const elementRender = (() => {
         if (el.type === 'text') {
           return (

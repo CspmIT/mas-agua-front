@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, IconButton, Tooltip } from '@mui/material';
 import { RiImageAddFill } from 'react-icons/ri';
 import { MdPolyline } from 'react-icons/md';
-import { LuBoxSelect, LuCircleDot, LuDatabase, LuExternalLink, LuPanelTop, LuShapes } from 'react-icons/lu';
+import { LuBoxSelect, LuCircleDot, LuDatabase, LuExternalLink, LuPanelTop, LuPower, LuShapes } from 'react-icons/lu';
 import { FaArrowRightLong } from 'react-icons/fa6';
 import { HiOutlineVariable } from 'react-icons/hi';
 import {
@@ -13,8 +13,10 @@ import {
 
 const toolButtonSx = (isActive) => ({
   ...(isActive ? iconButtonOnDarkPrimarySx : iconButtonOnDarkSx),
-  width: 44,
-  height: 44,
+  width: 38,
+  height: 38,
+  borderRadius: '9px',
+  flexShrink: 0,
 });
 
 const Sidebar = ({
@@ -122,52 +124,58 @@ const Sidebar = ({
   };
 
   return (
-    <Box sx={sidebarShellSx} className='w-16 py-3 px-2 flex flex-col items-center gap-1.5'>
+    <Box sx={sidebarShellSx} className='w-14 py-2 px-2 flex flex-col items-center gap-1 overflow-y-auto'>
       <Tooltip title='Agregar imagen' placement='right'>
         <IconButton onClick={toggleImage} sx={toolButtonSx(tool === 'imageSelector')}>
-          <RiImageAddFill size={20} />
+          <RiImageAddFill size={18} />
         </IconButton>
       </Tooltip>
 
       <Tooltip title='Agregar línea' placement='right'>
         <IconButton onClick={toggleLine} sx={toolButtonSx(tool === 'simpleLine')}>
-          <FaArrowRightLong size={20} />
+          <FaArrowRightLong size={18} />
         </IconButton>
       </Tooltip>
 
       <Tooltip title='Agregar texto' placement='right'>
         <IconButton onClick={toggleText} sx={toolButtonSx(tool === 'text')}>
-          <span className='text-lg font-bold leading-none'>T</span>
+          <span className='text-base font-bold leading-none'>T</span>
         </IconButton>
       </Tooltip>
 
       <Tooltip title='Agregar polilínea' placement='right'>
         <IconButton onClick={togglePolyline} sx={toolButtonSx(tool === 'polyline')}>
-          <MdPolyline size={20} />
+          <MdPolyline size={18} />
         </IconButton>
       </Tooltip>
 
       <Tooltip title='Agregar panel de información' placement='right'>
         <IconButton onClick={togglePanel} sx={toolButtonSx(tool === 'panel')}>
-          <LuPanelTop size={20} />
+          <LuPanelTop size={18} />
         </IconButton>
       </Tooltip>
 
       <Tooltip title='Agregar tanque de nivel' placement='right'>
         <IconButton onClick={() => toggleWidget('tank')} sx={toolButtonSx(tool === 'tank')}>
-          <LuDatabase size={20} />
+          <LuDatabase size={18} />
         </IconButton>
       </Tooltip>
 
       <Tooltip title='Agregar LED de estado' placement='right'>
         <IconButton onClick={() => toggleWidget('led')} sx={toolButtonSx(tool === 'led')}>
-          <LuCircleDot size={20} />
+          <LuCircleDot size={18} />
         </IconButton>
       </Tooltip>
 
       <Tooltip title='Agregar botón de navegación' placement='right'>
         <IconButton onClick={() => toggleWidget('linkButton')} sx={toolButtonSx(tool === 'linkButton')}>
-          <LuExternalLink size={20} />
+          <LuExternalLink size={18} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Agregar botón de acción PLC' placement='right'>
+        <IconButton onClick={() => toggleWidget('actionButton')} sx={toolButtonSx(tool === 'actionButton')}>
+          <LuPower size={18} />
         </IconButton>
       </Tooltip>
 
@@ -182,7 +190,7 @@ const Sidebar = ({
           }}
           sx={toolButtonSx(showSymbolSelector)}
         >
-          <LuShapes size={20} />
+          <LuShapes size={18} />
         </IconButton>
       </Tooltip>
 
@@ -202,14 +210,14 @@ const Sidebar = ({
           }}
           sx={toolButtonSx(tool === 'captureSymbol')}
         >
-          <LuBoxSelect size={20} />
+          <LuBoxSelect size={18} />
         </IconButton>
       </Tooltip>
 
       {!selectedId && (
         <Tooltip title='Asignar variable' placement='right'>
           <IconButton onClick={toggleFloatingVariable} sx={toolButtonSx(tool === 'floatingVariable')}>
-            <HiOutlineVariable size={20} />
+            <HiOutlineVariable size={18} />
           </IconButton>
         </Tooltip>
       )}
