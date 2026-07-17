@@ -258,6 +258,9 @@ export const uploadCanvaDb = async (id, {
 				draggable: true,
 				config: widget.config || {},
 				linkDiagram: widget.id_link_diagram || null,
+				idBomb: widget.id_bomb || null,
+				bombName: widget.bomb?.name || null,
+				bombControlType: widget.bomb?.control_type || null,
 				dataInflux,
 			});
 		}
@@ -430,10 +433,12 @@ export const saveDiagramKonva = async ({
 				case 'led':
 				case 'linkButton':
 				case 'varCard':
+				case 'actionButton':
 					saveObjects.widgets.push({
 						...(el.id ? { id: getNumericId(el.id) } : {}),
 						type: el.type,
 						id_link_diagram: el.linkDiagram || null,
+						id_bomb: el.idBomb || null,
 						left: el.x,
 						top: el.y,
 						width: el.width,
