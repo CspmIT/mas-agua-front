@@ -163,6 +163,11 @@ const MapView = ({ create = false, search = false }) => {
     const [selectedBitId, setSelectedBitId] = useState('')
 
     const isBinaryCompressed = selectedVar?.binary_compressed ?? false
+    const isCalcBinary =
+        (selectedVar?.calc_binary_compressed || selectedVar?.unit === 'calc_binary') ?? false
+    // La calc binaria puede venir con binary_compressed en true, pero su logica ya vive
+    // en el calculo: no se elige bit
+    const needsBitSelection = isBinaryCompressed && !isCalcBinary
     const availableBits = selectedVar?.bits ?? []
     const isEditing = editingIndex !== null
 
@@ -197,23 +202,15 @@ const MapView = ({ create = false, search = false }) => {
     })
 
     const handleVarSelect = (variable) => {
-        // Bloquear variables calc_binary (operación lógica entre binarias)
-        if (variable && (variable.calc_binary_compressed || variable.unit === 'calc_binary')) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Variable no soportada',
-                html: '<h3>Las variables calc_binary no son soportadas en el dashboard de presión.</h3>',
-            })
-            setValue('idVar', null)
-            setSelectedVar(null)
-            setSelectedBitId('')
-            return
-        }
         setValue('idVar', variable?.id ?? null)
         setSelectedVar(variable ?? null)
         setSelectedBitId('')
-        // Variables binarias no llevan umbrales ni unidad — limpio campos previos
-        if (variable?.binary_compressed) {
+        // Variables binarias y calc binarias no llevan umbrales ni unidad — limpio campos previos
+        if (
+            variable?.binary_compressed ||
+            variable?.calc_binary_compressed ||
+            variable?.unit === 'calc_binary'
+        ) {
             setValue('unit', '')
             setValue('warn_low', '')
             setValue('crit_low', '')
@@ -288,7 +285,7 @@ const MapView = ({ create = false, search = false }) => {
             await Swal.fire({ icon: 'error', title: 'Atención', html: '<h3>Debe seleccionar una variable.</h3>' })
             return
         }
-        if (isBinaryCompressed && !selectedBitId) {
+        if (needsBitSelection && !selectedBitId) {
             await Swal.fire({ icon: 'error', title: 'Atención', html: '<h3>Debe seleccionar un bit para la variable binaria comprimida.</h3>' })
             return
         }
@@ -320,7 +317,7 @@ const MapView = ({ create = false, search = false }) => {
             longitude: markerLng,
             idVar,
             data: selectedVar,
-            id_bit: isBinaryCompressed ? Number(selectedBitId) : null,
+            id_bit: needsBitSelection ? Number(selectedBitId) : null,
             anchor,
             sensor_type: selectedSensorType || null,
             unit: values.unit,
@@ -629,7 +626,7 @@ const MapView = ({ create = false, search = false }) => {
                             label='Variable del marcador'
                             initialVar={editInitialVar || false}
                         />
-                        {isBinaryCompressed && (
+                        {needsBitSelection && (
                             <FormControl fullWidth size='small'>
                                 <InputLabel>Bit de la variable</InputLabel>
                                 <Select
@@ -678,8 +675,8 @@ const MapView = ({ create = false, search = false }) => {
                         </FormControl>
                     </Box>
 
-                    {/* — Umbrales — (no aplica a variables binarias comprimidas) */}
-                    {!isBinaryCompressed && (
+                    {/* — Umbrales — (no aplica a variables binarias ni calc binarias) */}
+                    {!isBinaryCompressed && !isCalcBinary && (
                     <Box sx={sectionSx}>
                         <SectionTitle>Umbrales y unidad</SectionTitle>
                         <div className='flex flex-wrap gap-2'>
