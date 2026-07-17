@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'feat(diagram): control de bombas PLC y cards de variables flotantes'
+                  releaseBody: 'feat(map): soporte de variables calc_binary en marcadores y ajuste de labels'
                   prerelease: false
