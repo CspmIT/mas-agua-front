@@ -3,18 +3,20 @@ import SensorPin from './SensorPin'
 import StatusFloatingLabel from './StatusFloatingLabel'
 
 // Mapeo de anchor (string del back) → offset (dx, dy) en píxeles para el label.
-// Coordenadas relativas a la posición del pin.
+// La opción elegida es la posición VISUAL del label respecto del pin
+// (no la semántica de anchor de MapLibre, que es la inversa).
+// El pin ocupa y ∈ [-42, 0] respecto del punto del marker.
 const ANCHOR_TO_OFFSET = {
-    '':             [55, -45],   // automático
-    'top':          [0, -55],     // popup abajo del pin
-    'bottom':       [0, 15],    // popup arriba del pin
-    'left':         [55, -25],   // popup a la derecha
-    'right':        [-55, -25],  // popup a la izquierda
-    'top-left':     [40, 25],    // abajo-derecha
-    'top-right':    [-40, 25],   // abajo-izquierda
-    'bottom-left':  [40, -55],   // arriba-derecha
-    'bottom-right': [-40, -55],  // arriba-izquierda
-    'center':       [0, -25],    // centro encima del pin
+    '':             [45, -38],   // automático: derecha-arriba
+    'top':          [0, -58],    // arriba del pin
+    'bottom':       [0, 12],     // abajo del pin
+    'left':         [-45, -21],  // a la izquierda
+    'right':        [45, -21],   // a la derecha
+    'top-left':     [-38, -52],  // arriba-izquierda
+    'top-right':    [38, -52],   // arriba-derecha
+    'bottom-left':  [-38, 6],    // abajo-izquierda
+    'bottom-right': [38, 6],     // abajo-derecha
+    'center':       [0, -21],    // centro sobre el pin
 }
 
 const truncateLabel = (name) => {
