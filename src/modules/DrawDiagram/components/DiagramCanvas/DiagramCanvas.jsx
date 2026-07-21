@@ -1,4 +1,4 @@
-import React, { Fragment, useMemo, useState } from 'react';
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
 import { Stage, Layer, Line, Text, Transformer, Circle, Group, Rect, Label, Tag } from 'react-konva';
 import ImageElement from '../ImageElement/ImageElement';
 import PanelElement, { getPanelHeight, PANEL_PADDING, PANEL_TITLE_HEIGHT } from '../PanelElement/PanelElement';
@@ -32,7 +32,6 @@ const DiagramCanvas = ({
   circles,
   tempLine,
   captureRect,
-  dashOffset,
   selectedId,
   stageRef,
   transformerRef,
@@ -58,6 +57,32 @@ const DiagramCanvas = ({
   dragStartPos,
   setDragStartPos,
 }) => {
+  // Animacion de flujo: actualiza los dashOffset de las lineas .flowLine directo
+  // sobre Konva, sin re-renderizar React. Resuelve la capa viva en cada frame
+  // para sobrevivir remontajes del Stage.
+  useEffect(() => {
+    let raf;
+    const start = performance.now();
+
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      const stage = stageRef.current;
+      if (!stage) return;
+      const layer = stage.getLayers()[0];
+      if (!layer) return;
+      const nodes = layer.find('.flowLine');
+      if (!nodes.length) return;
+
+      const offset = ((performance.now() - start) / 1000) * 5; // pixeles por segundo
+      nodes.forEach((node) => node.dashOffset((node.getAttr('flowDir') || 1) * offset));
+      // Solo el canvas visible: el canvas de hit no cambia con el dashOffset
+      layer.drawScene();
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
   // ===== Guias de alineacion (snapping) =====
   const GUIDELINE_OFFSET = 5; // umbral en pixeles de pantalla
   const [guides, setGuides] = useState([]);
@@ -246,11 +271,8 @@ const DiagramCanvas = ({
                         stroke={el.stroke}
                         strokeWidth={el.strokeWidth}
                         dash={[10, 8]}
-                        dashOffset={(() => {
-                          // En el editor los trazos quedan estaticos sin caudal
-                          const { isClosed, speedFactor } = getFlowAnimation(el.dataInflux);
-                          return isClosed ? 0 : (el.invertAnimation ? -dashOffset : dashOffset) * speedFactor;
-                        })()}
+                        name={getFlowAnimation(el.dataInflux).isClosed ? undefined : 'flowLine'}
+                        flowDir={el.invertAnimation ? -1 : 1}
                         lineCap='round'
                         lineJoin='round'
                       />
@@ -758,11 +780,8 @@ const DiagramCanvas = ({
                         stroke={el.stroke}
                         strokeWidth={el.strokeWidth}
                         dash={[10, 8]}
-                        dashOffset={(() => {
-                          // En el editor los trazos quedan estaticos sin caudal
-                          const { isClosed, speedFactor } = getFlowAnimation(el.dataInflux);
-                          return isClosed ? 0 : (el.invertAnimation ? -dashOffset : dashOffset) * speedFactor;
-                        })()}
+                        name={getFlowAnimation(el.dataInflux).isClosed ? undefined : 'flowLine'}
+                        flowDir={el.invertAnimation ? -1 : 1}
                         lineCap='round'
                         lineJoin='round'
                       />

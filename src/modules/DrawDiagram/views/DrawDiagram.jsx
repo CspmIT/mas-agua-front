@@ -12,6 +12,7 @@ import PanelEditor from '../components/PanelEditor/PanelEditor';
 import LinkDiagramPanel from '../components/LinkDiagramPanel/LinkDiagramPanel';
 import SymbolSelector from '../components/SymbolSelector/SymbolSelector';
 import SelectionToolbar from '../components/SelectionToolbar/SelectionToolbar';
+import SelectedVariableInfo from '../components/SelectionToolbar/SelectedVariableInfo';
 import BombSelector from '../components/BombControl/BombSelector';
 import ActionButtonPanel from '../components/BombControl/ActionButtonPanel';
 import { createDefaultVarCard } from '../components/WidgetElements/VarCardElement';
@@ -45,7 +46,7 @@ const DrawDiagram = () => {
     strokeWidth: 5,
   });
   const [showLineStyleSelector, setShowLineStyleSelector] = useState(false);
-  const [dashOffset, setDashOffset] = useState(0);
+  // La animacion de flujo corre directo sobre Konva (sin re-render de React)
   const [textInput, setTextInput] = useState('');
   const [textPosition, setTextPosition] = useState(null);
   const [editingTextId, setEditingTextId] = useState(null);
@@ -709,17 +710,6 @@ const DrawDiagram = () => {
     return () => window.removeEventListener('contextmenu', handleContextMenu);
   }, [isDrawingPolyline, polylinePoints]);
 
-  useEffect(() => {
-    let frameId;
-
-    const animate = () => {
-      setDashOffset((prev) => (reverseDirection ? prev - 1 : prev + 0.35));
-      frameId = requestAnimationFrame(animate);
-    };
-
-    frameId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frameId);
-  }, [reverseDirection]);
 
   useEffect(() => {
     if (id) {
@@ -885,7 +875,6 @@ const DrawDiagram = () => {
                   circles={circles}
                   tempLine={tempLine}
                   captureRect={captureRect}
-                  dashOffset={dashOffset}
                   selectedId={selectedId}
                   stageRef={stageRef}
                   transformerRef={transformerRef}
@@ -928,6 +917,8 @@ const DrawDiagram = () => {
                     }}
                   />
                 )}
+                {/* Info de la variable asignada al elemento seleccionado */}
+                {selectedId && <SelectedVariableInfo element={selectedElement} />}
                 {/* Selector de bombas PLC */}
                 {showBombSelector && isBombImage && (
                   <BombSelector image={selectedElement} onChange={handlePanelChange} />
