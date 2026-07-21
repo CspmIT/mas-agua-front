@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'feat(diagram): botones de accion PLC en el diagrama'
+                  releaseBody: 'feat: automatizacion bombeo'
                   prerelease: false

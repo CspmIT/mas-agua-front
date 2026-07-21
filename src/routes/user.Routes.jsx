@@ -25,6 +25,7 @@ import Alert from '../modules/alert/views'
 import ConfigAlarms from '../modules/ConfigAlarms/views/index'
 import ExternalUser from '../modules/ExternalUsers/views/index'
 import PumpsTable from '../modules/PumpsTable/views/index'
+import PumpGenibus from '../modules/PumpGenibus/views/index'
 import Boards from '../modules/Boards/views'
 import AdminDashboardPage from '../modules/home/components/AdminDashboardPage'
 import AssistantPage from '../modules/Assistant/views/AssistantPage'
@@ -72,6 +73,7 @@ export const userRoutes = [
 	{ path: '/config/alarm', element: <ConfigAlarms /> },
 	{ path: '/external', element: <ExternalUser /> },
 	{ path: '/list/pumps', element: <PumpsTable /> },
+	{ path: '/pumps/control', element: <PumpGenibus /> },
 	{ path: '/boards', element: <Boards /> },
 	{ path: '/config/dashboard', element: <AdminDashboardPage />},
 	{ path: '/assistant', element: <AssistantPage /> },

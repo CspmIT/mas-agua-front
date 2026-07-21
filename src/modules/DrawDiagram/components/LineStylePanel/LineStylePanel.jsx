@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Box, Button, Divider, Slider, TextField } from '@mui/material';
+import { Box, Button, Divider, Slider } from '@mui/material';
 import { BiSync } from 'react-icons/bi';
 import {
   floatingPanelSx,
@@ -79,18 +79,6 @@ const LineStylePanel = ({
     }
   };
 
-  const handleFlowReferenceChange = (e) => {
-    const parsed = parseFloat(e.target.value);
-    const newValue = isNaN(parsed) || parsed <= 0 ? null : parsed;
-    setElements((prev) =>
-      prev.map((el) =>
-        el.id === selectedId && el.dataInflux
-          ? { ...el, dataInflux: { ...el.dataInflux, max_value_var: newValue } }
-          : el
-      )
-    );
-  };
-
   const handleToggleDirection = () => {
     setElements((prev) =>
       prev.map((el) => (el.id === selectedId ? { ...el, invertAnimation: !el.invertAnimation } : el))
@@ -149,23 +137,9 @@ const LineStylePanel = ({
       {canEdit && selectedElement?.dataInflux && (
         <>
           <Divider flexItem />
-          <div className='flex flex-col gap-1.5'>
-            <label className={panelLabelClass}>Animación por caudal</label>
-            <p className='text-[11px] leading-snug text-slate-500 dark:text-gray-400 m-0'>
-              Sin caudal, el flujo se detiene. Ingresá el caudal al que esta
-              línea corre a velocidad normal: con más caudal acelera, con menos
-              se frena. Vacío = solo prende/apaga.
-            </p>
-            <TextField
-              size='small'
-              type='number'
-              label='Caudal de velocidad normal (m³/h)'
-              value={selectedElement.dataInflux.max_value_var ?? ''}
-              onChange={handleFlowReferenceChange}
-              placeholder='Ej: 1'
-              inputProps={{ min: 0, step: 0.1 }}
-            />
-          </div>
+          <p className='text-[11px] leading-snug text-slate-500 dark:text-gray-400 m-0'>
+            Con variable asignada, la animación se detiene cuando no hay caudal.
+          </p>
         </>
       )}
 
