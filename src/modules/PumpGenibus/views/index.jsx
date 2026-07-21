@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Box, Container } from '@mui/material'
+import { Box, Button, Container } from '@mui/material'
+import { Add } from '@mui/icons-material'
 import Swal from 'sweetalert2'
 import PageHeader from '../../../components/PageHeader'
 import TableCustom from '../../../components/TableCustom'
@@ -64,7 +65,24 @@ const describePressure = (row) => {
     )
 }
 
-const PumpGenibus = () => {
+// Pill primario (mismo estilo que el boton de PageHeader)
+const createPillSx = {
+    borderRadius: '999px',
+    textTransform: 'none',
+    fontWeight: 500,
+    px: 2.5,
+    py: 1,
+    minHeight: 0,
+    background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+    boxShadow: '0 4px 14px rgba(44, 106, 160, 0.35)',
+    '&:hover': {
+        background: 'linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)',
+        boxShadow: '0 8px 24px rgba(44, 106, 160, 0.45)',
+    },
+}
+
+// embedded: se renderiza dentro de la vista Controles (sin Container ni PageHeader propio)
+const PumpGenibus = ({ embedded = false }) => {
     const [status, setStatus] = useState(null)
     const [automations, setAutomations] = useState([])
     const [loading, setLoading] = useState(true)
@@ -183,16 +201,20 @@ const PumpGenibus = () => {
 
     if (loading) return <LoaderComponent />
 
-    return (
-        <Container maxWidth={false} disableGutters className="w-full px-3 sm:px-5 pt-2 pb-4">
-            <PageHeader
-                title="Control de Bombas"
-                onCreate={() => {
-                    setEditing(null)
-                    setFormOpen(true)
-                }}
-                createLabel="Nueva programación"
-            />
+    const openCreate = () => {
+        setEditing(null)
+        setFormOpen(true)
+    }
+
+    const inner = (
+        <>
+            {!embedded && (
+                <PageHeader
+                    title="Control de Bombas"
+                    onCreate={openCreate}
+                    createLabel="Nueva programación"
+                />
+            )}
 
             <Box className="flex flex-col gap-5">
                 {status ? (
@@ -202,6 +224,20 @@ const PumpGenibus = () => {
                         Todavía no hay lecturas del equipo de bombeo. El ciclo de lectura corre
                         cada 1 minuto: si esto persiste, revisá el cron y la conexión MQTT.
                     </Box>
+                )}
+
+                {embedded && (
+                    <div className="flex justify-end -mb-2">
+                        <Button
+                            onClick={openCreate}
+                            variant="contained"
+                            disableElevation
+                            startIcon={<Add sx={{ fontSize: 18 }} />}
+                            sx={createPillSx}
+                        >
+                            Nueva programación
+                        </Button>
+                    </div>
                 )}
 
                 <TableCustom data={automations} columns={columns} />
@@ -218,6 +254,14 @@ const PumpGenibus = () => {
                 onClose={() => setLogsFor(null)}
                 automation={logsFor}
             />
+        </>
+    )
+
+    if (embedded) return inner
+
+    return (
+        <Container maxWidth={false} disableGutters className="w-full px-3 sm:px-5 pt-2 pb-4">
+            {inner}
         </Container>
     )
 }

@@ -24,8 +24,8 @@ import ProfilePLC from '../modules/ProfilePLC/views/ProfilePLC'
 import Alert from '../modules/alert/views'
 import ConfigAlarms from '../modules/ConfigAlarms/views/index'
 import ExternalUser from '../modules/ExternalUsers/views/index'
-import PumpsTable from '../modules/PumpsTable/views/index'
-import PumpGenibus from '../modules/PumpGenibus/views/index'
+import { Navigate } from 'react-router-dom'
+import Controls from '../modules/Controls/views/index'
 import Boards from '../modules/Boards/views'
 import AdminDashboardPage from '../modules/home/components/AdminDashboardPage'
 import AssistantPage from '../modules/Assistant/views/AssistantPage'
@@ -72,8 +72,11 @@ export const userRoutes = [
 	{ path: '/alert', element: <Alert /> },
 	{ path: '/config/alarm', element: <ConfigAlarms /> },
 	{ path: '/external', element: <ExternalUser /> },
-	{ path: '/list/pumps', element: <PumpsTable /> },
-	{ path: '/pumps/control', element: <PumpGenibus /> },
+	{ path: '/controls', element: <Controls /> },
+	{ path: '/controls/:tab', element: <Controls /> },
+	// Rutas viejas: redirigen a su pestaña dentro de Controles (los items de menu existentes siguen andando)
+	{ path: '/list/pumps', element: <Navigate to='/controls/succion' replace /> },
+	{ path: '/pumps/control', element: <Navigate to='/controls/urbana' replace /> },
 	{ path: '/boards', element: <Boards /> },
 	{ path: '/config/dashboard', element: <AdminDashboardPage />},
 	{ path: '/assistant', element: <AssistantPage /> },
