@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'feat: automatizacion bombeo'
+                  releaseBody: 'feat: multi vista controles'
                   prerelease: false
