@@ -7,7 +7,7 @@ import PumpGenibus from '../../PumpGenibus/views'
 
 // Clientes que tienen el bombeo urbano Genibus (las pestañas de salida solo
 // aparecen para ellos; el resto de los tenants ve solo el bombeo de succion)
-const GENIBUS_CLIENTS = ['coopmorteros', 'Coop desarrollo 2']
+const GENIBUS_CLIENTS = ['Coop Morteros', 'Coop desarrollo 2']
 
 // Placeholder de la salida industrial hasta que se implemente
 const ComingSoon = () => (
