@@ -44,7 +44,10 @@ export const uploadCanvaDb = async (id, {
 					id: line.id_influxvars,
 					name: line.variable.name,
 					unit: line.variable.unit,
+					type: line.variable.type,
+					calc: line.variable.calc,
 					varsInflux: line.variable.varsInflux,
+					bitCalcVar: line.variable.bitCalcVar || null,
 					position: line.variable.position || 'Centro',
 					// En las cañerias el tooltip queda oculto por defecto
 					show: false,
@@ -78,7 +81,10 @@ export const uploadCanvaDb = async (id, {
 					id: poly.id_influxvars,
 					name: poly.variable.name,
 					unit: poly.variable.unit,
+					type: poly.variable.type,
+					calc: poly.variable.calc,
 					varsInflux: poly.variable.varsInflux,
+					bitCalcVar: poly.variable.bitCalcVar || null,
 					position: poly.variable.position || 'Centro',
 					// En las cañerias el tooltip queda oculto por defecto
 					show: false,
@@ -109,7 +115,10 @@ export const uploadCanvaDb = async (id, {
 					id: text.id_influxvars,
 					name: text.variable.name,
 					unit: text.variable.unit,
+					type: text.variable.type,
+					calc: text.variable.calc,
 					varsInflux: text.variable.varsInflux,
+					bitCalcVar: text.variable.bitCalcVar || null,
 					position: text.variable.position || 'Centro',
 					show: text.variable.show_var || true
 				};
@@ -153,6 +162,7 @@ export const uploadCanvaDb = async (id, {
 					id_bit: variable.id_bit,
 					bit_name: variable.bit?.name || null,
 					calc_binary_compressed: variable.variable.calc_binary_compressed,
+					bitCalcVar: variable.variable.bitCalcVar || null,
 					
 				};
 
@@ -237,6 +247,7 @@ export const uploadCanvaDb = async (id, {
 					status: widget.variable.status,
 					binary_compressed: widget.variable.binary_compressed,
 					calc_binary_compressed: widget.variable.calc_binary_compressed,
+					bitCalcVar: widget.variable.bitCalcVar || null,
 					id_bit: widget.id_bit,
 					bit_name: widget.bit?.name || null,
 					show: widget.show_var ?? true,

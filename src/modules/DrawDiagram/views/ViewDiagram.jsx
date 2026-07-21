@@ -64,7 +64,7 @@ const darkPillSx = {
 function ViewDiagram() {
   const { id } = useParams();
   const stageRef = useRef();
-  const [dashOffset, setDashOffset] = useState(0);
+  // La animacion de flujo corre directo sobre Konva (sin re-render de React)
   const [elements, setElements] = useState([]);
   const elementsRef = useRef(elements);
   const [diagramMetadata, setDiagramMetadata] = useState({ id: null, title: '', backgroundColor: '#ffffff', backgroundImg: '' });
@@ -254,14 +254,30 @@ function ViewDiagram() {
     }
   }, [id]);
 
+  // Animacion de flujo: actualiza los dashOffset de las lineas .flowLine directo
+  // sobre Konva, sin re-renderizar React (fluido en diagramas grandes). Resuelve
+  // la capa viva en cada frame para sobrevivir remontajes del Stage.
   useEffect(() => {
-    let frameId;
-    const animate = () => {
-      setDashOffset(prev => prev + 0.25);
-      frameId = requestAnimationFrame(animate);
+    let raf;
+    const start = performance.now();
+
+    const tick = () => {
+      raf = requestAnimationFrame(tick);
+      const stage = stageRef.current;
+      if (!stage) return;
+      const layer = stage.getLayers()[0];
+      if (!layer) return;
+      const nodes = layer.find('.flowLine');
+      if (!nodes.length) return;
+
+      const offset = ((performance.now() - start) / 1000) * 5; // pixeles por segundo
+      nodes.forEach((node) => node.dashOffset((node.getAttr('flowDir') || 1) * offset));
+      // Solo el canvas visible: el canvas de hit no cambia con el dashOffset
+      layer.drawScene();
     };
-    frameId = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(frameId);
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   useEffect(() => {
@@ -536,8 +552,10 @@ function ViewDiagram() {
     });
   }, [dimensions]);
 
-  const renderElementsAndTooltips = () => {
-    return elements.map((el) => {
+  // Se renderiza en dos capas: las cañerias van en una capa propia asi la
+  // animacion de flujo redibuja solo esa capa (fluida aun en diagramas grandes)
+  const renderElementsAndTooltips = (filter) => {
+    return elements.filter(filter).map((el) => {
       // Botones de accion PLC: solo para perfiles operativos y segun su regla de visibilidad
       if (el.type === 'actionButton') {
         if (!canOperatePlc) return null;
@@ -569,9 +587,8 @@ function ViewDiagram() {
           );
         }
         if (el.type === 'line' || el.type === 'polyline') {
-          // Animacion segun el caudal: sin caudal se detiene, y con caudal de
-          // referencia la velocidad acompaña al valor
-          const { isClosed, speedFactor } = getFlowAnimation(el.dataInflux);
+          // Sin caudal la linea no muestra flujo animado
+          const { isClosed } = getFlowAnimation(el.dataInflux);
           return (
             <Group key={`group-${el.type}-${el.id}`}>
               {/* Borde exterior del caño */}
@@ -597,7 +614,8 @@ function ViewDiagram() {
                   stroke={el.stroke}
                   strokeWidth={el.strokeWidth}
                   dash={[10, 8]}
-                  dashOffset={(el.invertAnimation ? -dashOffset : dashOffset) * speedFactor}
+                  name='flowLine'
+                  flowDir={el.invertAnimation ? -1 : 1}
                   lineCap='round'
                   lineJoin='round'
                 />
@@ -818,7 +836,14 @@ function ViewDiagram() {
                   draggable
                   onDragEnd={(e) => setPosition({ x: e.target.x(), y: e.target.y() })}
                 >
-                  <Layer>{renderElementsAndTooltips()}</Layer>
+                  {/* Capa de cañerias (animada) debajo de todo, como el sistema anterior */}
+                  <Layer>
+                    {renderElementsAndTooltips((el) => el.type === 'line' || el.type === 'polyline')}
+                  </Layer>
+                  {/* Capa estatica: imagenes, paneles, widgets y tooltips */}
+                  <Layer>
+                    {renderElementsAndTooltips((el) => el.type !== 'line' && el.type !== 'polyline')}
+                  </Layer>
                 </Stage>
               )}
             </div>

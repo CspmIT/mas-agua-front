@@ -137,15 +137,15 @@ const Sidebar = ({
         </IconButton>
       </Tooltip>
 
-      <Tooltip title='Agregar texto' placement='right'>
-        <IconButton onClick={toggleText} sx={toolButtonSx(tool === 'text')}>
-          <span className='text-base font-bold leading-none'>T</span>
-        </IconButton>
-      </Tooltip>
-
       <Tooltip title='Agregar polilínea' placement='right'>
         <IconButton onClick={togglePolyline} sx={toolButtonSx(tool === 'polyline')}>
           <MdPolyline size={18} />
+        </IconButton>
+      </Tooltip>
+
+      <Tooltip title='Agregar texto' placement='right'>
+        <IconButton onClick={toggleText} sx={toolButtonSx(tool === 'text')}>
+          <span className='text-base font-bold leading-none'>T</span>
         </IconButton>
       </Tooltip>
 
