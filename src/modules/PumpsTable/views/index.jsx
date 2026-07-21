@@ -52,7 +52,8 @@ const summarySx = {
 }
 const detailsSx = { p: { xs: 0.75, sm: 1 }, pt: 0 }
 
-const PumpsTable = () => {
+// embedded: se renderiza dentro de la vista Controles (sin Container ni PageHeader propio)
+const PumpsTable = ({ embedded = false }) => {
   const [listpumps, setListPumps] = useState([])
   const [infoSuccion, setInfoSuccion] = useState([])
   const [bombColumns, setBombColumns] = useState([])
@@ -482,13 +483,13 @@ const PumpsTable = () => {
     density: 'compact',
   }
 
-  return (
-    <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+  const inner = (
+    <>
       {loading ? (
         <LoaderComponent />
       ) : (
         <>
-          <PageHeader title='Bombeo de succión' />
+          {!embedded && <PageHeader title='Bombeo de succión' />}
 
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-5'>
             <InfoCard index={0} label='Estado' value={infoSuccion.var_2} color='green' />
@@ -529,6 +530,14 @@ const PumpsTable = () => {
           </Accordion>
         </>
       )}
+    </>
+  )
+
+  if (embedded) return inner
+
+  return (
+    <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
+      {inner}
     </Container>
   )
 }
