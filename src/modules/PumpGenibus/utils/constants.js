@@ -47,3 +47,19 @@ export const formatDateTime = (value) => {
 }
 
 export const formatTime = (value) => (value ? value.slice(0, 5) : '-')
+
+// Para date_start/date_finish de las programaciones: la base guarda la hora
+// de pared argentina "etiquetada" como UTC, asi que se renderiza en UTC para
+// mostrar exactamente lo que se cargo (sin conversion del navegador)
+export const formatWallDateTime = (value) => {
+    if (!value) return '-'
+    return new Date(value).toLocaleString('es-AR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+        timeZone: 'UTC',
+    })
+}
