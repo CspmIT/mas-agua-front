@@ -15,6 +15,10 @@ export const sendSetPoint = (pressure) =>
 
 export const listAutomations = () => request(`${url}/pump-genibus/automations`, 'GET')
 
+// Programaciones que estan dentro de su ventana de ejecucion ahora
+export const getActiveAutomations = () =>
+    request(`${url}/pump-genibus/automations/active`, 'GET')
+
 export const saveAutomation = (data) => request(`${url}/pump-genibus/automations`, 'POST', data)
 
 export const deleteAutomation = (id) =>
