@@ -79,7 +79,7 @@ const ActionButtonPanel = ({ button, onChange }) => {
         </FormControl>
       </div>
 
-      {button.idBomb || button.config?.timedReboot ? (
+      {button.idBomb || button.config?.timedReboot || button.config?.pumpSetPoint ? (
         <div className='flex items-center justify-between gap-2 rounded-lg bg-[#2c6aa0]/10 dark:bg-[#5ea5f0]/15 px-2.5 py-1.5'>
           <span className='text-sm text-slate-800 dark:text-gray-100 truncate'>
             <LuPower className='inline mr-1.5' size={14} />
@@ -94,7 +94,7 @@ const ActionButtonPanel = ({ button, onChange }) => {
                 ...button,
                 idBomb: null,
                 bombName: null,
-                config: { ...button.config, timedReboot: false },
+                config: { ...button.config, timedReboot: false, pumpSetPoint: false },
               })
             }
           >
@@ -113,6 +113,27 @@ const ActionButtonPanel = ({ button, onChange }) => {
         </div>
       ) : (
         <List dense className='overflow-y-auto max-h-[260px] !py-0'>
+          {/* Destino especial: setpoint del bombeo urbano (Genibus) */}
+          <ListItem
+            button
+            selected={Boolean(button.config?.pumpSetPoint)}
+            onClick={() =>
+              onChange({
+                ...button,
+                idBomb: null,
+                bombName: 'Setpoint bombeo urbano',
+                config: { ...button.config, pumpSetPoint: true, timedReboot: false },
+              })
+            }
+            className='!rounded-md hover:!bg-[#2c6aa0]/10 dark:hover:!bg-[#5ea5f0]/15'
+          >
+            <ListItemText
+              primary='Setpoint bombeo urbano (Genibus)'
+              secondary='Abre el ajuste de presión de salida'
+              primaryTypographyProps={{ className: 'text-slate-800 dark:!text-gray-100' }}
+              secondaryTypographyProps={{ className: 'dark:!text-gray-400' }}
+            />
+          </ListItem>
           {/* Destino especial: toggle de la automatizacion de reinicio (OI-50) */}
           <ListItem
             button
@@ -122,7 +143,7 @@ const ActionButtonPanel = ({ button, onChange }) => {
                 ...button,
                 idBomb: null,
                 bombName: 'Automatización de reinicio',
-                config: { ...button.config, timedReboot: true },
+                config: { ...button.config, timedReboot: true, pumpSetPoint: false },
               })
             }
             className='!rounded-md hover:!bg-[#2c6aa0]/10 dark:hover:!bg-[#5ea5f0]/15'
@@ -144,7 +165,7 @@ const ActionButtonPanel = ({ button, onChange }) => {
                   ...button,
                   idBomb: control.id,
                   bombName: control.name,
-                  config: { ...button.config, timedReboot: false },
+                  config: { ...button.config, timedReboot: false, pumpSetPoint: false },
                 })
               }
               className='!rounded-md hover:!bg-[#2c6aa0]/10 dark:hover:!bg-[#5ea5f0]/15'

@@ -15,6 +15,7 @@ import LinkButtonElement from '../components/WidgetElements/LinkButtonElement';
 import VarCardElement from '../components/WidgetElements/VarCardElement';
 import VariableHistoryPopup from '../components/VariableHistoryPopup/VariableHistoryPopup';
 import BombControlPopup from '../components/BombControl/BombControlPopup';
+import PumpSetPointPopup from '../components/BombControl/PumpSetPointPopup';
 import ActionButtonElement from '../components/WidgetElements/ActionButtonElement';
 import Swal from 'sweetalert2';
 import LoaderComponent from '../../../components/Loader';
@@ -80,6 +81,7 @@ function ViewDiagram() {
   const location = useLocation();
   const [historyPopup, setHistoryPopup] = useState(null);
   const [bombPopup, setBombPopup] = useState(null);
+  const [setPointPopup, setSetPointPopup] = useState(null); // id del boton que lo abrio
 
   // ===== Botones de accion PLC =====
   const [plcState, setPlcState] = useState({ bombs: null, live: null });
@@ -124,6 +126,19 @@ function ViewDiagram() {
     if (showWhen === 'comm_down') visible = live?.comm_ok === false;
     if (showWhen === 'not_enabled') visible = live?.osmosis?.enabled === false;
 
+    // Setpoint del bombeo urbano (Genibus): abre el popup de ajuste de presion
+    if (el.config?.pumpSetPoint) {
+      const lockedSp = (actionLockRef.current[el.id] || 0) > Date.now();
+      return {
+        visible,
+        pumpSetPoint: true,
+        bomb: null,
+        action: null,
+        disabled: lockedSp,
+        variant: lockedSp ? 'disabled' : 'amber',
+      };
+    }
+
     // Automatizacion de reinicio (OI-50): toggle persistido, no es un equipo PLC
     if (el.config?.timedReboot) {
       const lockedReboot = (actionLockRef.current[el.id] || 0) > Date.now();
@@ -164,6 +179,12 @@ function ViewDiagram() {
   const handlePlcButtonClick = async (el) => {
     const state = getPlcButtonState(el);
     if (state.disabled) return;
+
+    // Ajuste de setpoint del bombeo urbano: se resuelve en su propio popup
+    if (state.pumpSetPoint) {
+      setSetPointPopup(el.id);
+      return;
+    }
 
     // Toggle de la automatizacion de reinicio: endpoint propio
     if (state.timedReboot) {
@@ -820,6 +841,17 @@ function ViewDiagram() {
                 <BombControlPopup
                   idBomb={bombPopup}
                   onClose={() => setBombPopup(null)}
+                />
+              )}
+
+              {setPointPopup && (
+                <PumpSetPointPopup
+                  onClose={() => setSetPointPopup(null)}
+                  onSent={() => {
+                    // Candado anti doble envio (mismo criterio que los otros botones)
+                    actionLockRef.current[setPointPopup] = Date.now() + 90000;
+                    setPlcState((prev) => ({ ...prev }));
+                  }}
                 />
               )}
 
