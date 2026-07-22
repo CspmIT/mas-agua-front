@@ -9,6 +9,7 @@ import Swal from 'sweetalert2'
 import { backend } from '../../../utils/routes/app.routes'
 import { request } from '../../../utils/js/request'
 import ConfigMultiple from './ConfigMultiple'
+import ConfigTotalizado from '../components/ConfigTotalizado'
 import HeaderForms from '../components/HeaderForms'
 
 const submitPillSx = {
@@ -235,21 +236,35 @@ const ConfigGraphic = () => {
     }
 
     const saveTotalizadoChart = async (data) => {
-        if (data?.idVar === undefined) {
+        const variables = (data.variables || []).filter(
+            (v) => v.idVar !== undefined && v.idVar !== null
+        )
+        if (!variables.length) {
             Swal.fire({
                 icon: 'error',
                 title: 'Atención!',
-                html: 'Debe seleccionar una variable para el gráfico',
+                html: 'Debe seleccionar al menos una variable para el gráfico',
             })
             return
         }
-    
+        if (variables.some((v) => !v.name?.trim())) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Atención!',
+                html: 'Cada variable debe tener un nombre a mostrar',
+            })
+            return
+        }
+
         const payload = {
             title: data.title,
             type: 'TotalizadoPeriodo',
-            idVar: Number(data.idVar),
-            color: data.color,
-            order: Number(data.order),
+            variables: variables.map((v) => ({
+                idVar: Number(v.idVar),
+                name: v.name.trim(),
+                color: v.color,
+            })),
+            order: Number(data.order) || 1,
         }
     
         const url = backend[import.meta.env.VITE_APP_NAME]
@@ -325,7 +340,16 @@ const ConfigGraphic = () => {
                             {...register('type')}
                             value={configs[id].typeGraph}
                         />
-                        {!configs[id].singleValue ? (
+                        {configs[id].typeGraph === 'TotalizadoPeriodo' ? (
+                            (!idChart || !loading) && (
+                                <ConfigTotalizado
+                                    register={register}
+                                    errors={errors}
+                                    setValue={setValue}
+                                    chartData={idChart ? chart : null}
+                                />
+                            )
+                        ) : !configs[id].singleValue ? (
                             <ConfigMultiple
                                 id={id}
                                 setValue={setValue}

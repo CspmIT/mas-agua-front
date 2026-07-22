@@ -22,20 +22,16 @@ const chartComponentMap = {
     </div>
   ),
 
-  TotalizadoPeriodo: ({ chartData, chart }) => {
-    const color = chart.ChartConfig?.find(c => c.key === 'color')?.value ?? '#363F9C'
-
-    return (
-        <div className="w-full">
-            <GrafBarra
-                title=" "
-                seriesData={chartData ?? []}
-                seriesName="Consumo (m³)"
-                color={color}
-            />
-        </div>
-    )
-},
+  TotalizadoPeriodo: ({ chartData }) => (
+    <div className="w-full">
+        <GrafBarra
+            title=" "
+            categories={chartData?.categories ?? []}
+            series={chartData?.series ?? []}
+            seriesName="Consumo (m³)"
+        />
+    </div>
+  ),
 }
 
 export const ChartFactory = ({ type, chartData, chart, loader, onZoomRange, onRestore }) => {
