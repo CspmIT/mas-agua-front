@@ -9,11 +9,12 @@ import { EditChip, DeleteChip, ToneChip, ActionsRow, StatusPill } from '../../..
 import LiveStatus from '../components/LiveStatus'
 import AutomationForm from '../components/AutomationForm'
 import AutomationLogs from '../components/AutomationLogs'
-import { getPumpStatus, listAutomations, deleteAutomation } from '../services/api'
+import RunningIndicator from '../components/RunningIndicator'
+import { getPumpStatus, listAutomations, deleteAutomation, getActiveAutomations } from '../services/api'
 import {
     PROGRAMMING_LABELS,
     formatDays,
-    formatDateTime,
+    formatWallDateTime,
     formatTime,
 } from '../utils/constants'
 
@@ -35,9 +36,9 @@ const describeAutomation = (row) => {
     if (row.programming === 2) {
         return (
             <div className="text-sm leading-5">
-                <b>Inicio:</b> {formatDateTime(row.date_start)}
+                <b>Inicio:</b> {formatWallDateTime(row.date_start)}
                 <br />
-                <b>Fin:</b> {formatDateTime(row.date_finish)}
+                <b>Fin:</b> {formatWallDateTime(row.date_finish)}
             </div>
         )
     }
@@ -84,6 +85,7 @@ const createPillSx = {
 // embedded: se renderiza dentro de la vista Controles (sin Container ni PageHeader propio)
 const PumpGenibus = ({ embedded = false }) => {
     const [status, setStatus] = useState(null)
+    const [running, setRunning] = useState([])
     const [automations, setAutomations] = useState([])
     const [loading, setLoading] = useState(true)
     const [formOpen, setFormOpen] = useState(false)
@@ -97,6 +99,12 @@ const PumpGenibus = ({ embedded = false }) => {
         } catch {
             // 404 = todavia no corrio ningun ciclo de lectura; se muestra vacio
             setStatus(null)
+        }
+        try {
+            const { data } = await getActiveAutomations()
+            setRunning(data)
+        } catch {
+            setRunning([])
         }
     }, [])
 
@@ -226,8 +234,9 @@ const PumpGenibus = ({ embedded = false }) => {
                     </Box>
                 )}
 
-                {embedded && (
-                    <div className="flex justify-end -mb-2">
+                <div className="flex flex-wrap items-center justify-between gap-3 -mb-2">
+                    <RunningIndicator running={running} />
+                    {embedded && (
                         <Button
                             onClick={openCreate}
                             variant="contained"
@@ -237,8 +246,8 @@ const PumpGenibus = ({ embedded = false }) => {
                         >
                             Nueva programación
                         </Button>
-                    </div>
-                )}
+                    )}
+                </div>
 
                 <TableCustom data={automations} columns={columns} />
             </Box>
