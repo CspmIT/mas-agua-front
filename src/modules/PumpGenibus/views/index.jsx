@@ -13,7 +13,7 @@ import { getPumpStatus, listAutomations, deleteAutomation } from '../services/ap
 import {
     PROGRAMMING_LABELS,
     formatDays,
-    formatDateTime,
+    formatWallDateTime,
     formatTime,
 } from '../utils/constants'
 
@@ -35,9 +35,9 @@ const describeAutomation = (row) => {
     if (row.programming === 2) {
         return (
             <div className="text-sm leading-5">
-                <b>Inicio:</b> {formatDateTime(row.date_start)}
+                <b>Inicio:</b> {formatWallDateTime(row.date_start)}
                 <br />
-                <b>Fin:</b> {formatDateTime(row.date_finish)}
+                <b>Fin:</b> {formatWallDateTime(row.date_finish)}
             </div>
         )
     }
