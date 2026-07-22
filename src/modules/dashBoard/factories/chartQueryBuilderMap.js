@@ -48,16 +48,44 @@ const samplingPeriodToMs = (sp) => {
   return 60 * 1000
 }
 
+const MESES_TOTALIZADO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
+// Convierte etiquetas tipo "Ene-2026" a un ordinal para ordenar cronologicamente
+const totalizadoLabelToOrd = (label) => {
+  const [mes, anio] = String(label).split('-')
+  return Number(anio) * 12 + MESES_TOTALIZADO.indexOf(mes)
+}
+
 export const chartQueryBuilderMap = {
   TotalizadoPeriodo: async (chart) => {
-    const sourceId = chart.ChartSeriesData?.[0]?.source_id
-    if (!sourceId) throw new Error('Sin source_id')
+    const seriesData = (chart.ChartSeriesData || []).filter((s) => s?.source_id)
+    if (!seriesData.length) throw new Error('Sin source_id')
 
-    const { data } = await request(
-      `${backend['Mas Agua']}/totalizado/${sourceId}`,
-      'GET'
+    const results = await Promise.all(
+      seriesData.map(async (serie) => {
+        const { data } = await request(
+          `${backend['Mas Agua']}/totalizado/${serie.source_id}`,
+          'GET'
+        )
+        return { serie, points: Array.isArray(data) ? data : [] }
+      })
     )
-    return data
+
+    // Union de meses de todas las series, en orden cronologico
+    const categories = [
+      ...new Set(results.flatMap(({ points }) => points.map((p) => p.name))),
+    ].sort((a, b) => totalizadoLabelToOrd(a) - totalizadoLabelToOrd(b))
+
+    const series = results.map(({ serie, points }) => {
+      const byMonth = new Map(points.map((p) => [p.name, p.value]))
+      return {
+        name: serie.name,
+        color: serie.color || undefined,
+        data: categories.map((c) => byMonth.get(c) ?? null),
+      }
+    })
+
+    return { categories, series }
   },
 
   LineChart: async (chart, filters) => {
