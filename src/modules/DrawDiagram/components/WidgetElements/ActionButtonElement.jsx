@@ -31,7 +31,7 @@ const ActionButtonElement = ({ el, variant = 'editor', isSelected = false, onSel
   const label = el.config?.label || 'Acción PLC';
   const fontSize = Math.min(height * 0.42, 15);
   const [colorA, colorB] = VARIANTS[variant] || VARIANTS.editor;
-  const hasBomb = Boolean(el.idBomb || el.config?.timedReboot);
+  const hasBomb = Boolean(el.idBomb || el.config?.timedReboot || el.config?.pumpSetPoint);
 
   return (
     <Group
