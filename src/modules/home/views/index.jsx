@@ -14,6 +14,7 @@ import BooleanChart from '../../Charts/components/BooleanChart'
 import MultipleBooleanChart from '../../Charts/components/MultipleBooleanChart'
 import { ChartComponentDbWrapper } from '../components/ChartComponentDbWrapper'
 import LineChartHomeWidget from '../components/LineChartHomeWidget'
+import TotalizadoHomeWidget from '../components/TotalizadoHomeWidget'
 import AddChartDialog from '../components/AddChartDialog'
 import EmptyDashboard from '../components/EmptyDashboard'
 import LoaderComponent from '../../../components/Loader'
@@ -53,14 +54,19 @@ const chartComponents = {
     GaugeSpeed,
     BooleanChart,
     MultipleBooleanChart,
-    LineChart: LineChartHomeWidget
+    LineChart: LineChartHomeWidget,
+    TotalizadoPeriodo: TotalizadoHomeWidget
 }
+
+// Tipos que consultan series históricas por su cuenta (useLineChartData) y se
+// guardan como chart crudo, fuera del batch de últimos valores
+const SERIES_CHART_TYPES = ['LineChart', 'TotalizadoPeriodo']
 
 // Tamaño mínimo en la grilla para que la serie histórica sea legible
 const LINE_CHART_MIN_SIZE = { minW: 4, minH: 5 }
 
 // Flag versionado por feature: cambiar la key para anunciar la próxima novedad
-const ANNOUNCE_KEY = 'announce_linechart_v1'
+const ANNOUNCE_KEY = 'announce_totalizado_v1'
 
 const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }
 const COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }
@@ -129,9 +135,9 @@ const Home = ({ targetUserId = null }) => {
         const vars = []
 
         chartsData.forEach((chart) => {
-            // Los LineChart consultan series históricas por su cuenta
+            // Los gráficos de series consultan históricos por su cuenta
             // (useLineChartData), no entran en el batch de últimos valores.
-            if (chart.component === 'LineChart') return
+            if (SERIES_CHART_TYPES.includes(chart.component)) return
 
             if (chart.component === 'PumpControl') {
                 const normalizePumpVar = (item) => ({
@@ -220,7 +226,7 @@ const Home = ({ targetUserId = null }) => {
 
                 }, {})
 
-                if (type === 'LineChart') {
+                if (SERIES_CHART_TYPES.includes(type)) {
                     // Se guarda el chart crudo: el widget arma la query con
                     // ChartSeriesData + ChartConfig (igual que el dashboard general)
                     return {
@@ -357,7 +363,7 @@ const Home = ({ targetUserId = null }) => {
                 y: c.layout.y,
                 w: c.layout.w,
                 h: c.layout.h,
-                ...(c.component === 'LineChart' && LINE_CHART_MIN_SIZE)
+                ...(SERIES_CHART_TYPES.includes(c.component) && LINE_CHART_MIN_SIZE)
             }))
             // En pantallas angostas apilamos los widgets uno debajo del otro,
             // respetando el orden de lectura (y, luego x). Si sólo forzamos x:0
@@ -540,6 +546,7 @@ const Home = ({ targetUserId = null }) => {
         const ChartComponentDb = chartComponents[chart.component]
         const isMultipleBoolean = chart.component === 'MultipleBooleanChart'
         const isLineChart = chart.component === 'LineChart'
+        const isTotalizado = chart.component === 'TotalizadoPeriodo'
 
         // Sólo las cards de bombas (MultipleBooleanChart) crecen según su contenido.
         // El resto conserva el alto fijo de la BD, como en desktop (sino se achican).
@@ -579,11 +586,18 @@ const Home = ({ targetUserId = null }) => {
                             </h2>
                         </div>
                     }
-                    <div className={`flex-1 flex items-center justify-center ${isLineChart ? 'min-h-0' : ''}`}>
+                    <div className={`flex-1 flex items-center justify-center ${isLineChart || isTotalizado ? 'min-h-0' : ''}`}>
                         {isLineChart ? (
                             // Sin key por tamaño: EChart se redimensiona solo
                             // (ResizeObserver) y un remount refetcharía las series
                             <LineChartHomeWidget
+                                chart={chart.rawChart}
+                                editMode={editMode}
+                            />
+                        ) : isTotalizado ? (
+                            // Sin key por tamaño: el widget mide su contenedor con
+                            // ResizeObserver y un remount refetcharía las series
+                            <TotalizadoHomeWidget
                                 chart={chart.rawChart}
                                 editMode={editMode}
                             />
@@ -686,7 +700,7 @@ const Home = ({ targetUserId = null }) => {
                                     </button>
                                     <p className='text-[13px] leading-snug pr-4 m-0'>
                                         ✨ <span className='font-semibold'>Nuevo:</span> ahora
-                                        podés agregar gráficos históricos a tu dashboard
+                                        podés agregar gráficos de totalizado a tu dashboard
                                     </p>
                                     {/* Flechita apuntando al botón de editar */}
                                     <div className='absolute -bottom-1 right-4 h-2.5 w-2.5 rotate-45 bg-[#2c6aa0] dark:bg-[#1f4e79]' />

@@ -94,6 +94,21 @@ const ChartPreviews = {
                 strokeLinejoin="round" strokeLinecap="round" />
         </svg>
     ),
+    TotalizadoPeriodo: () => (
+        <svg viewBox="0 0 80 80" fill="none">
+            {[
+                { x: 10, h1: 28, h2: 18 },
+                { x: 34, h1: 40, h2: 26 },
+                { x: 58, h1: 22, h2: 34 },
+            ].map((g, i) => (
+                <g key={i}>
+                    <rect x={g.x} y={70 - g.h1} width="8" height={g.h1} rx="2" fill="#363f9c" />
+                    <rect x={g.x + 10} y={70 - g.h2} width="8" height={g.h2} rx="2" fill="#10b981" />
+                </g>
+            ))}
+            <line x1="6" y1="70" x2="76" y2="70" stroke="#cbd5e1" strokeWidth="1.5" />
+        </svg>
+    ),
     MultipleBooleanChart: () => (
         <svg viewBox="0 0 80 80" fill="none">
             {[
@@ -125,7 +140,8 @@ const CHART_LABELS = {
     GaugeSpeed: { label: "Velocímetro" },
     BooleanChart: { label: "Booleano" },
     MultipleBooleanChart: { label: "Multi-booleano" },
-    LineChart: { label: "Líneas (histórico)", isNew: true },
+    LineChart: { label: "Líneas (histórico)" },
+    TotalizadoPeriodo: { label: "Totalizado por periodo", isNew: true },
 }
 
 export default function AddChartDialog({ open, onClose, availableCharts, onAdd }) {
