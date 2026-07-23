@@ -1,6 +1,7 @@
 import {
     Dialog, DialogTitle, DialogContent, IconButton, Chip
 } from "@mui/material"
+import { isNewChart } from "../../dashBoard/utils/newChart"
 
 // Preview SVG minimalista para cada tipo de gráfico
 const ChartPreviews = {
@@ -94,6 +95,21 @@ const ChartPreviews = {
                 strokeLinejoin="round" strokeLinecap="round" />
         </svg>
     ),
+    TotalizadoPeriodo: () => (
+        <svg viewBox="0 0 80 80" fill="none">
+            {[
+                { x: 10, h1: 28, h2: 18 },
+                { x: 34, h1: 40, h2: 26 },
+                { x: 58, h1: 22, h2: 34 },
+            ].map((g, i) => (
+                <g key={i}>
+                    <rect x={g.x} y={70 - g.h1} width="8" height={g.h1} rx="2" fill="#363f9c" />
+                    <rect x={g.x + 10} y={70 - g.h2} width="8" height={g.h2} rx="2" fill="#10b981" />
+                </g>
+            ))}
+            <line x1="6" y1="70" x2="76" y2="70" stroke="#cbd5e1" strokeWidth="1.5" />
+        </svg>
+    ),
     MultipleBooleanChart: () => (
         <svg viewBox="0 0 80 80" fill="none">
             {[
@@ -125,7 +141,8 @@ const CHART_LABELS = {
     GaugeSpeed: { label: "Velocímetro" },
     BooleanChart: { label: "Booleano" },
     MultipleBooleanChart: { label: "Multi-booleano" },
-    LineChart: { label: "Líneas (histórico)", isNew: true },
+    LineChart: { label: "Líneas (histórico)" },
+    TotalizadoPeriodo: { label: "Totalizado por periodo", isNew: true },
 }
 
 export default function AddChartDialog({ open, onClose, availableCharts, onAdd }) {
@@ -255,8 +272,30 @@ export default function AddChartDialog({ open, onClose, availableCharts, onAdd }
                                             e.currentTarget.style.transform = "none"
                                         }}
                                     >
-                                        <span style={{ fontWeight: 600, fontSize: 14, color: "#0f172a" }}>
+                                        <span style={{
+                                            fontWeight: 600,
+                                            fontSize: 14,
+                                            color: "#0f172a",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 6,
+                                            flexWrap: "wrap"
+                                        }}>
                                             {chart.name}
+                                            {isNewChart(chart) && (
+                                                <span style={{
+                                                    fontSize: 9,
+                                                    fontWeight: 700,
+                                                    letterSpacing: "0.08em",
+                                                    color: "#fff",
+                                                    background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                                                    padding: "2px 7px",
+                                                    borderRadius: 999,
+                                                    flexShrink: 0
+                                                }}>
+                                                    NUEVO
+                                                </span>
+                                            )}
                                         </span>
                                         <Chip
                                             label={`ID ${chart.id}`}

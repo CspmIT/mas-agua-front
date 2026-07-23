@@ -39,6 +39,8 @@ function GrafBarra({ ...props }) {
 		chart: {
 			type: 'column',
 			backgroundColor: darkMode ? '#373638' : 'white',
+			// Alto explícito en px (widgets del home, medido por el contenedor)
+			...(Number.isFinite(props.height) && { height: props.height }),
 		},
 		title: {
 			text: props.title || 'Grafico de Barra',
@@ -78,7 +80,17 @@ function GrafBarra({ ...props }) {
 		series,
 	}
 
-	return <HighchartsReact highcharts={Highcharts} options={options} />
+	return (
+		<HighchartsReact
+			highcharts={Highcharts}
+			options={options}
+			containerProps={
+				Number.isFinite(props.height)
+					? { style: { width: '100%' } }
+					: undefined
+			}
+		/>
+	)
 }
 
 export default GrafBarra
