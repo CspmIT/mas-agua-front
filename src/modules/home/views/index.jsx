@@ -14,6 +14,8 @@ import BooleanChart from '../../Charts/components/BooleanChart'
 import MultipleBooleanChart from '../../Charts/components/MultipleBooleanChart'
 import { ChartComponentDbWrapper } from '../components/ChartComponentDbWrapper'
 import LineChartHomeWidget from '../components/LineChartHomeWidget'
+import TotalizadoHomeWidget from '../components/TotalizadoHomeWidget'
+import { isNewChart } from '../../dashBoard/utils/newChart'
 import AddChartDialog from '../components/AddChartDialog'
 import EmptyDashboard from '../components/EmptyDashboard'
 import LoaderComponent from '../../../components/Loader'
@@ -53,14 +55,22 @@ const chartComponents = {
     GaugeSpeed,
     BooleanChart,
     MultipleBooleanChart,
-    LineChart: LineChartHomeWidget
+    LineChart: LineChartHomeWidget,
+    TotalizadoPeriodo: TotalizadoHomeWidget
 }
+
+// Tipos que consultan series históricas por su cuenta (useLineChartData) y se
+// guardan como chart crudo, fuera del batch de últimos valores
+const SERIES_CHART_TYPES = ['LineChart', 'TotalizadoPeriodo']
 
 // Tamaño mínimo en la grilla para que la serie histórica sea legible
 const LINE_CHART_MIN_SIZE = { minW: 4, minH: 5 }
 
 // Flag versionado por feature: cambiar la key para anunciar la próxima novedad
-const ANNOUNCE_KEY = 'announce_linechart_v1'
+const ANNOUNCE_KEY = 'announce_totalizado_v1'
+
+// Hasta qué fecha de creación ya se avisó de gráficos nuevos disponibles
+const NEW_CHARTS_SEEN_KEY = 'new_charts_seen_until'
 
 const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }
 const COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }
@@ -90,6 +100,21 @@ const Home = ({ targetUserId = null }) => {
         if (!showAnnouncement) return
         storage.set(ANNOUNCE_KEY, true)
         setShowAnnouncement(false)
+    }
+
+    // Aviso de gráficos nuevos (menos de una semana) disponibles para agregar
+    const [newAvailableCharts, setNewAvailableCharts] = useState([])
+    const [showNewChartsNotice, setShowNewChartsNotice] = useState(false)
+
+    const dismissNewChartsNotice = () => {
+        if (newAvailableCharts.length) {
+            const maxCreatedAt = newAvailableCharts
+                .map((c) => c.createdAt)
+                .sort()
+                .pop()
+            storage.set(NEW_CHARTS_SEEN_KEY, maxCreatedAt)
+        }
+        setShowNewChartsNotice(false)
     }
 
     const dashboardUrl = isAdminMode
@@ -129,9 +154,9 @@ const Home = ({ targetUserId = null }) => {
         const vars = []
 
         chartsData.forEach((chart) => {
-            // Los LineChart consultan series históricas por su cuenta
+            // Los gráficos de series consultan históricos por su cuenta
             // (useLineChartData), no entran en el batch de últimos valores.
-            if (chart.component === 'LineChart') return
+            if (SERIES_CHART_TYPES.includes(chart.component)) return
 
             if (chart.component === 'PumpControl') {
                 const normalizePumpVar = (item) => ({
@@ -220,7 +245,7 @@ const Home = ({ targetUserId = null }) => {
 
                 }, {})
 
-                if (type === 'LineChart') {
+                if (SERIES_CHART_TYPES.includes(type)) {
                     // Se guarda el chart crudo: el widget arma la query con
                     // ChartSeriesData + ChartConfig (igual que el dashboard general)
                     return {
@@ -357,7 +382,7 @@ const Home = ({ targetUserId = null }) => {
                 y: c.layout.y,
                 w: c.layout.w,
                 h: c.layout.h,
-                ...(c.component === 'LineChart' && LINE_CHART_MIN_SIZE)
+                ...(SERIES_CHART_TYPES.includes(c.component) && LINE_CHART_MIN_SIZE)
             }))
             // En pantallas angostas apilamos los widgets uno debajo del otro,
             // respetando el orden de lectura (y, luego x). Si sólo forzamos x:0
@@ -465,6 +490,13 @@ const Home = ({ targetUserId = null }) => {
         }
     }
 
+    // Al montar chequeamos si hay gráficos nuevos disponibles para avisar
+    useEffect(() => {
+        if (!isAdminMode && userId) {
+            getAvailableCharts(userId)
+        }
+    }, [])
+
     async function handleOpenAddChart() {
         const resolvedUserId = isAdminMode ? targetUserId : userId
         await getAvailableCharts(resolvedUserId)
@@ -477,11 +509,23 @@ const Home = ({ targetUserId = null }) => {
                 `${backend['Mas Agua']}/chartbyuser/${userId}`,
                 'GET'
             )
-    
+
             const validTypes = Object.keys(chartComponents)
             const filteredData = data.filter(chart => validTypes.includes(chart.type))
-    
+
             setAvailableCharts(filteredData)
+
+            // Gráficos nuevos disponibles: mostramos el aviso sólo si hay alguno
+            // más nuevo que el último del que ya se avisó
+            const news = filteredData.filter(isNewChart)
+            setNewAvailableCharts(news)
+            if (!isAdminMode) {
+                const seenUntil = storage.get(NEW_CHARTS_SEEN_KEY)
+                const hasUnseen = news.some(
+                    (c) => !seenUntil || new Date(c.createdAt) > new Date(seenUntil)
+                )
+                setShowNewChartsNotice(hasUnseen)
+            }
         } catch (error) {
             console.error(error)
         }
@@ -540,6 +584,7 @@ const Home = ({ targetUserId = null }) => {
         const ChartComponentDb = chartComponents[chart.component]
         const isMultipleBoolean = chart.component === 'MultipleBooleanChart'
         const isLineChart = chart.component === 'LineChart'
+        const isTotalizado = chart.component === 'TotalizadoPeriodo'
 
         // Sólo las cards de bombas (MultipleBooleanChart) crecen según su contenido.
         // El resto conserva el alto fijo de la BD, como en desktop (sino se achican).
@@ -579,11 +624,18 @@ const Home = ({ targetUserId = null }) => {
                             </h2>
                         </div>
                     }
-                    <div className={`flex-1 flex items-center justify-center ${isLineChart ? 'min-h-0' : ''}`}>
+                    <div className={`flex-1 flex items-center justify-center ${isLineChart || isTotalizado ? 'min-h-0' : ''}`}>
                         {isLineChart ? (
                             // Sin key por tamaño: EChart se redimensiona solo
                             // (ResizeObserver) y un remount refetcharía las series
                             <LineChartHomeWidget
+                                chart={chart.rawChart}
+                                editMode={editMode}
+                            />
+                        ) : isTotalizado ? (
+                            // Sin key por tamaño: el widget mide su contenedor con
+                            // ResizeObserver y un remount refetcharía las series
+                            <TotalizadoHomeWidget
                                 chart={chart.rawChart}
                                 editMode={editMode}
                             />
@@ -671,7 +723,7 @@ const Home = ({ targetUserId = null }) => {
                     )}
 
                     <div className='sticky bottom-4 z-30 flex justify-end py-2 px-1 pointer-events-none'>
-                        <div className={`pointer-events-auto relative flex items-center gap-0.5 rounded-full border border-gray-200/80 dark:border-gray-700/60 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md shadow-lg shadow-gray-900/5 dark:shadow-black/30 p-1 transition-opacity duration-200 ${isAdminMode || showAnnouncement ? 'opacity-100' : 'opacity-30 hover:opacity-100'}`}>
+                        <div className={`pointer-events-auto relative flex items-center gap-0.5 rounded-full border border-gray-200/80 dark:border-gray-700/60 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md shadow-lg shadow-gray-900/5 dark:shadow-black/30 p-1 transition-opacity duration-200 ${isAdminMode || showAnnouncement || showNewChartsNotice ? 'opacity-100' : 'opacity-30 hover:opacity-100'}`}>
                             {showAnnouncement && (
                                 <div
                                     className='absolute bottom-full right-0 mb-3 w-64 rounded-xl bg-[#2c6aa0] dark:bg-[#1f4e79] text-white shadow-xl shadow-[#2c6aa0]/30 px-3.5 py-3'
@@ -686,10 +738,32 @@ const Home = ({ targetUserId = null }) => {
                                     </button>
                                     <p className='text-[13px] leading-snug pr-4 m-0'>
                                         ✨ <span className='font-semibold'>Nuevo:</span> ahora
-                                        podés agregar gráficos históricos a tu dashboard
+                                        podés agregar gráficos de totalizado a tu dashboard
                                     </p>
                                     {/* Flechita apuntando al botón de editar */}
                                     <div className='absolute -bottom-1 right-4 h-2.5 w-2.5 rotate-45 bg-[#2c6aa0] dark:bg-[#1f4e79]' />
+                                </div>
+                            )}
+                            {!showAnnouncement && showNewChartsNotice && (
+                                <div
+                                    className='absolute bottom-full right-0 mb-3 w-64 rounded-xl bg-[#10B981] dark:bg-[#059669] text-white shadow-xl shadow-[#10B981]/30 px-3.5 py-3'
+                                    style={{ animation: 'calloutIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards' }}
+                                >
+                                    <button
+                                        className='absolute top-1.5 right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-transparent border-0 p-0 text-white/70 hover:text-white hover:bg-white/10 text-[11px] leading-none cursor-pointer'
+                                        onClick={dismissNewChartsNotice}
+                                        aria-label='Cerrar aviso'
+                                    >
+                                        ✕
+                                    </button>
+                                    <p className='text-[13px] leading-snug pr-4 m-0'>
+                                        ✨ {newAvailableCharts.length === 1
+                                            ? <>Hay <span className='font-semibold'>1 gráfico nuevo</span> disponible</>
+                                            : <>Hay <span className='font-semibold'>{newAvailableCharts.length} gráficos nuevos</span> disponibles</>}
+                                        {' '}para agregar a tu dashboard
+                                    </p>
+                                    {/* Flechita apuntando al botón de editar */}
+                                    <div className='absolute -bottom-1 right-4 h-2.5 w-2.5 rotate-45 bg-[#10B981] dark:bg-[#059669]' />
                                 </div>
                             )}
                             {editMode && (
@@ -731,6 +805,9 @@ const Home = ({ targetUserId = null }) => {
                                     }}
                                 >
                                     {editMode ? <IconCheck /> : <IconEdit />}
+                                    {showNewChartsNotice && !editMode && (
+                                        <span className='absolute top-0.5 right-0.5 h-2 w-2 rounded-full bg-[#10B981] ring-2 ring-white dark:ring-gray-900 animate-pulse' />
+                                    )}
                                 </IconButton>
                             </Tooltip>
                         </div>
@@ -740,7 +817,11 @@ const Home = ({ targetUserId = null }) => {
 
             <AddChartDialog
                 open={openAddChart}
-                onClose={() => setOpenAddChart(false)}
+                onClose={() => {
+                    setOpenAddChart(false)
+                    // Ya vio el listado: no volvemos a avisar por estos gráficos
+                    dismissNewChartsNotice()
+                }}
                 availableCharts={availableCharts}
                 onAdd={addChart}
             />
