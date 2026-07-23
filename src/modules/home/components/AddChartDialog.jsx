@@ -1,6 +1,7 @@
 import {
     Dialog, DialogTitle, DialogContent, IconButton, Chip
 } from "@mui/material"
+import { isNewChart } from "../../dashBoard/utils/newChart"
 
 // Preview SVG minimalista para cada tipo de gráfico
 const ChartPreviews = {
@@ -271,8 +272,30 @@ export default function AddChartDialog({ open, onClose, availableCharts, onAdd }
                                             e.currentTarget.style.transform = "none"
                                         }}
                                     >
-                                        <span style={{ fontWeight: 600, fontSize: 14, color: "#0f172a" }}>
+                                        <span style={{
+                                            fontWeight: 600,
+                                            fontSize: 14,
+                                            color: "#0f172a",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 6,
+                                            flexWrap: "wrap"
+                                        }}>
                                             {chart.name}
+                                            {isNewChart(chart) && (
+                                                <span style={{
+                                                    fontSize: 9,
+                                                    fontWeight: 700,
+                                                    letterSpacing: "0.08em",
+                                                    color: "#fff",
+                                                    background: "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+                                                    padding: "2px 7px",
+                                                    borderRadius: 999,
+                                                    flexShrink: 0
+                                                }}>
+                                                    NUEVO
+                                                </span>
+                                            )}
                                         </span>
                                         <Chip
                                             label={`ID ${chart.id}`}
