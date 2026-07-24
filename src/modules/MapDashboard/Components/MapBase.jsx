@@ -9,9 +9,10 @@ import Map, {
 import 'maplibre-gl/dist/maplibre-gl.css'
 import '../Style/MarkerPopup.css'
 import Pin from './Pin'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
+import VariableHistoryPopup from '../../DrawDiagram/components/VariableHistoryPopup/VariableHistoryPopup'
 
 // Suavidad del zoom. Más chico = más gradual (defaults de MapLibre: rueda 1/450, pinch 1/100)
 const WHEEL_ZOOM_RATE = 1 / 800   // rueda del mouse
@@ -86,6 +87,27 @@ const MapBase = ({
     onEditMarker = null,
 }) => {
     const mapRef = useRef(null)
+    const [historyVar, setHistoryVar] = useState(null)
+
+    // Historia sólo para variables no binarias (mismo criterio que en diagramas)
+    const canShowHistory = (marker) => {
+        const data = marker.popupInfo?.data
+        if (!withInfo || !data) return false
+        if (data.binary_compressed || data.calc_binary_compressed) return false
+        if (data.unit === 'calc_binary') return false
+        if (marker.popupInfo.kind === 'binary') return false
+        return true
+    }
+
+    const openHistory = (marker) => {
+        const data = marker.popupInfo.data
+        setHistoryVar({
+            ...data,
+            name: data.name || marker.name,
+            // Preferir la unit configurada por el operador en el marcador
+            unit: marker.unit ?? data.unit ?? '',
+        })
+    }
 
     // Ajusta la suavidad del zoom una vez cargado el mapa
     const handleMapLoad = () => {
@@ -298,6 +320,21 @@ const MapBase = ({
                                         status={marker.status}
                                     />
                                 </span>
+                            ) : canShowHistory(marker) ? (
+                                <span
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        openHistory(marker)
+                                    }}
+                                    style={{ cursor: 'pointer', display: 'inline-block', lineHeight: 0 }}
+                                >
+                                    <Pin
+                                        label={marker.name}
+                                        color='#2c6aa0'
+                                        active={withInfo}
+                                        status={marker.status}
+                                    />
+                                </span>
                             ) : (
                                 <Pin
                                     label={marker.name}
@@ -352,6 +389,13 @@ const MapBase = ({
                     )
                 })}
             </Map>
+
+            {historyVar && (
+                <VariableHistoryPopup
+                    dataInflux={historyVar}
+                    onClose={() => setHistoryVar(null)}
+                />
+            )}
         </div>
     )
 }

@@ -20,6 +20,7 @@ import {
     NivelPin,
     BombeoPin,
 } from '../utils/sensorPins'
+import VariableHistoryChart from '../../DrawDiagram/components/VariableHistoryPopup/VariableHistoryChart'
 
 const ALL_STATUSES = new Set(['ok', 'warn', 'crit', 'stale', 'apagado', 'off'])
 
@@ -109,6 +110,7 @@ const PressureDashboard = () => {
             crit_high: mm.crit_high,
             stale_after_minutes: mm.stale_after_minutes,
             varName: mm.PopUpsMarkers?.InfluxVar?.name ?? null,
+            varData: mm.PopUpsMarkers?.InfluxVar ?? null,
         }))
     }, [mapData])
 
@@ -186,8 +188,8 @@ const PressureDashboard = () => {
 // ── Overlay: panel de ayuda con leyenda de pines ───────────────────────────
 const MapHelpPanel = ({ open, onToggle }) => (
     <div
-        className='absolute z-[5] flex flex-col items-end'
-        style={{ right: 12, bottom: 12 }}
+        className='absolute z-[5] flex flex-col items-start'
+        style={{ left: 12, bottom: 12 }}
     >
         {open && (
             <div
@@ -323,9 +325,6 @@ const MarkerDetailCard = ({ marker, snapshot, onClose }) => {
     const status = snapshot?.status || 'off'
     const statusColor = STATUS_COLORS[status] || STATUS_COLORS.off
 
-    const sensorTypeLabel =
-        SENSOR_TYPE_OPTIONS.find((o) => o.value === marker.sensor_type)?.label || '—'
-
     const value = snapshot?.value
     const isBinary = snapshot?.kind === 'binary'
     // En binaria, status 'off' = Apagado (hay dato); solo es "Sin datos" si no hay value.
@@ -343,14 +342,23 @@ const MarkerDetailCard = ({ marker, snapshot, onClose }) => {
         marker.crit_low != null || marker.warn_low != null ||
         marker.warn_high != null || marker.crit_high != null
 
+    // Historia sólo para variables no binarias (mismo criterio que en diagramas)
+    const canShowHistory =
+        marker.varData &&
+        !marker.varData.binary_compressed &&
+        !marker.varData.calc_binary_compressed &&
+        marker.varData.unit !== 'calc_binary' &&
+        !isBinary
+
     return (
         <div
-            className='absolute z-[6] rounded-xl bg-white overflow-hidden'
+            className='absolute z-[6] rounded-xl bg-white overflow-hidden flex flex-col'
             style={{
                 top: 12,
                 right: 12,
                 width: 310,
                 maxWidth: 'calc(100vw - 32px)',
+                maxHeight: 'calc(100% - 24px)',
                 border: '1px solid rgba(15, 42, 68, 0.12)',
                 boxShadow:
                     '0 16px 40px rgba(15, 42, 68, 0.22), 0 4px 10px rgba(15, 42, 68, 0.08)',
@@ -405,6 +413,9 @@ const MarkerDetailCard = ({ marker, snapshot, onClose }) => {
                     <Close sx={{ fontSize: 18, color: '#ffffff' }} />
                 </button>
             </div>
+
+            {/* Cuerpo scrolleable: en pantallas bajas la card no debe superar el mapa */}
+            <div className='flex-1 min-h-0 overflow-y-auto'>
 
             {/* Valor en vivo */}
             <div
@@ -476,25 +487,20 @@ const MarkerDetailCard = ({ marker, snapshot, onClose }) => {
                 )}
             </div>
 
-            {/* Detalles */}
-            <div className='px-3 py-2 flex flex-col gap-1.5'>
-                <DetailRow label='Tipo' value={sensorTypeLabel} />
-                {marker.varName && <DetailRow label='Variable' value={marker.varName} />}
-                {marker.unit && <DetailRow label='Unidad' value={marker.unit} />}
-                <DetailRow
-                    label='Coordenadas'
-                    value={`${Number(marker.latitude).toFixed(5)}, ${Number(marker.longitude).toFixed(5)}`}
-                    mono
-                />
-            </div>
+            {/* Variable asociada */}
+            {marker.varName && (
+                <div className='px-3 py-1'>
+                    <DetailRow label='Variable' value={marker.varName} />
+                </div>
+            )}
 
             {/* Umbrales */}
             {hasThresholds && (
                 <div
-                    className='px-3 py-2 border-t'
+                    className='px-3 py-1.5 border-t'
                     style={{ borderColor: 'rgba(15, 42, 68, 0.06)' }}
                 >
-                    <div className='text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500 mb-1.5'>
+                    <div className='text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500 mb-1'>
                         Umbrales
                     </div>
                     <div className='grid grid-cols-4 gap-1'>
@@ -505,6 +511,24 @@ const MarkerDetailCard = ({ marker, snapshot, onClose }) => {
                     </div>
                 </div>
             )}
+
+            {/* Histórico */}
+            {canShowHistory && (
+                <div
+                    className='px-3 py-2 border-t flex flex-col gap-1.5'
+                    style={{ borderColor: 'rgba(15, 42, 68, 0.06)' }}
+                >
+                    <div className='text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500'>
+                        Histórico
+                    </div>
+                    <VariableHistoryChart
+                        dataInflux={marker.varData}
+                        heightClass='h-36'
+                        onWhite
+                    />
+                </div>
+            )}
+            </div>
         </div>
     )
 }
@@ -523,20 +547,20 @@ const DetailRow = ({ label, value, mono = false }) => (
 
 const ThresholdCell = ({ label, value, color }) => (
     <div
-        className='rounded-md px-1 py-1 text-center'
+        className='rounded-md px-0.5 py-1 text-center'
         style={{
             background: value != null ? `${color}10` : 'rgba(148,163,184,0.08)',
             border: `1px solid ${value != null ? `${color}40` : 'rgba(148,163,184,0.2)'}`,
         }}
     >
         <div
-            className='text-[8.5px] font-bold uppercase tracking-[0.08em]'
+            className='text-[8.5px] font-bold uppercase tracking-[0.08em] leading-tight'
             style={{ color: value != null ? color : '#94a3b8' }}
         >
             {label}
         </div>
         <div
-            className='text-[11px] font-bold text-slate-800'
+            className='text-[11px] font-bold text-slate-800 leading-tight'
             style={{ fontVariantNumeric: 'tabular-nums' }}
         >
             {value != null ? value : '—'}

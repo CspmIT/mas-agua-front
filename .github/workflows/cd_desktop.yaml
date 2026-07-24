@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'feat(charts): totalizado por periodo con multiples variables'
+                  releaseBody: 'feat: datos historicos en pressureDashboard'
                   prerelease: false
