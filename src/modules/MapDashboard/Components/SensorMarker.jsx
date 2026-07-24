@@ -1,4 +1,5 @@
 import { Marker } from 'react-map-gl/maplibre'
+import { useEffect, useRef, useState } from 'react'
 import SensorPin from './SensorPin'
 import StatusFloatingLabel from './StatusFloatingLabel'
 
@@ -24,10 +25,29 @@ const truncateLabel = (name) => {
     return String(name).slice(0, 3).toUpperCase().padStart(2, '0').slice(0, 3)
 }
 
-const SensorMarker = ({ marker, snapshot, onClick = null, selected = false }) => {
+const SensorMarker = ({
+    marker,
+    snapshot,
+    onClick = null,
+    selected = false,
+    showLabel = true,
+}) => {
     const s = snapshot || { status: 'off', value: null, kind: null, trend: null }
     const status = s.status || 'off'
     const offset = ANCHOR_TO_OFFSET[marker.anchor ?? ''] || ANCHOR_TO_OFFSET['']
+
+    const [hovered, setHovered] = useState(false)
+    const rootRef = useRef(null)
+
+    // Los markers de MapLibre son hermanos en el DOM: el hovereado/seleccionado
+    // pasa al frente para que su label no quede tapado por pines vecinos.
+    useEffect(() => {
+        const el = rootRef.current?.closest('.maplibregl-marker')
+        if (!el) return
+        el.style.zIndex = hovered ? '3' : selected ? '2' : ''
+    }, [hovered, selected])
+
+    const emphasized = hovered || selected
 
     return (
         <Marker
@@ -35,18 +55,28 @@ const SensorMarker = ({ marker, snapshot, onClick = null, selected = false }) =>
             latitude={marker.latitude}
             anchor='bottom'
         >
-            <div style={{ position: 'relative', width: 0, height: 0, pointerEvents: 'none' }}>
+            <div
+                ref={rootRef}
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+                style={{ position: 'relative', width: 0, height: 0, pointerEvents: 'none' }}
+            >
                 <div
                     onClick={onClick ? (e) => {
                         e.stopPropagation()
                         onClick(marker, s)
                     } : undefined}
                     style={{
-                        pointerEvents: onClick ? 'auto' : 'none',
-                        transform: selected ? 'scale(1.18)' : 'scale(1)',
+                        pointerEvents: 'auto',
+                        cursor: onClick ? 'pointer' : 'default',
+                        transform: selected
+                            ? 'scale(1.18)'
+                            : hovered
+                                ? 'scale(1.08)'
+                                : 'scale(1)',
                         transformOrigin: 'center bottom',
-                        transition: 'transform 0.18s ease',
-                        filter: selected
+                        transition: 'transform 0.18s ease, filter 0.18s ease',
+                        filter: emphasized
                             ? 'drop-shadow(0 0 4px rgba(255,255,255,0.9)) drop-shadow(0 0 6px rgba(54,139,237,0.6))'
                             : 'none',
                     }}
@@ -66,6 +96,8 @@ const SensorMarker = ({ marker, snapshot, onClick = null, selected = false }) =>
                     ageMinutes={s.age_minutes}
                     kind={s.kind}
                     offset={offset}
+                    visible={showLabel || emphasized}
+                    highlight={emphasized}
                 />
             </div>
         </Marker>
