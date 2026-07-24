@@ -1,0 +1,31 @@
+/* Pantalla completa del dashboard: el FullscreenControl apunta a este contenedor
+   (via containerId) para que filtros, card de detalle y ayuda sigan visibles. */
+.pressure-dashboard-fs:fullscreen {
+    background: #ffffff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* En fullscreen el mapa deja sus altos fijos y llena el espacio restante */
+.pressure-dashboard-fs:fullscreen .dashboard-map-area {
+    flex: 1 1 auto;
+    height: auto;
+    max-height: none;
+    aspect-ratio: auto;
+}
+
+body.dark .pressure-dashboard-fs:fullscreen {
+    background: #3f3f46;
+}
+
+/* Aclara y desatura la base OpenStreetMap para que pines y labels resalten.
+   Solo afecta al canvas del mapa; los markers son elementos DOM aparte. */
+/* .dashboard-map-area .maplibregl-canvas {
+    filter: saturate(0.35) brightness(1.05);
+} */
+
+/* En dark mode la base es dataviz-dark: sin filtro */
+body.dark .dashboard-map-area .maplibregl-canvas {
+    filter: none;
+}

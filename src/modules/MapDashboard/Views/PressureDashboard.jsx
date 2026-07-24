@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useContext, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { MainContext } from '../../../context/MainContext'
 import { Close, HelpOutline } from '@mui/icons-material'
 import { request } from '../../../utils/js/request'
 import { backend } from '../../../utils/routes/app.routes'
@@ -21,6 +22,11 @@ import {
     BombeoPin,
 } from '../utils/sensorPins'
 import VariableHistoryChart from '../../DrawDiagram/components/VariableHistoryPopup/VariableHistoryChart'
+import BasemapSelector from '../Components/BasemapSelector'
+import { DEFAULT_STYLE } from '../utils/mapStyles'
+import '../Style/PressureDashboard.css'
+
+const MAP_STYLE_STORAGE_KEY = 'dashboard.mapStyle'
 
 const ALL_STATUSES = new Set(['ok', 'warn', 'crit', 'stale', 'apagado', 'off'])
 
@@ -73,6 +79,18 @@ const PressureDashboard = () => {
 
     const [selectedId, setSelectedId] = useState(null)
     const [helpOpen, setHelpOpen] = useState(false)
+
+    // Mapa base elegido por el usuario (persistido); sin elección se usa el del tema
+    const { darkMode } = useContext(MainContext)
+    const [mapStyleId, setMapStyleId] = useState(
+        () => localStorage.getItem(MAP_STYLE_STORAGE_KEY) || null
+    )
+    const handleStyleChange = (id) => {
+        setMapStyleId(id)
+        localStorage.setItem(MAP_STYLE_STORAGE_KEY, id)
+    }
+    const effectiveStyleId =
+        mapStyleId || (darkMode ? DEFAULT_STYLE.dark : DEFAULT_STYLE.light)
 
     useEffect(() => {
         if (!mapId) {
@@ -146,39 +164,55 @@ const PressureDashboard = () => {
     return (
         <div className='w-full px-2 sm:px-3 pt-2 pb-4'>
             <CardCustom className='p-1 rounded-xl w-full flex flex-col overflow-hidden'>
-                <StatusFilterBar
-                    title={mapData?.name || 'Dashboard de presión'}
-                    counts={counts}
-                    activeFilters={activeFilters}
-                    setActiveFilters={setActiveFilters}
-                    lastUpdate={lastUpdate}
-                />
-                {/* Map area: 9:16 portrait on mobile, fills viewport on desktop */}
-                <div
-                    className='relative w-full mx-auto aspect-[9/16] max-h-[calc(100vh-180px)] sm:aspect-auto sm:h-[calc(88vh-80px)] sm:max-h-none'
-                >
-                    <DashboardMap
-                        key={mapId}
-                        markers={markers}
-                        snapshot={snapshot}
+                {/* Contenedor que se fullscreenea: incluye filtros y overlays */}
+                <div id='pressure-dashboard-fs' className='pressure-dashboard-fs flex flex-col'>
+                    <StatusFilterBar
+                        title={mapData?.name || 'Dashboard de presión'}
+                        counts={counts}
                         activeFilters={activeFilters}
-                        initialViewState={initialViewState}
-                        onPinClick={(m) => {
-                            setSelectedId(m.id)
-                            setHelpOpen(false)
-                        }}
-                        selectedId={selectedId}
+                        setActiveFilters={setActiveFilters}
+                        lastUpdate={lastUpdate}
                     />
+                    {/* Map area: 9:16 portrait on mobile, fills viewport on desktop */}
+                    <div
+                        className='dashboard-map-area relative w-full mx-auto aspect-[9/16] max-h-[calc(100vh-180px)] sm:aspect-auto sm:h-[calc(88vh-80px)] sm:max-h-none'
+                    >
+                        <DashboardMap
+                            key={mapId}
+                            markers={markers}
+                            snapshot={snapshot}
+                            activeFilters={activeFilters}
+                            initialViewState={initialViewState}
+                            onPinClick={(m) => {
+                                setSelectedId(m.id)
+                                setHelpOpen(false)
+                            }}
+                            selectedId={selectedId}
+                            fullscreenContainerId='pressure-dashboard-fs'
+                            styleId={mapStyleId}
+                        />
 
-                    <MarkerDetailCard
-                        marker={selectedMarker}
-                        snapshot={selectedSnapshot}
-                        onClose={() => setSelectedId(null)}
-                    />
-                    <MapHelpPanel
-                        open={helpOpen}
-                        onToggle={() => setHelpOpen((v) => !v)}
-                    />
+                        <MarkerDetailCard
+                            marker={selectedMarker}
+                            snapshot={selectedSnapshot}
+                            onClose={() => setSelectedId(null)}
+                        />
+                        {/* Botones flotantes del mapa (esq. inferior izquierda) */}
+                        <div
+                            className='absolute z-[5] flex items-end gap-2'
+                            style={{ left: 12, bottom: 12 }}
+                        >
+                            <MapHelpPanel
+                                open={helpOpen}
+                                onToggle={() => setHelpOpen((v) => !v)}
+                            />
+                            <BasemapSelector
+                                value={effectiveStyleId}
+                                onChange={handleStyleChange}
+                                center={initialViewState}
+                            />
+                        </div>
+                    </div>
                 </div>
             </CardCustom>
         </div>
@@ -186,14 +220,12 @@ const PressureDashboard = () => {
 }
 
 // ── Overlay: panel de ayuda con leyenda de pines ───────────────────────────
+// Se ancla dentro del contenedor de botones flotantes del mapa
 const MapHelpPanel = ({ open, onToggle }) => (
-    <div
-        className='absolute z-[5] flex flex-col items-start'
-        style={{ left: 12, bottom: 12 }}
-    >
+    <div className='relative flex flex-col items-start'>
         {open && (
             <div
-                className='mb-2 rounded-xl bg-white border overflow-hidden'
+                className='absolute bottom-full mb-2 left-0 rounded-xl bg-white border overflow-hidden'
                 style={{
                     width: 300,
                     maxWidth: 'calc(100vw - 32px)',
