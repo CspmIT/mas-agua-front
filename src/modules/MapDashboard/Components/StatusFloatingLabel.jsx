@@ -1,20 +1,10 @@
-import { TRENDS } from '../utils/sensorDefaults'
+import { TRENDS, STATUS_COLORS } from '../utils/sensorDefaults'
 
-// Fondos con alpha: el label es secundario al pin, se ve el mapa a través.
-const LABEL_BG = {
-    ok:    { bg: 'rgba(240,253,244,0.85)', border: 'rgba(187,247,208,0.8)', text: '#0f172a' },
-    warn:  { bg: 'rgba(255,251,235,0.85)', border: 'rgba(253,230,138,0.8)', text: '#0f172a' },
-    crit:  { bg: 'rgba(254,242,242,0.85)', border: 'rgba(254,202,202,0.8)', text: '#0f172a' },
-    stale:   { bg: 'rgba(245,243,255,0.85)', border: 'rgba(221,214,254,0.8)', text: '#0f172a' },
-    apagado: { bg: 'rgba(241,245,249,0.85)', border: 'rgba(203,213,225,0.8)', text: '#475569' },
-    off:     { bg: 'rgba(248,250,252,0.85)', border: 'rgba(226,232,240,0.8)', text: '#94a3b8' },
-}
-
-const TYPE_ICON = {
-    presion: '💧',
-    caudal:  '➤',
-    nivel:   '▮',
-    bombeo:  '⚙',
+// Label blanco casi sólido con punto del color del estado.
+// El tipo de sensor ya lo indica la forma del pin, así que no se repite acá.
+const TEXT_COLOR = {
+    apagado: '#475569',
+    off: '#94a3b8',
 }
 
 const renderValue = ({ kind, value, unit, status }) => {
@@ -22,7 +12,7 @@ const renderValue = ({ kind, value, unit, status }) => {
     // no "Sin datos". Por eso se resuelve antes que el corte de no-dato.
     if (kind === 'binary' && value !== null && value !== undefined) {
         return (
-            <span style={{ fontSize: 10, fontWeight: 600, color: '#0f172a' }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a' }}>
                 {Number(value) === 1 ? 'Encendido' : 'Apagado'}
             </span>
         )
@@ -30,24 +20,43 @@ const renderValue = ({ kind, value, unit, status }) => {
     // Calc binaria: value es el label del estado calculado ("Encendida", "En falla", ...)
     if (kind === 'calc_binary' && value) {
         return (
-            <span style={{ fontSize: 10, fontWeight: 600, color: '#0f172a' }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#0f172a' }}>
                 {value}
             </span>
         )
     }
     if (status === 'off' || value === null || value === undefined || value === 'Sin datos') {
-        return <span style={{ fontSize: 10, fontWeight: 600, color: '#94a3b8' }}>Sin datos</span>
+        return <span style={{ fontSize: 11, fontWeight: 600, color: '#94a3b8' }}>Sin datos</span>
     }
     return (
         <>
-            <span style={{ fontSize: 10, fontWeight: 600, color: '#0f172a' }}>{value}</span>
-            <span style={{ fontSize: 8, color: '#6b7280', marginLeft: 2 }}>{unit}</span>
+            <span
+                style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: '#0f172a',
+                    fontVariantNumeric: 'tabular-nums',
+                }}
+            >
+                {value}
+            </span>
+            <span style={{ fontSize: 9, color: '#6b7280', marginLeft: 2 }}>{unit}</span>
         </>
     )
 }
 
-const StatusFloatingLabel = ({ type, status, value, unit, trend, ageMinutes, kind, offset }) => {
-    const palette = LABEL_BG[status] || LABEL_BG.off
+const StatusFloatingLabel = ({
+    status,
+    value,
+    unit,
+    trend,
+    ageMinutes,
+    kind,
+    offset,
+    visible = true,
+    highlight = false,
+}) => {
+    const color = STATUS_COLORS[status] || STATUS_COLORS.off
     const [dx, dy] = offset || [55, -45]
     const isStale = status === 'stale'
     const isOff = status === 'off'
@@ -58,30 +67,41 @@ const StatusFloatingLabel = ({ type, status, value, unit, trend, ageMinutes, kin
                 position: 'absolute',
                 left: `${dx}px`,
                 top: `${dy}px`,
-                transform: 'translate(-50%, -50%)',
-                background: palette.bg,
+                transform: `translate(-50%, -50%)${highlight ? ' scale(1.06)' : ''}`,
+                background: 'rgba(255,255,255,0.95)',
                 borderWidth: 1,
                 borderStyle: isStale ? 'dashed' : 'solid',
-                borderColor: palette.border,
-                borderRadius: 5,
-                padding: '1px 6px',
-                fontSize: 9,
+                borderColor: highlight ? color : 'rgba(15, 42, 68, 0.16)',
+                borderRadius: 6,
+                padding: '2px 7px',
+                fontSize: 10,
                 lineHeight: 1.25,
                 whiteSpace: 'nowrap',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                backdropFilter: 'blur(2px)',
-                opacity: 0.92,
-                transition: 'opacity 0.15s ease',
-                pointerEvents: 'auto',
-                color: palette.text,
+                boxShadow: highlight
+                    ? '0 3px 10px rgba(15, 42, 68, 0.28)'
+                    : '0 1px 3px rgba(0,0,0,0.10)',
+                opacity: visible ? 1 : 0,
+                transition: 'opacity 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease',
+                pointerEvents: visible ? 'auto' : 'none',
+                color: TEXT_COLOR[status] || '#0f172a',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.opacity = '1' }}
-            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.92' }}
         >
-            <span style={{ marginRight: 3, fontSize: 8 }}>{TYPE_ICON[type] || ''}</span>
+            <span
+                aria-hidden
+                style={{
+                    display: 'inline-block',
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    background: color,
+                    boxShadow: `0 0 0 2px ${color}26`,
+                    marginRight: 5,
+                    verticalAlign: 'middle',
+                }}
+            />
             {renderValue({ kind, value, unit, status })}
             {!isOff && trend && (
-                <span style={{ marginLeft: 3, fontSize: 9 }}>{TRENDS[trend]}</span>
+                <span style={{ marginLeft: 3, fontSize: 10 }}>{TRENDS[trend]}</span>
             )}
             {isStale && ageMinutes != null && (
                 <span style={{ fontSize: 7.5, color: '#94a3b8', display: 'block', marginTop: 1 }}>
