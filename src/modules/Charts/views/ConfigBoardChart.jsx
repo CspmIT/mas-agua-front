@@ -97,6 +97,26 @@ const SectionTitle = ({ children }) => (
   </div>
 )
 
+// A nivel de módulo para que su identidad sea estable entre renders: definido
+// dentro del componente, React lo remonta en cada render (la vista se
+// re-renderiza con cada tecla por watch()) y el TextField pierde el foco
+// mientras SelectVars revierte a initialVar.
+const PumpingSlot = ({ label, labelField, register, initialVar, onVarSelect }) => (
+  <Box sx={subCardSx}>
+    <TextField
+      label={label}
+      size='small'
+      {...register(labelField)}
+      fullWidth
+    />
+    <SelectVars
+      initialVar={initialVar}
+      onSelect={onVarSelect}
+      label='-Seleccionar variable-'
+    />
+  </Box>
+)
+
 const ConfigBoardChart = () => {
   const { id = false } = useParams()
   const navigate = useNavigate()
@@ -139,6 +159,13 @@ const ConfigBoardChart = () => {
       roomItem3VarId: null,
     },
   })
+
+  // Guarda el id en el form y el objeto en varObjects, así initialVar de
+  // SelectVars queda en sync con lo último seleccionado.
+  const handleVarSelect = (field) => (v) => {
+    setValue(field, v?.id ?? null)
+    setVarObjects((prev) => ({ ...prev, [field]: v ?? null }))
+  }
 
   const safeGet = (fn, fallback = null) => {
     try {
@@ -365,22 +392,6 @@ const ConfigBoardChart = () => {
   const selectedRightChart =
     charts.find((c) => String(c.id) === String(watch('topRightChartId'))) || null
 
-  const PumpingSlot = ({ label, varField, labelField }) => (
-    <Box sx={subCardSx}>
-      <TextField
-        label={label}
-        size='small'
-        {...register(labelField)}
-        fullWidth
-      />
-      <SelectVars
-        initialVar={varObjects[varField] ?? null}
-        onSelect={(v) => setValue(varField, v?.id ?? null)}
-        label='-Seleccionar variable-'
-      />
-    </Box>
-  )
-
   return (
     <VarsProvider>
       <Container maxWidth={false} disableGutters className='w-full px-3 sm:px-5 pt-2 pb-4'>
@@ -456,16 +467,46 @@ const ConfigBoardChart = () => {
                 <div>
                   <SelectVars
                     initialVar={varObjects.pumpingStatusVarId ?? null}
-                    onSelect={(v) => setValue('pumpingStatusVarId', v ?? null)}
+                    onSelect={handleVarSelect('pumpingStatusVarId')}
                     label='Variable de estado'
                   />
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
-                  <PumpingSlot label='Label tiempo' varField='pumpingRuntimeVarId' labelField='pumpingRuntimeLabel' />
-                  <PumpingSlot label='Label arranques' varField='pumpingStartsVarId' labelField='pumpingStartsLabel' />
-                  <PumpingSlot label='Label I_L1' varField='pumpingCurrentL1VarId' labelField='pumpingCurrentL1Label' />
-                  <PumpingSlot label='Label I_L2' varField='pumpingCurrentL2VarId' labelField='pumpingCurrentL2Label' />
-                  <PumpingSlot label='Label I_L3' varField='pumpingCurrentL3VarId' labelField='pumpingCurrentL3Label' />
+                  <PumpingSlot
+                    label='Label tiempo'
+                    labelField='pumpingRuntimeLabel'
+                    register={register}
+                    initialVar={varObjects.pumpingRuntimeVarId ?? null}
+                    onVarSelect={handleVarSelect('pumpingRuntimeVarId')}
+                  />
+                  <PumpingSlot
+                    label='Label arranques'
+                    labelField='pumpingStartsLabel'
+                    register={register}
+                    initialVar={varObjects.pumpingStartsVarId ?? null}
+                    onVarSelect={handleVarSelect('pumpingStartsVarId')}
+                  />
+                  <PumpingSlot
+                    label='Label I_L1'
+                    labelField='pumpingCurrentL1Label'
+                    register={register}
+                    initialVar={varObjects.pumpingCurrentL1VarId ?? null}
+                    onVarSelect={handleVarSelect('pumpingCurrentL1VarId')}
+                  />
+                  <PumpingSlot
+                    label='Label I_L2'
+                    labelField='pumpingCurrentL2Label'
+                    register={register}
+                    initialVar={varObjects.pumpingCurrentL2VarId ?? null}
+                    onVarSelect={handleVarSelect('pumpingCurrentL2VarId')}
+                  />
+                  <PumpingSlot
+                    label='Label I_L3'
+                    labelField='pumpingCurrentL3Label'
+                    register={register}
+                    initialVar={varObjects.pumpingCurrentL3VarId ?? null}
+                    onVarSelect={handleVarSelect('pumpingCurrentL3VarId')}
+                  />
                 </div>
               </Box>
 
@@ -480,7 +521,7 @@ const ConfigBoardChart = () => {
                     />
                     <SelectVars
                       initialVar={varObjects[`roomItem${i}VarId`] ?? null}
-                      onSelect={(v) => setValue(`roomItem${i}VarId`, v ?? null)}
+                      onSelect={handleVarSelect(`roomItem${i}VarId`)}
                       label='-Seleccionar variable-'
                     />
                   </div>
