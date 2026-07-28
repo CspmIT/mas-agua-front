@@ -18,10 +18,11 @@ const formatValue = (value) => {
 }
 
 const formatUnit = (item, value) => {
-    if (value == 'Sin datos') return ''
+    if (value === null || value === undefined || value === 'Sin datos') return ''
     const unit = item?.InfluxVars?.unit
     if (!unit ) return ''
-    if (unit.trim().toLowerCase() === 'bool') return ''
+    const clean = unit.trim().toLowerCase()
+    if (clean === 'bool' || clean === '-' || clean === '') return ''
     return ` ${unit}`
   }
 
@@ -84,7 +85,7 @@ const SectionPanel = ({ title, action, children, className = '' }) => (
     <section
         className={`rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden ${className}`}
     >
-        <div className='flex items-center justify-between gap-2 px-3.5 py-1.5 border-b border-[#1f4e79]/8 dark:border-white/5'>
+        <div className='flex items-center justify-between gap-2 px-3.5 py-1 border-b border-[#1f4e79]/8 dark:border-white/5'>
             <div className='flex items-center gap-2 min-w-0'>
                 <span className='inline-block w-1.5 h-1.5 rounded-full bg-[#368bed]' aria-hidden />
                 <Eyebrow>{title}</Eyebrow>
@@ -95,34 +96,206 @@ const SectionPanel = ({ title, action, children, className = '' }) => (
     </section>
 )
 
-/** Fila métrica: label a la izquierda, valor tabular a la derecha. */
-const MetricRow = ({ label, value, suffix }) => (
-    <div className='flex items-baseline justify-between gap-3 py-1'>
-        <span className='text-[13px] text-slate-500 dark:text-slate-400 truncate'>{label}</span>
-        <span className='text-[14px] font-semibold tabular-nums text-slate-800 dark:text-slate-100 shrink-0'>
-            {formatValue(value)}
-            {suffix ?? ''}
-        </span>
-    </div>
+/** Convierte #rrggbb + alpha (0..1) en hex de 8 dígitos. */
+const hexA = (hex, alpha) =>
+    `${hex}${Math.round(alpha * 255).toString(16).padStart(2, '0')}`
+
+const ICON_PATHS = {
+    bolt: <polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2' />,
+    wifi: (
+        <>
+            <path d='M5 12.55a11 11 0 0 1 14.08 0' />
+            <path d='M1.42 9a16 16 0 0 1 21.16 0' />
+            <path d='M8.53 16.11a6 6 0 0 1 6.95 0' />
+            <line x1='12' y1='20' x2='12.01' y2='20' />
+        </>
+    ),
+    thermo: <path d='M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z' />,
+    drop: <path d='M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z' />,
+    clock: (
+        <>
+            <circle cx='12' cy='12' r='10' />
+            <polyline points='12 6 12 12 16 14' />
+        </>
+    ),
+    cycle: (
+        <>
+            <polyline points='23 4 23 10 17 10' />
+            <path d='M20.49 15a9 9 0 1 1-2.12-9.36L23 10' />
+        </>
+    ),
+    activity: <polyline points='22 12 18 12 15 21 9 3 6 12 2 12' />,
+}
+
+const TileIcon = ({ name, className = 'w-4 h-4' }) => (
+    <svg
+        viewBox='0 0 24 24'
+        fill='none'
+        stroke='currentColor'
+        strokeWidth={2.2}
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        className={className}
+    >
+        {ICON_PATHS[name] ?? ICON_PATHS.activity}
+    </svg>
 )
 
-/** Tile compacto para los ítems de Sala. */
-const RoomTile = ({ label, value, suffix }) => {
+/** Chip cuadrado con tinte: contiene un ícono o un texto corto (L1/L2/L3). */
+const IconChip = ({ tint, small = false, children }) => (
+    <span
+        className={[
+            'grid place-items-center shrink-0 font-bold',
+            small ? 'w-6 h-6 rounded-lg text-[10px]' : 'w-7 h-7 rounded-[9px] text-[11px]',
+            !tint ? 'bg-slate-400/10 text-slate-300 dark:bg-white/5 dark:text-slate-600' : '',
+        ].join(' ')}
+        style={tint ? { backgroundColor: hexA(tint, 0.15), color: tint } : undefined}
+    >
+        {children}
+    </span>
+)
+
+// Identidad visual de cada ítem de Sala, resuelta por heurística sobre el label.
+const resolveRoomVisual = (label = '') => {
+    const l = String(label)
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+    if (/energ/.test(l)) return { tint: '#f59e0b', icon: 'bolt' }
+    if (/conect|senal|internet/.test(l)) return { tint: '#10B981', icon: 'wifi' }
+    if (/temp/.test(l)) return { tint: '#f97316', icon: 'thermo', meter: 'temp' }
+    if (/hum/.test(l)) return { tint: '#0ea5e9', icon: 'drop', meter: 'progress' }
+    return { tint: '#368bed', icon: 'activity' }
+}
+
+const TEMP_METER_MAX = 40
+
+const clampPct = (num, max) => `${(Math.min(Math.max(num, 0), max) / max) * 100}%`
+
+/** Fila métrica: chip de color + label a la izquierda, valor tabular a la derecha. */
+const MetricRow = ({ label, value, suffix, tint, icon, chipText }) => {
     const hasData = value !== null && value !== undefined && value !== 'Sin datos'
     return (
-        <div className='rounded-xl border border-[#1f4e79]/10 dark:border-white/10 bg-slate-50/60 dark:bg-white/[0.025] px-2.5 py-2 text-center transition-colors hover:border-[#368bed]/35 hover:bg-[#368bed]/[0.04]'>
-            <div className='text-[10.5px] font-medium uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500 truncate'>
-                {label}
-            </div>
-            <div
+        <div className='flex items-center gap-2.5 py-1'>
+            <IconChip tint={tint} small>
+                {chipText ?? <TileIcon name={icon} className='w-3.5 h-3.5' />}
+            </IconChip>
+            <span className='flex-1 min-w-0 text-[13px] text-slate-500 dark:text-slate-400 truncate'>{label}</span>
+            <span
                 className={[
-                    'mt-1 text-[18px] font-semibold tabular-nums leading-none',
+                    'text-[14px] font-semibold tabular-nums shrink-0',
                     hasData ? 'text-slate-800 dark:text-slate-100' : 'text-slate-300 dark:text-slate-600',
                 ].join(' ')}
             >
                 {formatValue(value)}
-                {suffix ?? ''}
+                {hasData && suffix ? (
+                    <span className='ml-0.5 text-[11px] text-slate-400 dark:text-slate-500'>{suffix.trim()}</span>
+                ) : null}
+            </span>
+        </div>
+    )
+}
+
+/** Tile de Sala: chip identitario, valor protagonista y medidor según variable. */
+const RoomTile = ({ label, value, suffix }) => {
+    const hasData = value !== null && value !== undefined && value !== 'Sin datos'
+    const { tint, icon, meter } = resolveRoomVisual(label)
+    const isBool = typeof value === 'boolean'
+    const boolOn = isBool && value === true
+    const num = typeof value === 'number' && Number.isFinite(value) ? value : null
+
+    const valueClass = !hasData
+        ? 'text-[17px] text-slate-300 dark:text-slate-600'
+        : isBool
+        ? boolOn
+            ? 'text-[19px] text-[#047857] dark:text-[#34d399]'
+            : 'text-[19px] text-[#be123c] dark:text-[#fb7185]'
+        : 'text-[21px] text-slate-800 dark:text-slate-100'
+
+    return (
+        <div
+            className={[
+                'relative overflow-hidden rounded-xl border bg-white dark:bg-white/[0.025] px-3 py-2',
+                'transition-transform duration-150 hover:-translate-y-px',
+                hasData
+                    ? 'border-[#1f4e79]/10 dark:border-white/10'
+                    : 'border-dashed border-[#1f4e79]/15 dark:border-white/15',
+            ].join(' ')}
+        >
+            {/* Lavado de color en la esquina superior izquierda */}
+            {hasData && (
+                <div
+                    className='pointer-events-none absolute inset-0'
+                    aria-hidden
+                    style={{
+                        background: `radial-gradient(120% 90% at 0% 0%, ${hexA(tint, 0.12)}, transparent 60%)`,
+                    }}
+                />
+            )}
+
+            <div className='relative flex items-center gap-2'>
+                <IconChip tint={hasData ? tint : null}>
+                    <TileIcon name={icon} />
+                </IconChip>
+                <span className='text-[10.5px] font-semibold uppercase tracking-[0.09em] text-slate-400 dark:text-slate-500 truncate'>
+                    {label}
+                </span>
             </div>
+
+            <div className={`relative mt-1.5 flex items-baseline leading-none font-semibold tabular-nums ${valueClass}`}>
+                {isBool && (
+                    <span className='relative flex w-2 h-2 mr-1.5 self-center'>
+                        {boolOn && (
+                            <span className='absolute inline-flex w-full h-full rounded-full bg-[#10B981]/40 animate-ping' />
+                        )}
+                        <span
+                            className={`relative inline-flex w-2 h-2 rounded-full ${boolOn ? 'bg-[#10B981]' : 'bg-rose-500'}`}
+                        />
+                    </span>
+                )}
+                {formatValue(value)}
+                {hasData && suffix ? (
+                    <span className='ml-1 text-[12.5px] font-semibold text-slate-400 dark:text-slate-500'>
+                        {suffix.trim()}
+                    </span>
+                ) : null}
+            </div>
+
+            {/* Medidor: escala frío→calor para temperatura, progreso 0-100 para humedad */}
+            {meter === 'temp' && num !== null && (
+                <div className='relative mt-1.5'>
+                    <div
+                        className='relative h-1 rounded-full opacity-80'
+                        style={{ background: 'linear-gradient(90deg, #38bdf8, #34d399 35%, #fbbf24 65%, #ef4444)' }}
+                    >
+                        <span
+                            className='absolute top-1/2 w-2.5 h-2.5 rounded-full bg-white dark:bg-slate-900 shadow -translate-x-1/2 -translate-y-1/2'
+                            style={{ left: clampPct(num, TEMP_METER_MAX), border: `2.5px solid ${tint}` }}
+                        />
+                    </div>
+                    <div className='mt-0.5 flex justify-between text-[9.5px] font-medium tabular-nums text-slate-300 dark:text-slate-600'>
+                        <span>0°</span>
+                        <span>{TEMP_METER_MAX}°</span>
+                    </div>
+                </div>
+            )}
+            {meter === 'progress' && num !== null && (
+                <div className='relative mt-1.5'>
+                    <div className='h-1 rounded-full bg-slate-500/15 dark:bg-white/10 overflow-hidden'>
+                        <div
+                            className='h-full rounded-full'
+                            style={{
+                                width: clampPct(num, 100),
+                                background: `linear-gradient(90deg, ${hexA(tint, 0.7)}, ${tint})`,
+                            }}
+                        />
+                    </div>
+                    <div className='mt-0.5 flex justify-between text-[9.5px] font-medium tabular-nums text-slate-300 dark:text-slate-600'>
+                        <span>0</span>
+                        <span>100</span>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
@@ -199,6 +372,11 @@ const BoardChart = memo(
         const pumpingL3Item = getItem('board.pumping.currentL3')
 
         const pumpingStatusValue = resolveValue(pumpingStatusItem, inflValues)
+        const pumpingRuntimeValue = resolveValue(pumpingRuntimeItem, inflValues)
+        const pumpingStartsValue = resolveValue(pumpingStartsItem, inflValues)
+        const pumpingL1Value = resolveValue(pumpingL1Item, inflValues)
+        const pumpingL2Value = resolveValue(pumpingL2Item, inflValues)
+        const pumpingL3Value = resolveValue(pumpingL3Item, inflValues)
 
         const pumpingStatusText =
             typeof pumpingStatusValue === 'boolean'
@@ -332,35 +510,45 @@ const BoardChart = memo(
                             </div>
                         }
                     >
-                        <div className='grid grid-cols-1 md:grid-cols-2 gap-2.5 p-3'>
-                            <div className='rounded-xl border border-[#1f4e79]/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] px-3.5 py-1 divide-y divide-[#1f4e79]/8 dark:divide-white/5'>
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-2 p-2'>
+                            <div className='rounded-xl border border-[#1f4e79]/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] px-3.5 py-0.5 divide-y divide-[#1f4e79]/8 dark:divide-white/5'>
                                 <MetricRow
+                                    tint='#368bed'
+                                    icon='clock'
                                     label={pumpingRuntimeLabel}
-                                    value={resolveValue(pumpingRuntimeItem, inflValues)}
-                                    suffix={formatUnit(pumpingRuntimeItem)}
+                                    value={pumpingRuntimeValue}
+                                    suffix={formatUnit(pumpingRuntimeItem, pumpingRuntimeValue)}
                                 />
                                 <MetricRow
+                                    tint='#8b5cf6'
+                                    icon='cycle'
                                     label={pumpingStartsLabel}
-                                    value={resolveValue(pumpingStartsItem, inflValues)}
-                                    suffix={formatUnit(pumpingStartsItem)}
+                                    value={pumpingStartsValue}
+                                    suffix={formatUnit(pumpingStartsItem, pumpingStartsValue)}
                                 />
                             </div>
 
-                            <div className='rounded-xl border border-[#1f4e79]/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] px-3.5 py-1 divide-y divide-[#1f4e79]/8 dark:divide-white/5'>
+                            <div className='rounded-xl border border-[#1f4e79]/10 dark:border-white/10 bg-slate-50/50 dark:bg-white/[0.02] px-3.5 py-0.5 divide-y divide-[#1f4e79]/8 dark:divide-white/5'>
                                 <MetricRow
+                                    tint='#6366f1'
+                                    chipText='L1'
                                     label={pumpingL1Label}
-                                    value={resolveValue(pumpingL1Item, inflValues)}
-                                    suffix={formatUnit(pumpingL1Item)}
+                                    value={pumpingL1Value}
+                                    suffix={formatUnit(pumpingL1Item, pumpingL1Value)}
                                 />
                                 <MetricRow
+                                    tint='#6366f1'
+                                    chipText='L2'
                                     label={pumpingL2Label}
-                                    value={resolveValue(pumpingL2Item, inflValues)}
-                                    suffix={formatUnit(pumpingL2Item)}
+                                    value={pumpingL2Value}
+                                    suffix={formatUnit(pumpingL2Item, pumpingL2Value)}
                                 />
                                 <MetricRow
+                                    tint='#6366f1'
+                                    chipText='L3'
                                     label={pumpingL3Label}
-                                    value={resolveValue(pumpingL3Item, inflValues)}
-                                    suffix={formatUnit(pumpingL3Item)}
+                                    value={pumpingL3Value}
+                                    suffix={formatUnit(pumpingL3Item, pumpingL3Value)}
                                 />
                             </div>
                         </div>
@@ -368,7 +556,7 @@ const BoardChart = memo(
 
                     {/* SALA */}
                     <SectionPanel title='Sala'>
-                        <div className='p-2.5 grid grid-cols-2 md:grid-cols-4 gap-2'>
+                        <div className='p-2 grid grid-cols-2 md:grid-cols-4 gap-2'>
                             {roomItems.map((item, idx) => {
                                 const value = resolveValue(item, inflValues)
                                 return (
