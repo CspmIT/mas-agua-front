@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'fix: nueva version tableros'
+                  releaseBody: 'fix: correccion edicion de tableros'
                   prerelease: false
