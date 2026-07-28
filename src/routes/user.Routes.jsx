@@ -34,6 +34,8 @@ import PressureDashboard from '../modules/MapDashboard/Views/PressureDashboard'
 import Simulation from '../modules/Simulation/views'
 import InpSimulator from '../modules/Simulation/views/InpSimulator'
 import NetworkEditor from '../modules/Simulation/views/NetworkEditor'
+import ActionAudit from '../modules/ActionAudit/views'
+import SuperAdminRoute from '../components/SuperAdminRoute'
 
 export const userRoutes = [
 	{ path: '/', element: <Home /> },
@@ -86,4 +88,12 @@ export const userRoutes = [
 	{ path: '/simulation/inp', element: <InpSimulator /> },
 	{ path: '/simulation/editor', element: <NetworkEditor /> },
 	{ path: '/simulation/editor/:id', element: <NetworkEditor /> },
+	{
+		path: '/config/audit',
+		element: (
+			<SuperAdminRoute>
+				<ActionAudit />
+			</SuperAdminRoute>
+		),
+	},
 ]
