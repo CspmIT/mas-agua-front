@@ -10,6 +10,7 @@ import {
     FaMicrochip,
     FaBell,
     FaWater,
+    FaLock,
 } from 'react-icons/fa'
 import { FaTable } from "react-icons/fa6";
 import { HiVariable, HiSparkles } from 'react-icons/hi2'
@@ -110,6 +111,11 @@ const ListIcon = () => [
         title: 'Simulación',
         name: 'FaWater',
         icon: <FaWater className=' text-3xl' />,
+    },
+    {
+        title: 'Seguridad',
+        name: 'FaLock',
+        icon: <FaLock className=' text-3xl' />,
     },
 ]
 
