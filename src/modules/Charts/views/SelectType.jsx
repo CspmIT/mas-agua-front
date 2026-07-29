@@ -83,6 +83,14 @@ const chartTypes = [
         description:
             'Gráfico de barras que muestra el consumo mensual de los últimos 12 meses.',
     },
+    {
+        id: 13,
+        title: 'Gralf — Monitoreo de energía',
+        image: '/assets/img/charts/boardchart.png?height=300&width=300',
+        description:
+            'Tarjeta de energía del medidor trifásico: tensiones, corrientes, potencias, factor de potencia, demanda y máximos/mínimos. Se configura eligiendo la variable Gralf del medidor.',
+        gralf: true,
+    },
 ]
 
 const backPillSx = {
@@ -151,6 +159,7 @@ function SelectType() {
         if (chart?.multipleBoolean) return navigate('/config/graphic/multipleBoolean')
         if (chart?.pie) return navigate('/config/graphic/pie')
         if (chart?.board) return navigate('/config/graphic/board')
+        if (chart?.gralf) return navigate('/config/graphic/gralf')
         navigate(`/config/graphic/${chart.id}`)
     }
 

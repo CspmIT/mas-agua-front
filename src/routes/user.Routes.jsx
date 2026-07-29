@@ -17,6 +17,7 @@ import ConfigGraphic from '../modules/Charts/views/ConfigGraphic'
 import ChartsTable from '../modules/Charts/views/ChartsTable'
 import ConfigMultipleBooleanChart from '../modules/Charts/views/ConfigMultipleBooleanChart'
 import ConfigBoardChart from '../modules/Charts/views/ConfigBoardChart'
+import ConfigGralfChart from '../modules/Charts/views/ConfigGralfChart'
 import MapView from '../modules/MapDashboard/Views/MapView'
 import Maps from '../modules/MapDashboard/Views/Maps'
 import Vars from '../modules/ConfigVars/views/Vars'
@@ -65,6 +66,8 @@ export const userRoutes = [
 	{ path: '/config/graphic/multipleBoolean/:id', element: <ConfigMultipleBooleanChart /> },
 	{ path: '/config/graphic/board', element: <ConfigBoardChart /> },
 	{ path: '/config/graphic/board/:id', element: <ConfigBoardChart /> },
+	{ path: '/config/graphic/gralf', element: <ConfigGralfChart /> },
+	{ path: '/config/graphic/gralf/:id', element: <ConfigGralfChart /> },
 	{ path: '/map', element: <PressureDashboard /> },
 	{ path: '/maps', element: <Maps /> },
 	{ path: '/map/create', element: <MapView create={true} /> },

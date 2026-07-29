@@ -18,7 +18,7 @@ import PageHeader from '../../../components/PageHeader'
 import FiltersBar from '../../../components/FiltersBar'
 import { ActionsRow, EditChip, StatusPill, StatusToggleChip, ToneChip } from '../../../components/TableActions'
 
-const EXCLUDED_DASHBOARD_TYPES = ['BoardChart']
+const EXCLUDED_DASHBOARD_TYPES = ['BoardChart', 'GralfChart']
 
 const primaryActionSx = {
   borderRadius: '999px',
@@ -100,6 +100,7 @@ const ChartsTable = () => {
                 if (type === 'MultipleBooleanChart') { navigate(`/config/graphic/multipleBoolean/${row.original.id}`); return }
                 if (type === 'PumpControl') { navigate('/config/pumps'); return }
                 if (type === 'BoardChart') { navigate(`/config/graphic/board/${row.original.id}`); return }
+                if (type === 'GralfChart') { navigate(`/config/graphic/gralf/${row.original.id}`); return }
 
                 const matchingConfig = Object.values(configs).find(
                   (config) => config.typeGraph === type
