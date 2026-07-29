@@ -35,6 +35,7 @@ const formatMsAxisLabel = (ms) => {
   return `${time}\n${date}`
 }
 
+
 const buildTooltipHtml = (params) => {
   if (!params?.length) return ''
 
@@ -111,7 +112,10 @@ const buildDataViewTableHtml = (opt) => {
 
 // `compact`: modo minigráfico (tableros) — oculta labels del eje X (la fecha
 // se ve en el tooltip), achica márgenes y el slider de zoom.
-const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore, compact = false }) => {
+// `hideXLabels`: oculta sólo los labels del eje X manteniendo el resto del
+// gráfico completo (para rangos fijos como la curva P/Q del Gralf, donde
+// fecha y hora se ven en el tooltip).
+const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore, compact = false, hideXLabels = false }) => {
   const isMobile = useMemo(
     () => window.matchMedia('(max-width: 768px)').matches,
     []
@@ -228,7 +232,7 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore, compa
         type: 'time',
         splitNumber: isMobile ? 6 : 12,
         axisLabel: {
-          show: !compact,
+          show: !compact && !hideXLabels,
           rotate: isMobile ? 35 : 20,
           formatter: axisLabelFormatter,
           hideOverlap: true,
@@ -284,6 +288,7 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore, compa
     yType,
     isMobile,
     compact,
+    hideXLabels,
     tooltipFormatter,
     axisLabelFormatter,
     dataViewContent,

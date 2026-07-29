@@ -229,6 +229,7 @@ export const GralfChartView = memo(({ title, data, series = null }) => {
                             <div className='h-[240px]'>
                                 <LineChart
                                     yType='value'
+                                    hideXLabels
                                     xSeries={series.xSeries}
                                     ySeries={[
                                         {
