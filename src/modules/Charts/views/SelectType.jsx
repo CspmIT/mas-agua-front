@@ -9,79 +9,94 @@ import PageHeader from '../../../components/PageHeader'
 const chartTypes = [
     {
         id: 1,
-        title: 'Porcentaje con Olas',
+        title: 'Indicador circular con olas',
         image: '/assets/img/charts/echarts.png?height=300&width=300',
         description:
-            'Visualización de porcentaje con olas, ideal para indicadores. El valor se puede mostrar en porcentaje o en valor absoluto. El color del gráfico se puede personalizar.',
+            'Círculo que se llena como un líquido con el valor actual de una variable, en porcentaje o valor absoluto, con un valor secundario opcional (ej: caudal y presión de un pozo). Color personalizable.',
     },
     {
         id: 2,
-        title: 'Porcentaje Circular',
+        title: 'Anillo de porcentaje',
         image: '/assets/img/charts/porcentaje.png?height=300&width=300',
         description:
-            'Visualización de porcentaje circular, ideal para indicadores. El color del gráfico se puede personalizar.',
+            'Anillo que se completa según el porcentaje actual de la variable. Típico: nivel de cloro o porcentaje de llenado de una cisterna.',
     },
     {
         id: 3,
-        title: 'Grafico de torta',
+        title: 'Torta de distribución',
         image: '/assets/img/charts/graficoTorta.png?height=300&width=300',
-        description: 'Grafico de torta con bordes redondeados.',
+        description:
+            'Reparto proporcional entre varias variables, cada porción con su color. Típico: comparar el aporte de cada pozo o bomba al total.',
         pie: true,
     },
     {
         id: 4,
-        title: 'Porcentaje rectangular',
+        title: 'Indicador rectangular con olas',
         image: '/assets/img/charts/echartsrectangle.png?height=300&width=300',
         description:
-            'Visualización de porcentaje con olas, ideal para indicadores. El valor se puede mostrar en porcentaje o en valor absoluto. El color del gráfico se puede personalizar.',
+            'Igual al indicador circular con olas pero con forma de tanque: el nivel de llenado representa el valor actual. Típico: nivel de cisterna o reserva.',
     },
     {
         id: 6,
-        title: 'Grafico de linea con superposicion',
+        title: 'Líneas históricas',
         image: '/assets/img/charts/StepLine.png?height=200&width=200',
-        description: 'Multi-level pie chart visualization',
+        description:
+            'Evolución en el tiempo de una o más variables superpuestas, con filtros de rango y muestreo, zoom y exportación. Es el gráfico que se asocia a dashboards, minigráficos e históricos de los tableros.',
     },
     {
         id: 7,
-        title: 'Porcentajes con estado',
+        title: 'Bombas: estado y porcentaje',
         image: '/assets/img/charts/Bombas.png?height=200&width=200',
-        description: 'Visualiza el porcentaje y el estado de x variables',
+        description:
+            'Panel de bombas que combina el estado de marcha/paro de cada una con su porcentaje asociado.',
         bomb: true,
         disabled: false,
     },
     {
         id: 8,
-        title: 'Speed Gauge',
+        title: 'Reloj de aguja',
         image: '/assets/img/charts/gauge-speed.png?height=200&width=200',
-        description: 'some description',
+        description:
+            'Aguja sobre una escala graduada, tipo velocímetro, con el valor actual de la variable. Típico: presión de red urbana en los puntos de medición.',
     },
     {
         id: 9,
-        title: 'Boolean chart',
+        title: 'LED de estado',
         image: '/assets/img/charts/boolean-chart.png?height=200&width=200',
-        description: 'Led de encendido o apagado con colores y palabras personalizables',
+        description:
+            'Indicador de encendido/apagado para una variable booleana, con colores y textos personalizables. Típico: marcha de bomba, energía o conectividad.',
         boolean: true,
     },
     {
         id: 10,
-        title: 'Múltiple Boolean chart',
+        title: 'Múltiples LEDs de estado',
         image: '/assets/img/charts/MultipleBooleanChart.png?height=300&width=300',
-        description: 'Múltiple LEDs de encendido o apagado con colores y palabras personalizables',
+        description:
+            'Varios indicadores de encendido/apagado en una misma tarjeta, cada uno con su variable, colores y textos propios.',
         multipleBoolean: true,
     },
     {
         id: 11,
-        title: 'Board chart',
+        title: 'Tablero de pozo',
         image: '/assets/img/charts/boardchart.png?height=300&width=300',
-        description: 'Tablero para visualizacion de gráficos, estados de bombas y estado de sala.',
+        description:
+            'Minivista completa de un pozo: gráficos de valor actual, nivel de pozo, bombeo y sala, con minigráficos históricos al costado e históricos desplegables por cada elemento.',
         board: true,
     },
     {
         id: 12,
-        title: 'Totalizado por periodo',
+        title: 'Totalizado por período',
         image: '/assets/img/charts/totalizado-periodo.png?height=300&width=300',
         description:
-            'Gráfico de barras que muestra el consumo mensual de los últimos 12 meses.',
+            'Barras con el consumo mensual de los últimos 12 meses, calculado como la diferencia del totalizador entre mes y mes. Admite varias variables.',
+    },
+    {
+        id: 13,
+        title: 'Gralf: monitoreo de energía',
+        image: '/assets/img/charts/gralfchart.png?height=300&width=300',
+        description:
+            'Tarjeta de energía del medidor trifásico: tensiones y corrientes por fase, potencias, factor de potencia, demanda, máximos/mínimos y la curva de potencia de las últimas 24 h. Sólo requiere elegir la variable Gralf del medidor.',
+        gralf: true,
     },
 ]
 
@@ -151,6 +166,7 @@ function SelectType() {
         if (chart?.multipleBoolean) return navigate('/config/graphic/multipleBoolean')
         if (chart?.pie) return navigate('/config/graphic/pie')
         if (chart?.board) return navigate('/config/graphic/board')
+        if (chart?.gralf) return navigate('/config/graphic/gralf')
         navigate(`/config/graphic/${chart.id}`)
     }
 
@@ -200,10 +216,10 @@ function SelectType() {
                         </div>
 
                         <div className='flex flex-col flex-1 gap-1.5 px-3.5 py-3'>
-                            <h3 className='text-sm font-semibold tracking-tight text-slate-800 dark:text-gray-100 line-clamp-1'>
+                            <h3 className='text-sm font-semibold tracking-tight text-slate-800 dark:text-gray-100'>
                                 {chart.title}
                             </h3>
-                            <p className='text-xs text-slate-500 dark:text-gray-400 leading-snug line-clamp-3'>
+                            <p className='text-xs text-slate-500 dark:text-gray-400 leading-snug'>
                                 {chart.description}
                             </p>
                         </div>

@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'feat: tableros como minivistas por pozo — históricos integrados y nivel de pozo'
+                  releaseBody: 'feat: tableros como minivistas por pozo + monitoreo de energía Gralf'
                   prerelease: false
