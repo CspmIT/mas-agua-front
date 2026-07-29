@@ -393,6 +393,26 @@ const RoomTile = ({ label, value, suffix, historyOpen = false, onToggleHistory =
     )
 }
 
+/** Pill de valor actual (Nivel de pozo): azul con dato, gris sin datos. */
+const ValuePill = ({ value, suffix }) => {
+    const hasData = value !== null && value !== undefined && value !== 'Sin datos'
+    return (
+        <span
+            className={[
+                'inline-flex items-baseline gap-1 h-7 px-3 rounded-full border text-[13px] font-semibold tabular-nums items-center',
+                hasData
+                    ? 'bg-[#368bed]/10 border-[#368bed]/30 text-[#1f4e79] dark:text-[#7fb6ef]'
+                    : 'bg-slate-100/70 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400',
+            ].join(' ')}
+        >
+            {formatValue(value)}
+            {hasData && suffix ? (
+                <span className='text-[11px] font-medium opacity-70'>{suffix.trim()}</span>
+            ) : null}
+        </span>
+    )
+}
+
 /** Pill protagonista del estado de bombeo. */
 const StatusPill = ({ text }) => {
     const isOn = text === 'ENCENDIDO'
@@ -480,12 +500,18 @@ const BoardChart = memo(
             return dataByKey.get(key) || null
         }
 
+        const levelItem = getItem('board.level.value')
         const pumpingStatusItem = getItem('board.pumping.status')
         const pumpingRuntimeItem = getItem('board.pumping.runtime')
         const pumpingStartsItem = getItem('board.pumping.starts')
         const pumpingL1Item = getItem('board.pumping.currentL1')
         const pumpingL2Item = getItem('board.pumping.currentL2')
         const pumpingL3Item = getItem('board.pumping.currentL3')
+
+        const levelValue = resolveValue(levelItem, inflValues)
+        const levelLabel =
+            levelItem?.label ?? cfg['board.level.value.label'] ?? 'Profundidad al agua'
+        const levelHasHistory = (drawers.level || []).length > 0
 
         const pumpingStatusValue = resolveValue(pumpingStatusItem, inflValues)
         const pumpingRuntimeValue = resolveValue(pumpingRuntimeItem, inflValues)
@@ -664,6 +690,55 @@ const BoardChart = memo(
                         })}
                     </div>
 
+                    {/* NIVEL DE POZO — franja con valor actual; el drawer trae el histórico */}
+                    {levelItem && (
+                        <section className='rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden'>
+                            <div
+                                role={levelHasHistory ? 'button' : undefined}
+                                tabIndex={levelHasHistory ? 0 : undefined}
+                                onClick={levelHasHistory ? () => toggleDrawer('level') : undefined}
+                                onKeyDown={
+                                    levelHasHistory
+                                        ? (e) => {
+                                              if (e.key === 'Enter' || e.key === ' ') {
+                                                  e.preventDefault()
+                                                  toggleDrawer('level')
+                                              }
+                                          }
+                                        : undefined
+                                }
+                                className={`w-full flex items-center justify-between gap-2 px-3.5 py-1.5 ${
+                                    levelHasHistory
+                                        ? 'cursor-pointer select-none transition-colors hover:bg-[#368bed]/[0.04]'
+                                        : ''
+                                }`}
+                            >
+                                <div className='flex items-center gap-2 min-w-0'>
+                                    <span
+                                        className='inline-block w-1.5 h-1.5 rounded-full bg-[#368bed]'
+                                        aria-hidden
+                                    />
+                                    <Eyebrow>Nivel de pozo</Eyebrow>
+                                </div>
+                                <div className='flex items-center gap-2 min-w-0'>
+                                    <span className='hidden sm:inline text-[11px] font-medium text-slate-400 dark:text-slate-500 truncate'>
+                                        {levelLabel}
+                                    </span>
+                                    <ValuePill
+                                        value={levelValue}
+                                        suffix={formatUnit(levelItem, levelValue)}
+                                    />
+                                    {levelHasHistory && (
+                                        <Chevron
+                                            open={openDrawer === 'level'}
+                                            className='w-4 h-4 text-slate-400 dark:text-slate-500'
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        </section>
+                    )}
+
                     {/* BOMBEO */}
                     <SectionPanel
                         title='Bombeo'
@@ -763,6 +838,7 @@ const BoardChart = memo(
                         {[
                             { key: 'topLeft', charts: drawers.topLeft || [] },
                             { key: 'topRight', charts: drawers.topRight || [] },
+                            { key: 'level', charts: drawers.level || [] },
                             { key: 'pumping', charts: drawers.pumping || [] },
                             ...[0, 1, 2, 3].map((i) => ({
                                 key: `room${i}`,

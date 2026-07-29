@@ -172,8 +172,11 @@ const ConfigBoardChart = () => {
       topLeftChartId: '',
       topRightChartId: '',
       miniChartIds: [],
+      levelLabel: 'Profundidad al agua',
+      levelVarId: null,
       drawerTopLeft: [],
       drawerTopRight: [],
+      drawerLevel: [],
       drawerPumping: [],
       roomItem0Drawer: [],
       roomItem1Drawer: [],
@@ -241,7 +244,10 @@ const ConfigBoardChart = () => {
     push('board.mini.chartIds', JSON.stringify((d.miniChartIds || []).filter(Boolean)))
     push('board.drawer.topLeft', JSON.stringify(d.drawerTopLeft || []))
     push('board.drawer.topRight', JSON.stringify(d.drawerTopRight || []))
+    push('board.drawer.level', JSON.stringify(d.drawerLevel || []))
     push('board.drawer.pumping', JSON.stringify(d.drawerPumping || []))
+    push('board.level.value.label', d.levelLabel)
+    push('board.level.value.key', getVarId(d.levelVarId))
     push('board.drawer.room.item0', JSON.stringify(d.roomItem0Drawer || []))
     push('board.drawer.room.item1', JSON.stringify(d.roomItem1Drawer || []))
     push('board.drawer.room.item2', JSON.stringify(d.roomItem2Drawer || []))
@@ -281,6 +287,7 @@ const ConfigBoardChart = () => {
         })
       }
     }
+    maybePush('board.level.value', 'levelVarId', 'levelLabel')
     maybePush('board.pumping.status', 'pumpingStatusVarId')
     maybePush('board.pumping.runtime', 'pumpingRuntimeVarId', 'pumpingRuntimeLabel')
     maybePush('board.pumping.starts', 'pumpingStartsVarId', 'pumpingStartsLabel')
@@ -373,6 +380,7 @@ const ConfigBoardChart = () => {
       const cfg = data.ChartConfig || []
       const chartData = data.ChartData || []
 
+      const levelVar = getVarIdFromData(chartData, 'board.level.value')
       const pumpingStatus = getVarIdFromData(chartData, 'board.pumping.status')
       const pumpingRuntime = getVarIdFromData(chartData, 'board.pumping.runtime')
       const pumpingStarts = getVarIdFromData(chartData, 'board.pumping.starts')
@@ -399,8 +407,11 @@ const ConfigBoardChart = () => {
         topLeftChartId: getConfigValue(cfg, 'board.top.leftChartId', ''),
         topRightChartId: getConfigValue(cfg, 'board.top.rightChartId', ''),
         miniChartIds: parseIdList('board.mini.chartIds'),
+        levelVarId: levelVar?.id ?? null,
+        levelLabel: getLabelFromData(chartData, 'board.level.value', 'Profundidad al agua'),
         drawerTopLeft: parseIdList('board.drawer.topLeft'),
         drawerTopRight: parseIdList('board.drawer.topRight'),
+        drawerLevel: parseIdList('board.drawer.level'),
         drawerPumping: parseIdList('board.drawer.pumping'),
         roomItem0Drawer: parseIdList('board.drawer.room.item0'),
         roomItem1Drawer: parseIdList('board.drawer.room.item1'),
@@ -429,6 +440,7 @@ const ConfigBoardChart = () => {
       })
 
       setVarObjects({
+        levelVarId: levelVar,
         pumpingStatusVarId: pumpingStatus,
         pumpingRuntimeVarId: pumpingRuntime,
         pumpingStartsVarId: pumpingStarts,
@@ -478,6 +490,7 @@ const ConfigBoardChart = () => {
   const selectedDrawers = {
     topLeft: resolveLineCharts(watch('drawerTopLeft')),
     topRight: resolveLineCharts(watch('drawerTopRight')),
+    level: resolveLineCharts(watch('drawerLevel')),
     pumping: resolveLineCharts(watch('drawerPumping')),
     room: [0, 1, 2, 3].map((i) => resolveLineCharts(watch(`roomItem${i}Drawer`))),
   }
@@ -617,6 +630,31 @@ const ConfigBoardChart = () => {
                     Configuración → Gráficos para poder asociarlo al tablero.
                   </Typography>
                 )}
+              </Box>
+
+              <Box sx={sectionSx}>
+                <SectionTitle>Nivel de pozo</SectionTitle>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-2 items-center'>
+                  <TextField
+                    label='Label del valor'
+                    size='small'
+                    {...register('levelLabel')}
+                  />
+                  <SelectVars
+                    initialVar={varObjects.levelVarId ?? null}
+                    onSelect={handleVarSelect('levelVarId')}
+                    label='-Variable de nivel-'
+                  />
+                  <MultiChartSelect
+                    label='Históricos al desplegar'
+                    value={watch('drawerLevel') || []}
+                    onChange={(v) => setValue('drawerLevel', v)}
+                    options={lineCharts}
+                  />
+                </div>
+                <Typography variant='caption' color='textSecondary'>
+                  Si no se elige variable, la sección no se muestra en el tablero.
+                </Typography>
               </Box>
 
               <Box sx={sectionSx}>

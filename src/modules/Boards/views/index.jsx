@@ -137,6 +137,7 @@ const Boards = () => {
         const drawers = {
           topLeft: resolveCharts(parseIds('board.drawer.topLeft')),
           topRight: resolveCharts(parseIds('board.drawer.topRight')),
+          level: resolveCharts(parseIds('board.drawer.level')),
           pumping: resolveCharts(parseIds('board.drawer.pumping')),
           room: [0, 1, 2, 3].map((i) =>
             resolveCharts(parseIds(`board.drawer.room.item${i}`))
