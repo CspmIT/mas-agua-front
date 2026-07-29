@@ -109,7 +109,9 @@ const buildDataViewTableHtml = (opt) => {
   return html
 }
 
-const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => {
+// `compact`: modo minigráfico (tableros) — oculta labels del eje X (la fecha
+// se ve en el tooltip), achica márgenes y el slider de zoom.
+const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore, compact = false }) => {
   const isMobile = useMemo(
     () => window.matchMedia('(max-width: 768px)').matches,
     []
@@ -181,13 +183,21 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
           data: memoizedYSeries.map((s) => s.name),
         },
 
-      grid: {
-        left: '3%',
-        right: '4%',
-        top: isMobile ? '8%' : '10%',
-        bottom: isMobile ? 90 : 20,
-        containLabel: true,
-      },
+      grid: compact
+        ? {
+            left: '2%',
+            right: '3%',
+            top: 26,
+            bottom: 10,
+            containLabel: true,
+          }
+        : {
+            left: '3%',
+            right: '4%',
+            top: isMobile ? '8%' : '10%',
+            bottom: isMobile ? 90 : 20,
+            containLabel: true,
+          },
 
       toolbox: {
         right: 10,
@@ -218,7 +228,7 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
         type: 'time',
         splitNumber: isMobile ? 6 : 12,
         axisLabel: {
-          show: true,
+          show: !compact,
           rotate: isMobile ? 35 : 20,
           formatter: axisLabelFormatter,
           hideOverlap: true,
@@ -243,23 +253,28 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
           start: 0,
           end: 100,
         },
-        {
-          type: 'slider',
-          xAxisIndex: 0,
-          height: 28,
-          bottom: isMobile ? 5 : 0,
-          filterMode: 'none',
-          minValueSpan: 2 * 60 * 1000,
-          showDetail: true,
-          handleSize: 16,
-          left: '8%',
-          right: '8%',
-          showDataShadow: true,
-          brushSelect: false,
-          labelFormatter: axisLabelFormatter,
-          start: 0,
-          end: 100,
-        },
+        // En compacto no hay slider: el zoom se maneja con el ícono del toolbox
+        ...(compact
+          ? []
+          : [
+              {
+                type: 'slider',
+                xAxisIndex: 0,
+                height: 28,
+                bottom: isMobile ? 5 : 0,
+                filterMode: 'none',
+                minValueSpan: 2 * 60 * 1000,
+                showDetail: true,
+                handleSize: 16,
+                left: '8%',
+                right: '8%',
+                showDataShadow: true,
+                brushSelect: false,
+                labelFormatter: axisLabelFormatter,
+                start: 0,
+                end: 100,
+              },
+            ]),
       ],
 
       series: memoizedYSeries,
@@ -268,6 +283,7 @@ const LineChart = memo(({ yType, xSeries, ySeries, onZoomRange, onRestore }) => 
     memoizedYSeries,
     yType,
     isMobile,
+    compact,
     tooltipFormatter,
     axisLabelFormatter,
     dataViewContent,

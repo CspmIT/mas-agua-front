@@ -3,14 +3,18 @@ import VarsProvider from '../../../components/DataGenerator/ProviderVars'
 import {
   Box,
   Button,
+  Checkbox,
   Container,
   FormControl,
+  IconButton,
   InputLabel,
+  ListItemText,
   MenuItem,
   Select,
   TextField,
   Typography,
 } from '@mui/material'
+import { Add, DeleteOutline } from '@mui/icons-material'
 import { useEffect, useMemo, useState, Suspense, lazy } from 'react'
 import { useForm } from 'react-hook-form'
 import Swal from 'sweetalert2'
@@ -97,6 +101,35 @@ const SectionTitle = ({ children }) => (
   </div>
 )
 
+// Multi-select de gráficos históricos (LineChart) para asociar a un elemento
+// del tablero. A nivel de módulo por la misma razón que PumpingSlot.
+const MultiChartSelect = ({ label, value = [], onChange, options }) => (
+  <FormControl size='small' fullWidth>
+    <InputLabel>{label}</InputLabel>
+    <Select
+      multiple
+      label={label}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      renderValue={(selected) =>
+        selected
+          .map((id) => options.find((o) => String(o.id) === String(id))?.name ?? id)
+          .join(', ')
+      }
+    >
+      {options.map((c) => (
+        <MenuItem key={c.id} value={c.id} dense>
+          <Checkbox
+            size='small'
+            checked={value.some((id) => String(id) === String(c.id))}
+          />
+          <ListItemText primary={c.name} />
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
+)
+
 // A nivel de módulo para que su identidad sea estable entre renders: definido
 // dentro del componente, React lo remonta en cada render (la vista se
 // re-renderiza con cada tecla por watch()) y el TextField pierde el foco
@@ -123,6 +156,7 @@ const ConfigBoardChart = () => {
 
   const [loader, setLoader] = useState(true)
   const [charts, setCharts] = useState([])
+  const [lineCharts, setLineCharts] = useState([])
   const [varObjects, setVarObjects] = useState({})
   const {
     handleSubmit,
@@ -137,6 +171,17 @@ const ConfigBoardChart = () => {
       order: '',
       topLeftChartId: '',
       topRightChartId: '',
+      miniChartIds: [],
+      levelLabel: 'Profundidad al agua',
+      levelVarId: null,
+      drawerTopLeft: [],
+      drawerTopRight: [],
+      drawerLevel: [],
+      drawerPumping: [],
+      roomItem0Drawer: [],
+      roomItem1Drawer: [],
+      roomItem2Drawer: [],
+      roomItem3Drawer: [],
       pumpingStatusLabel: 'Estado',
       pumpingRuntimeLabel: 'Tiempo de funcionamiento',
       pumpingStartsLabel: 'Cantidad de arranques',
@@ -196,6 +241,17 @@ const ConfigBoardChart = () => {
 
     push('board.top.leftChartId', d.topLeftChartId ?? '', 'number')
     push('board.top.rightChartId', d.topRightChartId ?? '', 'number')
+    push('board.mini.chartIds', JSON.stringify((d.miniChartIds || []).filter(Boolean)))
+    push('board.drawer.topLeft', JSON.stringify(d.drawerTopLeft || []))
+    push('board.drawer.topRight', JSON.stringify(d.drawerTopRight || []))
+    push('board.drawer.level', JSON.stringify(d.drawerLevel || []))
+    push('board.drawer.pumping', JSON.stringify(d.drawerPumping || []))
+    push('board.level.value.label', d.levelLabel)
+    push('board.level.value.key', getVarId(d.levelVarId))
+    push('board.drawer.room.item0', JSON.stringify(d.roomItem0Drawer || []))
+    push('board.drawer.room.item1', JSON.stringify(d.roomItem1Drawer || []))
+    push('board.drawer.room.item2', JSON.stringify(d.roomItem2Drawer || []))
+    push('board.drawer.room.item3', JSON.stringify(d.roomItem3Drawer || []))
     push('board.pumping.runtime.label', d.pumpingRuntimeLabel)
     push('board.pumping.starts.label', d.pumpingStartsLabel)
     push('board.pumping.currentL1.label', d.pumpingCurrentL1Label)
@@ -231,6 +287,7 @@ const ConfigBoardChart = () => {
         })
       }
     }
+    maybePush('board.level.value', 'levelVarId', 'levelLabel')
     maybePush('board.pumping.status', 'pumpingStatusVarId')
     maybePush('board.pumping.runtime', 'pumpingRuntimeVarId', 'pumpingRuntimeLabel')
     maybePush('board.pumping.starts', 'pumpingStartsVarId', 'pumpingStartsLabel')
@@ -300,6 +357,17 @@ const ConfigBoardChart = () => {
       console.error(e)
       await Swal.fire('Error', 'No se pudieron cargar los gráficos', 'error')
     }
+
+    // LineCharts para los minigráficos (los excluye /indicatorCharts)
+    try {
+      const { data } = await request(
+        `${backend[import.meta.env.VITE_APP_NAME]}/dashboardCharts`,
+        'GET'
+      )
+      setLineCharts((data || []).filter((c) => c.type === 'LineChart'))
+    } catch (e) {
+      console.error('Error cargando charts de series:', e)
+    }
   }
 
   const fetchChartData = async () => {
@@ -312,6 +380,7 @@ const ConfigBoardChart = () => {
       const cfg = data.ChartConfig || []
       const chartData = data.ChartData || []
 
+      const levelVar = getVarIdFromData(chartData, 'board.level.value')
       const pumpingStatus = getVarIdFromData(chartData, 'board.pumping.status')
       const pumpingRuntime = getVarIdFromData(chartData, 'board.pumping.runtime')
       const pumpingStarts = getVarIdFromData(chartData, 'board.pumping.starts')
@@ -323,11 +392,31 @@ const ConfigBoardChart = () => {
       const roomItem2 = getVarIdFromData(chartData, 'board.room.item2')
       const roomItem3 = getVarIdFromData(chartData, 'board.room.item3')
 
+      const parseIdList = (key) => {
+        try {
+          const ids = JSON.parse(getConfigValue(cfg, key, '[]'))
+          return Array.isArray(ids) ? ids : []
+        } catch {
+          return []
+        }
+      }
+
       reset({
         title: data.name || '',
         order: data.order ?? '',
         topLeftChartId: getConfigValue(cfg, 'board.top.leftChartId', ''),
         topRightChartId: getConfigValue(cfg, 'board.top.rightChartId', ''),
+        miniChartIds: parseIdList('board.mini.chartIds'),
+        levelVarId: levelVar?.id ?? null,
+        levelLabel: getLabelFromData(chartData, 'board.level.value', 'Profundidad al agua'),
+        drawerTopLeft: parseIdList('board.drawer.topLeft'),
+        drawerTopRight: parseIdList('board.drawer.topRight'),
+        drawerLevel: parseIdList('board.drawer.level'),
+        drawerPumping: parseIdList('board.drawer.pumping'),
+        roomItem0Drawer: parseIdList('board.drawer.room.item0'),
+        roomItem1Drawer: parseIdList('board.drawer.room.item1'),
+        roomItem2Drawer: parseIdList('board.drawer.room.item2'),
+        roomItem3Drawer: parseIdList('board.drawer.room.item3'),
         pumpingStatusVarId: pumpingStatus?.id ?? null,
         pumpingRuntimeVarId: pumpingRuntime?.id ?? null,
         pumpingStartsVarId: pumpingStarts?.id ?? null,
@@ -351,6 +440,7 @@ const ConfigBoardChart = () => {
       })
 
       setVarObjects({
+        levelVarId: levelVar,
         pumpingStatusVarId: pumpingStatus,
         pumpingRuntimeVarId: pumpingRuntime,
         pumpingStartsVarId: pumpingStarts,
@@ -391,6 +481,19 @@ const ConfigBoardChart = () => {
     charts.find((c) => String(c.id) === String(watch('topLeftChartId'))) || null
   const selectedRightChart =
     charts.find((c) => String(c.id) === String(watch('topRightChartId'))) || null
+  const resolveLineCharts = (ids = []) =>
+    ids
+      .map((id) => lineCharts.find((c) => String(c.id) === String(id)))
+      .filter(Boolean)
+
+  const selectedMiniCharts = resolveLineCharts(watch('miniChartIds'))
+  const selectedDrawers = {
+    topLeft: resolveLineCharts(watch('drawerTopLeft')),
+    topRight: resolveLineCharts(watch('drawerTopRight')),
+    level: resolveLineCharts(watch('drawerLevel')),
+    pumping: resolveLineCharts(watch('drawerPumping')),
+    room: [0, 1, 2, 3].map((i) => resolveLineCharts(watch(`roomItem${i}Drawer`))),
+  }
 
   return (
     <VarsProvider>
@@ -459,16 +562,114 @@ const ConfigBoardChart = () => {
                       ))}
                     </Select>
                   </FormControl>
+
+                  <MultiChartSelect
+                    label='Históricos al desplegar (izquierdo)'
+                    value={watch('drawerTopLeft') || []}
+                    onChange={(v) => setValue('drawerTopLeft', v)}
+                    options={lineCharts}
+                  />
+                  <MultiChartSelect
+                    label='Históricos al desplegar (derecho)'
+                    value={watch('drawerTopRight') || []}
+                    onChange={(v) => setValue('drawerTopRight', v)}
+                    options={lineCharts}
+                  />
                 </div>
               </Box>
 
               <Box sx={sectionSx}>
-                <SectionTitle>Bombeo</SectionTitle>
+                <SectionTitle>Minigráficos históricos (columna derecha)</SectionTitle>
+                {(watch('miniChartIds') || []).map((chartId, idx) => (
+                  <div key={idx} className='flex items-center gap-2'>
+                    <FormControl size='small' fullWidth>
+                      <InputLabel>{`Minigráfico ${idx + 1}`}</InputLabel>
+                      <Select
+                        label={`Minigráfico ${idx + 1}`}
+                        value={chartId ?? ''}
+                        onChange={(e) => {
+                          const arr = [...(getValues('miniChartIds') || [])]
+                          arr[idx] = e.target.value
+                          setValue('miniChartIds', arr)
+                        }}
+                      >
+                        <MenuItem value=''><em>Ninguno</em></MenuItem>
+                        {lineCharts.map((c) => (
+                          <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <IconButton
+                      size='small'
+                      aria-label='Quitar minigráfico'
+                      onClick={() => {
+                        const arr = [...(getValues('miniChartIds') || [])]
+                        arr.splice(idx, 1)
+                        setValue('miniChartIds', arr)
+                      }}
+                    >
+                      <DeleteOutline fontSize='small' />
+                    </IconButton>
+                  </div>
+                ))}
                 <div>
+                  <Button
+                    size='small'
+                    startIcon={<Add />}
+                    sx={{ textTransform: 'none' }}
+                    onClick={() =>
+                      setValue('miniChartIds', [...(getValues('miniChartIds') || []), ''])
+                    }
+                  >
+                    Agregar minigráfico
+                  </Button>
+                </div>
+                {lineCharts.length === 0 && (
+                  <Typography variant='caption' color='textSecondary'>
+                    No hay gráficos de tipo LineChart disponibles: creá uno desde
+                    Configuración → Gráficos para poder asociarlo al tablero.
+                  </Typography>
+                )}
+              </Box>
+
+              <Box sx={sectionSx}>
+                <SectionTitle>Nivel de pozo</SectionTitle>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-2 items-center'>
+                  <TextField
+                    label='Label del valor'
+                    size='small'
+                    {...register('levelLabel')}
+                  />
+                  <SelectVars
+                    initialVar={varObjects.levelVarId ?? null}
+                    onSelect={handleVarSelect('levelVarId')}
+                    label='-Variable de nivel-'
+                  />
+                  <MultiChartSelect
+                    label='Históricos al desplegar'
+                    value={watch('drawerLevel') || []}
+                    onChange={(v) => setValue('drawerLevel', v)}
+                    options={lineCharts}
+                  />
+                </div>
+                <Typography variant='caption' color='textSecondary'>
+                  Si no se elige variable, la sección no se muestra en el tablero.
+                </Typography>
+              </Box>
+
+              <Box sx={sectionSx}>
+                <SectionTitle>Bombeo</SectionTitle>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-2 items-center'>
                   <SelectVars
                     initialVar={varObjects.pumpingStatusVarId ?? null}
                     onSelect={handleVarSelect('pumpingStatusVarId')}
                     label='Variable de estado'
+                  />
+                  <MultiChartSelect
+                    label='Históricos al desplegar'
+                    value={watch('drawerPumping') || []}
+                    onChange={(v) => setValue('drawerPumping', v)}
+                    options={lineCharts}
                   />
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
@@ -513,7 +714,7 @@ const ConfigBoardChart = () => {
               <Box sx={sectionSx}>
                 <SectionTitle>Sala</SectionTitle>
                 {[0, 1, 2, 3].map((i) => (
-                  <div key={i} className='grid grid-cols-1 md:grid-cols-2 gap-2'>
+                  <div key={i} className='grid grid-cols-1 md:grid-cols-3 gap-2 items-center'>
                     <TextField
                       label={`Label item ${i + 1}`}
                       size='small'
@@ -523,6 +724,12 @@ const ConfigBoardChart = () => {
                       initialVar={varObjects[`roomItem${i}VarId`] ?? null}
                       onSelect={handleVarSelect(`roomItem${i}VarId`)}
                       label='-Seleccionar variable-'
+                    />
+                    <MultiChartSelect
+                      label='Históricos al desplegar'
+                      value={watch(`roomItem${i}Drawer`) || []}
+                      onChange={(v) => setValue(`roomItem${i}Drawer`, v)}
+                      options={lineCharts}
                     />
                   </div>
                 ))}
@@ -544,6 +751,9 @@ const ConfigBoardChart = () => {
                     ChartConfig={buildChartConfig()}
                     topLeftChart={selectedLeftChart}
                     topRightChart={selectedRightChart}
+                    miniCharts={selectedMiniCharts}
+                    drawers={selectedDrawers}
+                    singleColumn
                     inflValues={previewInflValues}
                   />
                 </Suspense>
