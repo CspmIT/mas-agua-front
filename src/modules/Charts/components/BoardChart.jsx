@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { ChartComponentDbWrapper } from '../../home/components/ChartComponentDbWrapper'
 import CirclePorcentaje from '../../Charts/components/CirclePorcentaje'
 import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
@@ -80,21 +80,57 @@ const Eyebrow = ({ children }) => (
     </span>
 )
 
-/** Panel base con título tipo eyebrow y borde/superficie suaves. */
-const SectionPanel = ({ title, action, children, className = '' }) => (
-    <section
-        className={`rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden ${className}`}
+/** Flecha de sección colapsable. */
+const Chevron = ({ open }) => (
+    <svg
+        viewBox='0 0 24 24'
+        fill='none'
+        stroke='currentColor'
+        strokeWidth={2.4}
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        className={`w-4 h-4 shrink-0 text-slate-400 dark:text-slate-500 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
     >
-        <div className='flex items-center justify-between gap-2 px-3.5 py-1 border-b border-[#1f4e79]/8 dark:border-white/5'>
-            <div className='flex items-center gap-2 min-w-0'>
-                <span className='inline-block w-1.5 h-1.5 rounded-full bg-[#368bed]' aria-hidden />
-                <Eyebrow>{title}</Eyebrow>
-            </div>
-            {action}
-        </div>
-        {children}
-    </section>
+        <path d='M6 9l6 6 6-6' />
+    </svg>
 )
+
+/** Panel base con título tipo eyebrow, colapsable desde el header. */
+const SectionPanel = ({ title, action, children, defaultOpen = true, className = '' }) => {
+    const [open, setOpen] = useState(defaultOpen)
+    return (
+        <section
+            className={`rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden ${className}`}
+        >
+            <button
+                type='button'
+                onClick={() => setOpen((o) => !o)}
+                aria-expanded={open}
+                className={`w-full flex items-center justify-between gap-2 px-3.5 py-1.5 bg-transparent border-0 cursor-pointer text-left transition-colors hover:bg-[#368bed]/[0.04] ${
+                    open ? 'border-b border-solid border-[#1f4e79]/8 dark:border-white/5' : ''
+                }`}
+            >
+                <div className='flex items-center gap-2 min-w-0'>
+                    <span className='inline-block w-1.5 h-1.5 rounded-full bg-[#368bed]' aria-hidden />
+                    <Eyebrow>{title}</Eyebrow>
+                </div>
+                <div className='flex items-center gap-2 min-w-0'>
+                    {action}
+                    <Chevron open={open} />
+                </div>
+            </button>
+            {/* Colapso por max-height: la transición de grid-template-rows con fr
+                queda colgada en Chromium embebido, así que no usamos ese truco. */}
+            <div
+                className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+                    open ? 'max-h-[1200px]' : 'max-h-0'
+                }`}
+            >
+                {children}
+            </div>
+        </section>
+    )
+}
 
 /** Convierte #rrggbb + alpha (0..1) en hex de 8 dígitos. */
 const hexA = (hex, alpha) =>
@@ -458,13 +494,10 @@ const BoardChart = memo(
             )
         }
 
-        // Altura bloqueada a ~una pantalla para que el tablero entre completo en 720p.
-        // El offset (~100px) cubre el navbar (pt-16 = 64px) + el gutter superior del
-        // Grid, dejando un respiro abajo. La fila de charts es flex-1 y absorbe todo el
-        // espacio restante; Bombeo/Sala conservan su alto natural. Subir/bajar el offset
-        // es el único dial: menos px = charts más grandes (con menos respiro abajo).
+        // Minivista de pozo: altura natural (la página scrollea). Deja de bloquearse
+        // a una pantalla porque el tablero ahora crece con drawers y minigráficos.
         return (
-            <div className='w-full md:h-[calc(100dvh-100px)] min-h-[420px] rounded-3xl border border-[#1f4e79]/8 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-[0_2px_8px_rgba(15,42,68,0.05),0_24px_56px_-30px_rgba(15,42,68,0.28)] overflow-hidden flex flex-col'>
+            <div className='w-full rounded-3xl border border-[#1f4e79]/8 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-[0_2px_8px_rgba(15,42,68,0.05),0_24px_56px_-30px_rgba(15,42,68,0.28)] overflow-hidden'>
                 {/* HEADER */}
                 <div className='relative px-3.5 py-2.5 bg-gradient-to-br from-[#2c6aa0] to-[#1f4e79] overflow-hidden'>
                     {/* Textura de puntos sutil */}
@@ -485,13 +518,16 @@ const BoardChart = memo(
                     </div>
                 </div>
 
-                <div className='p-2.5 flex flex-col gap-2 md:flex-1 md:min-h-0'>
-                    {/* TOP — gráficos (absorben el espacio vertical sobrante) */}
-                    <div className='flex flex-col md:flex-row gap-2 md:flex-1 md:min-h-0'>
+                {/* Layout minivista: columna principal a la izquierda; la columna
+                    derecha de minigráficos históricos se suma en la fase 1b. */}
+                <div className='p-2.5 grid grid-cols-1 gap-2.5'>
+                    <div className='flex flex-col gap-2 min-w-0'>
+                    {/* TOP — gráficos de valor actual */}
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
                         {[topLeftChart, topRightChart].map((chart, idx) => (
                             <div
                                 key={idx}
-                                className='h-[220px] md:h-auto md:flex-1 min-w-0 md:min-h-0 overflow-hidden rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900/40 dark:to-slate-900/10 shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-1.5 flex items-center justify-center'
+                                className='h-[260px] min-w-0 overflow-hidden rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900/40 dark:to-slate-900/10 shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-1.5 flex items-center justify-center'
                             >
                                 {renderTopChart(chart)}
                             </div>
@@ -570,6 +606,7 @@ const BoardChart = memo(
                             })}
                         </div>
                     </SectionPanel>
+                    </div>
                 </div>
             </div>
         )
