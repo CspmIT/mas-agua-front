@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'fix: correccion edicion de tableros'
+                  releaseBody: 'feat: tableros como minivistas por pozo — históricos integrados y nivel de pozo'
                   prerelease: false
