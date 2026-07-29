@@ -5,12 +5,14 @@ import {
   Button,
   Container,
   FormControl,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
   TextField,
   Typography,
 } from '@mui/material'
+import { Add, DeleteOutline } from '@mui/icons-material'
 import { useEffect, useMemo, useState, Suspense, lazy } from 'react'
 import { useForm } from 'react-hook-form'
 import Swal from 'sweetalert2'
@@ -123,6 +125,7 @@ const ConfigBoardChart = () => {
 
   const [loader, setLoader] = useState(true)
   const [charts, setCharts] = useState([])
+  const [lineCharts, setLineCharts] = useState([])
   const [varObjects, setVarObjects] = useState({})
   const {
     handleSubmit,
@@ -137,6 +140,7 @@ const ConfigBoardChart = () => {
       order: '',
       topLeftChartId: '',
       topRightChartId: '',
+      miniChartIds: [],
       pumpingStatusLabel: 'Estado',
       pumpingRuntimeLabel: 'Tiempo de funcionamiento',
       pumpingStartsLabel: 'Cantidad de arranques',
@@ -196,6 +200,7 @@ const ConfigBoardChart = () => {
 
     push('board.top.leftChartId', d.topLeftChartId ?? '', 'number')
     push('board.top.rightChartId', d.topRightChartId ?? '', 'number')
+    push('board.mini.chartIds', JSON.stringify((d.miniChartIds || []).filter(Boolean)))
     push('board.pumping.runtime.label', d.pumpingRuntimeLabel)
     push('board.pumping.starts.label', d.pumpingStartsLabel)
     push('board.pumping.currentL1.label', d.pumpingCurrentL1Label)
@@ -300,6 +305,17 @@ const ConfigBoardChart = () => {
       console.error(e)
       await Swal.fire('Error', 'No se pudieron cargar los gráficos', 'error')
     }
+
+    // LineCharts para los minigráficos (los excluye /indicatorCharts)
+    try {
+      const { data } = await request(
+        `${backend[import.meta.env.VITE_APP_NAME]}/dashboardCharts`,
+        'GET'
+      )
+      setLineCharts((data || []).filter((c) => c.type === 'LineChart'))
+    } catch (e) {
+      console.error('Error cargando charts de series:', e)
+    }
   }
 
   const fetchChartData = async () => {
@@ -323,11 +339,19 @@ const ConfigBoardChart = () => {
       const roomItem2 = getVarIdFromData(chartData, 'board.room.item2')
       const roomItem3 = getVarIdFromData(chartData, 'board.room.item3')
 
+      let miniChartIds = []
+      try {
+        miniChartIds = JSON.parse(getConfigValue(cfg, 'board.mini.chartIds', '[]'))
+      } catch {
+        miniChartIds = []
+      }
+
       reset({
         title: data.name || '',
         order: data.order ?? '',
         topLeftChartId: getConfigValue(cfg, 'board.top.leftChartId', ''),
         topRightChartId: getConfigValue(cfg, 'board.top.rightChartId', ''),
+        miniChartIds,
         pumpingStatusVarId: pumpingStatus?.id ?? null,
         pumpingRuntimeVarId: pumpingRuntime?.id ?? null,
         pumpingStartsVarId: pumpingStarts?.id ?? null,
@@ -391,6 +415,9 @@ const ConfigBoardChart = () => {
     charts.find((c) => String(c.id) === String(watch('topLeftChartId'))) || null
   const selectedRightChart =
     charts.find((c) => String(c.id) === String(watch('topRightChartId'))) || null
+  const selectedMiniCharts = (watch('miniChartIds') || [])
+    .map((id) => lineCharts.find((c) => String(c.id) === String(id)))
+    .filter(Boolean)
 
   return (
     <VarsProvider>
@@ -460,6 +487,60 @@ const ConfigBoardChart = () => {
                     </Select>
                   </FormControl>
                 </div>
+              </Box>
+
+              <Box sx={sectionSx}>
+                <SectionTitle>Minigráficos históricos (columna derecha)</SectionTitle>
+                {(watch('miniChartIds') || []).map((chartId, idx) => (
+                  <div key={idx} className='flex items-center gap-2'>
+                    <FormControl size='small' fullWidth>
+                      <InputLabel>{`Minigráfico ${idx + 1}`}</InputLabel>
+                      <Select
+                        label={`Minigráfico ${idx + 1}`}
+                        value={chartId ?? ''}
+                        onChange={(e) => {
+                          const arr = [...(getValues('miniChartIds') || [])]
+                          arr[idx] = e.target.value
+                          setValue('miniChartIds', arr)
+                        }}
+                      >
+                        <MenuItem value=''><em>Ninguno</em></MenuItem>
+                        {lineCharts.map((c) => (
+                          <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <IconButton
+                      size='small'
+                      aria-label='Quitar minigráfico'
+                      onClick={() => {
+                        const arr = [...(getValues('miniChartIds') || [])]
+                        arr.splice(idx, 1)
+                        setValue('miniChartIds', arr)
+                      }}
+                    >
+                      <DeleteOutline fontSize='small' />
+                    </IconButton>
+                  </div>
+                ))}
+                <div>
+                  <Button
+                    size='small'
+                    startIcon={<Add />}
+                    sx={{ textTransform: 'none' }}
+                    onClick={() =>
+                      setValue('miniChartIds', [...(getValues('miniChartIds') || []), ''])
+                    }
+                  >
+                    Agregar minigráfico
+                  </Button>
+                </div>
+                {lineCharts.length === 0 && (
+                  <Typography variant='caption' color='textSecondary'>
+                    No hay gráficos de tipo LineChart disponibles: creá uno desde
+                    Configuración → Gráficos para poder asociarlo al tablero.
+                  </Typography>
+                )}
               </Box>
 
               <Box sx={sectionSx}>
@@ -544,6 +625,8 @@ const ConfigBoardChart = () => {
                     ChartConfig={buildChartConfig()}
                     topLeftChart={selectedLeftChart}
                     topRightChart={selectedRightChart}
+                    miniCharts={selectedMiniCharts}
+                    singleColumn
                     inflValues={previewInflValues}
                   />
                 </Suspense>

@@ -2,6 +2,7 @@ import { memo, useMemo, useState } from 'react'
 import { ChartComponentDbWrapper } from '../../home/components/ChartComponentDbWrapper'
 import CirclePorcentaje from '../../Charts/components/CirclePorcentaje'
 import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
+import BoardMiniChart from './BoardMiniChart'
 
 const chartComponents = {
     LiquidFillPorcentaje,
@@ -379,6 +380,11 @@ const BoardChart = memo(
 
         topLeftChart = null,
         topRightChart = null,
+        miniCharts = [],
+        // La vista previa de ConfigBoardChart es angosta: fuerza una columna.
+        singleColumn = false,
+        // Fecha del último refresco de valores (la setea la vista de Boards).
+        lastUpdate = null,
 
         ChartData = [],
         ChartConfig = [],
@@ -515,12 +521,31 @@ const BoardChart = memo(
                         <h1 className='text-[16px] font-medium tracking-tight leading-tight line-clamp-2 text-white'>
                             {title || 'Tablero'}
                         </h1>
+                        {lastUpdate && (
+                            <span className='shrink-0 text-[11.5px] text-white/75'>
+                                Última actualización{' '}
+                                <b className='font-semibold tabular-nums text-white'>
+                                    {new Date(lastUpdate).toLocaleString('es-AR', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: false,
+                                    }).replace(',', '')}
+                                </b>
+                            </span>
+                        )}
                     </div>
                 </div>
 
-                {/* Layout minivista: columna principal a la izquierda; la columna
-                    derecha de minigráficos históricos se suma en la fase 1b. */}
-                <div className='p-2.5 grid grid-cols-1 gap-2.5'>
+                {/* Layout minivista: columna principal a la izquierda; a la derecha,
+                    los minigráficos históricos configurados para el tablero. */}
+                <div
+                    className={`p-2 grid grid-cols-1 gap-2 ${
+                        miniCharts.length > 0 && !singleColumn ? 'xl:grid-cols-[42fr_58fr]' : ''
+                    }`}
+                >
                     <div className='flex flex-col gap-2 min-w-0'>
                     {/* TOP — gráficos de valor actual */}
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
@@ -607,6 +632,15 @@ const BoardChart = memo(
                         </div>
                     </SectionPanel>
                     </div>
+
+                    {/* Columna derecha: minigráficos históricos */}
+                    {miniCharts.length > 0 && (
+                        <div className='flex flex-col gap-2 min-w-0'>
+                            {miniCharts.map((chart) => (
+                                <BoardMiniChart key={chart.id} chart={chart} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         )
