@@ -19,7 +19,9 @@ const Boards = () => {
 
     charts.forEach((chart) => {
       chart.ChartData?.forEach((item) => {
-        if (item.InfluxVars) {
+        // Las variables Gralf no se consultan por multipleDataInflux:
+        // las resuelve el propio GralfChart con su endpoint.
+        if (item.InfluxVars && !item.InfluxVars?.varsInflux?.gralf) {
           vars.push({ dataInflux: item.InfluxVars })
         }
       })
@@ -128,8 +130,17 @@ const Boards = () => {
             return []
           }
         }
+        // Un drawer puede asociar LineCharts (seriesChartsMap) o GralfCharts
+        // (vienen en chartsMap, junto al resto de los charts sin series).
         const resolveCharts = (ids) =>
-          ids.map((id) => seriesChartsMap[id]).filter(Boolean)
+          ids
+            .map((id) => {
+              const serie = seriesChartsMap[id]
+              if (serie) return serie
+              const chart = chartsMap[id]
+              return chart?.type === 'GralfChart' ? chart : null
+            })
+            .filter(Boolean)
 
         const miniCharts = resolveCharts(parseIds('board.mini.chartIds'))
 

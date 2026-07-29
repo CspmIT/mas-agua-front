@@ -157,6 +157,7 @@ const ConfigBoardChart = () => {
   const [loader, setLoader] = useState(true)
   const [charts, setCharts] = useState([])
   const [lineCharts, setLineCharts] = useState([])
+  const [gralfCharts, setGralfCharts] = useState([])
   const [varObjects, setVarObjects] = useState({})
   const {
     handleSubmit,
@@ -353,6 +354,8 @@ const ConfigBoardChart = () => {
         (c) => c.type === 'LiquidFillPorcentaje' || c.type === 'CirclePorcentaje'
       )
       setCharts(filtered)
+      // GralfCharts: asociables a los drawers (tile Energía de Sala, etc.)
+      setGralfCharts((data || []).filter((c) => c.type === 'GralfChart'))
     } catch (e) {
       console.error(e)
       await Swal.fire('Error', 'No se pudieron cargar los gráficos', 'error')
@@ -481,9 +484,19 @@ const ConfigBoardChart = () => {
     charts.find((c) => String(c.id) === String(watch('topLeftChartId'))) || null
   const selectedRightChart =
     charts.find((c) => String(c.id) === String(watch('topRightChartId'))) || null
+  // Opciones de los drawers: LineCharts + GralfCharts (con sufijo para distinguirlos)
+  const drawerOptions = [
+    ...lineCharts,
+    ...gralfCharts.map((c) => ({ ...c, name: `${c.name} (energía)` })),
+  ]
+
   const resolveLineCharts = (ids = []) =>
     ids
-      .map((id) => lineCharts.find((c) => String(c.id) === String(id)))
+      .map(
+        (id) =>
+          lineCharts.find((c) => String(c.id) === String(id)) ||
+          gralfCharts.find((c) => String(c.id) === String(id))
+      )
       .filter(Boolean)
 
   const selectedMiniCharts = resolveLineCharts(watch('miniChartIds'))
@@ -567,13 +580,13 @@ const ConfigBoardChart = () => {
                     label='Históricos al desplegar (izquierdo)'
                     value={watch('drawerTopLeft') || []}
                     onChange={(v) => setValue('drawerTopLeft', v)}
-                    options={lineCharts}
+                    options={drawerOptions}
                   />
                   <MultiChartSelect
                     label='Históricos al desplegar (derecho)'
                     value={watch('drawerTopRight') || []}
                     onChange={(v) => setValue('drawerTopRight', v)}
-                    options={lineCharts}
+                    options={drawerOptions}
                   />
                 </div>
               </Box>
@@ -649,7 +662,7 @@ const ConfigBoardChart = () => {
                     label='Históricos al desplegar'
                     value={watch('drawerLevel') || []}
                     onChange={(v) => setValue('drawerLevel', v)}
-                    options={lineCharts}
+                    options={drawerOptions}
                   />
                 </div>
                 <Typography variant='caption' color='textSecondary'>
@@ -669,7 +682,7 @@ const ConfigBoardChart = () => {
                     label='Históricos al desplegar'
                     value={watch('drawerPumping') || []}
                     onChange={(v) => setValue('drawerPumping', v)}
-                    options={lineCharts}
+                    options={drawerOptions}
                   />
                 </div>
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-2'>
@@ -729,7 +742,7 @@ const ConfigBoardChart = () => {
                       label='Históricos al desplegar'
                       value={watch(`roomItem${i}Drawer`) || []}
                       onChange={(v) => setValue(`roomItem${i}Drawer`, v)}
-                      options={lineCharts}
+                      options={drawerOptions}
                     />
                   </div>
                 ))}

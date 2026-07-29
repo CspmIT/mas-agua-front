@@ -20,7 +20,10 @@ const SelectVars = ({
     const [options, setOptions] = useState([])
 
     const fetchVars = async () => {
-        const vars = await getVarsInflux()
+        const allVars = await getVarsInflux()
+        // Las variables Gralf (medidor de energía) no aplican a este selector
+        // genérico: las consume su propio tipo de gráfico.
+        const vars = (allVars || []).filter((v) => !v?.varsInflux?.gralf)
         setOptions(vars)
         //Obtengo la variable seleccionada para actualizarla con los datos de la base de datos
         if (initialVar) {

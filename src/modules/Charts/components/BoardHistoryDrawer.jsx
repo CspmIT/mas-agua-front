@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import LineChart from './LineChart'
 import FiltersChart from './FiltersChart'
+import GralfChart from './GralfChart'
 import { useLineChartData } from '../../../hooks/useLineChartData'
 
 /**
@@ -43,7 +44,8 @@ const BoardHistoryPanel = ({ chart, active }) => {
 
 /**
  * Drawer colapsable de históricos asociados a un elemento del tablero.
- * Renderiza un panel por cada gráfico asociado.
+ * Renderiza un panel por cada gráfico asociado: LineChart con filtros, o la
+ * tarjeta Gralf de energía si el gráfico asociado es de ese tipo.
  */
 const BoardHistoryDrawer = memo(({ open, charts = [] }) => {
     if (!charts.length) return null
@@ -54,9 +56,22 @@ const BoardHistoryDrawer = memo(({ open, charts = [] }) => {
             }`}
         >
             <div className='flex flex-col gap-2 pt-2'>
-                {charts.map((chart) => (
-                    <BoardHistoryPanel key={chart.id} chart={chart} active={open} />
-                ))}
+                {charts.map((chart) => {
+                    if (chart.type === 'GralfChart') {
+                        const varId = (chart.ChartData || []).find(
+                            (d) => d.key === 'value'
+                        )?.InfluxVars?.id
+                        return (
+                            <GralfChart
+                                key={chart.id}
+                                varId={varId}
+                                title={chart.name}
+                                active={open}
+                            />
+                        )
+                    }
+                    return <BoardHistoryPanel key={chart.id} chart={chart} active={open} />
+                })}
             </div>
         </div>
     )

@@ -52,17 +52,36 @@ const primarySaveSx = {
 	'&:active': { transform: 'translateY(0)' },
 }
 
+// Plantilla de la variable Gralf (medidor trifásico de energía): el usuario
+// sólo carga el tópico raíz; los fields de los 6 subtópicos los resuelve el
+// backend con esta plantilla.
+export const GRALF_TEMPLATE = 'energia_trifasica_v1'
+const GRALF_GROUPS = ['demanda', 'energia', 'insPotencia', 'instantaneos', 'maximos', 'minimos']
+
+// Normaliza el tópico raíz: espacios, barra final y subtópico pegado por error
+const normalizeGralfTopic = (raw = '') => {
+	let topic = String(raw).trim().replace(/\/+$/, '')
+	const last = topic.split('/').pop()
+	if (GRALF_GROUPS.includes(last)) {
+		topic = topic.slice(0, -(last.length + 1))
+	}
+	return topic
+}
+
 const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 	const [requireCalc, setRequireCalc] = useState(false)
 	const [binaryCompressed, setBinaryCompressed] = useState(data?.binary_compressed || false);
 	const [bits, setBits] = useState(data?.binary_compressed ? data.bits ?? [] : []);
 	const [isBitCalcVar, setIsBitCalcVar] = useState(false);
+	const [isGralf, setIsGralf] = useState(!!data?.varsInflux?.gralf)
 	const [display, setDisplay] = useState([])
 	const {
 		register,
 		formState: { errors },
 		handleSubmit,
 		setValue,
+		getValues,
+		trigger,
 	} = useForm()
 
 	const handleRquiredCalc = () => {
@@ -70,6 +89,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 		setBinaryCompressed(false);
 		setBits([]);
 		setIsBitCalcVar(false);
+		setIsGralf(false);
 		dispatch({ type: "SET_EQUATION", payload: [] });
 		dispatch({ type: "SET_CALC_VAR", payload: [] });
 	};
@@ -78,6 +98,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 	const handleBinaryCompressed = () => {
 		setBinaryCompressed(prev => !prev);
 		setIsBitCalcVar(false);
+		setIsGralf(false);
 		// Limpiamos fórmula si estaba prendida
 		if (requireCalc) {
 			setRequireCalc(false);
@@ -89,6 +110,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 
 	const handleBitCalcVar = () => {
 		setIsBitCalcVar(prev => !prev);
+		setIsGralf(false);
 		// Limpiar los otros modos
 		if (requireCalc) {
 			setRequireCalc(false);
@@ -100,6 +122,73 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 			setBits([]);
 		}
 	};
+
+	const handleGralf = () => {
+		setIsGralf(prev => !prev);
+		setIsBitCalcVar(false);
+		if (requireCalc) {
+			setRequireCalc(false);
+			setDisplay([]);
+			dispatch({ type: "SET_EQUATION", payload: null });
+			dispatch({ type: "SET_CALC_VAR", payload: [] });
+		}
+		if (binaryCompressed) {
+			setBinaryCompressed(false);
+			setBits([]);
+		}
+	};
+
+	// Guardado de variable Gralf: valida sólo nombre/proceso/tópico (el resto
+	// de los campos está oculto y sus reglas required no deben bloquear).
+	const onSubmitGralf = async () => {
+		const ok = await trigger(['name_var', 'process', 'topic'])
+		if (!ok) return false
+
+		try {
+			LoaderComponent({ image: false })
+			const dataReturn = {
+				id: getValues('id') || 0,
+				name: getValues('name_var'),
+				unit: ' ',
+				type: 'last',
+				calc: false,
+				varsInflux: {
+					gralf: {
+						template: GRALF_TEMPLATE,
+						calc_topic: normalizeGralfTopic(getValues('topic')),
+						calc_time: '2',
+						calc_unit: 'm',
+						calc_period: '20',
+						calc_type_period: 'last',
+						calc_unit_period: 's',
+					},
+				},
+				process: getValues('process'),
+				equation: null,
+				binary_compressed: false,
+				bits: [],
+				decimales: 1,
+			}
+
+			await request(`${backend[import.meta.env.VITE_APP_NAME]}/saveVariable`, 'POST', dataReturn)
+
+			if (onSaved) onSaved()
+			if (handleClose) handleClose()
+
+			Swal.fire({
+				icon: 'success',
+				title: 'Perfecto!',
+				text: 'La variable Gralf se guardo correctamente',
+			})
+		} catch (error) {
+			console.error(error)
+			Swal.fire({
+				icon: 'warning',
+				title: 'Atención!',
+				text: 'Hubo un problema al guardar.',
+			})
+		}
+	}
 
 	useEffect(() => {
 		if (requireCalc) {
@@ -208,6 +297,11 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 		setValue('process', data?.process)
 		setValue('type_var', data?.type)
 		setValue('decimales', data?.decimales ?? 1)
+		// Variable Gralf: sólo nombre, proceso y tópico raíz
+		if (data?.varsInflux?.gralf) {
+			setValue('topic', data.varsInflux.gralf.calc_topic)
+			return
+		}
 		if (data?.calc) {
 			setDisplay(data?.equation)
 			handleRquiredCalc()
@@ -269,45 +363,49 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 						size='small'
 						sx={{ flex: '1 1 180px' }}
 					/>
-					<TextField
-						type='text'
-						label='Unidad de medida'
-						{...register('unit', { required: 'Este campo es requerido' })}
-						error={!!errors.unit}
-						helperText={errors.unit && errors.unit.message}
-						size='small'
-						sx={{ flex: '1 1 140px' }}
-					/>
-					<TextField
-						type='number'
-						label='Decimales'
-						defaultValue={data?.decimales ?? 1}
-						inputProps={{ min: 0, max: 6, step: 1 }}
-						{...register('decimales', {
-							required: 'Este campo es requerido',
-							valueAsNumber: true,
-							min: { value: 0, message: 'Mínimo 0' },
-							max: { value: 6, message: 'Máximo 6' },
-							validate: (v) => Number.isInteger(Number(v)) || 'Debe ser un entero',
-						})}
-						error={!!errors.decimales}
-						helperText={errors.decimales && errors.decimales.message}
-						size='small'
-						sx={{ flex: '1 1 120px' }}
-					/>
-					<TextField
-						select
-						label='Tipo de variable'
-						{...register('type_var', { required: 'Este campo es requerido' })}
-						error={!!errors.type_var}
-						helperText={errors.type_var && errors.type_var.message}
-						defaultValue={data?.type || 'last'}
-						size='small'
-						sx={{ flex: '1 1 160px' }}
-					>
-						<MenuItem value='last'>Instantánea</MenuItem>
-						<MenuItem value='history'>Histórico</MenuItem>
-					</TextField>
+					{!isGralf && (
+						<>
+							<TextField
+								type='text'
+								label='Unidad de medida'
+								{...register('unit', { required: isGralf ? false : 'Este campo es requerido' })}
+								error={!!errors.unit}
+								helperText={errors.unit && errors.unit.message}
+								size='small'
+								sx={{ flex: '1 1 140px' }}
+							/>
+							<TextField
+								type='number'
+								label='Decimales'
+								defaultValue={data?.decimales ?? 1}
+								inputProps={{ min: 0, max: 6, step: 1 }}
+								{...register('decimales', {
+									required: isGralf ? false : 'Este campo es requerido',
+									valueAsNumber: true,
+									min: { value: 0, message: 'Mínimo 0' },
+									max: { value: 6, message: 'Máximo 6' },
+									validate: (v) => isGralf || Number.isInteger(Number(v)) || 'Debe ser un entero',
+								})}
+								error={!!errors.decimales}
+								helperText={errors.decimales && errors.decimales.message}
+								size='small'
+								sx={{ flex: '1 1 120px' }}
+							/>
+							<TextField
+								select
+								label='Tipo de variable'
+								{...register('type_var', { required: isGralf ? false : 'Este campo es requerido' })}
+								error={!!errors.type_var}
+								helperText={errors.type_var && errors.type_var.message}
+								defaultValue={data?.type || 'last'}
+								size='small'
+								sx={{ flex: '1 1 160px' }}
+							>
+								<MenuItem value='last'>Instantánea</MenuItem>
+								<MenuItem value='history'>Histórico</MenuItem>
+							</TextField>
+						</>
+					)}
 				</div>
 			</Box>
 
@@ -333,33 +431,49 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 						onChange={handleBitCalcVar}
 						sx={{ m: 0 }}
 					/>
+					<FormControlLabel
+						control={<Switch checked={isGralf} />}
+						label='Gralf (medidor de energía)'
+						onChange={handleGralf}
+						sx={{ m: 0 }}
+					/>
 				</div>
 			</Box>
 
 			{/* ── CONFIGURACIÓN INFLUX ── */}
 			{!requireCalc && (
 				<Box sx={sectionBoxSx}>
-					<SectionHeader eyebrow='Configuración Influx' />
+					<SectionHeader
+						eyebrow='Configuración Influx'
+						hint={
+							isGralf
+								? 'Cargá sólo el tópico raíz del medidor (ej: coop/rio_3/pozo025/Gralf_1). Los campos de demanda, energía, potencia, instantáneos, máximos y mínimos se resuelven solos con la plantilla.'
+								: undefined
+						}
+					/>
 					<div className='flex flex-wrap gap-2 mb-2'>
 						<TextField
 							type='text'
-							label='Tópico'
+							label={isGralf ? 'Tópico raíz del medidor' : 'Tópico'}
 							{...register('topic', { required: 'Este campo es requerido' })}
 							error={!!errors.topic}
 							helperText={errors.topic && errors.topic.message}
 							size='small'
 							sx={{ flex: '2 1 260px' }}
 						/>
-						<TextField
-							type='text'
-							label='Field'
-							{...register('field', { required: 'Este campo es requerido' })}
-							error={!!errors.field}
-							helperText={errors.field && errors.field.message}
-							size='small'
-							sx={{ flex: '1 1 180px' }}
-						/>
+						{!isGralf && (
+							<TextField
+								type='text'
+								label='Field'
+								{...register('field', { required: isGralf ? false : 'Este campo es requerido' })}
+								error={!!errors.field}
+								helperText={errors.field && errors.field.message}
+								size='small'
+								sx={{ flex: '1 1 180px' }}
+							/>
+						)}
 					</div>
+					{!isGralf && (
 					<div className='flex flex-wrap gap-3'>
 						<TextField
 							type='number'
@@ -437,6 +551,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 							<MenuItem value='min'>Mínimo</MenuItem>
 						</TextField>
 					</div>
+					)}
 				</Box>
 			)}
 
@@ -559,7 +674,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 					disableElevation
 					size='small'
 					startIcon={<Save sx={{ fontSize: 16 }} />}
-					onClick={handleSubmit(onSubmit)}
+					onClick={isGralf ? onSubmitGralf : handleSubmit(onSubmit)}
 					sx={primarySaveSx}
 				>
 					Guardar variable
