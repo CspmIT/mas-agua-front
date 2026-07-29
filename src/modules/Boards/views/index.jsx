@@ -8,7 +8,9 @@ import BoardChart from '../../Charts/components/BoardChart'
 const Boards = () => {
   const [boards, setBoards] = useState([])
   const [chartsMap, setChartsMap] = useState({})
+  const [seriesChartsMap, setSeriesChartsMap] = useState({})
   const [inflValues, setInflValues] = useState({})
+  const [lastUpdate, setLastUpdate] = useState(null)
   const intervalRef = useRef(null)
 
 
@@ -49,6 +51,23 @@ const Boards = () => {
       setBoards(boardsOnly)
       setChartsMap(chartMap)
 
+      // Charts de series (LineChart) para los minigráficos: vienen de
+      // /dashboardCharts porque /indicatorCharts los excluye. Si falla,
+      // el tablero se muestra igual, sin columna derecha.
+      try {
+        const { data: seriesCharts } = await request(
+          `${backend['Mas Agua']}/dashboardCharts`,
+          'GET'
+        )
+        const seriesMap = {}
+        ;(seriesCharts || []).forEach((chart) => {
+          if (chart.type === 'LineChart') seriesMap[chart.id] = chart
+        })
+        setSeriesChartsMap(seriesMap)
+      } catch (error) {
+        console.error('Error cargando charts de series:', error)
+      }
+
       // 3️⃣ Influx
       const allVars = extractInfluxVars(data)
       fetchMultipleData(allVars)
@@ -76,6 +95,7 @@ const Boards = () => {
         allVars
       )
       setInflValues(data)
+      setLastUpdate(new Date())
     } catch (error) {
       console.error('Error multipleDataInflux:', error)
     }
@@ -100,15 +120,43 @@ const Boards = () => {
         const topRightChart =
           chartsMap[cfg['board.top.rightChartId']] || null
 
+        const parseIds = (key) => {
+          try {
+            const ids = JSON.parse(cfg[key] || '[]')
+            return Array.isArray(ids) ? ids : []
+          } catch {
+            return []
+          }
+        }
+        const resolveCharts = (ids) =>
+          ids.map((id) => seriesChartsMap[id]).filter(Boolean)
+
+        const miniCharts = resolveCharts(parseIds('board.mini.chartIds'))
+
+        // Históricos asociados a elementos del tablero (drawers)
+        const drawers = {
+          topLeft: resolveCharts(parseIds('board.drawer.topLeft')),
+          topRight: resolveCharts(parseIds('board.drawer.topRight')),
+          level: resolveCharts(parseIds('board.drawer.level')),
+          pumping: resolveCharts(parseIds('board.drawer.pumping')),
+          room: [0, 1, 2, 3].map((i) =>
+            resolveCharts(parseIds(`board.drawer.room.item${i}`))
+          ),
+        }
+
+        // La minivista es densa: cada tablero ocupa el ancho completo.
         return (
-          <Grid item xs={12} md={6} key={board.id}>
+          <Grid item xs={12} key={board.id}>
             <BoardChart
               title={board.name}
               ChartData={board.ChartData}
               ChartConfig={board.ChartConfig}
               topLeftChart={topLeftChart}
               topRightChart={topRightChart}
+              miniCharts={miniCharts}
+              drawers={drawers}
               inflValues={inflValues}
+              lastUpdate={lastUpdate}
             />
           </Grid>
         )

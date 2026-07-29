@@ -1,7 +1,9 @@
-import { memo, useMemo } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { ChartComponentDbWrapper } from '../../home/components/ChartComponentDbWrapper'
 import CirclePorcentaje from '../../Charts/components/CirclePorcentaje'
 import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
+import BoardMiniChart from './BoardMiniChart'
+import BoardHistoryDrawer from './BoardHistoryDrawer'
 
 const chartComponents = {
     LiquidFillPorcentaje,
@@ -80,21 +82,88 @@ const Eyebrow = ({ children }) => (
     </span>
 )
 
-/** Panel base con título tipo eyebrow y borde/superficie suaves. */
-const SectionPanel = ({ title, action, children, className = '' }) => (
-    <section
-        className={`rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden ${className}`}
+/** Flecha de sección colapsable / drawer. */
+const Chevron = ({ open, className = 'w-4 h-4' }) => (
+    <svg
+        viewBox='0 0 24 24'
+        fill='none'
+        stroke='currentColor'
+        strokeWidth={2.4}
+        strokeLinecap='round'
+        strokeLinejoin='round'
+        className={`${className} shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
     >
-        <div className='flex items-center justify-between gap-2 px-3.5 py-1 border-b border-[#1f4e79]/8 dark:border-white/5'>
-            <div className='flex items-center gap-2 min-w-0'>
-                <span className='inline-block w-1.5 h-1.5 rounded-full bg-[#368bed]' aria-hidden />
-                <Eyebrow>{title}</Eyebrow>
-            </div>
-            {action}
-        </div>
-        {children}
-    </section>
+        <path d='M6 9l6 6 6-6' />
+    </svg>
 )
+
+/** Botón "Históricos" para headers de sección: abre el drawer del elemento. */
+const HistoryChip = ({ open, onClick }) => (
+    <button
+        type='button'
+        onClick={(e) => {
+            e.stopPropagation()
+            onClick()
+        }}
+        className={[
+            'inline-flex items-center gap-1 h-6 pl-2 pr-1.5 rounded-full border border-solid bg-transparent p-0',
+            'text-[10.5px] font-semibold cursor-pointer transition-colors',
+            open
+                ? 'border-[#368bed]/50 bg-[#368bed]/10 text-[#1f4e79] dark:text-[#7fb6ef]'
+                : 'border-[#1f4e79]/15 dark:border-white/15 text-slate-500 dark:text-slate-400 hover:border-[#368bed]/40 hover:text-[#1f4e79] dark:hover:text-[#7fb6ef]',
+        ].join(' ')}
+    >
+        <TileIcon name='activity' className='w-3 h-3' />
+        Históricos
+        <Chevron open={open} className='w-3 h-3 text-current' />
+    </button>
+)
+
+/** Panel base con título tipo eyebrow, colapsable desde el header. */
+const SectionPanel = ({ title, action, children, defaultOpen = true, className = '' }) => {
+    const [open, setOpen] = useState(defaultOpen)
+    return (
+        <section
+            className={`rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden ${className}`}
+        >
+            {/* Header como div-botón: la zona de acciones puede contener botones
+                reales (HistoryChip) sin anidar button dentro de button. */}
+            <div
+                role='button'
+                tabIndex={0}
+                onClick={() => setOpen((o) => !o)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setOpen((o) => !o)
+                    }
+                }}
+                aria-expanded={open}
+                className={`w-full flex items-center justify-between gap-2 px-3.5 py-1.5 cursor-pointer select-none transition-colors hover:bg-[#368bed]/[0.04] ${
+                    open ? 'border-b border-solid border-[#1f4e79]/8 dark:border-white/5' : ''
+                }`}
+            >
+                <div className='flex items-center gap-2 min-w-0'>
+                    <span className='inline-block w-1.5 h-1.5 rounded-full bg-[#368bed]' aria-hidden />
+                    <Eyebrow>{title}</Eyebrow>
+                </div>
+                <div className='flex items-center gap-2 min-w-0'>
+                    {action}
+                    <Chevron open={open} className='w-4 h-4 text-slate-400 dark:text-slate-500' />
+                </div>
+            </div>
+            {/* Colapso por max-height: la transición de grid-template-rows con fr
+                queda colgada en Chromium embebido, así que no usamos ese truco. */}
+            <div
+                className={`overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+                    open ? 'max-h-[1200px]' : 'max-h-0'
+                }`}
+            >
+                {children}
+            </div>
+        </section>
+    )
+}
 
 /** Convierte #rrggbb + alpha (0..1) en hex de 8 dígitos. */
 const hexA = (hex, alpha) =>
@@ -196,13 +265,15 @@ const MetricRow = ({ label, value, suffix, tint, icon, chipText }) => {
     )
 }
 
-/** Tile de Sala: chip identitario, valor protagonista y medidor según variable. */
-const RoomTile = ({ label, value, suffix }) => {
+/** Tile de Sala: chip identitario, valor protagonista y medidor según variable.
+ * Si recibe onToggleHistory, el tile es clickeable y abre su drawer de históricos. */
+const RoomTile = ({ label, value, suffix, historyOpen = false, onToggleHistory = null }) => {
     const hasData = value !== null && value !== undefined && value !== 'Sin datos'
     const { tint, icon, meter } = resolveRoomVisual(label)
     const isBool = typeof value === 'boolean'
     const boolOn = isBool && value === true
     const num = typeof value === 'number' && Number.isFinite(value) ? value : null
+    const clickable = typeof onToggleHistory === 'function'
 
     const valueClass = !hasData
         ? 'text-[17px] text-slate-300 dark:text-slate-600'
@@ -214,14 +285,36 @@ const RoomTile = ({ label, value, suffix }) => {
 
     return (
         <div
+            role={clickable ? 'button' : undefined}
+            tabIndex={clickable ? 0 : undefined}
+            onClick={clickable ? onToggleHistory : undefined}
+            onKeyDown={
+                clickable
+                    ? (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              onToggleHistory()
+                          }
+                      }
+                    : undefined
+            }
             className={[
                 'relative overflow-hidden rounded-xl border bg-white dark:bg-white/[0.025] px-3 py-2',
                 'transition-transform duration-150 hover:-translate-y-px',
-                hasData
+                clickable ? 'cursor-pointer select-none' : '',
+                historyOpen
+                    ? 'border-[#368bed]/50 dark:border-[#368bed]/40'
+                    : hasData
                     ? 'border-[#1f4e79]/10 dark:border-white/10'
                     : 'border-dashed border-[#1f4e79]/15 dark:border-white/15',
             ].join(' ')}
         >
+            {/* Indicador de drawer disponible */}
+            {clickable && (
+                <span className='absolute top-1.5 right-1.5 text-slate-300 dark:text-slate-600'>
+                    <Chevron open={historyOpen} className='w-3 h-3' />
+                </span>
+            )}
             {/* Lavado de color en la esquina superior izquierda */}
             {hasData && (
                 <div
@@ -300,6 +393,26 @@ const RoomTile = ({ label, value, suffix }) => {
     )
 }
 
+/** Pill de valor actual (Nivel de pozo): azul con dato, gris sin datos. */
+const ValuePill = ({ value, suffix }) => {
+    const hasData = value !== null && value !== undefined && value !== 'Sin datos'
+    return (
+        <span
+            className={[
+                'inline-flex items-baseline gap-1 h-7 px-3 rounded-full border text-[13px] font-semibold tabular-nums items-center',
+                hasData
+                    ? 'bg-[#368bed]/10 border-[#368bed]/30 text-[#1f4e79] dark:text-[#7fb6ef]'
+                    : 'bg-slate-100/70 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400',
+            ].join(' ')}
+        >
+            {formatValue(value)}
+            {hasData && suffix ? (
+                <span className='text-[11px] font-medium opacity-70'>{suffix.trim()}</span>
+            ) : null}
+        </span>
+    )
+}
+
 /** Pill protagonista del estado de bombeo. */
 const StatusPill = ({ text }) => {
     const isOn = text === 'ENCENDIDO'
@@ -343,10 +456,33 @@ const BoardChart = memo(
 
         topLeftChart = null,
         topRightChart = null,
+        miniCharts = [],
+        // Históricos asociados a elementos: { topLeft: [], topRight: [],
+        // pumping: [], room: [[],[],[],[]] } (arrays de charts LineChart).
+        drawers = {},
+        // La vista previa de ConfigBoardChart es angosta: fuerza una columna.
+        singleColumn = false,
+        // Fecha del último refresco de valores (la setea la vista de Boards).
+        lastUpdate = null,
 
         ChartData = [],
         ChartConfig = [],
     }) => {
+        // Un solo drawer abierto a la vez (acordeón)
+        const [openDrawer, setOpenDrawer] = useState(null)
+        const drawersRef = useRef(null)
+
+        const toggleDrawer = (key) =>
+            setOpenDrawer((prev) => (prev === key ? null : key))
+
+        // Al abrir un drawer, acercarlo a la vista una vez que terminó de expandirse
+        useEffect(() => {
+            if (!openDrawer || !drawersRef.current) return
+            const t = setTimeout(() => {
+                drawersRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+            }, 320)
+            return () => clearTimeout(t)
+        }, [openDrawer])
 
         const cfg = useMemo(() => normalizeChartProps(ChartConfig), [ChartConfig])
 
@@ -364,12 +500,18 @@ const BoardChart = memo(
             return dataByKey.get(key) || null
         }
 
+        const levelItem = getItem('board.level.value')
         const pumpingStatusItem = getItem('board.pumping.status')
         const pumpingRuntimeItem = getItem('board.pumping.runtime')
         const pumpingStartsItem = getItem('board.pumping.starts')
         const pumpingL1Item = getItem('board.pumping.currentL1')
         const pumpingL2Item = getItem('board.pumping.currentL2')
         const pumpingL3Item = getItem('board.pumping.currentL3')
+
+        const levelValue = resolveValue(levelItem, inflValues)
+        const levelLabel =
+            levelItem?.label ?? cfg['board.level.value.label'] ?? 'Profundidad al agua'
+        const levelHasHistory = (drawers.level || []).length > 0
 
         const pumpingStatusValue = resolveValue(pumpingStatusItem, inflValues)
         const pumpingRuntimeValue = resolveValue(pumpingRuntimeItem, inflValues)
@@ -458,13 +600,10 @@ const BoardChart = memo(
             )
         }
 
-        // Altura bloqueada a ~una pantalla para que el tablero entre completo en 720p.
-        // El offset (~100px) cubre el navbar (pt-16 = 64px) + el gutter superior del
-        // Grid, dejando un respiro abajo. La fila de charts es flex-1 y absorbe todo el
-        // espacio restante; Bombeo/Sala conservan su alto natural. Subir/bajar el offset
-        // es el único dial: menos px = charts más grandes (con menos respiro abajo).
+        // Minivista de pozo: altura natural (la página scrollea). Deja de bloquearse
+        // a una pantalla porque el tablero ahora crece con drawers y minigráficos.
         return (
-            <div className='w-full md:h-[calc(100dvh-100px)] min-h-[420px] rounded-3xl border border-[#1f4e79]/8 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-[0_2px_8px_rgba(15,42,68,0.05),0_24px_56px_-30px_rgba(15,42,68,0.28)] overflow-hidden flex flex-col'>
+            <div className='w-full rounded-3xl border border-[#1f4e79]/8 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-[0_2px_8px_rgba(15,42,68,0.05),0_24px_56px_-30px_rgba(15,42,68,0.28)] overflow-hidden'>
                 {/* HEADER */}
                 <div className='relative px-3.5 py-2.5 bg-gradient-to-br from-[#2c6aa0] to-[#1f4e79] overflow-hidden'>
                     {/* Textura de puntos sutil */}
@@ -482,27 +621,135 @@ const BoardChart = memo(
                         <h1 className='text-[16px] font-medium tracking-tight leading-tight line-clamp-2 text-white'>
                             {title || 'Tablero'}
                         </h1>
+                        {lastUpdate && (
+                            <span className='shrink-0 text-[11.5px] text-white/75'>
+                                Última actualización{' '}
+                                <b className='font-semibold tabular-nums text-white'>
+                                    {new Date(lastUpdate).toLocaleString('es-AR', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        hour12: false,
+                                    }).replace(',', '')}
+                                </b>
+                            </span>
+                        )}
                     </div>
                 </div>
 
-                <div className='p-2.5 flex flex-col gap-2 md:flex-1 md:min-h-0'>
-                    {/* TOP — gráficos (absorben el espacio vertical sobrante) */}
-                    <div className='flex flex-col md:flex-row gap-2 md:flex-1 md:min-h-0'>
-                        {[topLeftChart, topRightChart].map((chart, idx) => (
-                            <div
-                                key={idx}
-                                className='h-[220px] md:h-auto md:flex-1 min-w-0 md:min-h-0 overflow-hidden rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900/40 dark:to-slate-900/10 shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-1.5 flex items-center justify-center'
-                            >
-                                {renderTopChart(chart)}
-                            </div>
-                        ))}
+                {/* Layout minivista: columna principal a la izquierda; a la derecha,
+                    los minigráficos históricos configurados para el tablero. */}
+                <div
+                    className={`p-2 grid grid-cols-1 gap-2 ${
+                        miniCharts.length > 0 && !singleColumn ? 'xl:grid-cols-[42fr_58fr]' : ''
+                    }`}
+                >
+                    <div className='flex flex-col gap-2 min-w-0'>
+                    {/* TOP — gráficos de valor actual (clickeables si tienen históricos) */}
+                    <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+                        {[
+                            { chart: topLeftChart, drawerKey: 'topLeft' },
+                            { chart: topRightChart, drawerKey: 'topRight' },
+                        ].map(({ chart, drawerKey }, idx) => {
+                            const hasHistory = (drawers[drawerKey] || []).length > 0
+                            const isOpen = openDrawer === drawerKey
+                            return (
+                                <div
+                                    key={idx}
+                                    role={hasHistory ? 'button' : undefined}
+                                    tabIndex={hasHistory ? 0 : undefined}
+                                    onClick={hasHistory ? () => toggleDrawer(drawerKey) : undefined}
+                                    onKeyDown={
+                                        hasHistory
+                                            ? (e) => {
+                                                  if (e.key === 'Enter' || e.key === ' ') {
+                                                      e.preventDefault()
+                                                      toggleDrawer(drawerKey)
+                                                  }
+                                              }
+                                            : undefined
+                                    }
+                                    className={[
+                                        'relative h-[260px] min-w-0 overflow-hidden rounded-2xl border bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900/40 dark:to-slate-900/10 shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-1.5 flex items-center justify-center',
+                                        hasHistory ? 'cursor-pointer select-none' : '',
+                                        isOpen
+                                            ? 'border-[#368bed]/50 dark:border-[#368bed]/40'
+                                            : 'border-[#1f4e79]/10 dark:border-white/10',
+                                    ].join(' ')}
+                                >
+                                    {hasHistory && (
+                                        <span className='absolute top-2 right-2 z-10 text-slate-300 dark:text-slate-600'>
+                                            <Chevron open={isOpen} className='w-3.5 h-3.5' />
+                                        </span>
+                                    )}
+                                    {renderTopChart(chart)}
+                                </div>
+                            )
+                        })}
                     </div>
+
+                    {/* NIVEL DE POZO — franja con valor actual; el drawer trae el histórico */}
+                    {levelItem && (
+                        <section className='rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden'>
+                            <div
+                                role={levelHasHistory ? 'button' : undefined}
+                                tabIndex={levelHasHistory ? 0 : undefined}
+                                onClick={levelHasHistory ? () => toggleDrawer('level') : undefined}
+                                onKeyDown={
+                                    levelHasHistory
+                                        ? (e) => {
+                                              if (e.key === 'Enter' || e.key === ' ') {
+                                                  e.preventDefault()
+                                                  toggleDrawer('level')
+                                              }
+                                          }
+                                        : undefined
+                                }
+                                className={`w-full flex items-center justify-between gap-2 px-3.5 py-1.5 ${
+                                    levelHasHistory
+                                        ? 'cursor-pointer select-none transition-colors hover:bg-[#368bed]/[0.04]'
+                                        : ''
+                                }`}
+                            >
+                                <div className='flex items-center gap-2 min-w-0'>
+                                    <span
+                                        className='inline-block w-1.5 h-1.5 rounded-full bg-[#368bed]'
+                                        aria-hidden
+                                    />
+                                    <Eyebrow>Nivel de pozo</Eyebrow>
+                                </div>
+                                <div className='flex items-center gap-2 min-w-0'>
+                                    <span className='hidden sm:inline text-[11px] font-medium text-slate-400 dark:text-slate-500 truncate'>
+                                        {levelLabel}
+                                    </span>
+                                    <ValuePill
+                                        value={levelValue}
+                                        suffix={formatUnit(levelItem, levelValue)}
+                                    />
+                                    {levelHasHistory && (
+                                        <Chevron
+                                            open={openDrawer === 'level'}
+                                            className='w-4 h-4 text-slate-400 dark:text-slate-500'
+                                        />
+                                    )}
+                                </div>
+                            </div>
+                        </section>
+                    )}
 
                     {/* BOMBEO */}
                     <SectionPanel
                         title='Bombeo'
                         action={
                             <div className='flex items-center gap-2 min-w-0'>
+                                {(drawers.pumping || []).length > 0 && (
+                                    <HistoryChip
+                                        open={openDrawer === 'pumping'}
+                                        onClick={() => toggleDrawer('pumping')}
+                                    />
+                                )}
                                 <span className='hidden sm:inline text-[11px] font-medium text-slate-400 dark:text-slate-500 truncate'>
                                     {pumpingStatusLabel}
                                 </span>
@@ -559,17 +806,52 @@ const BoardChart = memo(
                         <div className='p-2 grid grid-cols-2 md:grid-cols-4 gap-2'>
                             {roomItems.map((item, idx) => {
                                 const value = resolveValue(item, inflValues)
+                                const hasHistory = (drawers.room?.[idx] || []).length > 0
                                 return (
                                     <RoomTile
                                         key={idx}
                                         label={item.label}
                                         value={value}
                                         suffix={formatUnit(item, value)}
+                                        historyOpen={openDrawer === `room${idx}`}
+                                        onToggleHistory={
+                                            hasHistory ? () => toggleDrawer(`room${idx}`) : null
+                                        }
                                     />
                                 )
                             })}
                         </div>
                     </SectionPanel>
+                    </div>
+
+                    {/* Columna derecha: minigráficos históricos */}
+                    {miniCharts.length > 0 && (
+                        <div className='flex flex-col gap-2 min-w-0'>
+                            {miniCharts.map((chart) => (
+                                <BoardMiniChart key={chart.id} chart={chart} />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Drawers de históricos asociados (ancho completo, debajo de todo) */}
+                    <div ref={drawersRef} className='col-span-full empty:hidden'>
+                        {[
+                            { key: 'topLeft', charts: drawers.topLeft || [] },
+                            { key: 'topRight', charts: drawers.topRight || [] },
+                            { key: 'level', charts: drawers.level || [] },
+                            { key: 'pumping', charts: drawers.pumping || [] },
+                            ...[0, 1, 2, 3].map((i) => ({
+                                key: `room${i}`,
+                                charts: drawers.room?.[i] || [],
+                            })),
+                        ].map(({ key, charts }) => (
+                            <BoardHistoryDrawer
+                                key={key}
+                                open={openDrawer === key}
+                                charts={charts}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
         )
