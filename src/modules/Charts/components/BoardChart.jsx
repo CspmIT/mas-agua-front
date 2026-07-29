@@ -1,8 +1,9 @@
-import { memo, useMemo, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { ChartComponentDbWrapper } from '../../home/components/ChartComponentDbWrapper'
 import CirclePorcentaje from '../../Charts/components/CirclePorcentaje'
 import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
 import BoardMiniChart from './BoardMiniChart'
+import BoardHistoryDrawer from './BoardHistoryDrawer'
 
 const chartComponents = {
     LiquidFillPorcentaje,
@@ -81,8 +82,8 @@ const Eyebrow = ({ children }) => (
     </span>
 )
 
-/** Flecha de sección colapsable. */
-const Chevron = ({ open }) => (
+/** Flecha de sección colapsable / drawer. */
+const Chevron = ({ open, className = 'w-4 h-4' }) => (
     <svg
         viewBox='0 0 24 24'
         fill='none'
@@ -90,10 +91,32 @@ const Chevron = ({ open }) => (
         strokeWidth={2.4}
         strokeLinecap='round'
         strokeLinejoin='round'
-        className={`w-4 h-4 shrink-0 text-slate-400 dark:text-slate-500 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+        className={`${className} shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
     >
         <path d='M6 9l6 6 6-6' />
     </svg>
+)
+
+/** Botón "Históricos" para headers de sección: abre el drawer del elemento. */
+const HistoryChip = ({ open, onClick }) => (
+    <button
+        type='button'
+        onClick={(e) => {
+            e.stopPropagation()
+            onClick()
+        }}
+        className={[
+            'inline-flex items-center gap-1 h-6 pl-2 pr-1.5 rounded-full border border-solid bg-transparent p-0',
+            'text-[10.5px] font-semibold cursor-pointer transition-colors',
+            open
+                ? 'border-[#368bed]/50 bg-[#368bed]/10 text-[#1f4e79] dark:text-[#7fb6ef]'
+                : 'border-[#1f4e79]/15 dark:border-white/15 text-slate-500 dark:text-slate-400 hover:border-[#368bed]/40 hover:text-[#1f4e79] dark:hover:text-[#7fb6ef]',
+        ].join(' ')}
+    >
+        <TileIcon name='activity' className='w-3 h-3' />
+        Históricos
+        <Chevron open={open} className='w-3 h-3 text-current' />
+    </button>
 )
 
 /** Panel base con título tipo eyebrow, colapsable desde el header. */
@@ -103,11 +126,20 @@ const SectionPanel = ({ title, action, children, defaultOpen = true, className =
         <section
             className={`rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden ${className}`}
         >
-            <button
-                type='button'
+            {/* Header como div-botón: la zona de acciones puede contener botones
+                reales (HistoryChip) sin anidar button dentro de button. */}
+            <div
+                role='button'
+                tabIndex={0}
                 onClick={() => setOpen((o) => !o)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        setOpen((o) => !o)
+                    }
+                }}
                 aria-expanded={open}
-                className={`w-full flex items-center justify-between gap-2 px-3.5 py-1.5 bg-transparent border-0 cursor-pointer text-left transition-colors hover:bg-[#368bed]/[0.04] ${
+                className={`w-full flex items-center justify-between gap-2 px-3.5 py-1.5 cursor-pointer select-none transition-colors hover:bg-[#368bed]/[0.04] ${
                     open ? 'border-b border-solid border-[#1f4e79]/8 dark:border-white/5' : ''
                 }`}
             >
@@ -117,9 +149,9 @@ const SectionPanel = ({ title, action, children, defaultOpen = true, className =
                 </div>
                 <div className='flex items-center gap-2 min-w-0'>
                     {action}
-                    <Chevron open={open} />
+                    <Chevron open={open} className='w-4 h-4 text-slate-400 dark:text-slate-500' />
                 </div>
-            </button>
+            </div>
             {/* Colapso por max-height: la transición de grid-template-rows con fr
                 queda colgada en Chromium embebido, así que no usamos ese truco. */}
             <div
@@ -233,13 +265,15 @@ const MetricRow = ({ label, value, suffix, tint, icon, chipText }) => {
     )
 }
 
-/** Tile de Sala: chip identitario, valor protagonista y medidor según variable. */
-const RoomTile = ({ label, value, suffix }) => {
+/** Tile de Sala: chip identitario, valor protagonista y medidor según variable.
+ * Si recibe onToggleHistory, el tile es clickeable y abre su drawer de históricos. */
+const RoomTile = ({ label, value, suffix, historyOpen = false, onToggleHistory = null }) => {
     const hasData = value !== null && value !== undefined && value !== 'Sin datos'
     const { tint, icon, meter } = resolveRoomVisual(label)
     const isBool = typeof value === 'boolean'
     const boolOn = isBool && value === true
     const num = typeof value === 'number' && Number.isFinite(value) ? value : null
+    const clickable = typeof onToggleHistory === 'function'
 
     const valueClass = !hasData
         ? 'text-[17px] text-slate-300 dark:text-slate-600'
@@ -251,14 +285,36 @@ const RoomTile = ({ label, value, suffix }) => {
 
     return (
         <div
+            role={clickable ? 'button' : undefined}
+            tabIndex={clickable ? 0 : undefined}
+            onClick={clickable ? onToggleHistory : undefined}
+            onKeyDown={
+                clickable
+                    ? (e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              onToggleHistory()
+                          }
+                      }
+                    : undefined
+            }
             className={[
                 'relative overflow-hidden rounded-xl border bg-white dark:bg-white/[0.025] px-3 py-2',
                 'transition-transform duration-150 hover:-translate-y-px',
-                hasData
+                clickable ? 'cursor-pointer select-none' : '',
+                historyOpen
+                    ? 'border-[#368bed]/50 dark:border-[#368bed]/40'
+                    : hasData
                     ? 'border-[#1f4e79]/10 dark:border-white/10'
                     : 'border-dashed border-[#1f4e79]/15 dark:border-white/15',
             ].join(' ')}
         >
+            {/* Indicador de drawer disponible */}
+            {clickable && (
+                <span className='absolute top-1.5 right-1.5 text-slate-300 dark:text-slate-600'>
+                    <Chevron open={historyOpen} className='w-3 h-3' />
+                </span>
+            )}
             {/* Lavado de color en la esquina superior izquierda */}
             {hasData && (
                 <div
@@ -381,6 +437,9 @@ const BoardChart = memo(
         topLeftChart = null,
         topRightChart = null,
         miniCharts = [],
+        // Históricos asociados a elementos: { topLeft: [], topRight: [],
+        // pumping: [], room: [[],[],[],[]] } (arrays de charts LineChart).
+        drawers = {},
         // La vista previa de ConfigBoardChart es angosta: fuerza una columna.
         singleColumn = false,
         // Fecha del último refresco de valores (la setea la vista de Boards).
@@ -389,6 +448,21 @@ const BoardChart = memo(
         ChartData = [],
         ChartConfig = [],
     }) => {
+        // Un solo drawer abierto a la vez (acordeón)
+        const [openDrawer, setOpenDrawer] = useState(null)
+        const drawersRef = useRef(null)
+
+        const toggleDrawer = (key) =>
+            setOpenDrawer((prev) => (prev === key ? null : key))
+
+        // Al abrir un drawer, acercarlo a la vista una vez que terminó de expandirse
+        useEffect(() => {
+            if (!openDrawer || !drawersRef.current) return
+            const t = setTimeout(() => {
+                drawersRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+            }, 320)
+            return () => clearTimeout(t)
+        }, [openDrawer])
 
         const cfg = useMemo(() => normalizeChartProps(ChartConfig), [ChartConfig])
 
@@ -547,16 +621,47 @@ const BoardChart = memo(
                     }`}
                 >
                     <div className='flex flex-col gap-2 min-w-0'>
-                    {/* TOP — gráficos de valor actual */}
+                    {/* TOP — gráficos de valor actual (clickeables si tienen históricos) */}
                     <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
-                        {[topLeftChart, topRightChart].map((chart, idx) => (
-                            <div
-                                key={idx}
-                                className='h-[260px] min-w-0 overflow-hidden rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900/40 dark:to-slate-900/10 shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-1.5 flex items-center justify-center'
-                            >
-                                {renderTopChart(chart)}
-                            </div>
-                        ))}
+                        {[
+                            { chart: topLeftChart, drawerKey: 'topLeft' },
+                            { chart: topRightChart, drawerKey: 'topRight' },
+                        ].map(({ chart, drawerKey }, idx) => {
+                            const hasHistory = (drawers[drawerKey] || []).length > 0
+                            const isOpen = openDrawer === drawerKey
+                            return (
+                                <div
+                                    key={idx}
+                                    role={hasHistory ? 'button' : undefined}
+                                    tabIndex={hasHistory ? 0 : undefined}
+                                    onClick={hasHistory ? () => toggleDrawer(drawerKey) : undefined}
+                                    onKeyDown={
+                                        hasHistory
+                                            ? (e) => {
+                                                  if (e.key === 'Enter' || e.key === ' ') {
+                                                      e.preventDefault()
+                                                      toggleDrawer(drawerKey)
+                                                  }
+                                              }
+                                            : undefined
+                                    }
+                                    className={[
+                                        'relative h-[260px] min-w-0 overflow-hidden rounded-2xl border bg-gradient-to-b from-white to-slate-50/60 dark:from-slate-900/40 dark:to-slate-900/10 shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-1.5 flex items-center justify-center',
+                                        hasHistory ? 'cursor-pointer select-none' : '',
+                                        isOpen
+                                            ? 'border-[#368bed]/50 dark:border-[#368bed]/40'
+                                            : 'border-[#1f4e79]/10 dark:border-white/10',
+                                    ].join(' ')}
+                                >
+                                    {hasHistory && (
+                                        <span className='absolute top-2 right-2 z-10 text-slate-300 dark:text-slate-600'>
+                                            <Chevron open={isOpen} className='w-3.5 h-3.5' />
+                                        </span>
+                                    )}
+                                    {renderTopChart(chart)}
+                                </div>
+                            )
+                        })}
                     </div>
 
                     {/* BOMBEO */}
@@ -564,6 +669,12 @@ const BoardChart = memo(
                         title='Bombeo'
                         action={
                             <div className='flex items-center gap-2 min-w-0'>
+                                {(drawers.pumping || []).length > 0 && (
+                                    <HistoryChip
+                                        open={openDrawer === 'pumping'}
+                                        onClick={() => toggleDrawer('pumping')}
+                                    />
+                                )}
                                 <span className='hidden sm:inline text-[11px] font-medium text-slate-400 dark:text-slate-500 truncate'>
                                     {pumpingStatusLabel}
                                 </span>
@@ -620,12 +731,17 @@ const BoardChart = memo(
                         <div className='p-2 grid grid-cols-2 md:grid-cols-4 gap-2'>
                             {roomItems.map((item, idx) => {
                                 const value = resolveValue(item, inflValues)
+                                const hasHistory = (drawers.room?.[idx] || []).length > 0
                                 return (
                                     <RoomTile
                                         key={idx}
                                         label={item.label}
                                         value={value}
                                         suffix={formatUnit(item, value)}
+                                        historyOpen={openDrawer === `room${idx}`}
+                                        onToggleHistory={
+                                            hasHistory ? () => toggleDrawer(`room${idx}`) : null
+                                        }
                                     />
                                 )
                             })}
@@ -641,6 +757,25 @@ const BoardChart = memo(
                             ))}
                         </div>
                     )}
+
+                    {/* Drawers de históricos asociados (ancho completo, debajo de todo) */}
+                    <div ref={drawersRef} className='col-span-full empty:hidden'>
+                        {[
+                            { key: 'topLeft', charts: drawers.topLeft || [] },
+                            { key: 'topRight', charts: drawers.topRight || [] },
+                            { key: 'pumping', charts: drawers.pumping || [] },
+                            ...[0, 1, 2, 3].map((i) => ({
+                                key: `room${i}`,
+                                charts: drawers.room?.[i] || [],
+                            })),
+                        ].map(({ key, charts }) => (
+                            <BoardHistoryDrawer
+                                key={key}
+                                open={openDrawer === key}
+                                charts={charts}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
         )

@@ -120,15 +120,28 @@ const Boards = () => {
         const topRightChart =
           chartsMap[cfg['board.top.rightChartId']] || null
 
-        let miniChartIds = []
-        try {
-          miniChartIds = JSON.parse(cfg['board.mini.chartIds'] || '[]')
-        } catch {
-          miniChartIds = []
+        const parseIds = (key) => {
+          try {
+            const ids = JSON.parse(cfg[key] || '[]')
+            return Array.isArray(ids) ? ids : []
+          } catch {
+            return []
+          }
         }
-        const miniCharts = miniChartIds
-          .map((id) => seriesChartsMap[id])
-          .filter(Boolean)
+        const resolveCharts = (ids) =>
+          ids.map((id) => seriesChartsMap[id]).filter(Boolean)
+
+        const miniCharts = resolveCharts(parseIds('board.mini.chartIds'))
+
+        // Históricos asociados a elementos del tablero (drawers)
+        const drawers = {
+          topLeft: resolveCharts(parseIds('board.drawer.topLeft')),
+          topRight: resolveCharts(parseIds('board.drawer.topRight')),
+          pumping: resolveCharts(parseIds('board.drawer.pumping')),
+          room: [0, 1, 2, 3].map((i) =>
+            resolveCharts(parseIds(`board.drawer.room.item${i}`))
+          ),
+        }
 
         // La minivista es densa: cada tablero ocupa el ancho completo.
         return (
@@ -140,6 +153,7 @@ const Boards = () => {
               topLeftChart={topLeftChart}
               topRightChart={topRightChart}
               miniCharts={miniCharts}
+              drawers={drawers}
               inflValues={inflValues}
               lastUpdate={lastUpdate}
             />
