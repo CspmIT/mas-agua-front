@@ -45,10 +45,10 @@ const chartTypes = [
     },
     {
         id: 7,
-        title: 'Bombas: estado y porcentaje',
+        title: 'Panel de información',
         image: '/assets/img/charts/Bombas.png?height=200&width=200',
         description:
-            'Panel de bombas que combina el estado de marcha/paro de cada una con su porcentaje asociado.',
+            'Mini tablero con estados destacados y tarjetas de label + valor actual de cada variable (números, textos, booleanos o bits). Pensado para bombas, pero sirve para agrupar cualquier información importante.',
         bomb: true,
         disabled: false,
     },
