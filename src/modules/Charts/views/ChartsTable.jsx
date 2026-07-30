@@ -93,12 +93,11 @@ const ChartsTable = () => {
         Cell: ({ row }) => (
           <ActionsRow>
             <EditChip
-              disabled={row.original.type === 'PumpControl'}
               onClick={() => {
                 const type = row.original.type
                 if (type === 'BooleanChart') { navigate(`/config/graphic/boolean/${row.original.id}`); return }
                 if (type === 'MultipleBooleanChart') { navigate(`/config/graphic/multipleBoolean/${row.original.id}`); return }
-                if (type === 'PumpControl') { navigate('/config/pumps'); return }
+                if (type === 'PumpControl') { navigate(`/config/pumps/${row.original.id}`); return }
                 if (type === 'BoardChart') { navigate(`/config/graphic/board/${row.original.id}`); return }
                 if (type === 'GralfChart') { navigate(`/config/graphic/gralf/${row.original.id}`); return }
 

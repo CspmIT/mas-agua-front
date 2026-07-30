@@ -1,6 +1,6 @@
 import { Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
-import PumpControl from '../../Charts/views/ConfigBombs'
+import PumpInfoPanel from '../../Charts/components/PumpInfoPanel'
 import LiquidFillBottomInfo from './LiquidFillBottomInfo'
 import logo from '../../../assets/img/Logo/MasAgua_hexagonal.png'
 import LiquidFillPorcentaje from '../../Charts/components/LiquidFillPorcentaje'
@@ -36,7 +36,7 @@ export const ChartComponentDbWrapper = ({
         return inflValues[influxVar.id] ?? null
     }
 
-    // PumpControl: resuelve múltiples valores
+    // PumpInfoPanel: resuelve múltiples valores (número, string, bool, bits, calc_binary)
     const resolvePumpOrState = (items) => {
         return items.map((item) => {
             const id = item.varId
@@ -85,7 +85,7 @@ export const ChartComponentDbWrapper = ({
 
         if (!inflValues || Object.keys(inflValues).length === 0) return
 
-        if (ChartComponent === PumpControl) {
+        if (ChartComponent === PumpInfoPanel) {
             const updatedPumps = resolvePumpOrState(initialData.initialPumps)
             const updatedStates = resolvePumpOrState(initialData.initialStates)
 

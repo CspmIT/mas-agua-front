@@ -55,6 +55,7 @@ export const userRoutes = [
 	{ path: '/config/menu', element: <AddMenu /> },
 	{ path: '/config/graphic', element: <SelectType /> },
 	{ path: '/config/pumps', element: <PumpControl /> },
+	{ path: '/config/pumps/:id', element: <PumpControl /> },
 	{ path: '/config/graphic/boolean', element: <ConfigBooleanChart /> },
 	{ path: '/config/graphic/boolean/:id', element: <ConfigBooleanChart /> },
 	{ path: '/config/graphic/pie', element: <ConfigPie /> },
