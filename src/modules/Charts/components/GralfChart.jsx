@@ -117,7 +117,7 @@ export const GralfChartView = memo(({ title, data, series = null }) => {
         : null
 
     return (
-        <div className='rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] overflow-hidden'>
+        <div className='rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] overflow-hidden'>
             <div className='flex items-center justify-between gap-2 px-2.5 py-1.5 border-b border-[#1f4e79]/8 dark:border-white/5'>
                 <span className='inline-flex items-center rounded-full bg-gradient-to-r from-[#12456f] to-[#1f5f95] px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.11em] text-white truncate'>
                     {title || 'Monitoreo de energía'}
@@ -319,7 +319,7 @@ const GralfChart = memo(({ varId, title, refreshMs = 30000, active = true }) => 
 
     if (loader) {
         return (
-            <div className='rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] p-6 text-center text-[13px] text-slate-400 dark:text-slate-500'>
+            <div className='rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-white/[0.02] p-6 text-center text-[13px] text-slate-400 dark:text-slate-500'>
                 Cargando datos del medidor...
             </div>
         )
