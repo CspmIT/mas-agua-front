@@ -8,7 +8,7 @@ import { request } from '../../../utils/js/request'
 import Swal from 'sweetalert2'
 import { backend } from '../../../utils/routes/app.routes'
 import { storage } from '../../../storage/storage'
-import PumpControl from '../../Charts/views/ConfigBombs'
+import PumpInfoPanel from '../../Charts/components/PumpInfoPanel'
 import GaugeSpeed from '../../Charts/components/GaugeSpeed'
 import BooleanChart from '../../Charts/components/BooleanChart'
 import MultipleBooleanChart from '../../Charts/components/MultipleBooleanChart'
@@ -51,7 +51,7 @@ const chartComponents = {
     CirclePorcentaje,
     BarDataSet,
     PieChart: DoughnutChart,
-    PumpControl,
+    PumpControl: PumpInfoPanel,
     GaugeSpeed,
     BooleanChart,
     MultipleBooleanChart,
@@ -159,8 +159,10 @@ const Home = ({ targetUserId = null }) => {
             if (SERIES_CHART_TYPES.includes(chart.component)) return
 
             if (chart.component === 'PumpControl') {
+                // Se manda la variable completa: getSimpleInfluxData resuelve
+                // según sus flags (calc, binary_compressed, calc_binary, etc.)
                 const normalizePumpVar = (item) => ({
-                    dataInflux: {
+                    dataInflux: item.influxVar ?? {
                         id: item.varId,
                         name: item.name,
                         unit: item.unit ?? null,
@@ -272,8 +274,13 @@ const Home = ({ targetUserId = null }) => {
                                 id: item.id,
                                 name: item.name,
                                 varId: item.varId,
+                                id_bit: item.id_bit ?? null,
+                                as_bool: Boolean(item.as_bool),
+                                text_on: item.text_on ?? null,
+                                text_off: item.text_off ?? null,
                                 value: item.InfluxVars.varsInflux,
                                 unit: item.InfluxVars.unit,
+                                influxVar: item.InfluxVars,
                                 type: item.type
                             }
 

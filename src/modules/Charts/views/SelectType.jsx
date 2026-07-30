@@ -45,10 +45,10 @@ const chartTypes = [
     },
     {
         id: 7,
-        title: 'Bombas: estado y porcentaje',
-        image: '/assets/img/charts/Bombas.png?height=200&width=200',
+        title: 'Panel de información',
+        image: '/assets/img/charts/panel-informacion.svg?height=200&width=200',
         description:
-            'Panel de bombas que combina el estado de marcha/paro de cada una con su porcentaje asociado.',
+            'Mini tablero con estados destacados y tarjetas de label + valor actual de cada variable (números, textos, booleanos o bits). Pensado para bombas, pero sirve para agrupar cualquier información importante.',
         bomb: true,
         disabled: false,
     },
@@ -210,8 +210,10 @@ function SelectType() {
                                 alt={chart.title}
                                 className='chart-type-thumb max-h-36 object-contain transition-transform duration-300 ease-out'
                             />
+                            {/* Numeración de la lista: el id interno se usa para el
+                                ruteo y tiene huecos (ej: 5 es BarDataSet, sin card) */}
                             <div className='absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#2c6aa0] text-white text-[10px] font-semibold uppercase tracking-[0.12em] shadow-sm'>
-                                Tipo {chart.id}
+                                Tipo {index + 1}
                             </div>
                         </div>
 

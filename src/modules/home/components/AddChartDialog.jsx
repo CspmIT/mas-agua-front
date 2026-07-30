@@ -137,7 +137,7 @@ const CHART_LABELS = {
     CirclePorcentaje: { label: "Círculo %" },
     BarDataSet: { label: "Barras" },
     PieChart: { label: "Torta" },
-    PumpControl: { label: "Control de bombas" },
+    PumpControl: { label: "Panel de información" },
     GaugeSpeed: { label: "Velocímetro" },
     BooleanChart: { label: "Booleano" },
     MultipleBooleanChart: { label: "Multi-booleano" },
