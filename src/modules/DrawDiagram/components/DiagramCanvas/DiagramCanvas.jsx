@@ -8,8 +8,10 @@ import LedElement from '../WidgetElements/LedElement';
 import LinkButtonElement from '../WidgetElements/LinkButtonElement';
 import VarCardElement from '../WidgetElements/VarCardElement';
 import ActionButtonElement from '../WidgetElements/ActionButtonElement';
+import ShapeElement, { SHAPE_TYPES } from '../ShapeElements/ShapeElements';
 
 const WIDGET_COMPONENTS = { tank: TankElement, led: LedElement, linkButton: LinkButtonElement, varCard: VarCardElement, actionButton: ActionButtonElement };
+SHAPE_TYPES.forEach((type) => { WIDGET_COMPONENTS[type] = ShapeElement; });
 
 // Funcion para calcular puntos a la hora de hacer la polilinea
 const distToSegment = (p, v, w) => {
@@ -218,7 +220,7 @@ const DiagramCanvas = ({
           setStagePosition(newPos);
         }}
         style={{
-          cursor: isPanning ? 'grab' : ['simpleLine', 'polyline', 'panel', 'captureSymbol'].includes(tool) ? 'crosshair' : 'default',
+          cursor: isPanning ? 'grab' : ['simpleLine', 'polyline', 'panel', 'captureSymbol', ...SHAPE_TYPES].includes(tool) ? 'crosshair' : 'default',
         }}
       >
         <Layer onDragMove={handleLayerDragMove} onDragEnd={handleLayerDragEnd}>
@@ -583,6 +585,30 @@ const DiagramCanvas = ({
                           );
                           return;
                         }
+                        // Figuras geométricas: además del tamaño se persiste la
+                        // rotación (va dentro de config para no tocar el backend)
+                        if (SHAPE_TYPES.includes(el.type)) {
+                          const node = e.target;
+                          const newWidth = Math.max(10, node.width() * node.scaleX());
+                          const newHeight = Math.max(10, node.height() * node.scaleY());
+                          node.scaleX(1);
+                          node.scaleY(1);
+                          setElements((prev) =>
+                            prev.map((item) =>
+                              item.id === el.id
+                                ? {
+                                  ...item,
+                                  x: node.x(),
+                                  y: node.y(),
+                                  width: newWidth,
+                                  height: newHeight,
+                                  config: { ...item.config, rotation: node.rotation() },
+                                }
+                                : item
+                            )
+                          );
+                          return;
+                        }
                         handleTransformEnd(el.id, e.target);
                       }}
                     />
@@ -856,7 +882,7 @@ const DiagramCanvas = ({
             // (en el panel lo horizontal ajusta el layout y lo vertical la escala)
             const selectedEl = elements.find((el) => String(el.id) === String(selectedId));
             const isPanel = selectedEl?.type === 'panel';
-            const isFreeResize = isPanel || ['tank', 'linkButton', 'actionButton'].includes(selectedEl?.type);
+            const isFreeResize = isPanel || ['tank', 'linkButton', 'actionButton', ...SHAPE_TYPES].includes(selectedEl?.type);
             return (
               <Transformer
                 ref={transformerRef}

@@ -15,6 +15,8 @@ import SelectionToolbar from '../components/SelectionToolbar/SelectionToolbar';
 import SelectedVariableInfo from '../components/SelectionToolbar/SelectedVariableInfo';
 import BombSelector from '../components/BombControl/BombSelector';
 import ActionButtonPanel from '../components/BombControl/ActionButtonPanel';
+import ShapeStylePanel from '../components/ShapeElements/ShapeStylePanel';
+import { SHAPE_TYPES } from '../components/ShapeElements/ShapeElements';
 import { createDefaultVarCard } from '../components/WidgetElements/VarCardElement';
 import TopNavbar from '../components/TopNavbar/TopNavbar';
 import { saveDiagramKonva, uploadCanvaDb } from '../utils/js/drawActions';
@@ -855,6 +857,13 @@ const DrawDiagram = () => {
                     panel={selectedElement}
                     onChange={handlePanelChange}
                     onAssignVariableRequest={handlePanelRowVariableRequest}
+                  />
+                )}
+                {/* Editor de estilo de figuras geométricas */}
+                {SHAPE_TYPES.includes(selectedElement?.type) && (
+                  <ShapeStylePanel
+                    shape={selectedElement}
+                    onChange={handlePanelChange}
                   />
                 )}
                 {/* Panel posicion de variables */}

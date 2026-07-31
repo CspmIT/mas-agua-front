@@ -1,8 +1,9 @@
-import React from 'react';
-import { Box, IconButton, Tooltip } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, IconButton, ListItemIcon, ListItemText, Menu, MenuItem, Tooltip } from '@mui/material';
 import { RiImageAddFill } from 'react-icons/ri';
 import { MdPolyline } from 'react-icons/md';
-import { LuBoxSelect, LuCircleDot, LuDatabase, LuExternalLink, LuPanelTop, LuPower, LuShapes } from 'react-icons/lu';
+import { LuBoxSelect, LuCircle, LuCircleDot, LuDatabase, LuExternalLink, LuPanelTop, LuPower, LuShapes, LuSquare, LuTriangle } from 'react-icons/lu';
+import { SHAPE_LABELS, SHAPE_TYPES } from '../ShapeElements/ShapeElements';
 import { FaArrowRightLong } from 'react-icons/fa6';
 import { HiOutlineVariable } from 'react-icons/hi';
 import {
@@ -110,6 +111,20 @@ const Sidebar = ({
     }
   };
 
+  const [shapesMenuAnchor, setShapesMenuAnchor] = useState(null);
+
+  const SHAPE_MENU_ICONS = {
+    rect: <LuSquare size={16} />,
+    circle: <LuCircle size={16} />,
+    ellipse: <LuCircle size={16} style={{ transform: 'scaleX(1.35)' }} />,
+    triangle: <LuTriangle size={16} />,
+  };
+
+  const handlePickShape = (shapeType) => {
+    setShapesMenuAnchor(null);
+    toggleWidget(shapeType);
+  };
+
   const toggleFloatingVariable = () => {
     if (tool === 'floatingVariable') {
       setTool(null);
@@ -142,6 +157,35 @@ const Sidebar = ({
           <MdPolyline size={18} />
         </IconButton>
       </Tooltip>
+
+      <Tooltip title='Agregar figura geométrica' placement='right'>
+        <IconButton
+          onClick={(e) => setShapesMenuAnchor(e.currentTarget)}
+          sx={toolButtonSx(SHAPE_TYPES.includes(tool))}
+        >
+          <LuSquare size={18} />
+        </IconButton>
+      </Tooltip>
+      <Menu
+        anchorEl={shapesMenuAnchor}
+        open={Boolean(shapesMenuAnchor)}
+        onClose={() => setShapesMenuAnchor(null)}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+      >
+        {SHAPE_TYPES.map((shapeType) => (
+          <MenuItem
+            key={shapeType}
+            selected={tool === shapeType}
+            onClick={() => handlePickShape(shapeType)}
+          >
+            <ListItemIcon>{SHAPE_MENU_ICONS[shapeType]}</ListItemIcon>
+            <ListItemText primaryTypographyProps={{ fontSize: '0.85rem' }}>
+              {SHAPE_LABELS[shapeType]}
+            </ListItemText>
+          </MenuItem>
+        ))}
+      </Menu>
 
       <Tooltip title='Agregar texto' placement='right'>
         <IconButton onClick={toggleText} sx={toolButtonSx(tool === 'text')}>

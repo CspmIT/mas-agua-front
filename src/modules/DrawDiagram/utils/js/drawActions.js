@@ -445,6 +445,10 @@ export const saveDiagramKonva = async ({
 				case 'linkButton':
 				case 'varCard':
 				case 'actionButton':
+				case 'rect':
+				case 'circle':
+				case 'ellipse':
+				case 'triangle':
 					saveObjects.widgets.push({
 						...(el.id ? { id: getNumericId(el.id) } : {}),
 						type: el.type,
