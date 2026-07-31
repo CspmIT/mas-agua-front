@@ -20,6 +20,19 @@ import { ActionsRow, EditChip, StatusPill, StatusToggleChip, ToneChip } from '..
 
 const EXCLUDED_DASHBOARD_TYPES = ['BoardChart', 'GralfChart']
 
+// Los filtros se guardan en sessionStorage porque crear/editar un gráfico navega
+// a otra ruta: al volver, la tabla se remonta y así no se pierde lo filtrado
+const FILTERS_STORAGE_KEY = 'tableFilters:config-charts'
+const EMPTY_FILTERS = { type: '', status: '', profile: '' }
+
+const readSavedFilters = () => {
+  try {
+    return { ...EMPTY_FILTERS, ...JSON.parse(sessionStorage.getItem(FILTERS_STORAGE_KEY)) }
+  } catch {
+    return { ...EMPTY_FILTERS }
+  }
+}
+
 const primaryActionSx = {
   borderRadius: '999px',
   textTransform: 'none',
@@ -49,8 +62,8 @@ const ChartsTable = () => {
     () => (isMobile ? { id: false, type: false } : {}),
     [isMobile]
   )
-  const [charts, setCharts] = useState([])
   const [chartsOriginal, setChartsOriginal] = useState([])
+  const [activeFilters, setActiveFilters] = useState(readSavedFilters)
   const [columnsTable, setColumnsTable] = useState([])
   const [loader, setLoader] = useState(true)
   const [users, setUsers] = useState([])
@@ -59,12 +72,28 @@ const ChartsTable = () => {
   const [profiles, setProfiles] = useState([])
 
   const { control, handleSubmit, reset } = useForm({
-    defaultValues: {
-      type: '',
-      status: '',
-      profile: '',
-    },
+    defaultValues: readSavedFilters(),
   })
+
+  // Lista filtrada derivada: los refetch tras guardar no borran los filtros aplicados
+  const charts = useMemo(() => {
+    const { type, status, profile } = activeFilters
+    let filtered = [...chartsOriginal]
+    if (type) filtered = filtered.filter((c) => c.type === type)
+    if (status === '1') filtered = filtered.filter((c) => c.status === 1)
+    else if (status === '0') filtered = filtered.filter((c) => c.status === 0)
+    if (profile) {
+      filtered = filtered.filter((c) =>
+        c.ChartProfiles?.some(cp => String(cp.profile_id) === String(profile))
+      )
+    }
+    return filtered
+  }, [chartsOriginal, activeFilters])
+
+  const applyFilters = (filters) => {
+    setActiveFilters(filters)
+    sessionStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filters))
+  }
 
   const typeList = useMemo(() => {
     const unique = [...new Set(chartsOriginal.map((c) => c.type).filter(Boolean))]
@@ -135,9 +164,6 @@ const ChartsTable = () => {
                     setChartsOriginal((prev) => prev.map((c) =>
                       c.id === row.original.id ? { ...c, status: !c.status } : c
                     ))
-                    setCharts((prev) => prev.map((c) =>
-                      c.id === row.original.id ? { ...c, status: !c.status } : c
-                    ))
                   }
                 } catch (error) {
                   console.error(error)
@@ -169,26 +195,16 @@ const ChartsTable = () => {
     ]
     setColumnsTable(columnsCel)
     setChartsOriginal(data)
-    setCharts(data)
     setLoader(false)
   }
 
   const onSubmit = ({ type, status, profile }) => {
-    let filtered = [...chartsOriginal]
-    if (type) filtered = filtered.filter((c) => c.type === type)
-    if (status === '1') filtered = filtered.filter((c) => c.status === 1)
-    else if (status === '0') filtered = filtered.filter((c) => c.status === 0)
-    if (profile) {
-      filtered = filtered.filter((c) =>
-        c.ChartProfiles?.some(cp => String(cp.profile_id) === String(profile))
-      )
-    }
-    setCharts(filtered)
+    applyFilters({ type, status, profile })
   }
 
   const onResetFilters = () => {
-    reset({ type: '', status: '', profile: '' })
-    setCharts(chartsOriginal)
+    reset({ ...EMPTY_FILTERS })
+    applyFilters({ ...EMPTY_FILTERS })
   }
 
   const fetchUsers = async () => {
@@ -296,6 +312,7 @@ const ChartsTable = () => {
             topToolbar={true}
             columnVisibility={columnVisibility}
             density={isMobile ? 'compact' : undefined}
+            stateKey='config-charts'
           />
 
           <AssignChartDialog
@@ -303,11 +320,13 @@ const ChartsTable = () => {
             chartId={assignDialog.chartId}
             users={users}
             onClose={() => setAssignDialog({ open: false, chartId: null })}
+            onSaved={fetchCharts}
           />
           <AssignProfileDialog
             open={profileDialog.open}
             chartId={profileDialog.chartId}
             onClose={() => setProfileDialog({ open: false, chartId: null })}
+            onSaved={fetchCharts}
           />
         </>
       ) : (

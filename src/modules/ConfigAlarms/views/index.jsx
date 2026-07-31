@@ -19,7 +19,8 @@ const ConfigAlarms = () => {
   const fetchAlarms = async () => {
     const url = backend[import.meta.env.VITE_APP_NAME];
     try {
-      setLoading(true);
+      // El loader sólo aparece en la carga inicial: en los refetch tras guardar
+      // la tabla queda montada y conserva página, orden y búsqueda
       const { data } = await request(`${url}/getAlarms`, 'GET');
 
       const columns = [
@@ -199,6 +200,7 @@ const ConfigAlarms = () => {
             data={listAlarm.length ? listAlarm : []}
             pagination={true}
             pageSize={10}
+            stateKey='config-alarms'
           />
         ) : (
           <LoaderComponent />
