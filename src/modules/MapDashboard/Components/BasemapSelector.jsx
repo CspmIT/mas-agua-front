@@ -6,17 +6,17 @@ import { MAP_STYLE_OPTIONS, thumbTileUrl } from '../utils/mapStyles'
 // de miniaturas (tiles reales centrados en el mapa actual). La elección se aplica
 // al instante; el panel queda abierto para comparar hasta que el usuario lo cierre.
 // Se ancla dentro del contenedor de botones flotantes del mapa (no se posiciona solo).
-const BasemapSelector = ({ value, onChange, center }) => {
+const BasemapSelector = ({ value, onChange, center, align = 'left' }) => {
     const [open, setOpen] = useState(false)
 
     const lon = Number(center?.longitude ?? -62.005196)
     const lat = Number(center?.latitude ?? -30.716256)
 
     return (
-        <div className='relative flex flex-col items-start'>
+        <div className={`relative flex flex-col ${align === 'right' ? 'items-end' : 'items-start'}`}>
             {open && (
                 <div
-                    className='absolute bottom-full mb-2 left-0 rounded-xl bg-white border overflow-hidden'
+                    className={`absolute bottom-full mb-2 ${align === 'right' ? 'right-0' : 'left-0'} rounded-xl bg-white border overflow-hidden`}
                     style={{
                         width: 316,
                         maxWidth: 'calc(100vw - 32px)',

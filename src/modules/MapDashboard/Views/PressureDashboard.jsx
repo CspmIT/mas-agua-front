@@ -15,12 +15,8 @@ import {
     SENSOR_TYPE_OPTIONS,
     TRENDS,
 } from '../utils/sensorDefaults'
-import {
-    PresionPin,
-    CaudalPin,
-    NivelPin,
-    BombeoPin,
-} from '../utils/sensorPins'
+import { PIN_BY_TYPE } from '../utils/sensorPins'
+import TypeFilterControl, { ALL_SENSOR_TYPES, UNTYPED_KEY } from '../Components/TypeFilterControl'
 import VariableHistoryChart from '../../DrawDiagram/components/VariableHistoryPopup/VariableHistoryChart'
 import BasemapSelector from '../Components/BasemapSelector'
 import { DEFAULT_STYLE } from '../utils/mapStyles'
@@ -31,7 +27,7 @@ const MAP_STYLE_STORAGE_KEY = 'dashboard.mapStyle'
 const ALL_STATUSES = new Set(['ok', 'warn', 'crit', 'stale', 'apagado', 'off'])
 
 const STATUS_HELP = [
-    { key: 'ok',      description: 'Lectura dentro del rango normal.' },
+    { key: 'ok',      description: 'Lectura dentro del rango normal: el pin va de celeste (cerca de advertencia baja) a azul oscuro (cerca de advertencia alta).' },
     { key: 'warn',    description: 'Valor cercano al límite — requiere atención.' },
     { key: 'crit',    description: 'Valor fuera del rango aceptable.' },
     { key: 'stale',   description: 'No se reciben lecturas hace tiempo (el pin parpadea).' },
@@ -39,15 +35,11 @@ const STATUS_HELP = [
     { key: 'off',     description: 'El sensor no envió un valor.' },
 ]
 
-const SENSOR_TYPE_SHAPES = {
-    presion: PresionPin,
-    caudal:  CaudalPin,
-    nivel:   NivelPin,
-    bombeo:  BombeoPin,
-}
+const SENSOR_TYPE_SHAPES = PIN_BY_TYPE
 
 const SENSOR_TYPE_ICONS = {
     presion: '💧',
+    presion_red: '💧',
     caudal:  '➤',
     nivel:   '▮',
     bombeo:  '⚙',
@@ -55,6 +47,7 @@ const SENSOR_TYPE_ICONS = {
 
 const SENSOR_TYPE_DESCRIPTIONS = {
     presion: 'Presión hidrostática de la red',
+    presion_red: 'Presión de la red de distribución',
     caudal:  'Caudal volumétrico de paso',
     nivel:   'Nivel de cisterna o tanque',
     bombeo:  'Estado/operación de bombeo',
@@ -76,6 +69,7 @@ const PressureDashboard = () => {
     const [mapData, setMapData] = useState(null)
     const [loading, setLoading] = useState(true)
     const [activeFilters, setActiveFilters] = useState(ALL_STATUSES)
+    const [activeTypes, setActiveTypes] = useState(() => new Set(ALL_SENSOR_TYPES))
 
     const [selectedId, setSelectedId] = useState(null)
     const [helpOpen, setHelpOpen] = useState(false)
@@ -153,6 +147,15 @@ const PressureDashboard = () => {
         return c
     }, [snapshot])
 
+    const typeCounts = useMemo(() => {
+        const c = {}
+        markers.forEach((m) => {
+            const key = m.sensor_type || UNTYPED_KEY
+            c[key] = (c[key] || 0) + 1
+        })
+        return c
+    }, [markers])
+
     const selectedMarker = useMemo(
         () => (selectedId != null ? markers.find((m) => m.id === selectedId) : null),
         [selectedId, markers],
@@ -182,6 +185,7 @@ const PressureDashboard = () => {
                             markers={markers}
                             snapshot={snapshot}
                             activeFilters={activeFilters}
+                            activeTypes={activeTypes}
                             initialViewState={initialViewState}
                             onPinClick={(m) => {
                                 setSelectedId(m.id)
@@ -197,19 +201,26 @@ const PressureDashboard = () => {
                             snapshot={selectedSnapshot}
                             onClose={() => setSelectedId(null)}
                         />
-                        {/* Botones flotantes del mapa (esq. inferior izquierda) */}
-                        <div
-                            className='absolute z-[5] flex items-end gap-2'
-                            style={{ left: 12, bottom: 12 }}
-                        >
+                        {/* Botones flotantes del mapa */}
+                        <div className='absolute z-[5]' style={{ right: 12, top: 12 }}>
                             <MapHelpPanel
                                 open={helpOpen}
                                 onToggle={() => setHelpOpen((v) => !v)}
                             />
+                        </div>
+                        <div className='absolute z-[5]' style={{ left: 12, bottom: 12 }}>
+                            <TypeFilterControl
+                                counts={typeCounts}
+                                activeTypes={activeTypes}
+                                setActiveTypes={setActiveTypes}
+                            />
+                        </div>
+                        <div className='absolute z-[5]' style={{ right: 12, bottom: 12 }}>
                             <BasemapSelector
                                 value={effectiveStyleId}
                                 onChange={handleStyleChange}
                                 center={initialViewState}
+                                align='right'
                             />
                         </div>
                     </div>
@@ -220,12 +231,12 @@ const PressureDashboard = () => {
 }
 
 // ── Overlay: panel de ayuda con leyenda de pines ───────────────────────────
-// Se ancla dentro del contenedor de botones flotantes del mapa
+// Anclado arriba a la derecha del mapa: el popover abre hacia abajo
 const MapHelpPanel = ({ open, onToggle }) => (
-    <div className='relative flex flex-col items-start'>
+    <div className='relative flex flex-col items-end'>
         {open && (
             <div
-                className='absolute bottom-full mb-2 left-0 rounded-xl bg-white border overflow-hidden'
+                className='absolute top-full mt-2 right-0 rounded-xl bg-white border overflow-hidden'
                 style={{
                     width: 300,
                     maxWidth: 'calc(100vw - 32px)',
@@ -269,8 +280,11 @@ const MapHelpPanel = ({ open, onToggle }) => (
                             const Shape = SENSOR_TYPE_SHAPES[o.value]
                             return (
                                 <div key={o.value} className='flex items-center gap-2.5'>
-                                    <div style={{ width: 26, height: 32, flexShrink: 0 }}>
-                                        {Shape && <Shape color='#2c6aa0' label='' />}
+                                    {/* Los pines son SVG de 32x42 fijos: se escalan al 65% */}
+                                    <div style={{ width: 21, height: 27, flexShrink: 0, overflow: 'hidden' }}>
+                                        <div style={{ transform: 'scale(0.65)', transformOrigin: 'top left', width: 32, height: 42 }}>
+                                            {Shape && <Shape color='#2c6aa0' label='' />}
+                                        </div>
                                     </div>
                                     <div className='leading-tight'>
                                         <div className='text-[11.5px] font-semibold text-slate-800'>

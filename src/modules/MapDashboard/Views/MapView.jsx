@@ -13,7 +13,7 @@ import ControlPanel from '../Components/ControlPanel'
 import SelectVars from '../../Charts/components/SelectVars'
 import { useForm } from 'react-hook-form'
 import Swal from 'sweetalert2'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { backend } from '../../../utils/routes/app.routes'
 import { request } from '../../../utils/js/request'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -22,6 +22,7 @@ import LoaderComponent from '../../../components/Loader'
 import PageHeader from '../../../components/PageHeader'
 import ModalShell from '../../../components/ModalShell'
 import { SENSOR_TYPE_OPTIONS, ANCHOR_OPTIONS } from '../utils/sensorDefaults'
+import ThresholdGauge, { THRESHOLD_ZONES } from '../Components/ThresholdGauge'
 
 const primaryPillSx = {
     borderRadius: '999px',
@@ -139,6 +140,7 @@ const MapView = ({ create = false, search = false }) => {
         getValues,
         setValue,
         trigger,
+        watch,
         reset: resetForm,
         formState: { errors },
     } = useForm()
@@ -158,9 +160,37 @@ const MapView = ({ create = false, search = false }) => {
     const [selectedSensorType, setSelectedSensorType] = useState('')
     const [anchor, setAnchor] = useState('')
 
+    // ── Alarmas ──────────────────────────────────────────────────────────────
+    // Checks del modal: qué umbrales generan alarma al guardar el MAPA (no el pin)
+    const [alarmChecks, setAlarmChecks] = useState({})
+    // Alarmas existentes: para el badge de la lista y para marcar en el gauge
+    // los umbrales que ya tienen su alarma creada
+    const [alarms, setAlarms] = useState([])
+
+    useEffect(() => {
+        if (!create) return
+        request(`${backend[import.meta.env.VITE_APP_NAME]}/getAlarms`, 'GET')
+            .then(({ data }) => setAlarms(data || []))
+            .catch(() => {})
+    }, [create])
+
+    const alarmVarIds = useMemo(
+        () => new Set(alarms.map((a) => Number(a.id_influxvars)).filter(Boolean)),
+        [alarms]
+    )
+
     // ── Variable Influx ──────────────────────────────────────────────────────
     const [selectedVar, setSelectedVar] = useState(null)
     const [selectedBitId, setSelectedBitId] = useState('')
+
+    // Alarmas existentes de la variable seleccionada en el modal
+    const selectedVarAlarms = useMemo(
+        () =>
+            selectedVar
+                ? alarms.filter((a) => Number(a.id_influxvars) === Number(selectedVar.id))
+                : [],
+        [alarms, selectedVar]
+    )
 
     const isBinaryCompressed = selectedVar?.binary_compressed ?? false
     const isCalcBinary =
@@ -191,6 +221,7 @@ const MapView = ({ create = false, search = false }) => {
         warn_high: toNumberOrNull(cfg.warn_high),
         crit_high: toNumberOrNull(cfg.crit_high),
         stale_after_minutes: toNumberOrNull(cfg.stale_after_minutes),
+        alarmChecks: cfg.alarmChecks || null,
         popupInfo: {
             lat: parseFloat(cfg.latitude),
             lng: parseFloat(cfg.longitude),
@@ -236,6 +267,7 @@ const MapView = ({ create = false, search = false }) => {
         setSelectedBitId('')
         setAnchor('')
         setSelectedSensorType('')
+        setAlarmChecks({})
         setEditingIndex(null)
         setEditInitialVar(null)
         setModalOpen(true)
@@ -259,6 +291,7 @@ const MapView = ({ create = false, search = false }) => {
         setSelectedBitId(marker.popupInfo?.id_bit ?? '')
         setAnchor(marker.popupInfo?.anchor ?? '')
         setSelectedSensorType(marker.sensor_type ?? '')
+        setAlarmChecks(marker.alarmChecks || {})
         setEditingIndex(index)
         setModalOpen(true)
     }
@@ -311,6 +344,15 @@ const MapView = ({ create = false, search = false }) => {
             return
         }
 
+        // Un check de alarma marcado necesita el valor de su umbral cargado
+        const missingAlarmValue = THRESHOLD_ZONES.find(
+            (zone) => alarmChecks[zone.key] && toNumberOrNull(values[zone.key]) === null
+        )
+        if (missingAlarmValue) {
+            await Swal.fire({ icon: 'error', title: 'Atención', html: `<h3>Marcaste crear alarma para "${missingAlarmValue.label}" pero no cargaste su valor.</h3>` })
+            return
+        }
+
         const marker = generateMarker({
             name: markerName,
             latitude: markerLat,
@@ -326,6 +368,7 @@ const MapView = ({ create = false, search = false }) => {
             warn_high: values.warn_high,
             crit_high: values.crit_high,
             stale_after_minutes: values.stale_after_minutes,
+            alarmChecks: Object.values(alarmChecks).some(Boolean) ? alarmChecks : null,
         })
 
         if (isEditing) {
@@ -378,6 +421,45 @@ const MapView = ({ create = false, search = false }) => {
         return value || null
     }
 
+    // Crea las alarmas pendientes (checks del modal) una vez guardado el mapa.
+    // Se difieren hasta acá para no dejar alarmas huérfanas si se cancela el guardado.
+    const createPendingAlarms = async () => {
+        const url = backend[import.meta.env.VITE_APP_NAME]
+        const pending = []
+        markers.forEach((m) => {
+            if (!m.alarmChecks || !m.popupInfo?.idVar) return
+            THRESHOLD_ZONES.forEach((zone) => {
+                if (!m.alarmChecks[zone.key]) return
+                const value = m[zone.key]
+                if (value === null || value === undefined || value === '') return
+                // No duplicar una alarma idéntica ya existente (misma variable, condición y valor)
+                const duplicated = alarms.some(
+                    (a) =>
+                        Number(a.id_influxvars) === Number(m.popupInfo.idVar) &&
+                        a.condition === zone.condition &&
+                        Number(a.value) === Number(value)
+                )
+                if (duplicated) return
+                pending.push({
+                    name: `${m.name} - ${zone.label}`,
+                    id_influxvars: m.popupInfo.idVar,
+                    id_bit: m.popupInfo.id_bit ?? null,
+                    condition: zone.condition,
+                    value: Number(value),
+                    repeatInterval: 0,
+                    type: 'single',
+                })
+            })
+        })
+        if (!pending.length) return { created: 0, failed: 0 }
+
+        const results = await Promise.allSettled(
+            pending.map((p) => request(`${url}/createAlarm`, 'POST', p))
+        )
+        const created = results.filter((r) => r.status === 'fulfilled').length
+        return { created, failed: results.length - created }
+    }
+
     const handleSubmit = async () => {
         if (!markers || markers.length === 0) {
             await Swal.fire({ icon: 'error', title: 'Atención', html: '<h3>Debe haber al menos un marcador para guardar el mapa.</h3>' })
@@ -387,14 +469,27 @@ const MapView = ({ create = false, search = false }) => {
         const mapName = await askMapName(search ? nameMap : '')
         if (!mapName) return
 
-        const map = { name: mapName, viewState, markers }
+        // alarmChecks es estado local del editor: no viaja al backend del mapa
+        const map = {
+            name: mapName,
+            viewState,
+            markers: markers.map(({ alarmChecks: _alarmChecks, ...rest }) => rest),
+        }
         try {
             let result = false
             if (create && search) result = await editMap(map)
             if (create && !search) result = await saveMap(map)
 
             if (result) {
-                await Swal.fire({ title: 'Éxito', icon: 'success', html: '<h3>El mapa se guardó con éxito</h3>' })
+                const { created, failed } = await createPendingAlarms()
+                let html = '<h3>El mapa se guardó con éxito</h3>'
+                if (created > 0) {
+                    html += `<p>Se ${created === 1 ? 'creó 1 alarma' : `crearon ${created} alarmas`}.</p>`
+                }
+                if (failed > 0) {
+                    html += `<p style="color:#b45309">No se ${failed === 1 ? 'pudo crear 1 alarma' : `pudieron crear ${failed} alarmas`}.</p>`
+                }
+                await Swal.fire({ title: 'Éxito', icon: failed > 0 ? 'warning' : 'success', html })
                 navigate('/maps')
             }
         } catch (error) {
@@ -541,6 +636,7 @@ const MapView = ({ create = false, search = false }) => {
                             markers={markers}
                             setMarkers={setMarkers}
                             onEdit={openEditModal}
+                            alarmVarIds={alarmVarIds}
                         />
                     </div>
                 )}
@@ -679,71 +775,14 @@ const MapView = ({ create = false, search = false }) => {
                     {!isBinaryCompressed && !isCalcBinary && (
                     <Box sx={sectionSx}>
                         <SectionTitle>Umbrales y unidad</SectionTitle>
-                        <div className='flex flex-wrap gap-2'>
-                            <div style={{ flex: '1 1 150px' }}>
-                                <TextField
-                                    fullWidth
-                                    size='small'
-                                    label='Unidad'
-                                    placeholder='bar / L/s / %'
-                                    {...register('unit')}
-                                />
-                            </div>
-                            <div style={{ flex: '1 1 150px' }}>
-                                <TextField
-                                    fullWidth
-                                    size='small'
-                                    type='number'
-                                    label='Stale (min)'
-                                    inputProps={{ step: 1, min: 1 }}
-                                    {...register('stale_after_minutes')}
-                                />
-                            </div>
-                        </div>
-                        <div className='flex flex-wrap gap-2'>
-                            <div style={{ flex: '1 1 150px' }}>
-                                <TextField
-                                    fullWidth
-                                    size='small'
-                                    type='number'
-                                    label='Crítico bajo'
-                                    inputProps={{ step: 0.1 }}
-                                    {...register('crit_low')}
-                                />
-                            </div>
-                            <div style={{ flex: '1 1 150px' }}>
-                                <TextField
-                                    fullWidth
-                                    size='small'
-                                    type='number'
-                                    label='Alerta baja'
-                                    inputProps={{ step: 0.1 }}
-                                    {...register('warn_low')}
-                                />
-                            </div>
-                        </div>
-                        <div className='flex flex-wrap gap-2'>
-                            <div style={{ flex: '1 1 150px' }}>
-                                <TextField
-                                    fullWidth
-                                    size='small'
-                                    type='number'
-                                    label='Alerta alta'
-                                    inputProps={{ step: 0.1 }}
-                                    {...register('warn_high')}
-                                />
-                            </div>
-                            <div style={{ flex: '1 1 150px' }}>
-                                <TextField
-                                    fullWidth
-                                    size='small'
-                                    type='number'
-                                    label='Crítico alto'
-                                    inputProps={{ step: 0.1 }}
-                                    {...register('crit_high')}
-                                />
-                            </div>
-                        </div>
+                        <ThresholdGauge
+                            register={register}
+                            watch={watch}
+                            alarmChecks={alarmChecks}
+                            setAlarmChecks={setAlarmChecks}
+                            canCreateAlarms={!!selectedVar}
+                            existingAlarms={selectedVarAlarms}
+                        />
                     </Box>
                     )}
                 </Box>
