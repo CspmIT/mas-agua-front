@@ -1,5 +1,5 @@
 import Home from '../modules/home/views'
-import ChartsDashboard from '../modules/dashBoard/views/ChartsDashboard'
+import ChartsPage from '../modules/dashBoard/views/ChartsPage'
 import TabDinamic from '../modules/tabs/views'
 import ConfigSecurity from '../modules/configSecurity/views'
 import ConfigMenu from '../modules/ConfigMenu/view'
@@ -42,7 +42,7 @@ export const userRoutes = [
 	{ path: '/', element: <Home /> },
 	{ path: '/home', element: <Home /> },
     { path: '/graphics', element: <Home /> },
-    { path: '/chart', element: <ChartsDashboard /> },
+    { path: '/chart', element: <ChartsPage /> },
 	{ path: '/tabs', element: <TabDinamic /> },
 	{ path: '/config/security', element: <ConfigSecurity /> },
 	{ path: '/config/accesses', element: <ConfigMenu /> },

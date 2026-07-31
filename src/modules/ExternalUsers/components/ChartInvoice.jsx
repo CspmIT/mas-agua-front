@@ -8,7 +8,9 @@ import LoaderComponent from '../../../components/Loader'
 import GrafBarra from '../../../components/Graphs/barchart'
 
 
-const ChartInvoice = () => {
+// Sin `client` consulta los datos del tenant logueado (usuarios externos).
+// Con `client` ('adeco' | 'lactear') consulta ese cliente puntual (usuarios internos).
+const ChartInvoice = ({ client = null }) => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -16,7 +18,7 @@ const ChartInvoice = () => {
     const url = backend[import.meta.env.VITE_APP_NAME]
     try {
       setLoading(true)
-      const { data } = await request(`${url}/graf_dif_men_osmosis`, 'GET')
+      const { data } = await request(`${url}/graf_dif_men_osmosis${client ? `/${client}` : ''}`, 'GET')
       setData(data)
     } catch (error) {
       console.error(error)
@@ -32,7 +34,7 @@ const ChartInvoice = () => {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [client])
 
   if (loading) return <LoaderComponent />
 
