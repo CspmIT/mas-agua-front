@@ -7,7 +7,9 @@ import Swal from 'sweetalert2'
 import LoaderComponent from '../../../components/Loader'
 import { BorderTop } from '@mui/icons-material'
 
-const TabsInvoice = () => {
+// Sin `client` consulta los datos del tenant logueado (usuarios externos).
+// Con `client` ('adeco' | 'lactear') consulta ese cliente puntual (usuarios internos).
+const TabsInvoice = ({ client = null }) => {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -15,7 +17,7 @@ const TabsInvoice = () => {
     const url = backend[import.meta.env.VITE_APP_NAME]
     try {
       setLoading(true)
-      const { data } = await request(`${url}/average-tax`, 'GET')
+      const { data } = await request(`${url}/average-tax${client ? `/${client}` : ''}`, 'GET')
       setData(data)
     } catch (error) {
       console.error(error)
@@ -31,7 +33,7 @@ const TabsInvoice = () => {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [client])
 
   if (loading) return <LoaderComponent />
 
