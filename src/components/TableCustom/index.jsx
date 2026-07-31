@@ -13,7 +13,7 @@ import NoRegisterTable from './NoRegisterTable'
 import { storage } from '../../storage/storage'
 import { Box, IconButton, Tooltip, useMediaQuery } from '@mui/material'
 import { PiBroomFill } from 'react-icons/pi'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { SiMicrosoftexcel } from 'react-icons/si'
 import { mkConfig, generateCsv, download } from 'export-to-csv'
 import { jsPDF } from 'jspdf'
@@ -40,8 +40,46 @@ const toolbarIconSx = (baseColor, hoverBg, darkHoverBg) => ({
 	},
 })
 
+// Con la prop stateKey, el estado de la tabla (página, orden y búsqueda) se
+// persiste en sessionStorage: sobrevive refetchs y remounts por navegación
+const readPersistedTableState = (stateKey) => {
+	if (!stateKey) return null
+	try {
+		return JSON.parse(sessionStorage.getItem(`tableState:${stateKey}`)) || null
+	} catch {
+		return null
+	}
+}
+
 const TableCustom = ({ data, columns, ...prop }) => {
 	const isMobile = useMediaQuery('(max-width: 768px)')
+
+	const persisted = readPersistedTableState(prop.stateKey)
+	const [pagination, setPagination] = useState(
+		persisted?.pagination || { pageIndex: 0, pageSize: prop.pageSize || 3 }
+	)
+	const [sorting, setSorting] = useState(
+		persisted?.sorting || (prop.orderBy ? [{ id: prop.orderBy, desc: false }] : [])
+	)
+	const [globalFilter, setGlobalFilter] = useState(persisted?.globalFilter ?? '')
+
+	useEffect(() => {
+		if (!prop.stateKey) return
+		sessionStorage.setItem(
+			`tableState:${prop.stateKey}`,
+			JSON.stringify({ pagination, sorting, globalFilter })
+		)
+	}, [prop.stateKey, pagination, sorting, globalFilter])
+
+	// Si los datos se achican (filtros, borrados) la página guardada puede quedar fuera de rango
+	useEffect(() => {
+		if (!prop.stateKey || !prop.pagination) return
+		const maxPage = Math.max(0, Math.ceil(data.length / pagination.pageSize) - 1)
+		if (pagination.pageIndex > maxPage) {
+			setPagination((p) => ({ ...p, pageIndex: maxPage }))
+		}
+	}, [data.length, pagination.pageIndex, pagination.pageSize])
+
 	const handleExportData = () => {
 		const getFlattenedHeadersAndKeys = (cols) => {
 			const flattened = []
@@ -138,6 +176,22 @@ const TableCustom = ({ data, columns, ...prop }) => {
 		showAll: 'Mostrar todo',
 	}
 
+	const controlledState = prop.stateKey
+		? {
+			...(prop.pagination ? { pagination } : {}),
+			sorting,
+			globalFilter,
+		}
+		: {}
+	const controlledHandlers = prop.stateKey
+		? {
+			...(prop.pagination ? { onPaginationChange: setPagination } : {}),
+			onSortingChange: setSorting,
+			onGlobalFilterChange: setGlobalFilter,
+			autoResetPageIndex: false,
+		}
+		: {}
+
 	const table = useMaterialReactTable({
 		columns,
 		data,
@@ -145,7 +199,9 @@ const TableCustom = ({ data, columns, ...prop }) => {
 		initialState: tableInitialState,
 		state: {
 			...columnVisibility,
+			...controlledState,
 		},
+		...controlledHandlers,
 		groupedColumnMode: 'remove',
 		positionToolbarAlertBanner: 'none',
 		positionToolbarDropZone: 'none',

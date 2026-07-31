@@ -14,7 +14,7 @@ const BoardHistoryPanel = ({ chart, active }) => {
         useLineChartData(chart, { active, refreshMs: 30000 })
 
     return (
-        <div className='rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-2.5 flex flex-col gap-2'>
+        <div className='rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] p-2.5 flex flex-col gap-2'>
             <div className='flex items-center gap-2 min-w-0'>
                 <span className='inline-flex items-center rounded-full bg-gradient-to-r from-[#12456f] to-[#1f5f95] px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.11em] text-white truncate'>
                     {chart.name}

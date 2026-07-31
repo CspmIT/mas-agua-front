@@ -46,7 +46,8 @@ function ConfigMenu() {
 	};
 
 	const fetchAll = async () => {
-		setLoading(true);
+		// El loader sólo aparece en la carga inicial (loading arranca en true):
+		// los refetch mantienen la tabla montada para no perder página ni búsqueda
 		await getUsers();
 		setLoading(false);
 	};
@@ -95,6 +96,7 @@ function ConfigMenu() {
 						pagination
 						pageSize={10}
 						columnVisibility={columnVisibility}
+						stateKey='config-accesses'
 					/>
 				</>
 			)}

@@ -15,6 +15,7 @@ import MultipleBooleanChart from '../../Charts/components/MultipleBooleanChart'
 import { ChartComponentDbWrapper } from '../components/ChartComponentDbWrapper'
 import LineChartHomeWidget from '../components/LineChartHomeWidget'
 import TotalizadoHomeWidget from '../components/TotalizadoHomeWidget'
+import { GralfBlocksWidget } from '../../Charts/components/GralfChart'
 import { isNewChart } from '../../dashBoard/utils/newChart'
 import AddChartDialog from '../components/AddChartDialog'
 import EmptyDashboard from '../components/EmptyDashboard'
@@ -56,7 +57,8 @@ const chartComponents = {
     BooleanChart,
     MultipleBooleanChart,
     LineChart: LineChartHomeWidget,
-    TotalizadoPeriodo: TotalizadoHomeWidget
+    TotalizadoPeriodo: TotalizadoHomeWidget,
+    GralfChart: GralfBlocksWidget,
 }
 
 // Tipos que consultan series históricas por su cuenta (useLineChartData) y se
@@ -158,6 +160,10 @@ const Home = ({ targetUserId = null }) => {
             // (useLineChartData), no entran en el batch de últimos valores.
             if (SERIES_CHART_TYPES.includes(chart.component)) return
 
+            // Los bloques Gralf consultan su propio endpoint (compartido por
+            // variable): la variable gralf no aplica a multipleDataInflux.
+            if (chart.component === 'GralfChart') return
+
             if (chart.component === 'PumpControl') {
                 // Se manda la variable completa: getSimpleInfluxData resuelve
                 // según sus flags (calc, binary_compressed, calc_binary, etc.)
@@ -246,6 +252,29 @@ const Home = ({ targetUserId = null }) => {
                     }
 
                 }, {})
+
+                if (type === 'GralfChart') {
+                    // Card del medidor de energía: los bloques elegidos viajan
+                    // en config.sections del layout; el widget consulta solo.
+                    const varId =
+                        (chart.ChartData || []).find((d) => d.key === 'value')
+                            ?.InfluxVars?.id ?? null
+                    const sections =
+                        layoutItem.config?.sections ??
+                        (layoutItem.config?.section ? [layoutItem.config.section] : ['tension'])
+                    return {
+                        id: layoutItem.id,
+                        component: type,
+                        props: { title: chart.name },
+                        data: { varId, sections },
+                        layout: {
+                            x: layoutItem.x,
+                            y: layoutItem.y,
+                            w: layoutItem.w,
+                            h: layoutItem.h
+                        }
+                    }
+                }
 
                 if (SERIES_CHART_TYPES.includes(type)) {
                     // Se guarda el chart crudo: el widget arma la query con
@@ -538,10 +567,11 @@ const Home = ({ targetUserId = null }) => {
         }
     }
 
-    async function addChart(chartId) {
+    async function addChart(chartId, sections = null) {
         try {
             await request(addChartUrl, 'POST', {
                 chartId,
+                ...(Array.isArray(sections) && sections.length && { sections }),
                 ...(isAdminMode && { userId: targetUserId })
             })
     
@@ -592,6 +622,7 @@ const Home = ({ targetUserId = null }) => {
         const isMultipleBoolean = chart.component === 'MultipleBooleanChart'
         const isLineChart = chart.component === 'LineChart'
         const isTotalizado = chart.component === 'TotalizadoPeriodo'
+        const isGralf = chart.component === 'GralfChart'
 
         // Sólo las cards de bombas (MultipleBooleanChart) crecen según su contenido.
         // El resto conserva el alto fijo de la BD, como en desktop (sino se achican).
@@ -645,6 +676,13 @@ const Home = ({ targetUserId = null }) => {
                             <TotalizadoHomeWidget
                                 chart={chart.rawChart}
                                 editMode={editMode}
+                            />
+                        ) : isGralf ? (
+                            // Sin key por tamaño: la consulta es compartida por
+                            // variable y el contenido se adapta solo
+                            <GralfBlocksWidget
+                                varId={chart.data.varId}
+                                sections={chart.data.sections}
                             />
                         ) : (
                             <ChartComponentDbWrapper

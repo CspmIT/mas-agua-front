@@ -82,7 +82,10 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 		setValue,
 		getValues,
 		trigger,
-	} = useForm()
+	} = useForm({
+		// Defaults al crear una variable; al editar, setData() los pisa con lo guardado
+		defaultValues: { time: 2, period: 20 },
+	})
 
 	const handleRquiredCalc = () => {
 		setRequireCalc(prev => !prev);
@@ -493,7 +496,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 							{...register('unit_topic', { required: 'Este campo es requerido' })}
 							error={!!errors.unit_topic}
 							helperText={errors.unit_topic && errors.unit_topic.message}
-							defaultValue={data?.varsInflux?.[data.name]?.calc_unit || 'ms'}
+							defaultValue={data?.varsInflux?.[data.name]?.calc_unit || 'm'}
 							size='small'
 							sx={{ flex: '1 1 120px' }}
 						>
@@ -523,7 +526,7 @@ const DataGenerator = ({ handleClose, data = null, onSaved }) => {
 							{...register('unit_period', { required: 'Este campo es requerido' })}
 							error={!!errors.unit_period}
 							helperText={errors.unit_period && errors.unit_period.message}
-							defaultValue={data?.varsInflux?.[data.name]?.calc_unit_period || 'ms'}
+							defaultValue={data?.varsInflux?.[data.name]?.calc_unit_period || 's'}
 							size='small'
 							sx={{ flex: '1 1 120px' }}
 						>

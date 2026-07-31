@@ -55,8 +55,9 @@ const StatusFloatingLabel = ({
     offset,
     visible = true,
     highlight = false,
+    colorOverride = null,
 }) => {
-    const color = STATUS_COLORS[status] || STATUS_COLORS.off
+    const color = colorOverride || STATUS_COLORS[status] || STATUS_COLORS.off
     const [dx, dy] = offset || [55, -45]
     const isStale = status === 'stale'
     const isOff = status === 'off'

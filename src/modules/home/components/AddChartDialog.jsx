@@ -1,7 +1,9 @@
+import { useState } from "react"
 import {
     Dialog, DialogTitle, DialogContent, IconButton, Chip
 } from "@mui/material"
 import { isNewChart } from "../../dashBoard/utils/newChart"
+import { GRALF_SECTIONS } from "../../Charts/components/GralfChart"
 
 // Preview SVG minimalista para cada tipo de gráfico
 const ChartPreviews = {
@@ -76,6 +78,28 @@ const ChartPreviews = {
             <circle cx="40" cy="58" r="4" fill="#1e293b" />
         </svg>
     ),
+    GralfChart: () => (
+        <svg viewBox="0 0 80 80" fill="none">
+            {/* dos mini-cards con barras de fase */}
+            {[0, 1].map(c => (
+                <g key={c}>
+                    <rect x={6 + c * 36} y="6" width="32" height="30" rx="3"
+                        fill="#f8fafc" stroke="#e2e8f0" strokeWidth="1" />
+                    {[0, 1, 2].map(b => (
+                        <rect key={b} x={10 + c * 36} y={12 + b * 8} rx="1.5"
+                            width={[22, 18, 24][b] - c * 4} height="3.5"
+                            fill={c === 0 ? "#283080" : ["#CF0927", "#1e5fd0", "#e5259b"][b]} />
+                    ))}
+                </g>
+            ))}
+            {/* curva P/Q */}
+            <rect x="6" y="42" width="68" height="32" rx="3" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="1" />
+            <path d="M9 52 Q16 49 24 51 L32 51 L34 68 L46 68 L48 51 Q60 49 71 52"
+                stroke="#00933B" strokeWidth="1.8" fill="none" />
+            <path d="M9 62 Q24 60 33 62 L34 70 L46 70 L48 62 Q60 61 71 62"
+                stroke="#DA5224" strokeWidth="1.5" fill="none" />
+        </svg>
+    ),
     BooleanChart: () => (
         <svg viewBox="0 0 80 80" fill="none">
             <circle cx="40" cy="35" r="12" fill="#22c55e" opacity="0.2" />
@@ -142,10 +166,35 @@ const CHART_LABELS = {
     BooleanChart: { label: "Booleano" },
     MultipleBooleanChart: { label: "Multi-booleano" },
     LineChart: { label: "Líneas (histórico)" },
-    TotalizadoPeriodo: { label: "Totalizado por periodo", isNew: true },
+    TotalizadoPeriodo: { label: "Totalizado por periodo" },
+    GralfChart: { label: "Monitoreo de energía (por bloques)", isNew: true },
 }
 
 export default function AddChartDialog({ open, onClose, availableCharts, onAdd }) {
+
+    // Bloques Gralf elegidos por medidor (chartId -> [keys]) antes de agregar
+    const [gralfSelection, setGralfSelection] = useState({})
+
+    const toggleGralfSection = (chartId, key) => {
+        setGralfSelection(prev => {
+            const current = prev[chartId] ?? []
+            return {
+                ...prev,
+                [chartId]: current.includes(key)
+                    ? current.filter(k => k !== key)
+                    : [...current, key]
+            }
+        })
+    }
+
+    const addGralf = (chartId) => {
+        const selected = gralfSelection[chartId] ?? []
+        if (!selected.length) return
+        // Respetar el orden canónico de los bloques, no el orden de clickeo
+        const ordered = GRALF_SECTIONS.map(s => s.key).filter(k => selected.includes(k))
+        onAdd(chartId, ordered)
+        setGralfSelection(prev => ({ ...prev, [chartId]: [] }))
+    }
 
     // Agrupar por tipo para mostrar la previsualización
     const grouped = availableCharts.reduce((acc, chart) => {
@@ -245,7 +294,102 @@ export default function AddChartDialog({ open, onClose, availableCharts, onAdd }
                                 gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
                                 gap: 10
                             }}>
-                                {charts.map(chart => (
+                                {charts.map(chart => type === "GralfChart" ? (
+                                    // El Gralf se agrega como UNA card con los
+                                    // bloques que el usuario marque
+                                    <div
+                                        key={chart.id}
+                                        style={{
+                                            gridColumn: "1 / -1",
+                                            background: "#fff",
+                                            border: "1.5px solid #e2e8f0",
+                                            borderRadius: 10,
+                                            padding: "10px 14px",
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: 8
+                                        }}
+                                    >
+                                        <span style={{
+                                            fontWeight: 600,
+                                            fontSize: 14,
+                                            color: "#0f172a",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 8
+                                        }}>
+                                            {chart.name}
+                                            <Chip
+                                                label={`ID ${chart.id}`}
+                                                size="small"
+                                                sx={{ fontSize: 10, height: 18, background: "#f1f5f9", color: "#64748b" }}
+                                            />
+                                        </span>
+                                        <div style={{
+                                            display: "grid",
+                                            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+                                            gap: 8
+                                        }}>
+                                            {GRALF_SECTIONS.map(section => {
+                                                const selected = (gralfSelection[chart.id] ?? []).includes(section.key)
+                                                return (
+                                                    <button
+                                                        key={section.key}
+                                                        onClick={() => toggleGralfSection(chart.id, section.key)}
+                                                        style={{
+                                                            background: selected ? "#eef2ff" : "#f8fafc",
+                                                            border: selected ? "1.5px solid #363f9c" : "1.5px solid #e2e8f0",
+                                                            borderRadius: 8,
+                                                            padding: "8px 10px",
+                                                            cursor: "pointer",
+                                                            textAlign: "left",
+                                                            fontSize: 13,
+                                                            fontWeight: selected ? 600 : 500,
+                                                            color: selected ? "#363f9c" : "#0f172a",
+                                                            transition: "all 0.15s",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            gap: 6
+                                                        }}
+                                                    >
+                                                        <span style={{
+                                                            width: 14, height: 14, borderRadius: 4, flexShrink: 0,
+                                                            border: selected ? "none" : "1.5px solid #cbd5e1",
+                                                            background: selected ? "#363f9c" : "#fff",
+                                                            color: "#fff", fontSize: 10, fontWeight: 700,
+                                                            display: "flex", alignItems: "center", justifyContent: "center"
+                                                        }}>
+                                                            {selected ? "✓" : ""}
+                                                        </span>
+                                                        {section.label}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                        <button
+                                            onClick={() => addGralf(chart.id)}
+                                            disabled={!(gralfSelection[chart.id] ?? []).length}
+                                            style={{
+                                                alignSelf: "flex-end",
+                                                background: (gralfSelection[chart.id] ?? []).length
+                                                    ? "linear-gradient(135deg, #2c6aa0 0%, #1f4e79 100%)"
+                                                    : "#e2e8f0",
+                                                color: (gralfSelection[chart.id] ?? []).length ? "#fff" : "#94a3b8",
+                                                border: "none",
+                                                borderRadius: 999,
+                                                padding: "8px 18px",
+                                                fontSize: 13,
+                                                fontWeight: 600,
+                                                cursor: (gralfSelection[chart.id] ?? []).length ? "pointer" : "not-allowed",
+                                                transition: "all 0.15s"
+                                            }}
+                                        >
+                                            {(gralfSelection[chart.id] ?? []).length
+                                                ? `Agregar card con ${(gralfSelection[chart.id] ?? []).length} bloque${(gralfSelection[chart.id] ?? []).length > 1 ? 's' : ''}`
+                                                : 'Elegí al menos un bloque'}
+                                        </button>
+                                    </div>
+                                ) : (
                                     <button
                                         key={chart.id}
                                         onClick={() => onAdd(chart.id)}

@@ -32,6 +32,26 @@ export const PresionPin = ({ color, label }) => (
     </svg>
 )
 
+// Gota con doble contorno — Presión de red (misma familia visual que Presión)
+export const PresionRedPin = ({ color, label }) => (
+    <svg width='32' height='42' viewBox='0 0 32 42' xmlns='http://www.w3.org/2000/svg'>
+        <path
+            d='M16 41 C 16 41, 30 24, 30 14 C 30 6, 24 1, 16 1 C 8 1, 2 6, 2 14 C 2 24, 16 41, 16 41 Z'
+            fill={color}
+            stroke='white'
+            strokeWidth='2'
+        />
+        <path
+            d='M16 37 C 16 37, 27 22.5, 27 14 C 27 7.5, 22.5 4, 16 4 C 9.5 4, 5 7.5, 5 14 C 5 22.5, 16 37, 16 37 Z'
+            fill='none'
+            stroke='white'
+            strokeWidth='1.5'
+            opacity='0.9'
+        />
+        <InnerBadge color={color} label={label} />
+    </svg>
+)
+
 // Rombo / hexágono — Caudal
 export const CaudalPin = ({ color, label }) => (
     <svg width='32' height='42' viewBox='0 0 32 42' xmlns='http://www.w3.org/2000/svg'>
@@ -81,6 +101,7 @@ export const BombeoPin = ({ color, label }) => (
 
 export const PIN_BY_TYPE = {
     presion: PresionPin,
+    presion_red: PresionRedPin,
     caudal: CaudalPin,
     nivel: NivelPin,
     bombeo: BombeoPin,

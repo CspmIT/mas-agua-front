@@ -108,71 +108,169 @@ const Boards = () => {
     return () => clearInterval(intervalRef.current)
   }, [])
 
+  // ── Pestañas: un tab por tablero, persistido en localStorage ──
+  const [activeId, setActiveId] = useState(null)
 
-  return (
-    <Grid container spacing={2}>
-      {boards.map((board) => {
-        const cfg = Object.fromEntries(
-          board.ChartConfig.map((c) => [c.key, c.value])
-        )
+  useEffect(() => {
+    if (!boards.length) return
+    const saved = Number(localStorage.getItem('boards.activeTabId'))
+    const exists = boards.some((b) => b.id === saved)
+    setActiveId(exists ? saved : boards[0].id)
+  }, [boards])
 
-        const topLeftChart =
-          chartsMap[cfg['board.top.leftChartId']] || null
+  const selectTab = (id) => {
+    setActiveId(id)
+    localStorage.setItem('boards.activeTabId', String(id))
+  }
 
-        const topRightChart =
-          chartsMap[cfg['board.top.rightChartId']] || null
+  // Estado de bombeo del tablero, para el punto de la pestaña:
+  // verde = bomba encendida, rojo = apagada, gris = sin datos.
+  const pumpStatusOf = (board) => {
+    const item = (board.ChartData || []).find(
+      (d) => d.key === 'board.pumping.status'
+    )
+    const varId = item?.InfluxVars?.id
+    const val = varId != null ? inflValues[varId] : undefined
+    if (val === true) return 'on'
+    if (val === false) return 'off'
+    if (typeof val === 'number') return val > 0 ? 'on' : 'off'
+    if (typeof val === 'string') {
+      const t = val.toLowerCase()
+      if (t.includes('encendid') || t.includes('marcha')) return 'on'
+      if (t.includes('apagad') || t.includes('parad')) return 'off'
+    }
+    return 'na'
+  }
 
-        const parseIds = (key) => {
-          try {
-            const ids = JSON.parse(cfg[key] || '[]')
-            return Array.isArray(ids) ? ids : []
-          } catch {
-            return []
-          }
-        }
-        // Un drawer puede asociar LineCharts (seriesChartsMap) o GralfCharts
-        // (vienen en chartsMap, junto al resto de los charts sin series).
-        const resolveCharts = (ids) =>
-          ids
-            .map((id) => {
-              const serie = seriesChartsMap[id]
-              if (serie) return serie
-              const chart = chartsMap[id]
-              return chart?.type === 'GralfChart' ? chart : null
-            })
-            .filter(Boolean)
+  const DOT_CLASS = {
+    on: 'bg-[#10B981]',
+    off: 'bg-rose-500',
+    na: 'bg-slate-400',
+  }
 
-        const miniCharts = resolveCharts(parseIds('board.mini.chartIds'))
+  const renderBoard = (board, embedded) => {
+    const cfg = Object.fromEntries(
+      board.ChartConfig.map((c) => [c.key, c.value])
+    )
 
-        // Históricos asociados a elementos del tablero (drawers)
-        const drawers = {
-          topLeft: resolveCharts(parseIds('board.drawer.topLeft')),
-          topRight: resolveCharts(parseIds('board.drawer.topRight')),
-          level: resolveCharts(parseIds('board.drawer.level')),
-          pumping: resolveCharts(parseIds('board.drawer.pumping')),
-          room: [0, 1, 2, 3].map((i) =>
-            resolveCharts(parseIds(`board.drawer.room.item${i}`))
-          ),
-        }
+    const topLeftChart = chartsMap[cfg['board.top.leftChartId']] || null
+    const topRightChart = chartsMap[cfg['board.top.rightChartId']] || null
 
-        // La minivista es densa: cada tablero ocupa el ancho completo.
-        return (
+    const parseIds = (key) => {
+      try {
+        const ids = JSON.parse(cfg[key] || '[]')
+        return Array.isArray(ids) ? ids : []
+      } catch {
+        return []
+      }
+    }
+    // Un drawer puede asociar LineCharts (seriesChartsMap) o GralfCharts
+    // (vienen en chartsMap, junto al resto de los charts sin series).
+    const resolveCharts = (ids) =>
+      ids
+        .map((id) => {
+          const serie = seriesChartsMap[id]
+          if (serie) return serie
+          const chart = chartsMap[id]
+          return chart?.type === 'GralfChart' ? chart : null
+        })
+        .filter(Boolean)
+
+    const miniCharts = resolveCharts(parseIds('board.mini.chartIds'))
+
+    // Históricos asociados a elementos del tablero (drawers)
+    const drawers = {
+      topLeft: resolveCharts(parseIds('board.drawer.topLeft')),
+      topRight: resolveCharts(parseIds('board.drawer.topRight')),
+      level: resolveCharts(parseIds('board.drawer.level')),
+      pumping: resolveCharts(parseIds('board.drawer.pumping')),
+      room: [0, 1, 2, 3].map((i) =>
+        resolveCharts(parseIds(`board.drawer.room.item${i}`))
+      ),
+    }
+
+    return (
+      <BoardChart
+        title={board.name}
+        ChartData={board.ChartData}
+        ChartConfig={board.ChartConfig}
+        topLeftChart={topLeftChart}
+        topRightChart={topRightChart}
+        miniCharts={miniCharts}
+        drawers={drawers}
+        inflValues={inflValues}
+        lastUpdate={lastUpdate}
+        embedded={embedded}
+      />
+    )
+  }
+
+  // Un solo tablero: se muestra como siempre, sin barra de pestañas
+  if (boards.length <= 1) {
+    return (
+      <Grid container spacing={2}>
+        {boards.map((board) => (
           <Grid item xs={12} key={board.id}>
-            <BoardChart
-              title={board.name}
-              ChartData={board.ChartData}
-              ChartConfig={board.ChartConfig}
-              topLeftChart={topLeftChart}
-              topRightChart={topRightChart}
-              miniCharts={miniCharts}
-              drawers={drawers}
-              inflValues={inflValues}
-              lastUpdate={lastUpdate}
-            />
+            {renderBoard(board, false)}
           </Grid>
-        )
-      })}
-    </Grid>
+        ))}
+      </Grid>
+    )
+  }
+
+  const activeBoard = boards.find((b) => b.id === activeId) || boards[0]
+
+  // Varios tableros: una sola card con pestañas. Sólo el activo se monta,
+  // así los inactivos no consultan Influx (minigráficos, drawers, gralf).
+  return (
+    <div className='w-full rounded-3xl border border-[#1f4e79]/8 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-[0_2px_8px_rgba(15,42,68,0.05),0_24px_56px_-30px_rgba(15,42,68,0.28)] overflow-hidden'>
+      {/* Barra de pestañas con el degradado de la navbar */}
+      <div
+        className='flex flex-wrap items-center gap-1 px-2.5 py-1.5 border-b border-white/10'
+        style={{ background: 'linear-gradient(90deg, #3f80bd 0%, #2c6aa0 50%, #1f4e79 100%)' }}
+      >
+        {boards.map((board) => {
+          const isActive = board.id === activeBoard.id
+          const status = pumpStatusOf(board)
+          return (
+            <button
+              key={board.id}
+              type='button'
+              onClick={() => selectTab(board.id)}
+              className={[
+                'inline-flex items-center gap-1.5 h-7 px-2.5 rounded-full border-0 text-[12px] font-semibold cursor-pointer transition-colors whitespace-nowrap',
+                isActive
+                  ? 'bg-white text-[#1f4e79] shadow-[0_4px_12px_-2px_rgba(7,34,60,0.5)]'
+                  : 'bg-transparent text-white/70 hover:bg-white/10 hover:text-white',
+              ].join(' ')}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full shrink-0 ${DOT_CLASS[status]}`}
+              />
+              {board.name}
+            </button>
+          )
+        })}
+        <span className='flex-1' />
+        {lastUpdate && (
+          <span className='text-[11.5px] text-white/70'>
+            Última actualización{' '}
+            <b className='font-semibold tabular-nums text-white'>
+              {new Date(lastUpdate).toLocaleString('es-AR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
+              }).replace(',', '')}
+            </b>
+          </span>
+        )}
+      </div>
+
+      {renderBoard(activeBoard, true)}
+    </div>
   )
 }
 

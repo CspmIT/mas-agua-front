@@ -2,6 +2,7 @@ import { Marker } from 'react-map-gl/maplibre'
 import { useEffect, useRef, useState } from 'react'
 import SensorPin from './SensorPin'
 import StatusFloatingLabel from './StatusFloatingLabel'
+import { normalRangeColor } from '../utils/sensorDefaults'
 
 // Mapeo de anchor (string del back) → offset (dx, dy) en píxeles para el label.
 // La opción elegida es la posición VISUAL del label respecto del pin
@@ -35,6 +36,13 @@ const SensorMarker = ({
     const s = snapshot || { status: 'off', value: null, kind: null, trend: null }
     const status = s.status || 'off'
     const offset = ANCHOR_TO_OFFSET[marker.anchor ?? ''] || ANCHOR_TO_OFFSET['']
+
+    // En rango normal el color no es el verde fijo de "ok": interpola celeste →
+    // azul oscuro según dónde caiga el valor entre las advertencias baja y alta
+    const normalColor =
+        status === 'ok' && s.kind !== 'binary' && s.kind !== 'calc_binary'
+            ? normalRangeColor(s.value, marker.warn_low, marker.warn_high)
+            : null
 
     const [hovered, setHovered] = useState(false)
     const rootRef = useRef(null)
@@ -85,11 +93,13 @@ const SensorMarker = ({
                         type={marker.sensor_type}
                         status={status}
                         label={truncateLabel(marker.name)}
+                        colorOverride={normalColor}
                     />
                 </div>
                 <StatusFloatingLabel
                     type={marker.sensor_type}
                     status={status}
+                    colorOverride={normalColor}
                     value={s.value}
                     unit={marker.unit}
                     trend={s.trend}

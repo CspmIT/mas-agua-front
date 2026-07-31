@@ -124,7 +124,7 @@ const SectionPanel = ({ title, action, children, defaultOpen = true, className =
     const [open, setOpen] = useState(defaultOpen)
     return (
         <section
-            className={`rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden ${className}`}
+            className={`rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden ${className}`}
         >
             {/* Header como div-botón: la zona de acciones puede contener botones
                 reales (HistoryChip) sin anidar button dentro de button. */}
@@ -464,6 +464,9 @@ const BoardChart = memo(
         singleColumn = false,
         // Fecha del último refresco de valores (la setea la vista de Boards).
         lastUpdate = null,
+        // Modo embebido (tableros agrupados con pestañas): sin carcasa ni
+        // header propios — la card contenedora y la pestaña los reemplazan.
+        embedded = false,
 
         ChartData = [],
         ChartConfig = [],
@@ -603,8 +606,15 @@ const BoardChart = memo(
         // Minivista de pozo: altura natural (la página scrollea). Deja de bloquearse
         // a una pantalla porque el tablero ahora crece con drawers y minigráficos.
         return (
-            <div className='w-full rounded-3xl border border-[#1f4e79]/8 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-[0_2px_8px_rgba(15,42,68,0.05),0_24px_56px_-30px_rgba(15,42,68,0.28)] overflow-hidden'>
-                {/* HEADER */}
+            <div
+                className={
+                    embedded
+                        ? 'w-full'
+                        : 'w-full rounded-3xl border border-[#1f4e79]/8 dark:border-white/10 bg-white dark:bg-slate-900/50 shadow-[0_2px_8px_rgba(15,42,68,0.05),0_24px_56px_-30px_rgba(15,42,68,0.28)] overflow-hidden'
+                }
+            >
+                {/* HEADER (en modo embebido lo reemplaza la pestaña) */}
+                {!embedded && (
                 <div className='relative px-3.5 py-2.5 bg-gradient-to-br from-[#2c6aa0] to-[#1f4e79] overflow-hidden'>
                     {/* Textura de puntos sutil */}
                     <div
@@ -638,6 +648,7 @@ const BoardChart = memo(
                         )}
                     </div>
                 </div>
+                )}
 
                 {/* Layout minivista: columna principal a la izquierda; a la derecha,
                     los minigráficos históricos configurados para el tablero. */}
@@ -676,7 +687,7 @@ const BoardChart = memo(
                                         hasHistory ? 'cursor-pointer select-none' : '',
                                         isOpen
                                             ? 'border-[#368bed]/50 dark:border-[#368bed]/40'
-                                            : 'border-[#1f4e79]/10 dark:border-white/10',
+                                            : 'border-slate-300 dark:border-slate-600',
                                     ].join(' ')}
                                 >
                                     {hasHistory && (
@@ -692,7 +703,7 @@ const BoardChart = memo(
 
                     {/* NIVEL DE POZO — franja con valor actual; el drawer trae el histórico */}
                     {levelItem && (
-                        <section className='rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden'>
+                        <section className='rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_14px_34px_-26px_rgba(15,42,68,0.35)] overflow-hidden'>
                             <div
                                 role={levelHasHistory ? 'button' : undefined}
                                 tabIndex={levelHasHistory ? 0 : undefined}

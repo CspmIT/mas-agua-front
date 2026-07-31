@@ -1,9 +1,9 @@
 import { PIN_BY_TYPE } from '../utils/sensorPins'
 import { STATUS_COLORS } from '../utils/sensorDefaults'
 
-const SensorPin = ({ type, status, label }) => {
+const SensorPin = ({ type, status, label, colorOverride = null }) => {
     const Shape = PIN_BY_TYPE[type] || PIN_BY_TYPE.presion
-    const color = STATUS_COLORS[status] || STATUS_COLORS.off
+    const color = colorOverride || STATUS_COLORS[status] || STATUS_COLORS.off
     const isStale = status === 'stale'
 
     return (

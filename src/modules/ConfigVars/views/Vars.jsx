@@ -2,7 +2,7 @@ import { Container, FormControl, InputLabel, MenuItem, Select } from '@mui/mater
 import TableCustom from '../../../components/TableCustom'
 import { ActionsRow, DeleteChip, EditChip } from '../../../components/TableActions'
 import FiltersBar from '../../../components/FiltersBar'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getVarsInflux } from '../../DrawDiagram/components/Fields/actions'
 import ModalVar from '../../../components/DataGenerator/ModalVar'
 import { backend } from '../../../utils/routes/app.routes'
@@ -18,15 +18,26 @@ const Vars = () => {
     const [modal, setModal] = useState(false)
     const [modalBitCalc, setModalBitCalc] = useState(false);
     const [detailVar, setDetailVar] = useState(null)
-    const [vars, setVars] = useState([])
     const [varsOriginal, setVarsOriginal] = useState([]);
+    const [activeFilters, setActiveFilters] = useState({ process: '', calc: '', unit: '' });
     const [processList, setProcessList] = useState([]);
     const [unitList, setUnitList] = useState([]);
     const { control, handleSubmit, reset } = useForm({ defaultValues: { process: '', calc: '', unit: '' } });
 
+    // Lista filtrada derivada: un refetch tras guardar no borra los filtros aplicados
+    const vars = useMemo(() => {
+        const { process, calc, unit } = activeFilters;
+        let filtered = [...varsOriginal];
+        if (process) filtered = filtered.filter(v => v.process === process);
+        if (calc === 'true') filtered = filtered.filter(v => v.calc === true);
+        else if (calc === 'false') filtered = filtered.filter(v => v.calc === false);
+        if (unit) filtered = filtered.filter(v => v.unit === unit);
+        return filtered;
+    }, [varsOriginal, activeFilters]);
+
     const onResetFilters = () => {
         reset({ process: '', calc: '', unit: '' });
-        setVars(varsOriginal);
+        setActiveFilters({ process: '', calc: '', unit: '' });
     };
     const deleteVar = async (id) => {
         const url = `${backend[import.meta.env.VITE_APP_NAME]}/deleteVar/${id}`
@@ -99,7 +110,6 @@ const Vars = () => {
     const getVars = async () => {
         const varsDB = await getVarsInflux();
 
-        setVars(varsDB);
         setVarsOriginal(varsDB);
 
         const processUniques = Array.from(
@@ -118,26 +128,7 @@ const Vars = () => {
 
     // FUNCION PARA SETEAR FILTROS
     const onSubmit = ({ process, calc, unit }) => {
-        let filtered = [...varsOriginal];
-
-        // Filtro por process
-        if (process) {
-            filtered = filtered.filter(v => v.process === process);
-        }
-
-        // Filtro por calc (convertimos string → boolean)
-        if (calc === "true") {
-            filtered = filtered.filter(v => v.calc === true);
-        } else if (calc === "false") {
-            filtered = filtered.filter(v => v.calc === false);
-        }
-
-        // Filtro por unit
-        if (unit) {
-            filtered = filtered.filter(v => v.unit === unit);
-        }
-
-        setVars(filtered);
+        setActiveFilters({ process, calc, unit });
     };
 
 
@@ -220,6 +211,7 @@ const Vars = () => {
                         pagination={true}
                         pageSize={10}
                         topToolbar={true}
+                        stateKey='config-vars'
                     />
                 </>
             ) : (

@@ -5,6 +5,7 @@ import { createDefaultLed } from '../components/WidgetElements/LedElement';
 import { createDefaultLinkButton } from '../components/WidgetElements/LinkButtonElement';
 import { createDefaultVarCard } from '../components/WidgetElements/VarCardElement';
 import { createDefaultActionButton } from '../components/WidgetElements/ActionButtonElement';
+import { createDefaultShape, SHAPE_TYPES } from '../components/ShapeElements/ShapeElements';
 
 //CAJA CONTENEDORA APROXIMADA DE UN ELEMENTO EN COORDENADAS DEL CANVAS
 export const getElementBBox = (el) => {
@@ -220,13 +221,14 @@ export const useDrawingTools = ({
       return;
     }
 
-    // Widgets tanque, LED, botón de navegación y botón de acción PLC
-    if (['tank', 'led', 'linkButton', 'actionButton'].includes(tool) && clickedOnEmpty) {
+    // Widgets tanque, LED, botón de navegación, botón de acción PLC y figuras geométricas
+    if (['tank', 'led', 'linkButton', 'actionButton', ...SHAPE_TYPES].includes(tool) && clickedOnEmpty) {
       const factories = {
         tank: createDefaultTank,
         led: createDefaultLed,
         linkButton: createDefaultLinkButton,
         actionButton: createDefaultActionButton,
+        ...Object.fromEntries(SHAPE_TYPES.map((type) => [type, createDefaultShape(type)])),
       };
       const newWidget = factories[tool](pos);
       setElements((prev) => [...prev, newWidget]);
