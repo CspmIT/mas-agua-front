@@ -72,7 +72,7 @@ const ghostPillSx = {
     color: '#475569',
 }
 
-export default function AssignProfileDialog({ open, chartId, onClose }) {
+export default function AssignProfileDialog({ open, chartId, onClose, onSaved }) {
     const [profiles, setProfiles] = useState([])
     const [selected, setSelected] = useState([])
     const [loading, setLoading] = useState(false)
@@ -118,6 +118,7 @@ export default function AssignProfileDialog({ open, chartId, onClose }) {
                 showConfirmButton: false,
                 timerProgressBar: true,
             })
+            onSaved?.()
             onClose()
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Error', text: error.message })

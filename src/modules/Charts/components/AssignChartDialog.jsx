@@ -71,7 +71,7 @@ const ghostPillSx = {
     color: '#475569',
 }
 
-const AssignChartDialog = ({ open, chartId, users, onClose }) => {
+const AssignChartDialog = ({ open, chartId, users, onClose, onSaved }) => {
     const [assignedUsers, setAssignedUsers] = useState([])
     const [selectedUsers, setSelectedUsers] = useState([])
     const [loaded, setLoaded] = useState(false)
@@ -118,6 +118,7 @@ const AssignChartDialog = ({ open, chartId, users, onClose }) => {
                 ),
             ])
             Swal.fire({ icon: 'success', title: '¡Guardado!', html: 'Asignaciones actualizadas' })
+            onSaved?.()
             handleClose()
         } catch (error) {
             Swal.fire({ icon: 'error', title: 'Error', html: error.message })

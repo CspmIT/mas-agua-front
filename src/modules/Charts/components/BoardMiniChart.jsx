@@ -29,7 +29,7 @@ const BoardMiniChart = memo(({ chart }) => {
     const cleanUnit = typeof unit === 'string' && unit.trim().toLowerCase() !== 'bool' ? unit.trim() : ''
 
     return (
-        <div className='flex-1 rounded-2xl border border-[#1f4e79]/10 dark:border-white/10 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] overflow-hidden flex flex-col'>
+        <div className='flex-1 rounded-2xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-white/[0.02] shadow-[0_1px_3px_rgba(15,42,68,0.04),0_12px_30px_-22px_rgba(15,42,68,0.30)] overflow-hidden flex flex-col'>
             <div className='flex items-center justify-between gap-2 px-2.5 py-1.5 border-b border-[#1f4e79]/8 dark:border-white/5'>
                 <span className='inline-flex items-center rounded-full bg-gradient-to-r from-[#12456f] to-[#1f5f95] px-2 py-0.5 text-[9px] font-bold uppercase tracking-[0.11em] text-white truncate'>
                     {chart.name}

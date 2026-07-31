@@ -101,6 +101,7 @@ const Maps = () => {
                     pagination={true}
                     pageSize={10}
                     columnVisibility={columnVisibility}
+                    stateKey='maps'
                 />
             ) : (
                 <LoaderComponent />

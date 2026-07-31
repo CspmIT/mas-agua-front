@@ -17,6 +17,7 @@ import VariableHistoryPopup from '../components/VariableHistoryPopup/VariableHis
 import BombControlPopup from '../components/BombControl/BombControlPopup';
 import PumpSetPointPopup from '../components/BombControl/PumpSetPointPopup';
 import ActionButtonElement from '../components/WidgetElements/ActionButtonElement';
+import ShapeElement, { SHAPE_TYPES } from '../components/ShapeElements/ShapeElements';
 import Swal from 'sweetalert2';
 import LoaderComponent from '../../../components/Loader';
 import CardCustom from '../../../components/CardCustom';
@@ -661,6 +662,9 @@ function ViewDiagram() {
         }
         if (el.type === 'varCard') {
           return <VarCardElement key={el.id} el={el} />;
+        }
+        if (SHAPE_TYPES.includes(el.type)) {
+          return <ShapeElement key={el.id} el={el} />;
         }
         return null;
       })();

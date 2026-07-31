@@ -181,8 +181,8 @@ function AddMenu() {
 	// ---------------- LOAD DATA ----------------
 	const loadData = async () => {
 		try {
-			setLoadingApp(true)
-
+			// El loader sólo aparece en la carga inicial: en los refetch tras guardar
+			// la vista queda montada y conserva el filtro y el estado del árbol
 			const profilesRes = await request(
 				`${backend[import.meta.env.VITE_APP_NAME]}/listProfiles`,
 				'GET'

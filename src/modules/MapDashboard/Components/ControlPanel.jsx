@@ -9,6 +9,7 @@ import {
     Tooltip,
 } from '@mui/material'
 import { Delete, Edit, RoomOutlined } from '@mui/icons-material'
+import { FaDiscord } from 'react-icons/fa'
 import CardCustom from '../../../components/CardCustom'
 
 const avatarSx = {
@@ -38,7 +39,25 @@ const dangerIconBtnSx = {
     },
 }
 
-const ControlPanel = ({ markers = [], setMarkers, onEdit = null, className = '' }) => {
+// Badge de alarmas del marcador: azul si su variable ya tiene alarmas
+// configuradas, ámbar si tiene alarmas pendientes de crear al guardar el mapa
+const AlarmBadge = ({ hasAlarm, hasPending }) => {
+    if (!hasAlarm && !hasPending) return null
+    const title = hasAlarm && hasPending
+        ? 'Tiene alarmas configuradas y otras pendientes de crear al guardar'
+        : hasAlarm
+            ? 'La variable de este marcador tiene alarmas configuradas'
+            : 'Alarma pendiente: se crea al guardar el mapa'
+    return (
+        <Tooltip title={title} arrow>
+            <span className='inline-flex items-center flex-shrink-0'>
+                <FaDiscord size={13} color={hasAlarm ? '#5865F2' : '#d97706'} />
+            </span>
+        </Tooltip>
+    )
+}
+
+const ControlPanel = ({ markers = [], setMarkers, onEdit = null, className = '', alarmVarIds = new Set() }) => {
     const deleteMarker = (marker) => {
         setMarkers(markers.filter((m) => m !== marker))
     }
@@ -162,8 +181,17 @@ const ControlPanel = ({ markers = [], setMarkers, onEdit = null, className = '' 
                                     </ListItemAvatar>
                                     <ListItemText
                                         primary={
-                                            <span className='text-sm font-semibold text-slate-800 dark:text-gray-100 truncate block'>
-                                                {marker.name}
+                                            <span className='flex items-center gap-1.5 min-w-0'>
+                                                <span className='text-sm font-semibold text-slate-800 dark:text-gray-100 truncate'>
+                                                    {marker.name}
+                                                </span>
+                                                <AlarmBadge
+                                                    hasAlarm={alarmVarIds.has(Number(marker.popupInfo?.idVar))}
+                                                    hasPending={Boolean(
+                                                        marker.alarmChecks &&
+                                                        Object.values(marker.alarmChecks).some(Boolean)
+                                                    )}
+                                                />
                                             </span>
                                         }
                                         secondary={
