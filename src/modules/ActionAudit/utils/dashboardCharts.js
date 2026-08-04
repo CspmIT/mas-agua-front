@@ -85,13 +85,25 @@ export const lineArea = ({ labels, values, name, color, darkMode, valueFormatter
 	],
 })
 
-// Barras horizontales (rankings: módulos, usuarios). El primero queda arriba.
-export const horizontalBars = ({ labels, values, name, color, darkMode, valueFormatter }) => ({
+// Barras horizontales (rankings: módulos, usuarios, endpoints). El primero
+// queda arriba. labelWidth agranda el eje para etiquetas largas (endpoints)
+// y tooltipFormatter permite un tooltip enriquecido.
+export const horizontalBars = ({
+	labels,
+	values,
+	name,
+	color,
+	darkMode,
+	valueFormatter,
+	labelWidth = 130,
+	tooltipFormatter,
+}) => ({
 	tooltip: {
 		trigger: 'axis',
 		axisPointer: { type: 'shadow' },
 		...tooltipStyle(darkMode),
-		...(valueFormatter ? { valueFormatter } : {}),
+		...(tooltipFormatter ? { formatter: tooltipFormatter } : {}),
+		...(valueFormatter && !tooltipFormatter ? { valueFormatter } : {}),
 	},
 	grid: { left: 8, right: 24, top: 8, bottom: 4, containLabel: true },
 	xAxis: {
@@ -103,7 +115,7 @@ export const horizontalBars = ({ labels, values, name, color, darkMode, valueFor
 		type: 'category',
 		data: [...labels].reverse(),
 		...baseAxes(darkMode),
-		axisLabel: { color: textColor(darkMode), width: 130, overflow: 'truncate' },
+		axisLabel: { color: textColor(darkMode), width: labelWidth, overflow: 'truncate' },
 	},
 	series: [
 		{

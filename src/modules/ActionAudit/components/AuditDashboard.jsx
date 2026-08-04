@@ -138,6 +138,11 @@ function AuditDashboard({ scope = 'tenant' }) {
 		const modulesByDemand = [...data.modules].sort((a, b) => b.totalMs - a.totalMs).slice(0, TOP_MODULES)
 		const users = data.users.slice(0, TOP_MODULES)
 
+		// Endpoints más usados: etiqueta "MÉTODO /ruta" (sin el prefijo /api)
+		const endpoints = (data.endpoints ?? []).slice(0, 10)
+		const endpointLabel = (e) => `${e.method} ${e.path.replace(/^\/api/, '')}`
+		const endpointByLabel = new Map(endpoints.map((e) => [endpointLabel(e), e]))
+
 		return {
 			traffic: verticalBars({
 				labels: dayLabels,
@@ -195,6 +200,22 @@ function AuditDashboard({ scope = 'tenant' }) {
 				darkMode,
 				valueFormatter: (v) => formatInt(v),
 			}),
+			endpoints: endpoints.length
+				? horizontalBars({
+						labels: endpoints.map(endpointLabel),
+						values: endpoints.map((e) => e.count),
+						name: 'Requests',
+						color: COLOR.count,
+						darkMode,
+						labelWidth: 240,
+						tooltipFormatter: (params) => {
+							const p = Array.isArray(params) ? params[0] : params
+							const e = endpointByLabel.get(p.name)
+							if (!e) return p.name
+							return `${p.name}<br/>${formatInt(e.count)} requests · prom. ${formatMs(e.avgMs)}`
+						},
+					})
+				: null,
 			orgsRequests: organizations.length
 				? horizontalBars({
 						labels: organizations.map((o) => o.name),
@@ -352,6 +373,15 @@ function AuditDashboard({ scope = 'tenant' }) {
 				>
 					<EChart config={charts.modulesByDemand} />
 				</ChartCard>
+				{charts.endpoints && (
+					<ChartCard
+						title='Endpoints más usados'
+						subtitle={`Top 10 de requests por método y ruta (últimos ${days} días)`}
+						className='lg:col-span-2 h-80'
+					>
+						<EChart config={charts.endpoints} />
+					</ChartCard>
+				)}
 			</div>
 
 			{/* Sesiones, usuarios y estados */}
