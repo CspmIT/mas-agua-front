@@ -37,10 +37,13 @@ function ActionAudit() {
 
 			<Tabs value={tab} onChange={(_, value) => setTab(value)} sx={tabsSx}>
 				<Tab value='dashboard' label='Dashboard' />
+				<Tab value='todas' label='Todas las organizaciones' />
 				<Tab value='movimientos' label='Movimientos' />
 			</Tabs>
 
-			{tab === 'dashboard' ? <AuditDashboard /> : <AuditMovements />}
+			{tab === 'dashboard' && <AuditDashboard />}
+			{tab === 'todas' && <AuditDashboard scope='all' />}
+			{tab === 'movimientos' && <AuditMovements />}
 		</Container>
 	)
 }

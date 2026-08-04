@@ -89,7 +89,8 @@ const ChartCard = ({ title, subtitle, className = '', children }) => (
 	</CardCustom>
 )
 
-function AuditDashboard() {
+// scope 'tenant' = la organización activa; 'all' = todas las organizaciones
+function AuditDashboard({ scope = 'tenant' }) {
 	const { darkMode } = useContext(MainContext)
 	const [data, setData] = useState(null)
 	const [loading, setLoading] = useState(true)
@@ -100,8 +101,9 @@ function AuditDashboard() {
 		const getDashboard = async () => {
 			setLoading(true)
 			try {
+				const endpoint = scope === 'all' ? '/audit/dashboard/all' : '/audit/dashboard'
 				const response = await request(
-					`${backend[import.meta.env.VITE_APP_NAME]}/audit/dashboard?days=${days}`,
+					`${backend[import.meta.env.VITE_APP_NAME]}${endpoint}?days=${days}`,
 					'GET'
 				)
 				if (!cancelled) setData(response?.data ?? null)
@@ -116,7 +118,7 @@ function AuditDashboard() {
 		return () => {
 			cancelled = true
 		}
-	}, [days])
+	}, [days, scope])
 
 	const charts = useMemo(() => {
 		if (!data) return null
@@ -129,6 +131,8 @@ function AuditDashboard() {
 
 		const hourKeys = lastNHourKeys(24)
 		const requestsByHour = new Map(data.requests.seriesHourly.map((r) => [r.hour, r.count]))
+
+		const organizations = data.organizations ?? []
 
 		const modulesByCount = [...data.modules].sort((a, b) => b.count - a.count).slice(0, TOP_MODULES)
 		const modulesByDemand = [...data.modules].sort((a, b) => b.totalMs - a.totalMs).slice(0, TOP_MODULES)
@@ -191,6 +195,26 @@ function AuditDashboard() {
 				darkMode,
 				valueFormatter: (v) => formatInt(v),
 			}),
+			orgsRequests: organizations.length
+				? horizontalBars({
+						labels: organizations.map((o) => o.name),
+						values: organizations.map((o) => o.requests),
+						name: 'Requests',
+						color: COLOR.count,
+						darkMode,
+						valueFormatter: (v) => formatInt(v),
+					})
+				: null,
+			orgsLogins: organizations.length
+				? horizontalBars({
+						labels: [...organizations].sort((a, b) => b.logins - a.logins).map((o) => o.name),
+						values: [...organizations].sort((a, b) => b.logins - a.logins).map((o) => o.logins),
+						name: 'Inicios de sesión',
+						color: COLOR.activity,
+						darkMode,
+						valueFormatter: (v) => formatInt(v),
+					})
+				: null,
 			status: donut({
 				data: data.status.map((s) => ({
 					name: STATUS_META[s.bucket]?.label ?? s.bucket,
@@ -264,6 +288,32 @@ function AuditDashboard() {
 					hint={`${errorRate.toFixed(1)}% de ${formatInt(data.requests.total)} requests`}
 				/>
 			</div>
+
+			{/* Desglose por organización (sólo en la vista global) */}
+			{charts.orgsRequests && (
+				<div className='grid grid-cols-1 lg:grid-cols-2 gap-3'>
+					<ChartCard
+						title='Requests por organización'
+						subtitle={`Solicitudes al backend (últimos ${days} días)`}
+						className='h-72'
+					>
+						<EChart config={charts.orgsRequests} />
+					</ChartCard>
+					<ChartCard
+						title='Sesiones por organización'
+						subtitle={`Inicios de sesión (últimos ${days} días)`}
+						className='h-72'
+					>
+						<EChart config={charts.orgsLogins} />
+					</ChartCard>
+				</div>
+			)}
+
+			{data.skipped?.length > 0 && (
+				<p className='text-xs text-slate-400 dark:text-gray-400 px-1'>
+					Sin datos de: {data.skipped.join(', ')}
+				</p>
+			)}
 
 			{/* Tráfico y tiempos */}
 			<div className='grid grid-cols-1 lg:grid-cols-2 gap-3'>

@@ -20,6 +20,9 @@ export const request = async (url, method, data = false) => {
 				'Content-Type': 'application/json',
 				Accept: 'application/json',
 				Authorization: 'Bearer ' + token,
+				// Vista activa: el backend la usa para atribuir la request a un
+				// modulo en las metricas de auditoria
+				'X-App-Route': window.location.pathname,
 			},
 		})
 		return response
