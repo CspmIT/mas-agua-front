@@ -2,6 +2,7 @@ import { createContext, useEffect, useState } from 'react'
 import { request } from '../utils/js/request'
 import { backend } from '../utils/routes/app.routes'
 import { storage } from '../storage/storage'
+import { renewSessionIfNeeded } from '../utils/js/session'
 
 const MainContext = createContext()
 
@@ -36,6 +37,15 @@ function MainProvider({ children }) {
 		const interval = setInterval(fetchUnreadCount, 15000)
 		return () => clearInterval(interval)
 	}, [user, client])
+
+	// Renovacion deslizante de la sesion: mientras la app este abierta el token no vence
+	useEffect(() => {
+		if (!user) return
+
+		renewSessionIfNeeded()
+		const interval = setInterval(renewSessionIfNeeded, 5 * 60 * 1000)
+		return () => clearInterval(interval)
+	}, [user])
 
 	useEffect(() => {
 		if (tabs.length) {

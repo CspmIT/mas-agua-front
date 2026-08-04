@@ -7,6 +7,7 @@ import Footer from '../components/Footer'
 import Swal from 'sweetalert2'
 import { storage } from '../../../storage/storage'
 import { getData, removeData } from '../../../storage/cookies-store'
+import { isTokenExpired } from '../../../utils/js/session'
 import LoaderComponent from '../../../components/Loader'
 
 
@@ -17,7 +18,8 @@ const MainContent = () => {
 	const authUser = storage.get('usuario')
 	const validationUser = async () => {
 		const token = await getData('token')
-		if (!authUser || !token) {
+		// En Tauri el Store no borra el token vencido, por eso se valida tambien la expiracion
+		if (!authUser || !token || isTokenExpired(token)) {
 			localStorage.clear()
 			await removeData('token')
 			setUser(false)
