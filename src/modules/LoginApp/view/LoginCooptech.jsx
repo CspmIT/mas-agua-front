@@ -3,6 +3,7 @@ import { jwtDecode } from 'jwt-decode'
 import { storage } from '../utils/storage'
 import Swal from 'sweetalert2'
 import { removeData, saveData } from '../../../storage/cookies-store'
+import { getTokenExpiration } from '../../../utils/js/session'
 import { useContext } from 'react'
 import { MainContext } from '../../../context/MainContext'
 
@@ -33,7 +34,7 @@ const LoginCooptech = () => {
 			delete decodedToken.user_id_cooptech
 			delete decodedToken.tokenCooptech
 			// Obtengo la fecha de expiracion del token y la guardo en una cookie
-			const expirationDate = new Date(decodedToken.exp)
+			const expirationDate = getTokenExpiration(decodedToken)
 			await saveData('token', token, {
 				expires: expirationDate,
 				secure: import.meta.env.VITE_ENTORNO === 'desarrollo' ? false : true,
