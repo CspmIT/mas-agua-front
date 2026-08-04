@@ -22,7 +22,7 @@ import LoaderComponent from '../../../components/Loader'
 import PageHeader from '../../../components/PageHeader'
 import ModalShell from '../../../components/ModalShell'
 import { SENSOR_TYPE_OPTIONS, ANCHOR_OPTIONS } from '../utils/sensorDefaults'
-import ThresholdGauge, { THRESHOLD_ZONES } from '../Components/ThresholdGauge'
+import ThresholdGauge, { THRESHOLD_ZONES, zoneAlarmName } from '../Components/ThresholdGauge'
 
 const primaryPillSx = {
     borderRadius: '999px',
@@ -159,6 +159,8 @@ const MapView = ({ create = false, search = false }) => {
     // ── Tipo + anchor (estado del modal) ─────────────────────────────────────
     const [selectedSensorType, setSelectedSensorType] = useState('')
     const [anchor, setAnchor] = useState('')
+    // Color base del rango normal del pin ('' = azul de la marca)
+    const [normalColor, setNormalColor] = useState('')
 
     // ── Alarmas ──────────────────────────────────────────────────────────────
     // Checks del modal: qué umbrales generan alarma al guardar el MAPA (no el pin)
@@ -192,6 +194,18 @@ const MapView = ({ create = false, search = false }) => {
         [alarms, selectedVar]
     )
 
+    // Alarmas vinculadas al marcador en edición (por id guardado en alarm_ids)
+    const linkedAlarms = useMemo(() => {
+        if (editingIndex === null) return {}
+        const ids = markers[editingIndex]?.alarm_ids || {}
+        const result = {}
+        Object.entries(ids).forEach(([zoneKey, alarmId]) => {
+            const alarm = alarms.find((a) => Number(a.id) === Number(alarmId))
+            if (alarm) result[zoneKey] = alarm
+        })
+        return result
+    }, [editingIndex, markers, alarms])
+
     const isBinaryCompressed = selectedVar?.binary_compressed ?? false
     const isCalcBinary =
         (selectedVar?.calc_binary_compressed || selectedVar?.unit === 'calc_binary') ?? false
@@ -222,6 +236,8 @@ const MapView = ({ create = false, search = false }) => {
         crit_high: toNumberOrNull(cfg.crit_high),
         stale_after_minutes: toNumberOrNull(cfg.stale_after_minutes),
         alarmChecks: cfg.alarmChecks || null,
+        alarm_ids: cfg.alarm_ids || null,
+        normal_color: cfg.normal_color || null,
         popupInfo: {
             lat: parseFloat(cfg.latitude),
             lng: parseFloat(cfg.longitude),
@@ -267,6 +283,7 @@ const MapView = ({ create = false, search = false }) => {
         setSelectedBitId('')
         setAnchor('')
         setSelectedSensorType('')
+        setNormalColor('')
         setAlarmChecks({})
         setEditingIndex(null)
         setEditInitialVar(null)
@@ -291,6 +308,7 @@ const MapView = ({ create = false, search = false }) => {
         setSelectedBitId(marker.popupInfo?.id_bit ?? '')
         setAnchor(marker.popupInfo?.anchor ?? '')
         setSelectedSensorType(marker.sensor_type ?? '')
+        setNormalColor(marker.normal_color ?? '')
         setAlarmChecks(marker.alarmChecks || {})
         setEditingIndex(index)
         setModalOpen(true)
@@ -369,6 +387,8 @@ const MapView = ({ create = false, search = false }) => {
             crit_high: values.crit_high,
             stale_after_minutes: values.stale_after_minutes,
             alarmChecks: Object.values(alarmChecks).some(Boolean) ? alarmChecks : null,
+            alarm_ids: isEditing ? markers[editingIndex]?.alarm_ids ?? null : null,
+            normal_color: normalColor || null,
         })
 
         if (isEditing) {
@@ -421,43 +441,100 @@ const MapView = ({ create = false, search = false }) => {
         return value || null
     }
 
-    // Crea las alarmas pendientes (checks del modal) una vez guardado el mapa.
-    // Se difieren hasta acá para no dejar alarmas huérfanas si se cancela el guardado.
-    const createPendingAlarms = async () => {
+    // Sincroniza las alarmas de los pines una vez guardado el mapa (así no quedan
+    // alarmas huérfanas si se cancela el guardado). El vínculo pin→alarma se
+    // persiste por id en marker.alarm_ids:
+    // - umbral con alarma vinculada y valor distinto → se actualiza esa alarma
+    // - sin vínculo pero existe una idéntica (variable+condición+valor) → se adopta
+    // - sin vínculo pero existe una con el nombre autogenerado (legado) → se
+    //   actualiza y se adopta su id
+    // - si no hay nada → se crea y se guarda el id nuevo
+    const syncMarkerAlarms = async () => {
         const url = backend[import.meta.env.VITE_APP_NAME]
-        const pending = []
-        markers.forEach((m) => {
-            if (!m.alarmChecks || !m.popupInfo?.idVar) return
-            THRESHOLD_ZONES.forEach((zone) => {
-                if (!m.alarmChecks[zone.key]) return
+        let created = 0
+        let updated = 0
+        let failed = 0
+        let idsChanged = false
+
+        const updatedMarkers = []
+        for (const m of markers) {
+            if (!m.alarmChecks || !m.popupInfo?.idVar) {
+                updatedMarkers.push(m)
+                continue
+            }
+            const idVar = Number(m.popupInfo.idVar)
+            const newIds = { ...(m.alarm_ids || {}) }
+
+            for (const zone of THRESHOLD_ZONES) {
+                if (!m.alarmChecks[zone.key]) continue
                 const value = m[zone.key]
-                if (value === null || value === undefined || value === '') return
-                // No duplicar una alarma idéntica ya existente (misma variable, condición y valor)
-                const duplicated = alarms.some(
-                    (a) =>
-                        Number(a.id_influxvars) === Number(m.popupInfo.idVar) &&
-                        a.condition === zone.condition &&
-                        Number(a.value) === Number(value)
-                )
-                if (duplicated) return
-                pending.push({
-                    name: `${m.name} - ${zone.label}`,
+                if (value === null || value === undefined || value === '') continue
+
+                const payload = {
+                    name: zoneAlarmName(m.name, zone),
                     id_influxvars: m.popupInfo.idVar,
                     id_bit: m.popupInfo.id_bit ?? null,
                     condition: zone.condition,
                     value: Number(value),
-                    repeatInterval: 0,
+                    repeatInterval: 10,
                     type: 'single',
-                })
-            })
-        })
-        if (!pending.length) return { created: 0, failed: 0 }
+                }
 
-        const results = await Promise.allSettled(
-            pending.map((p) => request(`${url}/createAlarm`, 'POST', p))
-        )
-        const created = results.filter((r) => r.status === 'fulfilled').length
-        return { created, failed: results.length - created }
+                try {
+                    const linked = alarms.find((a) => Number(a.id) === Number(newIds[zone.key]))
+                    if (linked) {
+                        const unchanged =
+                            linked.condition === zone.condition &&
+                            Number(linked.value) === Number(value) &&
+                            linked.name === payload.name
+                        if (unchanged) continue
+                        await request(`${url}/updateAlarm/${linked.id}`, 'PUT', payload)
+                        updated++
+                        continue
+                    }
+
+                    // Sin vínculo: adoptar una idéntica o la del nombre legado
+                    const identical = alarms.find(
+                        (a) =>
+                            Number(a.id_influxvars) === idVar &&
+                            a.condition === zone.condition &&
+                            Number(a.value) === Number(value)
+                    )
+                    if (identical) {
+                        newIds[zone.key] = identical.id
+                        idsChanged = true
+                        continue
+                    }
+                    const legacy = alarms.find(
+                        (a) => Number(a.id_influxvars) === idVar && a.name === payload.name
+                    )
+                    if (legacy) {
+                        await request(`${url}/updateAlarm/${legacy.id}`, 'PUT', payload)
+                        newIds[zone.key] = legacy.id
+                        idsChanged = true
+                        updated++
+                        continue
+                    }
+
+                    const { data } = await request(`${url}/createAlarm`, 'POST', payload)
+                    if (data?.id) {
+                        newIds[zone.key] = data.id
+                        idsChanged = true
+                    }
+                    created++
+                } catch (error) {
+                    console.error(error)
+                    failed++
+                }
+            }
+
+            updatedMarkers.push({
+                ...m,
+                alarm_ids: Object.keys(newIds).length ? newIds : null,
+            })
+        }
+
+        return { updatedMarkers, created, updated, failed, idsChanged }
     }
 
     const handleSubmit = async () => {
@@ -470,26 +547,57 @@ const MapView = ({ create = false, search = false }) => {
         if (!mapName) return
 
         // alarmChecks es estado local del editor: no viaja al backend del mapa
-        const map = {
+        const buildMapPayload = (markersList) => ({
             name: mapName,
             viewState,
-            markers: markers.map(({ alarmChecks: _alarmChecks, ...rest }) => rest),
-        }
+            markers: markersList.map(({ alarmChecks: _alarmChecks, ...rest }) => rest),
+        })
+
         try {
             let result = false
-            if (create && search) result = await editMap(map)
-            if (create && !search) result = await saveMap(map)
+            if (create && search) result = await editMap(buildMapPayload(markers))
+            if (create && !search) result = await saveMap(buildMapPayload(markers))
 
             if (result) {
-                const { created, failed } = await createPendingAlarms()
+                const { updatedMarkers, created, updated, failed, idsChanged } =
+                    await syncMarkerAlarms()
+
+                // Persistir el vínculo pin→alarma con un segundo guardado silencioso
+                let linkFailed = false
+                if (idsChanged) {
+                    const mapId = search
+                        ? searchParam.get('id')
+                        : result?.data?.newMap?.id
+                    if (mapId) {
+                        try {
+                            await request(
+                                `${backend[import.meta.env.VITE_APP_NAME]}/map/${mapId}`,
+                                'POST',
+                                buildMapPayload(updatedMarkers)
+                            )
+                        } catch (error) {
+                            console.error(error)
+                            linkFailed = true
+                        }
+                    } else {
+                        linkFailed = true
+                    }
+                }
+
                 let html = '<h3>El mapa se guardó con éxito</h3>'
                 if (created > 0) {
                     html += `<p>Se ${created === 1 ? 'creó 1 alarma' : `crearon ${created} alarmas`}.</p>`
                 }
-                if (failed > 0) {
-                    html += `<p style="color:#b45309">No se ${failed === 1 ? 'pudo crear 1 alarma' : `pudieron crear ${failed} alarmas`}.</p>`
+                if (updated > 0) {
+                    html += `<p>Se ${updated === 1 ? 'actualizó 1 alarma' : `actualizaron ${updated} alarmas`}.</p>`
                 }
-                await Swal.fire({ title: 'Éxito', icon: failed > 0 ? 'warning' : 'success', html })
+                if (failed > 0) {
+                    html += `<p style="color:#b45309">No se ${failed === 1 ? 'pudo guardar 1 alarma' : `pudieron guardar ${failed} alarmas`}.</p>`
+                }
+                if (linkFailed) {
+                    html += '<p style="color:#b45309">Las alarmas se guardaron pero no se pudo registrar el vínculo con el pin.</p>'
+                }
+                await Swal.fire({ title: 'Éxito', icon: failed > 0 || linkFailed ? 'warning' : 'success', html })
                 navigate('/maps')
             }
         } catch (error) {
@@ -536,6 +644,8 @@ const MapView = ({ create = false, search = false }) => {
                     warn_high: mk.warn_high,
                     crit_high: mk.crit_high,
                     stale_after_minutes: mk.stale_after_minutes,
+                    alarm_ids: mk.alarm_ids ?? null,
+                    normal_color: mk.normal_color ?? null,
                 })
             )
             setMarkers(loadedMarkers)
@@ -782,6 +892,9 @@ const MapView = ({ create = false, search = false }) => {
                             setAlarmChecks={setAlarmChecks}
                             canCreateAlarms={!!selectedVar}
                             existingAlarms={selectedVarAlarms}
+                            linkedAlarms={linkedAlarms}
+                            normalColor={normalColor}
+                            onNormalColorChange={setNormalColor}
                         />
                     </Box>
                     )}

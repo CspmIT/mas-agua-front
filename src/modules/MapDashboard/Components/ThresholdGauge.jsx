@@ -1,57 +1,77 @@
 import { Checkbox, TextField, Tooltip } from '@mui/material'
 import { FaDiscord } from 'react-icons/fa'
+import {
+    DEFAULT_NORMAL_COLOR,
+    NORMAL_COLOR_PRESETS,
+    normalRangeGradient,
+} from '../utils/sensorDefaults'
 
 // Definición de zonas del gauge, de arriba hacia abajo.
 // condition es la que usa la alarma creada desde el check de cada umbral.
 export const THRESHOLD_ZONES = [
-    { key: 'crit_high', label: 'Crítico alto', condition: '>', color: '#ef4444' },
-    { key: 'warn_high', label: 'Advertencia alta', condition: '>', color: '#facc15' },
-    { key: 'warn_low', label: 'Advertencia baja', condition: '<', color: '#facc15' },
-    { key: 'crit_low', label: 'Crítico bajo', condition: '<', color: '#ef4444' },
+    { key: 'crit_high', label: 'Crítico alto', condition: '>=', color: '#ef4444' },
+    { key: 'warn_high', label: 'Advertencia alta', condition: '>=', color: '#facc15' },
+    { key: 'warn_low', label: 'Advertencia baja', condition: '<=', color: '#facc15' },
+    { key: 'crit_low', label: 'Crítico bajo', condition: '<=', color: '#ef4444' },
 ]
+
+// Nombre determinístico de la alarma de un pin/umbral: permite reencontrarla
+// para actualizarla cuando el usuario cambia el valor del umbral
+export const zoneAlarmName = (markerName, zone) => `${markerName} - ${zone.label}`
 
 const ROW_HEIGHT = 52
 const NORMAL_HEIGHT = 96
 const BAR_WIDTH = 18
 
-// Gradiente del rango normal: azul oscuro (cerca de advertencia alta) a
-// celeste (cerca de advertencia baja) — el pin del mapa replica esta escala
-const NORMAL_GRADIENT = 'linear-gradient(180deg, #1e40af 0%, #2563eb 35%, #38bdf8 75%, #bae6fd 100%)'
-
 const DISCORD_BLURPLE = '#5865F2'
 
-const AlarmToggle = ({ checked, onChange, disabled, existing }) => (
-    <Tooltip
-        title={
-            existing
-                ? 'Ya existe una alarma con este valor (se administra en Configuración → Alarmas)'
-                : disabled
-                    ? 'Asigná una variable al marcador para poder crear la alarma'
-                    : 'Crear alarma con este valor al guardar el mapa'
-        }
-        arrow
-        placement='top'
-    >
-        <span className='inline-flex items-center'>
-            <FaDiscord
-                size={18}
-                color={existing || (checked && !disabled) ? DISCORD_BLURPLE : '#94a3b8'}
-                style={{ transition: 'color 0.15s ease' }}
-            />
-            <Checkbox
-                size='small'
-                checked={existing || checked}
-                onChange={(e) => onChange(e.target.checked)}
-                disabled={disabled || existing}
-                sx={{
-                    p: 0.5,
-                    '&.Mui-checked': { color: DISCORD_BLURPLE },
-                    '&.Mui-disabled.Mui-checked': { color: DISCORD_BLURPLE, opacity: 0.75 },
-                }}
-            />
-        </span>
-    </Tooltip>
-)
+// Estados del toggle: 'new' (crea alarma), 'update' (ya hay una alarma de este
+// pin/umbral con otro valor: al guardar se actualiza) y 'existing' (idéntica, bloqueado)
+const TOGGLE_TOOLTIPS = {
+    disabled: 'Asigná una variable al marcador para poder crear la alarma',
+    existing: 'Ya existe una alarma con este valor (se administra en Configuración → Alarmas)',
+    new: 'Crear alarma con este valor al guardar el mapa',
+}
+
+const AlarmToggle = ({ checked, onChange, disabled, mode, previousValue }) => {
+    const title = disabled
+        ? TOGGLE_TOOLTIPS.disabled
+        : mode === 'existing'
+            ? TOGGLE_TOOLTIPS.existing
+            : mode === 'update'
+                ? `Ya hay una alarma para este umbral (valor ${previousValue}): marcá para actualizarla al guardar el mapa`
+                : TOGGLE_TOOLTIPS.new
+
+    const isExisting = mode === 'existing'
+    const iconColor = isExisting || (checked && !disabled)
+        ? DISCORD_BLURPLE
+        : mode === 'update'
+            ? '#d97706'
+            : '#94a3b8'
+
+    return (
+        <Tooltip title={title} arrow placement='top'>
+            <span className='inline-flex items-center'>
+                <FaDiscord
+                    size={18}
+                    color={iconColor}
+                    style={{ transition: 'color 0.15s ease' }}
+                />
+                <Checkbox
+                    size='small'
+                    checked={isExisting || checked}
+                    onChange={(e) => onChange(e.target.checked)}
+                    disabled={disabled || isExisting}
+                    sx={{
+                        p: 0.5,
+                        '&.Mui-checked': { color: DISCORD_BLURPLE },
+                        '&.Mui-disabled.Mui-checked': { color: DISCORD_BLURPLE, opacity: 0.75 },
+                    }}
+                />
+            </span>
+        </Tooltip>
+    )
+}
 
 // Barra vertical de umbrales estilo "termómetro": cada zona de color queda
 // alineada con su input, y el rango normal muestra el gradiente celeste→azul
@@ -62,22 +82,49 @@ const ThresholdGauge = ({
     setAlarmChecks,
     canCreateAlarms,
     existingAlarms = [],
+    linkedAlarms = {},
+    normalColor = '',
+    onNormalColorChange = () => {},
 }) => {
     const setCheck = (key, value) =>
         setAlarmChecks((prev) => ({ ...prev, [key]: value }))
 
-    // Un umbral "ya tiene alarma" si la variable tiene una alarma con la misma
-    // condición y el mismo valor que está cargado en el input
-    const hasExistingAlarm = (zone) => {
+    // Estado de alarma de un umbral:
+    // - 'existing': la alarma vinculada (o una idéntica de la variable) ya tiene
+    //   la misma condición y valor
+    // - 'update': el umbral tiene una alarma (vinculada por id, o legada por
+    //   nombre) con otro valor: al guardar se actualiza
+    // - 'new': no hay nada, el check crea una alarma nueva
+    const getZoneAlarmState = (zone) => {
         const raw = watch ? watch(zone.key) : undefined
-        if (raw === '' || raw === null || raw === undefined) return false
-        return existingAlarms.some(
-            (a) =>
-                a.condition === zone.condition &&
-                a.value !== null &&
-                a.value !== undefined &&
-                Number(a.value) === Number(raw)
-        )
+        const hasValue = raw !== '' && raw !== null && raw !== undefined
+
+        const linked = linkedAlarms[zone.key]
+        if (linked) {
+            const unchanged =
+                hasValue &&
+                linked.condition === zone.condition &&
+                Number(linked.value) === Number(raw)
+            if (unchanged) return { mode: 'existing' }
+            return { mode: 'update', previousValue: linked.value }
+        }
+
+        if (hasValue) {
+            const identical = existingAlarms.some(
+                (a) =>
+                    a.condition === zone.condition &&
+                    a.value !== null &&
+                    a.value !== undefined &&
+                    Number(a.value) === Number(raw)
+            )
+            if (identical) return { mode: 'existing' }
+        }
+        const markerName = watch ? watch('markerName') : ''
+        const byName = markerName
+            ? existingAlarms.find((a) => a.name === zoneAlarmName(markerName, zone))
+            : null
+        if (byName) return { mode: 'update', previousValue: byName.value }
+        return { mode: 'new' }
     }
 
     const segments = [
@@ -106,7 +153,7 @@ const ThresholdGauge = ({
                             key={s.zone?.key || 'normal'}
                             style={{
                                 height: s.height,
-                                background: s.zone ? s.zone.color : NORMAL_GRADIENT,
+                                background: s.zone ? s.zone.color : normalRangeGradient(normalColor),
                                 borderTop: i === 0 ? 'none' : '1px solid rgba(15, 23, 42, 0.35)',
                             }}
                         />
@@ -134,19 +181,47 @@ const ThresholdGauge = ({
                                     checked={!!alarmChecks[s.zone.key]}
                                     onChange={(v) => setCheck(s.zone.key, v)}
                                     disabled={!canCreateAlarms}
-                                    existing={hasExistingAlarm(s.zone)}
+                                    {...getZoneAlarmState(s.zone)}
                                 />
                             </div>
                         ) : (
                             <div
                                 key='normal'
-                                className='flex items-center'
+                                className='flex flex-col justify-center gap-1.5'
                                 style={{ height: NORMAL_HEIGHT }}
                             >
                                 <span className='text-[11px] leading-snug text-slate-500 dark:text-gray-400' style={{ maxWidth: 230 }}>
-                                    Rango normal: el pin varía de celeste a azul
-                                    oscuro según dónde caiga el valor.
+                                    Rango normal: el pin varía de claro a oscuro
+                                    según dónde caiga el valor.
                                 </span>
+                                <div className='flex items-center gap-1.5'>
+                                    <Tooltip title='Elegir color del rango normal' arrow placement='top'>
+                                        <input
+                                            type='color'
+                                            value={normalColor || DEFAULT_NORMAL_COLOR}
+                                            onChange={(e) => onNormalColorChange(e.target.value)}
+                                            className='w-8 h-7 rounded-md border border-slate-300 dark:border-gray-600 cursor-pointer p-0 bg-transparent'
+                                        />
+                                    </Tooltip>
+                                    {NORMAL_COLOR_PRESETS.map((preset) => (
+                                        <Tooltip key={preset.value} title={preset.label} arrow placement='top'>
+                                            <button
+                                                type='button'
+                                                onClick={() => onNormalColorChange(preset.value)}
+                                                className='rounded-full cursor-pointer p-0'
+                                                style={{
+                                                    width: 20,
+                                                    height: 20,
+                                                    background: normalRangeGradient(preset.value),
+                                                    border:
+                                                        (normalColor || DEFAULT_NORMAL_COLOR) === preset.value
+                                                            ? '2px solid #0f172a'
+                                                            : '1px solid rgba(15, 23, 42, 0.25)',
+                                                }}
+                                            />
+                                        </Tooltip>
+                                    ))}
+                                </div>
                             </div>
                         )
                     )}

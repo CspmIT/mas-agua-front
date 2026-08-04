@@ -41,7 +41,7 @@ const SensorMarker = ({
     // azul oscuro según dónde caiga el valor entre las advertencias baja y alta
     const normalColor =
         status === 'ok' && s.kind !== 'binary' && s.kind !== 'calc_binary'
-            ? normalRangeColor(s.value, marker.warn_low, marker.warn_high)
+            ? normalRangeColor(s.value, marker.warn_low, marker.warn_high, marker.normal_color)
             : null
 
     const [hovered, setHovered] = useState(false)
