@@ -89,24 +89,35 @@ const ChartCard = ({ title, subtitle, className = '', children }) => (
 	</CardCustom>
 )
 
-// scope 'tenant' = la organización activa; 'all' = todas las organizaciones
-function AuditDashboard({ scope = 'tenant' }) {
+// Por defecto muestra todas las organizaciones combinadas; con el selector
+// se filtra una específica sin cambiar de tenant (la vista es sólo SuperAdmin)
+function AuditDashboard() {
 	const { darkMode } = useContext(MainContext)
 	const [data, setData] = useState(null)
 	const [loading, setLoading] = useState(true)
 	const [days, setDays] = useState(30)
+	const [org, setOrg] = useState('all')
+	// Opciones del selector: se completan con la primera respuesta global
+	const [orgOptions, setOrgOptions] = useState([])
 
 	useEffect(() => {
 		let cancelled = false
 		const getDashboard = async () => {
 			setLoading(true)
 			try {
-				const endpoint = scope === 'all' ? '/audit/dashboard/all' : '/audit/dashboard'
+				const endpoint =
+					org === 'all' ? `/audit/dashboard/all?days=${days}` : `/audit/dashboard?days=${days}&org=${org}`
 				const response = await request(
-					`${backend[import.meta.env.VITE_APP_NAME]}${endpoint}?days=${days}`,
+					`${backend[import.meta.env.VITE_APP_NAME]}${endpoint}`,
 					'GET'
 				)
-				if (!cancelled) setData(response?.data ?? null)
+				if (cancelled) return
+				setData(response?.data ?? null)
+				if (response?.data?.organizations) {
+					setOrgOptions(
+						[...response.data.organizations].sort((a, b) => a.name.localeCompare(b.name))
+					)
+				}
 			} catch (error) {
 				console.error('Error al obtener el dashboard de auditoría:', error)
 				if (!cancelled) setData(null)
@@ -118,7 +129,7 @@ function AuditDashboard({ scope = 'tenant' }) {
 		return () => {
 			cancelled = true
 		}
-	}, [days, scope])
+	}, [days, org])
 
 	const charts = useMemo(() => {
 		if (!data) return null
@@ -263,9 +274,24 @@ function AuditDashboard({ scope = 'tenant' }) {
 
 	return (
 		<div className='flex flex-col gap-3'>
-			{/* Selector de rango */}
-			<div className='flex items-center justify-end gap-1.5'>
-				<span className='text-xs text-slate-400 dark:text-gray-400 mr-1'>Rango</span>
+			{/* Filtros: organización y rango */}
+			<div className='flex flex-wrap items-center justify-end gap-1.5'>
+				<label className='flex items-center gap-1.5 text-xs text-slate-400 dark:text-gray-400'>
+					Organización
+					<select
+						value={org}
+						onChange={(e) => setOrg(e.target.value)}
+						className='rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 outline-none focus:border-primary dark:border-gray-600 dark:bg-gray-800 dark:text-slate-200'
+					>
+						<option value='all'>Todas las organizaciones</option>
+						{orgOptions.map((o) => (
+							<option key={o.key} value={o.key}>
+								{o.name}
+							</option>
+						))}
+					</select>
+				</label>
+				<span className='text-xs text-slate-400 dark:text-gray-400 ml-2 mr-1'>Rango</span>
 				{RANGES.map((r) => (
 					<button
 						key={r.days}
