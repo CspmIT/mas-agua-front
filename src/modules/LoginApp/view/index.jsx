@@ -15,6 +15,7 @@ import { jwtDecode } from 'jwt-decode'
 import styles from '../utils/style.module.css'
 import { backend } from '../../../utils/routes/app.routes'
 import { getData, removeData, saveData } from '../../../storage/cookies-store'
+import { getTokenExpiration } from '../../../utils/js/session'
 import LoaderComponent from '../../../components/Loader'
 function LoginApp() {
 	const {
@@ -88,7 +89,7 @@ function LoginApp() {
 					}
 					const decoded = jwtDecode(token.token)
 					// Obtengo la fecha de expiracion del token y la guardo en una cookie
-					const expirationDate = new Date(decoded.exp)
+					const expirationDate = getTokenExpiration(decoded)
 					await saveData('token', token.token, {
 						expires: expirationDate,
 						secure: false,

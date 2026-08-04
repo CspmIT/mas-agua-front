@@ -49,20 +49,49 @@ export const STATUS_LABELS = {
 
 export const TRENDS = { up: '↑', down: '↓', stable: '→' }
 
-// Escala del rango normal: celeste (valor cerca de advertencia baja) a
-// azul oscuro (cerca de advertencia alta). Misma escala que muestra el
-// gauge de umbrales del editor de marcadores.
-export const NORMAL_RANGE_COLORS = { low: '#7dd3fc', high: '#1e40af' }
-
-const hexToRgb = (hex) => [
-    parseInt(hex.slice(1, 3), 16),
-    parseInt(hex.slice(3, 5), 16),
-    parseInt(hex.slice(5, 7), 16),
+// Color base del rango normal de los pines. Cada marcador puede elegir el suyo
+// (marker.normal_color); sin elección se usa el azul de la marca.
+export const DEFAULT_NORMAL_COLOR = '#2563eb'
+export const NORMAL_COLOR_PRESETS = [
+    { value: DEFAULT_NORMAL_COLOR, label: 'Azul +Agua' },
+    { value: '#16a34a', label: 'Verde semáforo' },
 ]
 
-// Color interpolado para un valor dentro del rango normal [warnLow, warnHigh].
+// Claridad de los extremos del gradiente (HSL): claro cerca de advertencia
+// baja, oscuro cerca de advertencia alta
+const LIGHT_L = 76
+const DARK_L = 30
+
+const hexToHsl = (hex) => {
+    const r = parseInt(hex.slice(1, 3), 16) / 255
+    const g = parseInt(hex.slice(3, 5), 16) / 255
+    const b = parseInt(hex.slice(5, 7), 16) / 255
+    const max = Math.max(r, g, b)
+    const min = Math.min(r, g, b)
+    const l = (max + min) / 2
+    if (max === min) return [0, 0, Math.round(l * 100)]
+    const d = max - min
+    const s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+    let h
+    switch (max) {
+        case r: h = (g - b) / d + (g < b ? 6 : 0); break
+        case g: h = (b - r) / d + 2; break
+        default: h = (r - g) / d + 4
+    }
+    return [Math.round(h * 60), Math.round(s * 100), Math.round(l * 100)]
+}
+
+const baseHueSat = (baseColor) => {
+    const hex = /^#[0-9a-fA-F]{6}$/.test(baseColor || '') ? baseColor : DEFAULT_NORMAL_COLOR
+    const [h, s] = hexToHsl(hex)
+    // Con saturación muy baja el gradiente no se lee: se asegura un piso
+    return [h, Math.max(45, s)]
+}
+
+// Color interpolado para un valor dentro del rango normal [warnLow, warnHigh],
+// sobre el tono del color base elegido (claro → oscuro).
 // Devuelve null si faltan datos: el llamador cae al color de estado clásico.
-export const normalRangeColor = (value, warnLow, warnHigh) => {
+export const normalRangeColor = (value, warnLow, warnHigh, baseColor) => {
     const v = Number(value)
     const lo = Number(warnLow)
     const hi = Number(warnHigh)
@@ -70,8 +99,13 @@ export const normalRangeColor = (value, warnLow, warnHigh) => {
         return null
     }
     const t = Math.max(0, Math.min(1, (v - lo) / (hi - lo)))
-    const from = hexToRgb(NORMAL_RANGE_COLORS.low)
-    const to = hexToRgb(NORMAL_RANGE_COLORS.high)
-    const mix = from.map((c, i) => Math.round(c + (to[i] - c) * t))
-    return `rgb(${mix[0]}, ${mix[1]}, ${mix[2]})`
+    const [h, s] = baseHueSat(baseColor)
+    const lightness = Math.round(LIGHT_L - t * (LIGHT_L - DARK_L))
+    return `hsl(${h}, ${s}%, ${lightness}%)`
+}
+
+// Gradiente (oscuro arriba → claro abajo) para el gauge de umbrales del editor
+export const normalRangeGradient = (baseColor) => {
+    const [h, s] = baseHueSat(baseColor)
+    return `linear-gradient(180deg, hsl(${h}, ${s}%, ${DARK_L}%) 0%, hsl(${h}, ${s}%, 53%) 50%, hsl(${h}, ${s}%, ${LIGHT_L}%) 100%)`
 }

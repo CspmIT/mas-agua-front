@@ -27,7 +27,7 @@ const MAP_STYLE_STORAGE_KEY = 'dashboard.mapStyle'
 const ALL_STATUSES = new Set(['ok', 'warn', 'crit', 'stale', 'apagado', 'off'])
 
 const STATUS_HELP = [
-    { key: 'ok',      description: 'Lectura dentro del rango normal: el pin va de celeste (cerca de advertencia baja) a azul oscuro (cerca de advertencia alta).' },
+    { key: 'ok',      description: 'Lectura dentro del rango normal: el pin va de un tono claro (cerca de advertencia baja) a uno oscuro (cerca de advertencia alta), con el color configurado en el marcador.' },
     { key: 'warn',    description: 'Valor cercano al límite — requiere atención.' },
     { key: 'crit',    description: 'Valor fuera del rango aceptable.' },
     { key: 'stale',   description: 'No se reciben lecturas hace tiempo (el pin parpadea).' },
@@ -114,6 +114,7 @@ const PressureDashboard = () => {
             longitude: Number(mm.longitude),
             latitude: Number(mm.latitude),
             sensor_type: mm.sensor_type,
+            normal_color: mm.normal_color,
             unit: mm.unit,
             anchor: mm.PopUpsMarkers?.anchor ?? '',
             warn_low: mm.warn_low,
