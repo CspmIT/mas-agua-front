@@ -1,4 +1,5 @@
 import EChart from './EChart'
+import useChartScale from '../../../hooks/useChartScale'
 
 const isValidNumber = (v) =>
     v !== null &&
@@ -7,6 +8,8 @@ const isValidNumber = (v) =>
     !isNaN(Number(v))
 
 const CirclePorcentaje = ({ value = 0, maxValue = 100, color = '#00FF00' }) => {
+    const { ref, k, kSoft } = useChartScale()
+
     const hasValue = isValidNumber(value)
     const hasMax = isValidNumber(maxValue)
 
@@ -33,7 +36,7 @@ const CirclePorcentaje = ({ value = 0, maxValue = 100, color = '#00FF00' }) => {
                 progress: {
                     show: true,
                     roundCap: true,
-                    width: 24,
+                    width: Math.round(24 * k),
                     itemStyle: {
                         color: hasValue
                             ? {
@@ -55,7 +58,7 @@ const CirclePorcentaje = ({ value = 0, maxValue = 100, color = '#00FF00' }) => {
                 // 🛞 Anillo de fondo
                 axisLine: {
                     lineStyle: {
-                        width: 24,
+                        width: Math.round(24 * k),
                         color: [[1, '#657EB333']],
                         shadowBlur: 12,
                         shadowColor: 'rgba(0,0,0,0.4)',
@@ -71,9 +74,9 @@ const CirclePorcentaje = ({ value = 0, maxValue = 100, color = '#00FF00' }) => {
                 // 🔤 Texto central
                 detail: {
                     offsetCenter: [0, '0%'],
-                    fontSize: 24,
+                    fontSize: Math.round(24 * kSoft),
                     fontWeight: 700,
-                    lineHeight: 32,
+                    lineHeight: Math.round(32 * kSoft),
                     color: '#0f2a44',
                     formatter: () =>
                         hasValue
@@ -87,7 +90,11 @@ const CirclePorcentaje = ({ value = 0, maxValue = 100, color = '#00FF00' }) => {
     }
 
 
-    return <EChart config={options} />
+    return (
+        <div ref={ref} style={{ width: '100%', height: '100%' }}>
+            <EChart config={options} />
+        </div>
+    )
 }
 
 export default CirclePorcentaje
