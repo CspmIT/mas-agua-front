@@ -49,5 +49,5 @@ jobs:
               with:
                   tagName: v__VERSION__
                   releaseName: 'Mas Agua v__VERSION__'
-                  releaseBody: 'feat(audit): grafico de endpoints mas usados en el dashboard'
+                  releaseBody: 'feat: gráficos compactos en el dashboard + monitoreo de crons en auditoría'
                   prerelease: false
