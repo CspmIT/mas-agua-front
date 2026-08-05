@@ -85,6 +85,51 @@ export const lineArea = ({ labels, values, name, color, darkMode, valueFormatter
 	],
 })
 
+// Línea sobre eje de tiempo con zoom (tráfico horario): pensada para series
+// largas donde interesa recorrer los picos y valles del día. data = [[ts, valor]]
+export const timeLine = ({ data, name, color, darkMode, tooltipFormatter }) => ({
+	tooltip: {
+		trigger: 'axis',
+		axisPointer: { type: 'cross', label: { show: false } },
+		...tooltipStyle(darkMode),
+		...(tooltipFormatter ? { formatter: tooltipFormatter } : {}),
+	},
+	grid: { left: 8, right: 16, top: 24, bottom: 48, containLabel: true },
+	xAxis: {
+		type: 'time',
+		axisLabel: { color: textColor(darkMode), hideOverlap: true },
+		axisLine: { lineStyle: { color: GRID_LINE } },
+		axisTick: { show: false },
+	},
+	yAxis: {
+		type: 'value',
+		axisLabel: { color: textColor(darkMode) },
+		splitLine: { lineStyle: { color: GRID_LINE } },
+	},
+	dataZoom: [
+		{ type: 'inside', throttle: 50 },
+		{
+			type: 'slider',
+			height: 20,
+			bottom: 6,
+			borderColor: GRID_LINE,
+			textStyle: { color: textColor(darkMode) },
+		},
+	],
+	series: [
+		{
+			name,
+			type: 'line',
+			data,
+			lineStyle: { width: 1.5, color },
+			itemStyle: { color },
+			showSymbol: false,
+			sampling: 'lttb',
+			areaStyle: { color, opacity: 0.1 },
+		},
+	],
+})
+
 // Barras horizontales (rankings: módulos, usuarios, endpoints). El primero
 // queda arriba. labelWidth agranda el eje para etiquetas largas (endpoints)
 // y tooltipFormatter permite un tooltip enriquecido.

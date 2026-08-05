@@ -8,20 +8,24 @@ import { backend } from '../../../utils/routes/app.routes'
 import {
 	verticalBars,
 	lineArea,
+	timeLine,
 	horizontalBars,
 	donut,
 	formatMs,
 	formatTotalMs,
 } from '../utils/dashboardCharts'
-
-// Un tono por gráfico: conteos en azul, tiempos/demanda en naranja,
-// actividad de usuarios/sesiones en violeta. Los colores de estado
-// (verde/ámbar/rojo) quedan reservados para la distribución de status.
-const COLOR = {
-	count: '#368bed',
-	duration: '#d8621d',
-	activity: '#8b5cf6',
-}
+import {
+	COLOR,
+	artHourKey,
+	lastNDayKeys,
+	hourStampsBetween,
+	dayLabel,
+	formatHourTick,
+	formatInt,
+	KpiCard,
+	ChartCard,
+	DashboardFilters,
+} from '../utils/dashboardShared'
 
 const STATUS_META = {
 	'2xx': { label: 'Éxito (2xx)', color: '#10B981' },
@@ -30,63 +34,66 @@ const STATUS_META = {
 	'5xx': { label: 'Error de servidor (5xx)', color: '#ef4444' },
 }
 
-const RANGES = [
-	{ days: 7, label: '7 días' },
-	{ days: 30, label: '30 días' },
-	{ days: 90, label: '90 días' },
-]
-
 const TOP_MODULES = 8
 
-const pad = (n) => String(n).padStart(2, '0')
-
-// Claves de día/hora en horario argentino (offset fijo -03), consistentes
-// con el agrupamiento del backend. La DB guarda en UTC.
-const artParts = (date) => new Date(date.getTime() - 3 * 60 * 60 * 1000)
-
-const artDayKey = (date) => {
-	const s = artParts(date)
-	return `${s.getUTCFullYear()}-${pad(s.getUTCMonth() + 1)}-${pad(s.getUTCDate())}`
+// Ayudas para usuarios no técnicos (icono ⓘ en cada KPI y gráfico)
+const HELP = {
+	sesiones:
+		'Cuenta cada vez que alguien entra a la aplicación. Si una persona entra tres veces, son tres sesiones (no es "usuarios distintos").',
+	requests:
+		'Todos los pedidos que la aplicación le hace al servidor. La mayoría son automáticos (las pantallas piden datos frescos cada pocos segundos), así que el número crece aunque nadie esté tocando nada.',
+	respuesta:
+		'Cuánto tarda el servidor en contestar un pedido, en promedio. Como referencia: menos de 200 ms es imperceptible, hasta 1 segundo es fluido, más de 3 segundos se siente lento.',
+	errores:
+		'Pedidos que no se pudieron completar. Lo importante es el porcentaje: unos pocos errores sobre miles de pedidos es normal.',
+	trafico:
+		'Por qué nunca baja a cero: las pantallas de monitoreo piden datos automáticamente todo el día, y eso forma la "base" del gráfico. Los picos por encima de esa base son actividad real de personas usando la aplicación.',
+	tiempoRespuesta:
+		'Promedio de cada día: un pico indica que ese día hubo consultas pesadas o el servidor estuvo exigido. Un pico aislado no es problema; una tendencia que sube día a día, sí.',
+	perfilHorario:
+		'Es el "día típico": el promedio de actividad para cada hora. Sirve para saber a qué hora conviene hacer mantenimiento (los valles) y cuándo hay más gente conectada (los picos).',
+	modulosUsados:
+		'Cada pedido se atribuye a la pantalla que estaba abierta cuando se hizo. Como las pantallas piden datos solas, también funciona como medida de dónde pasa más tiempo la gente.',
+	modulosDemanda:
+		'No es lo mismo que "más usados": acá se suma el tiempo de trabajo del servidor. Un módulo puede estar arriba por hacer muchos pedidos livianos o pocos pedidos muy pesados.',
+	endpoints:
+		'Un "endpoint" es un tipo de pedido específico: pedir las alertas, guardar un diagrama, traer los datos de un sensor. Es la versión detallada de "módulos": dice exactamente qué operación se usa más.',
+	loginsDia:
+		'Cada barra es la cantidad de veces que alguien entró a la aplicación ese día. Los días sin barra son días sin ingresos (fin de semana, feriado).',
+	usuarios:
+		'Cantidad de pedidos al servidor por usuario. Ojo al leerlo: alguien con una pantalla de monitoreo abierta todo el día va a figurar altísimo aunque no haya tocado nada.',
+	orgsRequests:
+		'Compara el nivel de uso del sistema entre cooperativas: cuántos pedidos al servidor generó cada una. Útil para ver cuáles adoptaron más la aplicación.',
+	orgsSesiones:
+		'Cuántas veces entró gente de cada cooperativa a la aplicación en el período. Complementa al gráfico de requests: mucha gente entrando con pocas requests indica visitas cortas.',
 }
 
-const artHourKey = (date) => {
-	const s = artParts(date)
-	return `${artDayKey(date)} ${pad(s.getUTCHours())}:00`
-}
-
-const lastNDayKeys = (n) => {
-	const now = Date.now()
-	return Array.from({ length: n }, (_, i) => artDayKey(new Date(now - (n - 1 - i) * 86400000)))
-}
-
-const lastNHourKeys = (n) => {
-	const now = Date.now()
-	return Array.from({ length: n }, (_, i) => artHourKey(new Date(now - (n - 1 - i) * 3600000)))
-}
-
-const dayLabel = (key) => `${key.slice(8, 10)}/${key.slice(5, 7)}`
-const hourLabel = (key) => `${key.slice(11, 13)} h`
-
-const formatInt = (n) => (n == null ? '—' : Number(n).toLocaleString('es-AR'))
-
-const KpiCard = ({ label, value, hint }) => (
-	<CardCustom className='rounded-xl p-4 flex flex-col gap-0.5'>
-		<span className='text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400 dark:text-gray-400'>
-			{label}
+// Ayuda para usuarios no técnicos: qué significa cada resultado HTTP
+const statusHelp = (
+	<div className='flex flex-col gap-1.5 p-0.5 text-xs leading-relaxed'>
+		<span>
+			Cada vez que la aplicación necesita algo del servidor (abrir una pantalla, cargar un
+			gráfico, guardar un cambio) le manda un pedido, y el servidor responde indicando cómo
+			terminó. Este gráfico agrupa esas respuestas:
 		</span>
-		<span className='text-2xl font-semibold text-slate-800 dark:text-gray-100 tabular-nums'>
-			{value}
+		<span>
+			<b>Éxito (2xx):</b> el pedido se procesó correctamente. Lo normal es que sea la mayoría.
 		</span>
-		{hint && <span className='text-xs text-slate-400 dark:text-gray-400'>{hint}</span>}
-	</CardCustom>
-)
-
-const ChartCard = ({ title, subtitle, className = '', children }) => (
-	<CardCustom className={`rounded-xl p-4 flex flex-col ${className}`}>
-		<h3 className='text-sm font-semibold text-slate-700 dark:text-gray-200'>{title}</h3>
-		{subtitle && <p className='text-xs text-slate-400 dark:text-gray-400 mb-1'>{subtitle}</p>}
-		<div className='w-full flex-1 min-h-0'>{children}</div>
-	</CardCustom>
+		<span>
+			<b>Redirección (3xx):</b> casi siempre significa &quot;esto no cambió desde la última
+			vez&quot;, y el navegador reutiliza la copia que ya tenía. No es un error: ahorra tiempo
+			y datos.
+		</span>
+		<span>
+			<b>Error de cliente (4xx):</b> el pedido no se pudo atender porque estaba mal armado o
+			sin permiso (típico: una sesión vencida que pide datos antes de renovarse). Unos pocos
+			sueltos son normales.
+		</span>
+		<span>
+			<b>Error de servidor (5xx):</b> el servidor falló al procesar el pedido. Es la porción
+			que importa vigilar: si crece, algo anda mal en el sistema.
+		</span>
+	</div>
 )
 
 // Por defecto muestra todas las organizaciones combinadas; con el selector
@@ -106,7 +113,9 @@ function AuditDashboard() {
 			setLoading(true)
 			try {
 				const endpoint =
-					org === 'all' ? `/audit/dashboard/all?days=${days}` : `/audit/dashboard?days=${days}&org=${org}`
+					org === 'all'
+						? `/audit/dashboard/all?days=${days}`
+						: `/audit/dashboard?days=${days}&org=${org}`
 				const response = await request(
 					`${backend[import.meta.env.VITE_APP_NAME]}${endpoint}`,
 					'GET'
@@ -140,8 +149,19 @@ function AuditDashboard() {
 		const requestsByDay = new Map(data.requests.seriesDaily.map((r) => [r.day, r]))
 		const loginsByDay = new Map(data.logins.seriesDaily.map((r) => [r.day, r.count]))
 
-		const hourKeys = lastNHourKeys(24)
+		// Serie horaria de todo el rango: puntos [ts, count] con las horas
+		// vacías en 0, para que los valles se vean de verdad
 		const requestsByHour = new Map(data.requests.seriesHourly.map((r) => [r.hour, r.count]))
+		const hourlyPoints = hourStampsBetween(new Date(data.range.from).getTime(), Date.now()).map(
+			(ts) => [ts, requestsByHour.get(artHourKey(new Date(ts))) ?? 0]
+		)
+
+		// Perfil horario: promedio de requests para cada hora del día (0-23)
+		const profileSums = Array.from({ length: 24 }, () => 0)
+		for (const r of data.requests.seriesHourly) {
+			profileSums[Number(r.hour.slice(11, 13))] += r.count
+		}
+		const hourlyProfile = profileSums.map((sum) => Math.round((sum / days) * 10) / 10)
 
 		const organizations = data.organizations ?? []
 
@@ -155,13 +175,16 @@ function AuditDashboard() {
 		const endpointByLabel = new Map(endpoints.map((e) => [endpointLabel(e), e]))
 
 		return {
-			traffic: verticalBars({
-				labels: dayLabels,
-				values: dayKeys.map((k) => requestsByDay.get(k)?.count ?? 0),
+			traffic: timeLine({
+				data: hourlyPoints,
 				name: 'Requests',
 				color: COLOR.count,
 				darkMode,
-				valueFormatter: (v) => formatInt(v),
+				tooltipFormatter: (params) => {
+					const p = Array.isArray(params) ? params[0] : params
+					if (!p?.value) return ''
+					return `${formatHourTick(p.value[0])}<br/>${formatInt(p.value[1])} requests`
+				},
 			}),
 			responseTime: lineArea({
 				labels: dayLabels,
@@ -171,10 +194,10 @@ function AuditDashboard() {
 				darkMode,
 				valueFormatter: (v) => formatMs(v),
 			}),
-			hourly: verticalBars({
-				labels: hourKeys.map(hourLabel),
-				values: hourKeys.map((k) => requestsByHour.get(k) ?? 0),
-				name: 'Requests',
+			hourlyProfile: lineArea({
+				labels: hourlyProfile.map((_, h) => `${String(h).padStart(2, '0')} h`),
+				values: hourlyProfile,
+				name: 'Requests promedio',
 				color: COLOR.count,
 				darkMode,
 				valueFormatter: (v) => formatInt(v),
@@ -274,39 +297,7 @@ function AuditDashboard() {
 
 	return (
 		<div className='flex flex-col gap-3'>
-			{/* Filtros: organización y rango */}
-			<div className='flex flex-wrap items-center justify-end gap-1.5'>
-				<label className='flex items-center gap-1.5 text-xs text-slate-400 dark:text-gray-400'>
-					Organización
-					<select
-						value={org}
-						onChange={(e) => setOrg(e.target.value)}
-						className='rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 outline-none focus:border-primary dark:border-gray-600 dark:bg-gray-800 dark:text-slate-200'
-					>
-						<option value='all'>Todas las organizaciones</option>
-						{orgOptions.map((o) => (
-							<option key={o.key} value={o.key}>
-								{o.name}
-							</option>
-						))}
-					</select>
-				</label>
-				<span className='text-xs text-slate-400 dark:text-gray-400 ml-2 mr-1'>Rango</span>
-				{RANGES.map((r) => (
-					<button
-						key={r.days}
-						type='button'
-						onClick={() => setDays(r.days)}
-						className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
-							days === r.days
-								? 'border-primary bg-primary text-white'
-								: 'border-slate-200 bg-white text-slate-500 hover:border-primary hover:text-primary dark:border-gray-600 dark:bg-gray-800 dark:text-slate-300'
-						}`}
-					>
-						{r.label}
-					</button>
-				))}
-			</div>
+			<DashboardFilters org={org} setOrg={setOrg} orgOptions={orgOptions} days={days} setDays={setDays} />
 
 			{data.requests.total === 0 && (
 				<CardCustom className='rounded-xl p-4'>
@@ -320,19 +311,41 @@ function AuditDashboard() {
 
 			{/* KPIs */}
 			<div className='grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3'>
-				<KpiCard label='Sesiones hoy' value={formatInt(data.logins.today)} hint='Inicios de sesión' />
-				<KpiCard label='Sesiones del mes' value={formatInt(data.logins.month)} hint='Inicios de sesión' />
-				<KpiCard label='Requests hoy' value={formatInt(data.requests.today)} hint='Solicitudes al backend' />
-				<KpiCard label='Requests del mes' value={formatInt(data.requests.month)} hint='Solicitudes al backend' />
+				<KpiCard
+					label='Sesiones hoy'
+					value={formatInt(data.logins.today)}
+					hint='Inicios de sesión'
+					help={HELP.sesiones}
+				/>
+				<KpiCard
+					label='Sesiones del mes'
+					value={formatInt(data.logins.month)}
+					hint='Inicios de sesión'
+					help={HELP.sesiones}
+				/>
+				<KpiCard
+					label='Requests hoy'
+					value={formatInt(data.requests.today)}
+					hint='Solicitudes al backend'
+					help={HELP.requests}
+				/>
+				<KpiCard
+					label='Requests del mes'
+					value={formatInt(data.requests.month)}
+					hint='Solicitudes al backend'
+					help={HELP.requests}
+				/>
 				<KpiCard
 					label='Resp. promedio'
 					value={formatMs(data.requests.avgMs)}
 					hint={`Hoy: ${formatMs(data.requests.avgMsToday)} · Máx: ${formatMs(data.requests.maxMs)}`}
+					help={HELP.respuesta}
 				/>
 				<KpiCard
 					label='Errores'
 					value={formatInt(data.requests.errors)}
 					hint={`${errorRate.toFixed(1)}% de ${formatInt(data.requests.total)} requests`}
+					help={HELP.errores}
 				/>
 			</div>
 
@@ -342,6 +355,7 @@ function AuditDashboard() {
 					<ChartCard
 						title='Requests por organización'
 						subtitle={`Solicitudes al backend (últimos ${days} días)`}
+						help={HELP.orgsRequests}
 						className='h-72'
 					>
 						<EChart config={charts.orgsRequests} />
@@ -349,6 +363,7 @@ function AuditDashboard() {
 					<ChartCard
 						title='Sesiones por organización'
 						subtitle={`Inicios de sesión (últimos ${days} días)`}
+						help={HELP.orgsSesiones}
 						className='h-72'
 					>
 						<EChart config={charts.orgsLogins} />
@@ -365,21 +380,28 @@ function AuditDashboard() {
 			{/* Tráfico y tiempos */}
 			<div className='grid grid-cols-1 lg:grid-cols-2 gap-3'>
 				<ChartCard
-					title='Tráfico diario'
-					subtitle={`Requests al backend por día (últimos ${days} días)`}
-					className='lg:col-span-2 h-72'
+					title='Tráfico'
+					subtitle={`Requests al backend por hora (últimos ${days} días) — arrastrá o usá la rueda para hacer zoom en los picos y valles`}
+					help={HELP.trafico}
+					className='lg:col-span-2 h-80'
 				>
 					<EChart config={charts.traffic} />
 				</ChartCard>
 				<ChartCard
 					title='Tiempo de respuesta'
 					subtitle='Promedio diario del backend'
+					help={HELP.tiempoRespuesta}
 					className='h-64'
 				>
 					<EChart config={charts.responseTime} />
 				</ChartCard>
-				<ChartCard title='Tráfico por hora' subtitle='Requests en las últimas 24 horas' className='h-64'>
-					<EChart config={charts.hourly} />
+				<ChartCard
+					title='Perfil horario'
+					subtitle={`Promedio de requests para cada hora del día (últimos ${days} días)`}
+					help={HELP.perfilHorario}
+					className='h-64'
+				>
+					<EChart config={charts.hourlyProfile} />
 				</ChartCard>
 			</div>
 
@@ -388,6 +410,7 @@ function AuditDashboard() {
 				<ChartCard
 					title='Módulos más usados'
 					subtitle={`Requests por módulo (últimos ${days} días)`}
+					help={HELP.modulosUsados}
 					className='h-72'
 				>
 					<EChart config={charts.modulesByCount} />
@@ -395,6 +418,7 @@ function AuditDashboard() {
 				<ChartCard
 					title='Módulos que más demandan al backend'
 					subtitle='Tiempo total de procesamiento (segundos)'
+					help={HELP.modulosDemanda}
 					className='h-72'
 				>
 					<EChart config={charts.modulesByDemand} />
@@ -403,6 +427,7 @@ function AuditDashboard() {
 					<ChartCard
 						title='Endpoints más usados'
 						subtitle={`Top 10 de requests por método y ruta (últimos ${days} días)`}
+						help={HELP.endpoints}
 						className='lg:col-span-2 h-80'
 					>
 						<EChart config={charts.endpoints} />
@@ -412,17 +437,28 @@ function AuditDashboard() {
 
 			{/* Sesiones, usuarios y estados */}
 			<div className='grid grid-cols-1 lg:grid-cols-3 gap-3'>
-				<ChartCard title='Inicios de sesión por día' subtitle={`Últimos ${days} días`} className='h-64'>
+				<ChartCard
+					title='Inicios de sesión por día'
+					subtitle={`Últimos ${days} días`}
+					help={HELP.loginsDia}
+					className='h-64'
+				>
 					<EChart config={charts.logins} />
 				</ChartCard>
 				<ChartCard
 					title='Usuarios más activos'
 					subtitle={`Requests por usuario (últimos ${days} días)`}
+					help={HELP.usuarios}
 					className='h-64'
 				>
 					<EChart config={charts.users} />
 				</ChartCard>
-				<ChartCard title='Resultado de las requests' subtitle='Distribución por status HTTP' className='h-64'>
+				<ChartCard
+					title='Resultado de las requests'
+					subtitle='Cómo terminó cada solicitud al servidor'
+					help={statusHelp}
+					className='h-64'
+				>
 					<EChart config={charts.status} />
 				</ChartCard>
 			</div>
