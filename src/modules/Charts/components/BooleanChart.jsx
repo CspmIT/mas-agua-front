@@ -1,5 +1,6 @@
 import React from 'react'
 import EChart from './EChart'
+import useChartScale from '../../../hooks/useChartScale'
 
 const BooleanChart = ({
   value,
@@ -8,6 +9,8 @@ const BooleanChart = ({
   colorOn = '#00ff00',
   colorOff = '#444',
 }) => {
+
+  const { ref, k, kSoft } = useChartScale()
 
   const hasValue = value !== 'Sin datos'
 
@@ -20,7 +23,7 @@ const BooleanChart = ({
       {
         type: 'scatter',
         symbol: 'circle',
-        symbolSize: 65,
+        symbolSize: Math.round(65 * k),
         data: [[0.5, 0.55]],
         itemStyle: {
           color: !hasValue
@@ -57,7 +60,7 @@ const BooleanChart = ({
                   ],
                 },
 
-          shadowBlur: !hasValue ? 8 : value ? 35 : 10,
+          shadowBlur: !hasValue ? 8 : value ? Math.round(35 * k) : 10,
           shadowColor: value ? colorOn : '#000',
         },
         z: 3,
@@ -67,12 +70,12 @@ const BooleanChart = ({
       {
         type: 'scatter',
         symbol: 'circle',
-        symbolSize: 80,
+        symbolSize: Math.round(80 * k),
         data: [[0.5, 0.55]],
         itemStyle: {
           color: 'transparent',
           borderColor: '#1f2937',
-          borderWidth: 6,
+          borderWidth: Math.max(3, Math.round(6 * k)),
           shadowBlur: 15,
           shadowColor: 'rgba(0,0,0,0.6)',
         },
@@ -94,7 +97,7 @@ const BooleanChart = ({
               x: api.getWidth() / 2,
               y: api.getHeight() * 0.82,
               textAlign: 'center',
-              fontSize: 18,
+              fontSize: Math.round(18 * kSoft),
               fontWeight: 600,
               fill: !hasValue
                 ? '#6b7280'
@@ -110,7 +113,11 @@ const BooleanChart = ({
     ],
   }
 
-  return <EChart config={option} />
+  return (
+    <div ref={ref} style={{ width: '100%', height: '100%' }}>
+      <EChart config={option} />
+    </div>
+  )
 }
 
 export default BooleanChart

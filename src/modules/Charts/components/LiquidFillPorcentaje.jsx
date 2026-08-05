@@ -1,4 +1,5 @@
 import EChart from './EChart'
+import useChartScale from '../../../hooks/useChartScale'
 import 'echarts-liquidfill'
 
 const SHAPE_CONFIG = {
@@ -73,6 +74,13 @@ const LiquidFillPorcentaje = ({
   unidad = '',
   other = false,
 }) => {
+
+  const { ref, k, kSoft } = useChartScale()
+
+  // Borde escalado según el tamaño de la card (k = 1 en cards grandes);
+  // los valores usan la escala suave kSoft para seguir legibles
+  const outlineWidth = Math.max(3, Math.round(8 * k))
+  const scaleFont = (f) => Math.round(f * kSoft)
 
   const hasMultiple =
     multipleValues &&
@@ -160,22 +168,22 @@ const LiquidFillPorcentaje = ({
               return `${safeValue} ${unidad}${other ? `\n${other}` : ''}`
             },
 
-            fontSize: cfg.fontSize,
+            fontSize: scaleFont(cfg.fontSize),
             fontWeight: 'bold',
 
             color: textColor,
 
-            lineHeight: cfg.fontSize + 6,
+            lineHeight: scaleFont(cfg.fontSize) + 6,
             textShadowColor: 'rgba(0,0,0,0.35)',
             textShadowBlur: 6,
           },
 
           outline: {
             show: border,
-            borderDistance: cfg.outlineDistance,
+            borderDistance: Math.round(cfg.outlineDistance * k),
 
             itemStyle: {
-              borderWidth: 8,
+              borderWidth: outlineWidth,
               borderColor: {
                 type: 'linear',
                 x: 0,
@@ -201,7 +209,11 @@ const LiquidFillPorcentaje = ({
       ],
     }
 
-    return <EChart config={options} />
+    return (
+      <div ref={ref} style={{ width: '100%', height: '100%' }}>
+        <EChart config={options} />
+      </div>
+    )
   }
 
   // ─────────────────────────────────────────────
@@ -292,28 +304,28 @@ const LiquidFillPorcentaje = ({
 
         label: {
           show: true,
-          fontSize: cfg.fontSize,
+          fontSize: scaleFont(cfg.fontSize),
           fontWeight: 'bold',
           color: textColor,
-          lineHeight: cfg.fontSize + 6,
+          lineHeight: scaleFont(cfg.fontSize) + 6,
           textShadowColor: 'rgba(0,0,0,0.35)',
           textShadowBlur: 6,
 
           rich: {
             main: {
-              fontSize: cfg.fontSize,
+              fontSize: scaleFont(cfg.fontSize),
               fontWeight: 'bold',
               color: textColor,
             },
 
             sec: {
-              fontSize: 20,
+              fontSize: scaleFont(20),
               fontWeight: 'bold',
               color: textColor,
             },
 
             extra: {
-              fontSize: 20,
+              fontSize: scaleFont(20),
               fontWeight: 'bold',
               color: textColor,
             },
@@ -344,10 +356,10 @@ const LiquidFillPorcentaje = ({
 
         outline: {
           show: border,
-          borderDistance: cfg.outlineDistance,
+          borderDistance: Math.round(cfg.outlineDistance * k),
 
           itemStyle: {
-            borderWidth: 8,
+            borderWidth: outlineWidth,
             borderColor: {
               type: 'linear',
               x: 0,
@@ -373,7 +385,11 @@ const LiquidFillPorcentaje = ({
     ],
   }
 
-  return <EChart config={options} />
+  return (
+    <div ref={ref} style={{ width: '100%', height: '100%' }}>
+      <EChart config={options} />
+    </div>
+  )
 }
 
 export default LiquidFillPorcentaje

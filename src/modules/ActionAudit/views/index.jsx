@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Container, Tabs, Tab } from '@mui/material'
 import PageHeader from '../../../components/PageHeader'
 import AuditDashboard from '../components/AuditDashboard'
+import CronDashboard from '../components/CronDashboard'
 import AuditMovements from '../components/AuditMovements'
 
 const tabsSx = {
@@ -37,12 +38,12 @@ function ActionAudit() {
 
 			<Tabs value={tab} onChange={(_, value) => setTab(value)} sx={tabsSx}>
 				<Tab value='dashboard' label='Dashboard' />
-				<Tab value='todas' label='Todas las organizaciones' />
+				<Tab value='cron' label='Tareas automáticas' />
 				<Tab value='movimientos' label='Movimientos' />
 			</Tabs>
 
 			{tab === 'dashboard' && <AuditDashboard />}
-			{tab === 'todas' && <AuditDashboard scope='all' />}
+			{tab === 'cron' && <CronDashboard />}
 			{tab === 'movimientos' && <AuditMovements />}
 		</Container>
 	)
