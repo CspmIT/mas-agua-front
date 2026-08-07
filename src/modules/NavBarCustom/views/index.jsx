@@ -25,7 +25,7 @@ import ButtonDownloads from '../../core/components/ButtonDownloads'
 function NavBarCustom({ setLoading }) {
 	const [open, setOpen] = useState(false)
 	const [nameCoop, setNameCoop] = useState('')
-	const { tabActive, tabs, infoNav, permission, setPermission, unreadCount } = useContext(MainContext)
+	const { tabActive, tabs, infoNav, permission, setPermission, setMenus, unreadCount } = useContext(MainContext)
 	const navigate = useNavigate()
 	const NavBarRef = useRef(null)
 	const { pathname } = useLocation()
@@ -113,9 +113,11 @@ function NavBarCustom({ setLoading }) {
 	}
 
 	const getPermissions = async () => {
-		const permiso = import.meta.env.VITE_WIFI == 'sin' ? list_menu : await getPermissionDb()
-		setPermission(permiso)
-		await groupedMenu(permiso)
+		const { allowed, all } =
+			import.meta.env.VITE_WIFI == 'sin' ? { allowed: list_menu, all: list_menu } : await getPermissionDb()
+		setPermission(allowed)
+		setMenus(all)
+		await groupedMenu(allowed)
 		setLoading(true)
 	}
 

@@ -77,8 +77,9 @@ export const getPermissionDb = async () => {
 
 	/* =========================
 	   5) Devolver listo para navbar
+	   allowed: menús con acceso efectivo | all: todos los menús activos del tenant
 	   ========================= */
-	return finalMenu
+	return { allowed: finalMenu, all: menus }
 }
 
 /* =========================================================
