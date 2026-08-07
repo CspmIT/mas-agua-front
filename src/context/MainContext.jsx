@@ -14,6 +14,8 @@ function MainProvider({ children }) {
 	const [tabs, setTabs] = useState([])
 	const [tabCurrent, setTabCurrent] = useState(0)
 	const [permission, setPermission] = useState([])
+	// Todos los menús activos del tenant (con y sin acceso), para el guard de rutas
+	const [menus, setMenus] = useState([])
 	const [unreadCount, setUnreadCount] = useState(0)
 	const [client, setClient] = useState(() => {
 		const coop = storage.get('usuarioCooptech')
@@ -70,6 +72,8 @@ function MainProvider({ children }) {
 				setDarkMode,
 				permission,
 				setPermission,
+				menus,
+				setMenus,
 				unreadCount,
 				setUnreadCount,
 				fetchUnreadCount,
