@@ -33,7 +33,9 @@ export const renewSessionIfNeeded = async () => {
 		await saveData('token', data.token, {
 			expires: getTokenExpiration(newDecoded),
 			secure: import.meta.env.VITE_ENTORNO === 'desarrollo' ? false : true,
-			sameSite: import.meta.env.VITE_ENTORNO === 'desarrollo' ? 'Lax' : 'None',
+			// Lax: la cookie es solo el almacenamiento del token (se envia por header
+			// Authorization), asi no viaja en requests cross-site
+			sameSite: 'Lax',
 		})
 	} catch (error) {
 		console.error('No se pudo renovar la sesión', error)
