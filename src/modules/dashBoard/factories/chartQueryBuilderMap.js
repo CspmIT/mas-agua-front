@@ -186,10 +186,12 @@ export const chartQueryBuilderMap = {
   PieChart: async (chart) => {
     const updatedPies = await Promise.all(
       chart.ChartPieData.map(async (item) => {
+        // Se manda la variable completa: el backend resuelve topic/field por su id
+        // (antes iba solo varsInflux y la respuesta fallaba con 400)
         const { data } = await request(
           `${backend['Mas Agua']}/dataInflux`,
           'POST',
-          item?.InfluxVars?.varsInflux
+          item?.InfluxVars
         )
         const accessKey = Object.values(
           item.InfluxVars.varsInflux
