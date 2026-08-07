@@ -118,16 +118,37 @@ const BombControlPopup = ({ idBomb, onClose }) => {
         status: live?.status !== undefined ? live.status : prev.status,
       }));
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Comando enviado',
-        text: `"${action.name}" enviado a ${bomb.name}.`,
-        timer: 1800,
-        showConfirmButton: false,
-      });
+      // 3 estados: confirmado por el leer del PLC / enviado sin confirmación / enviado
+      if (live) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Comando confirmado por el PLC',
+          text: `"${action.name}" aplicado en ${bomb.name}.`,
+          timer: 1800,
+          showConfirmButton: false,
+        });
+      } else if (response?.data?.unconfirmed) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Comando enviado, sin confirmación',
+          text: `El PLC no confirmó "${action.name}" en ${bomb.name}. Verificá el estado en unos instantes.`,
+        });
+      } else {
+        Swal.fire({
+          icon: 'success',
+          title: 'Comando enviado',
+          text: `"${action.name}" enviado a ${bomb.name}.`,
+          timer: 1800,
+          showConfirmButton: false,
+        });
+      }
     } catch (error) {
       console.error('Error enviando el comando:', error);
-      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo enviar el comando a la bomba.' });
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.error || 'No se pudo enviar el comando a la bomba.',
+      });
     } finally {
       setSending(null);
     }

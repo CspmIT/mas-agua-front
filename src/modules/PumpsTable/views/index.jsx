@@ -408,13 +408,30 @@ const PumpsTable = ({ embedded = false }) => {
         executeData = data
       }
 
-      Swal.fire({
-        icon: 'success',
-        title: 'Acción enviada',
-        text: 'En breve verás el cambio reflejado',
-        timer: 1500,
-        showConfirmButton: false,
-      })
+      // 3 estados: confirmado por el leer del PLC / enviado sin confirmación / enviado
+      if (executeData?.liveStatus) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Acción confirmada por el PLC',
+          text: 'En breve verás el cambio reflejado',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+      } else if (executeData?.unconfirmed) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Acción enviada, sin confirmación',
+          text: 'El PLC no confirmó el cambio. Verificá el estado del equipo en unos instantes.',
+        })
+      } else {
+        Swal.fire({
+          icon: 'success',
+          title: 'Acción enviada',
+          text: 'En breve verás el cambio reflejado',
+          timer: 1500,
+          showConfirmButton: false,
+        })
+      }
 
       const isBomb = row.control_type === 'bomb' || !row.control_type
 
@@ -459,7 +476,7 @@ const PumpsTable = ({ embedded = false }) => {
       console.error(error)
       Swal.fire({
         icon: 'error',
-        text: 'No se pudo enviar la acción',
+        text: error.response?.data?.error || 'No se pudo enviar la acción',
       })
     }
   }

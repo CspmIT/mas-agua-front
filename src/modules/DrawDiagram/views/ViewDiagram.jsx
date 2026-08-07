@@ -240,24 +240,46 @@ function ViewDiagram() {
 
     try {
       Swal.fire({ title: 'Enviando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-      await request(`${backend['Mas Agua']}/bombs_PLC/execute`, 'POST', {
+      const { data } = await request(`${backend['Mas Agua']}/bombs_PLC/execute`, 'POST', {
         bombId: state.bomb.id,
         actionId: state.action.id,
       });
 
       actionLockRef.current[el.id] = Date.now() + 90000;
       setPlcState((prev) => ({ ...prev })); // re-render para reflejar el candado
-      Swal.fire({
-        icon: 'success',
-        title: 'Comando enviado',
-        text: `"${state.action.name}" enviado a ${state.bomb.name}.`,
-        timer: 1800,
-        showConfirmButton: false,
-      });
+
+      // 3 estados: confirmado por el leer del PLC / enviado sin confirmación / enviado
+      if (data?.liveStatus) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Comando confirmado por el PLC',
+          text: `"${state.action.name}" aplicado en ${state.bomb.name}.`,
+          timer: 1800,
+          showConfirmButton: false,
+        });
+      } else if (data?.unconfirmed) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Comando enviado, sin confirmación',
+          text: `El PLC no confirmó "${state.action.name}" en ${state.bomb.name}. Verificá el estado en unos instantes.`,
+        });
+      } else {
+        Swal.fire({
+          icon: 'success',
+          title: 'Comando enviado',
+          text: `"${state.action.name}" enviado a ${state.bomb.name}.`,
+          timer: 1800,
+          showConfirmButton: false,
+        });
+      }
       fetchPlcLive();
     } catch (error) {
       console.error('Error enviando el comando PLC:', error);
-      Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo enviar el comando al equipo.' });
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: error.response?.data?.error || 'No se pudo enviar el comando al equipo.',
+      });
     }
   };
 
