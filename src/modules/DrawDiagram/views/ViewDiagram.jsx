@@ -202,7 +202,7 @@ function ViewDiagram() {
       if (!result.isConfirmed) return;
 
       try {
-        Swal.fire({ title: 'Enviando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'Enviando...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
         await request(`${backend['Mas Agua']}/osmosis/auto-reboot`, 'POST', {
           status: state.isActive ? 0 : 1,
         });
@@ -239,7 +239,7 @@ function ViewDiagram() {
     if (!result.isConfirmed) return;
 
     try {
-      Swal.fire({ title: 'Enviando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+      Swal.fire({ title: 'Enviando...', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
       const { data } = await request(`${backend['Mas Agua']}/bombs_PLC/execute`, 'POST', {
         bombId: state.bomb.id,
         actionId: state.action.id,

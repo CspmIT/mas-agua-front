@@ -103,6 +103,15 @@ const BombControlPopup = ({ idBomb, onClose }) => {
     if (!result.isConfirmed) return;
 
     setSending(actionName);
+    // Loader bloqueante: mientras se espera la respuesta del PLC el usuario
+    // no puede disparar otra acción que interfiera
+    Swal.fire({
+      title: 'Enviando...',
+      text: `Esperando respuesta del PLC para "${action.name}".`,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading(),
+    });
     try {
       const response = await request(
         `${backend[import.meta.env.VITE_APP_NAME]}/bombs_PLC/execute`,

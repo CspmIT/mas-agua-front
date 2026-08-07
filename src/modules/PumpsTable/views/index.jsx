@@ -383,6 +383,16 @@ const PumpsTable = ({ embedded = false }) => {
     if (!result.isConfirmed) return
 
     try {
+      // Loader bloqueante: mientras se espera la respuesta del PLC el usuario
+      // no puede disparar otra acción que interfiera
+      Swal.fire({
+        title: 'Enviando...',
+        text: 'Esperando respuesta del equipo.',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => Swal.showLoading(),
+      })
+
       let executeData = null
 
       if (isAutoReboot) {
